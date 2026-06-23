@@ -355,6 +355,8 @@ def post_pending() -> None:
                 channel=channel,
                 text=f"Draft reply: {item.get('subject', '(no subject)')}",
                 blocks=blocks,
+                icon_url=_cfg.BOT_ICON_URL,
+                username=_cfg.BOT_USERNAME,
             )
             ts = resp["ts"]
             q.update_item(item["id"], slack_ts=ts, slack_channel=channel)
@@ -409,6 +411,8 @@ def post_missed(missed_json_path: str) -> None:
                 channel=channel,
                 text=f"Missed: {item.get('subject', '(no subject)')} from {item.get('from', '?')}",
                 blocks=blocks,
+                icon_url=_cfg.BOT_ICON_URL,
+                username=_cfg.BOT_USERNAME,
             )
             log.info("Posted missed card for thread %s → ts=%s", thread_id, resp["ts"])
         except SlackApiError as exc:
@@ -698,6 +702,8 @@ def handle_draft_for_missed(ack, body, client: WebClient):
                     channel=channel,
                     text=f"Draft reply: {item.get('subject', '(no subject)')}",
                     blocks=_build_draft_blocks(item),
+                    icon_url=_cfg.BOT_ICON_URL,
+                    username=_cfg.BOT_USERNAME,
                 )
                 q.update_item(item_id, slack_ts=resp["ts"], slack_channel=channel)
             except SlackApiError as exc:

@@ -152,6 +152,8 @@ def post_briefing(client, channel: str) -> str | None:
             channel=channel,
             text="🌅 Good morning — daily mail briefing",
             blocks=blocks,
+            icon_url=_cfg.BOT_ICON_URL,
+            username=_cfg.BOT_USERNAME,
         )
         ts = resp["ts"]
         log.info("Posted morning briefing → ts=%s", ts)

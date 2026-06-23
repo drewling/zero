@@ -60,6 +60,18 @@ PROFILE_PATH   = os.path.join(KNOWLEDGE_DIR, "drewl.md")
 PYTHON_BIN = os.environ.get("MAIL_TRIAGE_PYTHON", sys.executable)
 
 # ---------------------------------------------------------------------------
+# Slack bot appearance (per-message avatar via chat:write.customize)
+# ---------------------------------------------------------------------------
+# Slack's app-config icon can only be set in the app UI, but with the
+# chat:write.customize scope the bot can show a custom avatar on every message
+# it posts. Point BOT_ICON_URL at a PUBLICLY-fetchable PNG (Slack fetches it).
+BOT_ICON_URL = os.environ.get(
+    "BOT_ICON_URL",
+    "https://raw.githubusercontent.com/drewling/mail-triage-assets/master/app_icon.png",
+)
+BOT_USERNAME = os.environ.get("BOT_USERNAME", "Mail Draft Review")
+
+# ---------------------------------------------------------------------------
 # Accounts helper
 # ---------------------------------------------------------------------------
 
