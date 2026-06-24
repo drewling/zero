@@ -1,11 +1,11 @@
 // inbox-keeper — macOS menu-bar shell.
 //
-// Lives in the menu bar (no Dock icon). On launch it starts the local panel
-// server (lib/keeper_server.py) and shows the web panel in a popover anchored
-// under the menu-bar item. The popover's background is tinted to the panel's
-// paper colour so the arrow matches the body. Quitting terminates the server.
-// The shell is thin: all UI is the web panel, all logic is the Python the rest
-// of the repo already uses.
+// Lives in the menu bar (no Dock icon). Shows the web panel in a borderless
+// floating window we draw ourselves: an opaque paper bubble with a paper arrow
+// pointing up at the menu-bar item. Drawing it ourselves (rather than NSPopover)
+// gives full control of the arrow colour and the corner radius, with no system
+// vibrancy material that we can't tint. The content is opaque so it can never
+// render blank. Starts the local panel server on launch, kills it on quit.
 
 import AppKit
 import WebKit
@@ -14,8 +14,13 @@ let PORT = ProcessInfo.processInfo.environment["KEEPER_PORT"] ?? "8765"
 let PANEL_URL = URL(string: "http://127.0.0.1:\(PORT)/?app=1")!
 let PANEL_W: CGFloat = 420
 let PANEL_H: CGFloat = 640
+let ARROW_H: CGFloat = 9
+let ARROW_W: CGFloat = 22
+let CORNER: CGFloat = 13
+let GAP: CGFloat = 1            // arrow tip to the menu bar
 // Matches CSS --paper: oklch(98.6% 0.006 75).
 let PAPER = NSColor(srgbRed: 0.974, green: 0.957, blue: 0.930, alpha: 1)
+let HAIRLINE = NSColor(srgbRed: 0.88, green: 0.866, blue: 0.84, alpha: 1)
 
 func resolveRepoRoot() -> String? {
     let fm = FileManager.default
@@ -34,7 +39,6 @@ func resolveRepoRoot() -> String? {
     return nil
 }
 
-// A generous PATH so a Finder-launched app can still find gws / node / python.
 func augmentedPath() -> String {
     let home = FileManager.default.homeDirectoryForCurrentUser.path
     var parts = ["/opt/homebrew/bin", "/opt/homebrew/anaconda3/bin", "/usr/local/bin",
@@ -47,19 +51,54 @@ func augmentedPath() -> String {
     return parts.joined(separator: ":")
 }
 
+// The paper bubble + upward arrow. Drawn (not layer-filled) so the window shadow
+// follows the bubble silhouette including the arrow.
+final class BubbleView: NSView {
+    var arrowX: CGFloat = PANEL_W - 40 { didSet { needsDisplay = true } }
+
+    private func bubblePath() -> NSBezierPath {
+        let bodyTop = bounds.height - ARROW_H
+        let body = NSRect(x: 0, y: 0, width: bounds.width, height: bodyTop)
+        let path = NSBezierPath(roundedRect: body, xRadius: CORNER, yRadius: CORNER)
+        let tri = NSBezierPath()
+        tri.move(to: NSPoint(x: arrowX - ARROW_W / 2, y: bodyTop - 0.5))
+        tri.line(to: NSPoint(x: arrowX, y: bounds.height))
+        tri.line(to: NSPoint(x: arrowX + ARROW_W / 2, y: bodyTop - 0.5))
+        tri.close()
+        path.append(tri)
+        return path
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let path = bubblePath()
+        PAPER.setFill()
+        path.fill()
+        HAIRLINE.setStroke()
+        path.lineWidth = 0.5
+        path.stroke()
+    }
+}
+
+final class KeyablePanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+}
+
 final class AppController: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate {
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-    let popover = NSPopover()
+    var panel: KeyablePanel!
+    var bubble: BubbleView!
     var server: Process?
     var webView: WKWebView!
     var loadRetries = 0
     var repoMissing = false
+    var clickMonitor: Any?
+    var escMonitor: Any?
 
     func applicationDidFinishLaunching(_ note: Notification) {
         NSApp.setActivationPolicy(.accessory)
         startServer()
         setupStatusItem()
-        setupPopover()
+        setupPanel()
     }
 
     func setupStatusItem() {
@@ -67,28 +106,38 @@ final class AppController: NSObject, NSApplicationDelegate, WKNavigationDelegate
             let img = NSImage(systemSymbolName: "tray.full", accessibilityDescription: "inbox-keeper")
             img?.isTemplate = true
             button.image = img
-            button.action = #selector(togglePopover)
+            button.action = #selector(togglePanel)
             button.target = self
         }
     }
 
-    func setupPopover() {
+    func setupPanel() {
+        let total = NSRect(x: 0, y: 0, width: PANEL_W, height: PANEL_H + ARROW_H)
+        bubble = BubbleView(frame: total)
+
         let cfg = WKWebViewConfiguration()
-        webView = WKWebView(frame: NSRect(x: 0, y: 0, width: PANEL_W, height: PANEL_H), configuration: cfg)
+        webView = WKWebView(frame: NSRect(x: 0, y: 0, width: PANEL_W, height: PANEL_H),
+                            configuration: cfg)
         webView.navigationDelegate = self
         webView.uiDelegate = self
-        // Transparent so the popover's paper background (incl. the arrow) shows through.
-        webView.setValue(false, forKey: "drawsBackground")
-        let vc = NSViewController()
-        vc.view = webView
-        popover.contentViewController = vc
-        popover.contentSize = NSSize(width: PANEL_W, height: PANEL_H)
-        popover.behavior = .transient
-        popover.animates = true
-        popover.appearance = NSAppearance(named: .aqua)
-        // Tint the whole popover (body + arrow) to the panel's paper colour. This is
-        // a KVC-set background that NSPopover honours, giving a seamless arrow.
-        popover.setValue(PAPER, forKey: "backgroundColor")
+        webView.wantsLayer = true
+        webView.layer?.cornerRadius = CORNER
+        webView.layer?.masksToBounds = true
+        webView.setValue(true, forKey: "drawsBackground")   // opaque paper — never blank
+        bubble.addSubview(webView)
+
+        panel = KeyablePanel(contentRect: total,
+                             styleMask: [.borderless, .nonactivatingPanel],
+                             backing: .buffered, defer: false)
+        panel.isFloatingPanel = true
+        panel.level = .popUpMenu
+        panel.isOpaque = false
+        panel.backgroundColor = .clear
+        panel.hasShadow = true
+        panel.isMovableByWindowBackground = false
+        panel.hidesOnDeactivate = false
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        panel.contentView = bubble
 
         if repoMissing {
             showError("Can’t find the inbox-keeper folder",
@@ -104,7 +153,7 @@ final class AppController: NSObject, NSApplicationDelegate, WKNavigationDelegate
         let html = """
         <html><head><meta name="viewport" content="width=device-width,initial-scale=1">
         <style>html,body{height:100%}body{font:14px -apple-system,system-ui;color:#3a342e;
-        background:transparent;margin:0;display:flex;align-items:center;justify-content:center;text-align:center}
+        background:#f8f4ed;margin:0;display:flex;align-items:center;justify-content:center;text-align:center}
         .b{max-width:300px;padding:24px}h2{font-size:17px;margin:0 0 8px}p{color:#7a7268;line-height:1.5}
         code{background:#ece6dc;padding:2px 5px;border-radius:4px;font-size:12px}</style></head>
         <body><div class="b"><h2>\(title)</h2><p>\(detail)</p></div></body></html>
@@ -112,8 +161,6 @@ final class AppController: NSObject, NSApplicationDelegate, WKNavigationDelegate
         webView.loadHTMLString(html, baseURL: nil)
     }
 
-    // The server may not be listening the instant the webview loads; retry briefly,
-    // then surface the failure instead of leaving a blank popover.
     func webView(_ wv: WKWebView, didFailProvisionalNavigation nav: WKNavigation!, withError e: Error) {
         guard loadRetries < 25 else {
             showError("Couldn’t reach the panel",
@@ -142,15 +189,53 @@ final class AppController: NSObject, NSApplicationDelegate, WKNavigationDelegate
         return nil
     }
 
-    @objc func togglePopover() {
-        guard let button = statusItem.button else { return }
-        if popover.isShown {
-            popover.performClose(nil)
-        } else {
-            webView.reload()
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
+    @objc func togglePanel() {
+        if panel.isVisible { hidePanel() } else { showPanel() }
+    }
+
+    func showPanel() {
+        positionPanel()
+        webView.reload()
+        panel.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) {
+            [weak self] _ in
+            guard let self = self else { return }
+            if let button = self.statusItem.button, let bWin = button.window {
+                let f = bWin.convertToScreen(button.convert(button.bounds, to: nil))
+                if f.contains(NSEvent.mouseLocation) { return }  // toggle handles the item click
+            }
+            self.hidePanel()
         }
+        escMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] e in
+            if e.keyCode == 53 { self?.hidePanel(); return nil }
+            return e
+        }
+    }
+
+    func hidePanel() {
+        panel.orderOut(nil)
+        if let m = clickMonitor { NSEvent.removeMonitor(m); clickMonitor = nil }
+        if let m = escMonitor { NSEvent.removeMonitor(m); escMonitor = nil }
+    }
+
+    // Snug under the menu-bar item: arrow tip just below the bar, pointing at the
+    // item's centre; window clamped to the screen.
+    func positionPanel() {
+        guard let button = statusItem.button, let bWin = button.window else { return }
+        let f = bWin.convertToScreen(button.convert(button.bounds, to: nil))
+        let visible = (bWin.screen ?? NSScreen.main)?.visibleFrame
+            ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        let winH = PANEL_H + ARROW_H
+        // Place the window so the arrow sits ~40px from its right edge under the item.
+        var originX = f.midX - (PANEL_W - 40)
+        originX = max(visible.minX + 8, min(originX, visible.maxX - PANEL_W - 8))
+        let originY = f.minY - GAP - winH
+        var ax = f.midX - originX
+        ax = max(CORNER + ARROW_W, min(ax, PANEL_W - CORNER - ARROW_W))
+        bubble.arrowX = ax
+        bubble.needsDisplay = true
+        panel.setFrame(NSRect(x: originX, y: originY, width: PANEL_W, height: winH), display: true)
     }
 
     func startServer() {
