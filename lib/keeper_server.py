@@ -306,12 +306,13 @@ def _send_draft(payload):
     tid = payload.get("thread_id")
     to = payload.get("to_email") or payload.get("to") or ""
     subject = payload.get("subject") or ""
-    final = payload.get("body") or ""
+    final = payload.get("body") or ""          # plain-text part (and the fallback)
+    html = payload.get("html") or ""           # rich formatting, optional
     original = payload.get("original") or ""
     if not (slug and tid and to and final.strip()):
         raise ValueError("send requires slug, thread_id, to, and body")
     cfg = _acct(slug)["config_dir"]
-    raw = du._build_raw(cfg, tid, to, subject, final)
+    raw = du._build_raw(cfg, tid, to, subject, final, html=html)
     d = du._gws(cfg, ["gmail", "users", "drafts", "create",
                       "--params", json.dumps({"userId": "me"}),
                       "--json", json.dumps({"message": {"raw": raw, "threadId": tid}})])

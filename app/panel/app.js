@@ -484,7 +484,16 @@ function openComposer(d) {
     </div>
     <div class="composer-body">
       <div class="composer-loading"><span class="spinner dark"></span> Drafting in your voice…</div>
-      <textarea class="composer-text" spellcheck="true" aria-label="Reply" hidden></textarea>
+      <div class="composer-editor" hidden>
+        <div class="composer-toolbar" role="toolbar" aria-label="Formatting">
+          <button class="fmt" data-cmd="bold" title="Bold (⌘B)" aria-label="Bold"><b>B</b></button>
+          <button class="fmt" data-cmd="italic" title="Italic (⌘I)" aria-label="Italic"><i>I</i></button>
+          <span class="fmt-sep"></span>
+          <button class="fmt" data-cmd="insertUnorderedList" title="Bulleted list" aria-label="Bulleted list">${listSvg()}</button>
+          <button class="fmt" data-cmd="createLink" title="Add link" aria-label="Add link">${linkSvg()}</button>
+        </div>
+        <div class="composer-text" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Reply" spellcheck="true"></div>
+      </div>
     </div>
     <div class="composer-foot">
       <button class="btn btn-ghost" data-c-regen disabled>${runSvg()}<span>Regenerate</span></button>
@@ -494,7 +503,33 @@ function openComposer(d) {
   $(".composer-x", el).onclick = closeComposer;
   $("[data-c-regen]", el).onclick = () => generateDraft(true);
   $("[data-c-send]", el).onclick = sendDraft;
+  el.querySelectorAll(".fmt").forEach((b) => {
+    // mousedown (not click) so the editor keeps its selection while we format.
+    b.onmousedown = (e) => {
+      e.preventDefault();
+      const cmd = b.dataset.cmd;
+      if (cmd === "createLink") {
+        const url = prompt("Link URL:");
+        if (url) document.execCommand("createLink", false, url);
+      } else {
+        document.execCommand(cmd, false, null);
+      }
+      syncFmtState(el);
+    };
+  });
   generateDraft(false);
+}
+
+function syncFmtState(el) {
+  el.querySelectorAll(".fmt[data-cmd]").forEach((b) => {
+    try { b.classList.toggle("on", document.queryCommandState(b.dataset.cmd)); }
+    catch (e) { /* createLink has no state */ }
+  });
+}
+
+// Plain draft text -> simple HTML (paragraphs + line breaks) for the editor.
+function textToHtml(t) {
+  return esc(t).split(/\n\n+/).map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("");
 }
 
 function closeComposer() {
@@ -506,9 +541,10 @@ function closeComposer() {
 async function generateDraft(isRegen) {
   const el = $(".composer", panelEl);
   if (!el || !COMPOSER) return;
-  const ta = $(".composer-text", el), load = $(".composer-loading", el);
+  const editor = $(".composer-editor", el), ta = $(".composer-text", el);
+  const load = $(".composer-loading", el);
   const send = $("[data-c-send]", el), regen = $("[data-c-regen]", el);
-  ta.hidden = true; load.hidden = false; send.disabled = true; regen.disabled = true;
+  editor.hidden = true; load.hidden = false; send.disabled = true; regen.disabled = true;
   const steer = isRegen ? (prompt("Adjust the draft (e.g. ‘shorter’, ‘warmer’, ‘decline politely’):") || "") : "";
   const { ok, data } = await api("/api/draft", {
     method: "POST", headers: { "Content-Type": "application/json" },
@@ -519,7 +555,8 @@ async function generateDraft(isRegen) {
   COMPOSER.original = data.body;
   COMPOSER.to_email = data.to_email || COMPOSER.to_email;
   COMPOSER.subject = data.subject || COMPOSER.subject;
-  ta.value = data.body; ta.hidden = false; ta.focus();
+  ta.innerHTML = textToHtml(data.body);
+  editor.hidden = false; ta.focus();
   send.disabled = false; regen.disabled = false;
 }
 
@@ -527,14 +564,15 @@ async function sendDraft() {
   const el = $(".composer", panelEl);
   if (!el || !COMPOSER) return;
   const ta = $(".composer-text", el), send = $("[data-c-send]", el);
-  const body = ta.value.trim();
-  if (!body) { toast("Write a reply first"); return; }
+  const text = (ta.innerText || "").trim();
+  const html = ta.innerHTML;
+  if (!text) { toast("Write a reply first"); return; }
   send.disabled = true; send.textContent = "Sending…";
   const { ok } = await api("/api/draft/send", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ slug: COMPOSER.slug, thread_id: COMPOSER.thread,
       to_email: COMPOSER.to_email, subject: COMPOSER.subject,
-      body, original: COMPOSER.original }),
+      body: text, html, original: COMPOSER.original }),
   });
   if (!ok) { toast("Couldn’t send"); send.disabled = false; send.textContent = "Send reply"; return; }
   dropLoop(COMPOSER.slug, COMPOSER.thread);
@@ -546,6 +584,12 @@ async function sendDraft() {
 
 function xSvg() {
   return `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
+}
+function listSvg() {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>`;
+}
+function linkSvg() {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>`;
 }
 
 async function savePolicy() {
