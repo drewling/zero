@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-06-24
+
+### Changed
+
+- **Renamed to `zero`.** The app, bundle identifier (`com.drewling.zero`), CLI (`bin/zero`), and repository are now `zero`. On first launch the app migrates your existing `~/Library/Application Support/inbox-keeper` data — accounts, policy, learning, and state — to the new location, so nothing is lost across the rename.
+- Converted the remaining flat-fill surfaces to real macOS 26 Liquid Glass: the top and action bars, the segmented-nav track, list-row and icon-button hovers, the composer strips, and error banners now use the native `.glassEffect` material, with a soft scroll-edge effect on the loops list. The deliberate legibility floor and the branded buttons are unchanged.
+
+### Added
+
+- **Time-windowed controls:** label-only backfill that sorts recent mail into categories, a reversible "clear the backlog before a date" sweep, and a first-run backlog step.
+- **In-app Google setup.** A new user can paste their Google OAuth client (`client_secret.json`) directly in onboarding instead of hand-placing a file; the browser sign-in follows. This removes the biggest first-run hurdle to using zero on a fresh Mac. (New `POST /api/set-credentials` and `GET /api/credentials-status` endpoints.)
+
 ## [1.3.0] - 2026-06-24
 
 ### Changed
