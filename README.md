@@ -1,252 +1,142 @@
-# mail-triage
+<div align="center">
 
-A personal automation for multi-account Gmail triage, AI-drafted replies in your
-own voice, and interactive Slack review — with a reversible inbox-zero sweep.
+# inbox-keeper
 
-## What it does
+**Keep your inbox at "only what still needs you," across every account, and never lose anything.**
 
-Every morning at **07:00**, a launchd job runs `run.sh`, which:
+A quiet macOS menu-bar app that reads each thread, sets aside everything that
+isn't waiting on you, and keeps the rest one tap away. Nothing is ever deleted.
 
-1. **Triages** each authenticated account's last-day unread inbox. A headless Claude
-   (Sonnet) orchestrator fans out **one Haiku subagent per account** in parallel.
-   Each thread is classified with a unified label taxonomy; noise is archived.
+<img src="design/screenshots/panel-loops.png" width="320" alt="inbox-keeper panel showing the open loops that still need you">
 
-2. **Emails a combined digest** to your primary account — every ⚡ Action item across
-   all accounts in one place, so nothing is missed.
-
-3. **Runs a 14-day catch-up sweep** across all accounts, finds threads you never
-   replied to, asks Haiku to filter for genuinely important ones, and posts them to
-   Slack.
-
-4. **Drafts replies** for primary-account ⚡ Action items (Haiku), saves them as real
-   Gmail drafts, and **posts interactive Slack cards** for review.
-
-An **always-on Slack listener** (Socket Mode, no public URL) handles the review cards:
-
-| Button | Action |
-|--------|--------|
-| ✅ Send | Sends the Gmail draft |
-| ✏️ Edit | Opens a modal to edit the reply, then sends |
-| 🗑 Discard | Deletes the draft |
-| 🔄 Regenerate | Re-drafts with optional steer ("make it shorter") |
-| ⏰ Snooze | Collapses the card for 24 hours |
-
-Missed-item cards offer: **Draft reply / Archive / Snooze / Keep in inbox / Open in Gmail**.
+</div>
 
 ---
 
-## Architecture at a glance
+## What it is
 
-```
-launchd (07:00)
-  └─ run.sh
-       ├─ claude (Sonnet) → TRIAGE.md → Haiku ×N  (classify + label)
-       ├─ missed_sweep.py → catchup.py ×N          (14-day catch-up)
-       ├─ gen_drafts.py                             (draft replies)
-       ├─ build_briefing.py                         (briefing data)
-       └─ app.py brief / post / post-missed         (Slack cards)
+Most "inbox zero" tools make you do the sorting. This does the one part you'd
+never finish by hand: continuously deciding what in your inbox is still an
+**open loop** (something genuinely awaiting your action) and quietly setting
+everything else aside.
 
-launchd (KeepAlive)
-  └─ slack_app/daemon.sh
-       └─ app.py (Socket Mode listener — handles button clicks)
-```
+It lives in the menu bar. You glance at it between meetings and see, across all
+your accounts, the few things that actually need you. Everything else has been
+archived reversibly, so the inbox stops being a swamp without anything going
+missing.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full data flow.
+Think of it as the inbox you'd keep if you had an hour every morning and perfect
+memory of who is still waiting on you.
 
----
+## Why you can trust it with your email
 
-## Label taxonomy
+Three properties, in priority order:
 
-Applied identically across every account.
+1. **Reversible by construction.** "Archive" means remove the inbox label and add
+   a dated recovery label. Mail stays in All Mail, fully searchable, and any day's
+   sweep restores in one tap from the **Undo** view. Nothing is ever deleted.
+2. **Ambient.** No new app to live in. Your Gmail and Apple Mail stay exactly as
+   they are. This works quietly behind them, once a morning.
+3. **The judgment is an agent, not a rule list.** What counts as "needs you" is
+   described in plain English (see [keep-policy.md](keep-policy.md)) and enforced
+   by a model that reads each thread. Cold outreach using a real person's name
+   gets archived; a real person actually awaiting your reply is kept. A filter
+   rule cannot tell those two apart.
 
-**Priority** (exactly one per thread):
-- **⚡ Action** — real person awaiting your reply, decision, or scheduling. Kept in inbox.
-- **📬 FYI** — worth seeing, no action needed. Kept in inbox.
-- **🔻 Low** — noise: newsletters, cold outreach, marketing. Archived automatically.
+## The panel
 
-**Category** (zero or more):
-- **💰 Finance** · **🤝 Clients** · **📅 Meetings** · **🔔 Services**
+| Open loops | Accounts | Undo | Policy |
+|:---:|:---:|:---:|:---:|
+| ![Open loops](design/screenshots/panel-loops.png) | ![Accounts](design/screenshots/panel-accounts.png) | ![Undo](design/screenshots/panel-undo.png) | ![Policy](design/screenshots/panel-policy.png) |
+| What still needs you, across all accounts | Per-account inbox and archive counts | Restore any day's archived mail in one tap | The one thing you configure, in plain English |
 
----
+## Install
 
-## Prerequisites
-
-| Tool | Install |
-|------|---------|
-| macOS | Any recent version |
-| `gws` | `npm install -g @google-workspace/cli` |
-| `claude` CLI | `npm install -g @anthropic-ai/claude-code` |
-| `python3` | `brew install python3` |
-| `jq` | `brew install jq` (optional, useful for debugging) |
-| A Slack app | Create via `slack_app/manifest.yml` (Socket Mode) |
-
-Each Gmail account must be authenticated with `gws` using OAuth (headless-safe via
-the file keyring backend). See [docs/SETUP.md](docs/SETUP.md) for step-by-step auth.
-
----
-
-## Quick start
+Requires macOS, Python 3, and the [`gws` CLI](https://github.com/googleworkspace/cli)
+(`npm i -g @googleworkspace/cli`) authenticated for each Gmail account. Swift (from
+the Xcode command line tools) is needed only to build the menu-bar app.
 
 ```bash
-# 1. Clone
-git clone https://github.com/YOUR_ORG/mail-triage.git ~/mail-triage
-cd ~/mail-triage
-
-# 2. Check deps + create venv + scaffold config files
-bash setup.sh
-
-# 3. Authenticate each account with gws (see docs/SETUP.md)
-
-# 4. Edit accounts.json with your accounts
-# 5. Edit slack_app/config.env with your Slack tokens
-
-# 6. Install launchd agents (daily triage + always-on Slack listener)
-bash deploy/install.sh
-
-# 7. Test immediately (optional)
-bash run.sh && tail -f logs/latest.log
+git clone https://github.com/drewling/mail-triage.git inbox-keeper
+cd inbox-keeper
+./install.sh          # checks deps, sets up accounts.json, builds the app
 ```
 
-See [docs/SETUP.md](docs/SETUP.md) for the full step-by-step.
-
----
-
-## Configuration
-
-### accounts.json
+Then edit `accounts.json` with your accounts (one entry per Gmail account):
 
 ```json
 [
-  { "slug": "work",     "email": "me@company.com",   "config_dir": "~/.config/gws" },
-  { "slug": "personal", "email": "me@gmail.com",     "config_dir": "~/.config/gws/accounts/personal" }
+  { "slug": "primary", "email": "you@example.com",      "config_dir": "/Users/you/.config/gws" },
+  { "slug": "work",    "email": "you.work@gmail.com",   "config_dir": "/Users/you/.config/gws/accounts/work" }
 ]
 ```
 
-The **first entry is the primary account** — digests are sent from/to it and drafts
-are generated for it.
+`config_dir` is the `gws` config directory for that account. Authenticate each
+with `gws auth login` (see the `gws` docs for multi-account setup).
 
-### slack_app/config.env
-
-```bash
-SLACK_BOT_TOKEN=xoxb-...          # from api.slack.com → OAuth & Permissions
-SLACK_APP_TOKEN=xapp-...          # from Basic Information → App-Level Tokens
-SLACK_REVIEW_CHANNEL=U01234567    # your Slack user ID (for DMs) or channel ID
-```
-
-### Environment variable overrides
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `MAIL_TRIAGE_DIR` | repo root (computed) | Override the repo root |
-| `MAIL_TRIAGE_PYTHON` | `python3` from PATH | Override the Python binary |
-| `QUEUE_PATH` | `$MAIL_TRIAGE_DIR/drafts/queue.json` | Override queue file |
-| `BRIEFING_PATH` | `$MAIL_TRIAGE_DIR/drafts/briefing.json` | Override briefing file |
-| `CLAUDE_BIN` | `claude` | Override Claude CLI binary |
-| `GWS_BIN` | `gws` | Override gws binary |
-
----
-
-## Tuning the AI
-
-### knowledge/drewl.md
-
-This file is the AI's context: who you are, what your business does, which senders
-are genuine contacts vs cold outreach, and how to draft replies in your voice.
-**Edit this file** before first run — the quality of triage and drafts depends on it.
-
-### TRIAGE.md
-
-The Claude orchestrator prompt. Contains the label classification rules (what counts
-as ⚡ Action vs 📬 FYI vs 🔻 Low). Edit the rules here to tune classification.
-
----
-
-## Scheduling
-
-| Agent | When | What |
-|-------|------|------|
-| `com.drewl.mailtriage.plist` | Daily 07:00 | Full morning pipeline |
-| `com.drewl.maildraftreview.plist` | Always-on (KeepAlive) | Slack listener |
-
-Install/reload via `bash deploy/install.sh`. The templates in `deploy/` work for any
-clone location — `__MAIL_TRIAGE_DIR__` is substituted at install time.
-
----
-
-## Inbox-zero tools
+## Use it
 
 ```bash
-# Dry-run (reports what would be archived, changes nothing)
-python3 lib/inbox_zero.py ~/.config/gws
-
-# Execute (archives noise, adds 🗄️ Auto-Archived recovery label)
-python3 lib/inbox_zero.py ~/.config/gws --execute
-
-# Undo (restores everything tagged with the recovery label)
-python3 lib/undo_inbox_zero.py ~/.config/gws --execute
+./bin/inbox-keeper app         # launch the menu-bar app
+./bin/inbox-keeper dashboard   # or open the panel in your browser
+./bin/inbox-keeper run         # run the keeper now across all accounts
+./bin/inbox-keeper state       # refresh the panel data
+./bin/inbox-keeper stop        # stop the local panel server
 ```
 
-**Nothing is ever deleted.** Archived mail stays in All Mail, fully searchable.
+Click the menu-bar icon to open the panel. Hit **Run keeper now** to tidy every
+inbox to only what needs you. Click any loop to open it in Gmail. Made a mistake?
+**Undo** restores a whole day's archived mail.
 
----
+To run it automatically every morning, point a `launchd` job at
+`./bin/inbox-keeper run` (the repo's `run.sh` shows the full daily pipeline).
 
-## Safety notes
+## How "needs you" is decided
 
-- **Nothing is ever deleted.** Archiving only removes the INBOX label.
-- **No email is sent without you.** Drafts are created in Gmail but only sent when
-  you click Send in Slack.
-- **Fully reversible.** `undo_inbox_zero.py` restores everything with one command.
-- **Tokens stay on your machine.** `config.env` is gitignored. gws OAuth tokens are
-  stored in `~/.config/gws/`, outside this repo.
+You edit one plain-language file, [keep-policy.md](keep-policy.md), or the
+**Policy** tab in the panel. No regex, no config DSL. The default keeps a thread
+only if a real person is awaiting your reply, there's an unanswered request to
+you, a live payment problem, a legal matter, or a real deadline. Two signals do
+most of the work:
 
----
+- **Last message from you** means you already responded. It gets archived.
+- **Never replied to this sender** plus cold/sales content means it was never a
+  real loop, even with a person's name on it. It gets archived.
 
-## Layout
+Everything archived is reversible. When unsure, the policy keeps it.
+
+## How it works
 
 ```
-config.sh             Shell config (repo root, python bin, derived paths)
-config.py             Python config (same, used by lib/ and slack_app/)
-run.sh                Morning runner (launchd-triggered)
-setup.sh              First-time setup script
-TRIAGE.md             Claude orchestrator prompt + classification rules
-accounts.json         Account registry (email + gws config dir per account)
-knowledge/drewl.md    AI context: who you are + reply boundaries
-lib/
-  config.py → config  (imported via ROOT-relative path)
-  ensure_labels.sh    Idempotent taxonomy creation per account
-  fetch_inbox.sh      Compact JSON of recent unread inbox threads
-  apply.sh            Apply/remove labels on a thread
-  gen_drafts.py       Draft replies for ⚡ Action items → Gmail drafts → queue
-  draft_one.py        Draft a reply for a single thread (used by Slack button)
-  draftutil.py        Create / send / discard / update-send Gmail reply drafts
-  context.py          Context gathering for AI drafts (thread + history + profile)
-  catchup.py          Per-account missed-items finder
-  missed_sweep.py     Parallel missed-sweep orchestrator + digest emailer
-  build_briefing.py   Build drafts/briefing.json for the Slack morning card
-  inbox_zero.py       Reversible bulk-archive sweep
-  undo_inbox_zero.py  Undo inbox_zero (restore from recovery label)
-  verify_archive.py   AI safety check before inbox_zero --execute
-  test_gate.py        Ad-hoc draft gate tester
-  send_draft.sh       Thin wrapper: draftutil send
-  discard_draft.sh    Thin wrapper: draftutil discard
-  update_and_send_draft.sh  Thin wrapper: draftutil update-send
-slack_app/
-  app.py              Slack Bolt (Socket Mode) review app
-  briefing.py         Morning briefing card builder
-  review_queue.py     Concurrency-safe queue.json helpers
-  snooze_store.py     fcntl-locked snooze store
-  _regen_worker.py    Draft regeneration subprocess worker
-  manifest.yml        Slack app manifest (create the app from this)
-  daemon.sh           Sources config.env, starts the listener
-  set_tokens.sh       Helper: save Slack tokens into config.env
-  config.env.example  Template — copy to config.env and fill in tokens
-deploy/
-  com.drewl.mailtriage.plist.template      launchd plist template (daily triage)
-  com.drewl.maildraftreview.plist.template launchd plist template (Slack listener)
-  install.sh          Fills templates and loads agents into ~/Library/LaunchAgents
-docs/
-  SETUP.md            Step-by-step setup guide
-  ARCHITECTURE.md     Component diagram + data flow
-drafts/               Runtime state (gitignored)
-logs/                 Run logs (gitignored)
+menu-bar app (Swift)  ->  local panel (HTML/CSS/JS, no deps)
+                              |  reads
+                          app/state.json  <-  dashboard_state.py  (per-account status,
+                              ^                                     open loops, undo points)
+                              |  Run / Undo
+                          keeper_server.py  ->  review_open_loops.py  (the agent keep-bar)
+                                                gws CLI  ->  Gmail (reversible label swaps)
 ```
+
+The Swift shell is deliberately thin: it starts the local server and shows the
+web panel. All judgment runs through the Python the rest of the repo already
+uses, with Gmail reached via the `gws` CLI. The panel never talks to Gmail
+directly; it reads a cached state file so it opens instantly.
+
+## Privacy and safety
+
+- Everything runs locally on your Mac. No server, no third party sees your mail.
+- The panel binds to `127.0.0.1` only.
+- Nothing is ever deleted. Archiving is a reversible label change.
+- `accounts.json` and any Slack config stay out of git (see `.gitignore`).
+
+## Beyond the keeper
+
+This repo also contains the fuller morning pipeline it grew out of: AI-drafted
+replies reviewed from Slack, a missed-items catch-up sweep, and a combined daily
+digest. Those are optional and documented in [docs/PIPELINE.md](docs/PIPELINE.md)
+and `TRIAGE.md`. The keeper and its panel are the core; the rest is the engine
+room.
+
+## License
+
+[MIT](LICENSE)
