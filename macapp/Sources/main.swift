@@ -21,11 +21,15 @@ let GAP: CGFloat = 5            // arrow tip to the menu bar
 
 func resolveRepoRoot() -> String? {
     let fm = FileManager.default
+    // Dev opt-in: run straight from a source checkout when explicitly pointed at one.
     if let env = ProcessInfo.processInfo.environment["MAIL_TRIAGE_DIR"],
        fm.fileExists(atPath: "\(env)/lib/keeper_server.py") { return env }
-    let home = fm.homeDirectoryForCurrentUser.path
-    let guess = "\(home)/mail-triage"
-    if fm.fileExists(atPath: "\(guess)/lib/keeper_server.py") { return guess }
+    // A packaged app must NOT auto-grab a source checkout by guessing home-dir paths:
+    // that path may be inside ~/Documents, which macOS TCC blocks for the app's helper
+    // processes (and the daily LaunchAgent). We only use a source tree when the binary
+    // is being run from *inside* one (walk up from the executable — the dev build case);
+    // otherwise we seed the bundle into Application Support (not TCC-protected) and run
+    // from there. That makes a downloaded .dmg behave identically for every user.
     var dir = URL(fileURLWithPath: CommandLine.arguments[0]).deletingLastPathComponent()
     for _ in 0..<6 {
         if fm.fileExists(atPath: dir.appendingPathComponent("lib/keeper_server.py").path) {
