@@ -193,23 +193,25 @@ private struct LoopsView: View {
     var body: some View {
         if m.state == nil || m.state?.needsBuild == true {
             SkeletonView()
-        } else if m.isKeeping {
-            TidyingView(message: m.job?.message ?? "Starting…")
         } else {
             let rows = m.loopRows
             let total = m.state?.totalLoops ?? rows.count
             let failed = (m.state?.accounts ?? []).filter { !$0.ok }
-            if total == 0 && !failed.isEmpty {
+            // While keeping, never show an "all clear" / error empty state — counts are
+            // mid-flight. Fall through to the list path so the slim TidyingBanner shows
+            // on top and the inbox stays visible + scrollable instead of a full takeover.
+            if total == 0 && !failed.isEmpty && !m.isKeeping {
                 EmptyState(symbol: "exclamationmark.triangle", warn: true,
                            title: "Couldn’t check your inboxes",
                            message: "\(failed.count == 1 ? "An account" : "\(failed.count) accounts") didn’t respond, so this isn’t a real “all clear”. \(failed.first?.error ?? "")")
-            } else if total == 0 {
+            } else if total == 0 && !m.isKeeping {
                 EmptyState(symbol: "checkmark", warn: false,
                            title: "Your inboxes are clear",
                            message: "Nothing is waiting on you across \(m.state?.accounts.count ?? 0) accounts. Everything else was set aside, reversibly.")
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
+                        if m.isKeeping { TidyingBanner(message: m.job?.message ?? "Starting…") }
                         if !failed.isEmpty { Banner(text: bannerText(failed), error: true) }
                         HeroCount(total: total, accounts: m.state?.accounts.count ?? 0)
                         SectionLabel("Waiting on you")
@@ -508,18 +510,10 @@ private struct CategoryEditRow: View {
     let onDelete: () -> Void
     @State private var hovering = false
 
-    private var colorBinding: Binding<Color> {
-        Binding(get: { Color(hex: cat.color) }, set: { cat.color = $0.hexString() })
-    }
-
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
-            // Emoji, framed in the category's own colour so the row reads as a chip.
-            TextField("🏷️", text: $cat.emoji)
-                .textFieldStyle(.plain).multilineTextAlignment(.center)
-                .font(.system(size: 15)).frame(width: 30, height: 30)
-                .background(Circle().fill(Color(hex: cat.color).opacity(0.20)))
-                .overlay(Circle().strokeBorder(Color(hex: cat.color).opacity(0.5), lineWidth: 1))
+            // Emoji + colour, framed in the category's own colour so the row reads as a chip.
+            CuteEmojiPicker(emoji: $cat.emoji, tint: Color(hex: cat.color))
 
             VStack(alignment: .leading, spacing: 2) {
                 TextField("Name", text: $cat.name)
@@ -529,9 +523,7 @@ private struct CategoryEditRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            ColorPicker("", selection: colorBinding, supportsOpacity: false)
-                .labelsHidden().frame(width: 22)
-                .help("Tag colour")
+            CuteColorPicker(hex: $cat.color)
 
             Button(action: onDelete) {
                 Image(systemName: "xmark").font(.system(size: 11, weight: .semibold))
@@ -544,6 +536,107 @@ private struct CategoryEditRow: View {
         .padding(10)
         .glassSurface(11)
         .transition(.opacity.combined(with: .move(edge: .leading)))
+    }
+}
+
+// MARK: Cute pickers — a curated emoji grid + a soft swatch palette, in a glassy
+// popover, so picking a tag's look feels like the rest of the panel instead of the
+// raw system ColorPicker / a bare text field. Both still allow anything off-palette.
+
+private struct CuteEmojiPicker: View {
+    @Binding var emoji: String
+    let tint: Color
+    @State private var open = false
+    // A friendly set skewed to triage (reply / waiting / schedule / read / action),
+    // then a few warm extras. Type-your-own covers everything else.
+    private static let choices = [
+        "🏷️","✉️","💌","📨","📥","💬","⏳","⌛️","🕐","📅","🗓️","⏰",
+        "🔖","📌","📎","⚡️","🔥","🚨","⭐️","✅","☑️","🔔","🧾","💡",
+        "🎯","🚀","☕️","🌱","🍀","🌸","🫶","🤝","🧠","🎉","❤️","👀"]
+    var body: some View {
+        Button { open.toggle() } label: {
+            Text(emoji.isEmpty ? "🏷️" : emoji)
+                .font(.system(size: 15)).frame(width: 30, height: 30)
+                .opacity(emoji.isEmpty ? 0.5 : 1)
+                .background(Circle().fill(tint.opacity(0.20)))
+                .overlay(Circle().strokeBorder(tint.opacity(0.5), lineWidth: 1))
+        }
+        .buttonStyle(.plain).help("Pick an emoji")
+        .popover(isPresented: $open, arrowEdge: .bottom) {
+            VStack(spacing: 10) {
+                LazyVGrid(columns: Array(repeating: GridItem(.fixed(30), spacing: 4), count: 8), spacing: 4) {
+                    ForEach(Self.choices, id: \.self) { e in
+                        Button { emoji = e; open = false } label: {
+                            Text(e).font(.system(size: 18)).frame(width: 30, height: 30)
+                                .background(RoundedRectangle(cornerRadius: 7)
+                                    .fill(e == emoji ? Paper.accent.opacity(0.28) : .clear))
+                        }.buttonStyle(.plain)
+                    }
+                }
+                Divider().overlay(Paper.hairline.opacity(0.12))
+                HStack(spacing: 6) {
+                    Text("Or type:").font(.system(size: 11)).foregroundStyle(Paper.ink3)
+                    TextField("🏷️", text: $emoji).textFieldStyle(.plain)
+                        .multilineTextAlignment(.center).frame(width: 44)
+                        .padding(.vertical, 4)
+                        .background(RoundedRectangle(cornerRadius: 6).fill(Paper.sunken.opacity(0.3)))
+                }
+            }
+            .padding(14).frame(width: 300).background(Paper.paper)
+        }
+    }
+}
+
+private struct CuteColorPicker: View {
+    @Binding var hex: String
+    @State private var open = false
+    // A soft, cute palette: the brand blues/purples plus warm pastels. Anything
+    // off-palette stays reachable via the system picker below.
+    private static let palette = [
+        "#4285F4","#5C6BC0","#7E57C2","#AB47BC","#EC407A","#EF5350",
+        "#FF7043","#FFA726","#FFCA28","#9CCC65","#26A69A","#29B6F6"]
+    var body: some View {
+        Button { open.toggle() } label: {
+            Circle().fill(Color(hex: hex)).frame(width: 20, height: 20)
+                .overlay(Circle().strokeBorder(.white.opacity(0.55), lineWidth: 1.5))
+                .shadow(color: Color(hex: hex).opacity(0.5), radius: 3, y: 1)
+        }
+        .buttonStyle(.plain).help("Tag colour")
+        .popover(isPresented: $open, arrowEdge: .bottom) {
+            VStack(spacing: 10) {
+                LazyVGrid(columns: Array(repeating: GridItem(.fixed(26), spacing: 8), count: 6), spacing: 8) {
+                    ForEach(Self.palette, id: \.self) { p in
+                        Swatch(hex: p, selected: p.caseInsensitiveCompare(hex) == .orderedSame) {
+                            hex = p; open = false
+                        }
+                    }
+                }
+                Divider().overlay(Paper.hairline.opacity(0.12))
+                ColorPicker(selection: Binding(get: { Color(hex: hex) },
+                                               set: { hex = $0.hexString() }),
+                            supportsOpacity: false) {
+                    Text("Custom…").font(.system(size: 11.5)).foregroundStyle(Paper.ink2)
+                }
+            }
+            .padding(14).frame(width: 220).background(Paper.paper)
+        }
+    }
+}
+
+private struct Swatch: View {
+    let hex: String; let selected: Bool; let action: () -> Void
+    @State private var hover = false
+    var body: some View {
+        Button(action: action) {
+            Circle().fill(Color(hex: hex)).frame(width: 24, height: 24)
+                .overlay(Circle().strokeBorder(.white, lineWidth: selected ? 2.5 : 0))
+                .overlay(Circle().strokeBorder(.white.opacity(0.15), lineWidth: 0.5))
+                .scaleEffect(hover ? 1.18 : (selected ? 1.1 : 1))
+                .shadow(color: Color(hex: hex).opacity(selected || hover ? 0.6 : 0), radius: 4, y: 1)
+                .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hover)
+                .animation(Motion.pop, value: selected)
+        }
+        .buttonStyle(.plain).onHover { hover = $0 }
     }
 }
 
@@ -913,35 +1006,27 @@ private struct ActionBar: View {
 
 // MARK: - Shared pieces
 
-private struct TidyingView: View {
+// A slim glass progress strip pinned at the top of the loops list while the keeper
+// runs, so the inbox stays visible + scrollable instead of vanishing behind a
+// full-screen takeover. The footer action bar carries the same message + spinner.
+private struct TidyingBanner: View {
     let message: String
-    var body: some View {
-        VStack(spacing: 16) {
-            BreathingOrb()
-            Text("Tidying your inboxes").font(.system(size: 17, weight: .semibold))
-            Text(message).font(.system(size: 12.5)).foregroundStyle(Paper.accent)
-                .contentTransition(.opacity)
-                .animation(.easeInOut(duration: 0.25), value: message)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
-// A soft glass orb that breathes while the keeper works — calmer and more alive than
-// a system spinner, and unmistakably the same glass as the rest of the panel.
-private struct BreathingOrb: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
-        ZStack {
-            Circle().fill(Paper.accentHi.opacity(0.20)).blur(radius: 7)
-            Image(systemName: "tray.full").font(.system(size: 21, weight: .semibold))
-                .foregroundStyle(Paper.accentSoft)
+        HStack(spacing: 9) {
+            Circle().fill(Paper.accentSoft).frame(width: 8, height: 8)
+                .phaseAnimator(reduceMotion ? [1.0] : [0.45, 1.0]) { dot, o in
+                    dot.opacity(o)
+                } animation: { _ in .easeInOut(duration: 0.85) }
+            Text(message).font(.system(size: 11.5, weight: .medium)).foregroundStyle(Paper.accent)
+                .lineLimit(1).contentTransition(.opacity)
+                .animation(.easeInOut(duration: 0.25), value: message)
+            Spacer(minLength: 0)
         }
-        .frame(width: 66, height: 66)
-        .glassSurface(33)
-        .phaseAnimator(reduceMotion ? [1.0] : [0.95, 1.06]) { view, scale in
-            view.scaleEffect(scale).opacity(scale < 1 ? 0.9 : 1)
-        } animation: { _ in .easeInOut(duration: 1.15) }
+        .padding(.horizontal, 12).padding(.vertical, 9)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassSurface(9, tint: Paper.accent.opacity(0.12))
+        .padding(.horizontal, 14).padding(.top, 12)
     }
 }
 

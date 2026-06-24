@@ -14,9 +14,9 @@ let PORT = ProcessInfo.processInfo.environment["KEEPER_PORT"] ?? "8765"
 let PANEL_W: CGFloat = 420
 let PANEL_H: CGFloat = 640
 let CORNER: CGFloat = 17        // menu-surface corner radius
-let ARROW_W: CGFloat = 30       // arrow base width (wider reads as a gentler curve)
+let ARROW_W: CGFloat = 44       // arrow base width (wide raised-cosine ogee = gentle, smooth join)
 let ARROW_H: CGFloat = 11       // how far the arrow tip protrudes above the body
-let ARROW_CLAMP: CGFloat = 34   // keep the arrow off the rounded top corners
+let ARROW_CLAMP: CGFloat = 42   // keep the arrow (incl. its wide base) off the rounded top corners
 let GAP: CGFloat = 5            // arrow tip to the menu bar
 
 func resolveRepoRoot() -> String? {
@@ -122,26 +122,30 @@ final class GlassSurface: NSView {
     }
     required init?(coder: NSCoder) { fatalError("unused") }
 
-    private func bubblePath() -> NSBezierPath {
-        let body = NSRect(x: 0, y: 0, width: bounds.width, height: PANEL_H)
-        let path = NSBezierPath(roundedRect: body, xRadius: CORNER, yRadius: CORNER)
+    private func bodyPath() -> NSBezierPath {
+        NSBezierPath(roundedRect: NSRect(x: 0, y: 0, width: bounds.width, height: PANEL_H),
+                     xRadius: CORNER, yRadius: CORNER)
+    }
+
+    /// A smooth "beak", not a triangle: a raised-cosine bump (`h·½(1+cos πt)`) whose
+    /// flanks leave the flat top edge with a horizontal tangent, dip through concave
+    /// shoulders, and curve over a softly rounded apex — so the arrow flows *out* of
+    /// the body instead of rising from a kink. Sampled as a fine polyline; it's
+    /// rasterised into the mask anyway, so a curve beats fiddly Bézier control points.
+    /// Filled separately from the body (see applyMask) so the two never cancel.
+    private func beakPath() -> NSBezierPath {
         let cx = max(ARROW_CLAMP, min(arrowX, bounds.width - ARROW_CLAMP))
-        // A smooth "beak", not a triangle: each flank leaves the flat top edge
-        // horizontally (so it blends in with no visible kink) and curves up and over a
-        // softly rounded tip. The near-tip control points sit just off-centre at full
-        // height, which rounds the apex instead of meeting in a sharp point.
-        let w = ARROW_W / 2, h = ARROW_H, y0 = PANEL_H - 1
+        let w = ARROW_W / 2, h = ARROW_H, y0 = PANEL_H - 2   // base sits just inside the body
         let beak = NSBezierPath()
+        let steps = 120
         beak.move(to: NSPoint(x: cx - w, y: y0))
-        beak.curve(to: NSPoint(x: cx, y: y0 + h),
-                   controlPoint1: NSPoint(x: cx - w * 0.55, y: y0),
-                   controlPoint2: NSPoint(x: cx - 2.1, y: y0 + h))
-        beak.curve(to: NSPoint(x: cx + w, y: y0),
-                   controlPoint1: NSPoint(x: cx + 2.1, y: y0 + h),
-                   controlPoint2: NSPoint(x: cx + w * 0.55, y: y0))
+        for i in 0...steps {
+            let t = CGFloat(i) / CGFloat(steps) * 2 - 1       // -1 … 1
+            beak.line(to: NSPoint(x: cx + t * w, y: y0 + h * 0.5 * (1 + cos(.pi * t))))
+        }
+        beak.line(to: NSPoint(x: cx + w, y: y0))
         beak.close()
-        path.append(beak)
-        return path
+        return beak
     }
 
     override func viewDidChangeBackingProperties() {
@@ -162,7 +166,11 @@ final class GlassSurface: NSView {
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
         NSColor.black.setFill()
-        bubblePath().fill()
+        // Two separate fills = union by overpaint. Appending the beak to the body as
+        // one path made their overlap cancel under nonzero winding, leaving a white
+        // slit at the join — the "not smooth" seam between box and arrow.
+        bodyPath().fill()
+        beakPath().fill()
         NSGraphicsContext.restoreGraphicsState()
         let img = NSImage(size: bounds.size)
         img.addRepresentation(rep)
