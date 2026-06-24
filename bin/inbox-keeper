@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# bin/inbox-keeper — main CLI for inbox-keeper / mail-triage
+set -euo pipefail
+
+# Resolve repo root from this script's location, then source config.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../config.sh
+source "$SCRIPT_DIR/../config.sh"
+
+SUBCOMMAND="${1:-}"
+
+case "$SUBCOMMAND" in
+
+  dashboard)
+    export GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file
+
+    # Start keeper_server.py in the background if port 8765 is not already serving.
+    if ! curl -s http://127.0.0.1:8765/ >/dev/null 2>&1; then
+      echo "Starting keeper server..."
+      "$MAIL_TRIAGE_PYTHON" "$MAIL_TRIAGE_LIB/keeper_server.py" &
+      # Give it a moment to start.
+      sleep 1
+    else
+      echo "Keeper server already running."
+    fi
+
+    echo "Opening http://127.0.0.1:8765"
+    open http://127.0.0.1:8765
+    ;;
+
+  app)
+    APP_BUNDLE="$MAIL_TRIAGE_DIR/macapp/build/inbox-keeper.app"
+    if [ ! -d "$APP_BUNDLE" ]; then
+      echo "Building inbox-keeper.app (first run)..."
+      bash "$MAIL_TRIAGE_DIR/macapp/build.sh"
+    fi
+    echo "Opening $APP_BUNDLE"
+    open "$APP_BUNDLE"
+    ;;
+
+  run)
+    export GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file
+
+    # Parse accounts.json (list OR {"accounts":[...]}) and run the keeper per account.
+    accounts=$("$MAIL_TRIAGE_PYTHON" -c '
+import json, sys
+data = json.load(open(sys.argv[1]))
+accts = data if isinstance(data, list) else data.get("accounts", [])
+for a in accts:
+    print("\t".join([a["config_dir"], a.get("email", a.get("slug", "")),
+                     a.get("slug", a.get("email", ""))]))
+' "$MAIL_TRIAGE_ACCOUNTS")
+
+    while IFS=$'\t' read -r config_dir email slug; do
+      [ -z "$config_dir" ] && continue
+      echo "--- Running keeper pass for: $slug ($email) ---"
+      "$MAIL_TRIAGE_PYTHON" "$MAIL_TRIAGE_LIB/review_open_loops.py" \
+        "$config_dir" "$email" --grace-days 2 --execute
+    done <<< "$accounts"
+
+    echo "--- Refreshing dashboard state ---"
+    "$MAIL_TRIAGE_PYTHON" "$MAIL_TRIAGE_LIB/dashboard_state.py"
+    echo "Done."
+    ;;
+
+  state)
+    export GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file
+    echo "Refreshing dashboard state..."
+    "$MAIL_TRIAGE_PYTHON" "$MAIL_TRIAGE_LIB/dashboard_state.py"
+    echo "Done."
+    ;;
+
+  stop)
+    if pkill -f keeper_server.py 2>/dev/null; then
+      echo "Stopped keeper_server.py."
+    else
+      echo "No running keeper_server.py found."
+    fi
+    ;;
+
+  *)
+    cat <<'USAGE'
+inbox-keeper — mail triage panel CLI
+
+Usage:
+  inbox-keeper dashboard   Start the web panel (if not running) and open it in the browser
+  inbox-keeper app         Build (if needed) and open the native menu-bar app
+  inbox-keeper run         Run the keeper pass for all accounts, then refresh dashboard state
+  inbox-keeper state       Refresh app/state.json without opening the panel
+  inbox-keeper stop        Kill the running keeper server
+
+USAGE
+    ;;
+esac

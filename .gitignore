@@ -32,3 +32,12 @@ accounts.json
 # Lock files
 *.lock
 drafts/*.lock
+
+# Build output
+macapp/build/
+
+# Dashboard state (generated at runtime)
+app/state.json
+
+# Editor / tooling dirs
+.claude/
