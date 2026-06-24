@@ -77,7 +77,10 @@ def _thread_reply_headers(config_dir, thread_id):
     return mid, new_refs
 
 
-def _build_raw(config_dir, thread_id, to, subject, body):
+def _build_raw(config_dir, thread_id, to, subject, body, html=None):
+    """Build a reply. `body` is the plain-text part; if `html` is given, the
+    message is multipart/alternative (plain + html) so rich formatting renders in
+    clients that support it and degrades gracefully where they don't."""
     msg = EmailMessage()
     msg["From"] = _profile_email(config_dir)
     msg["To"] = to
@@ -89,6 +92,8 @@ def _build_raw(config_dir, thread_id, to, subject, body):
     if references:
         msg["References"] = references
     msg.set_content(body)
+    if html and html.strip():
+        msg.add_alternative(html, subtype="html")
     return base64.urlsafe_b64encode(msg.as_bytes()).decode("ascii")
 
 
