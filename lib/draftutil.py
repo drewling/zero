@@ -93,7 +93,9 @@ def _build_raw(config_dir, thread_id, to, subject, body, html=None):
         msg["References"] = references
     msg.set_content(body)
     if html and html.strip():
-        msg.add_alternative(html, subtype="html")
+        # Wrap the fragment and pin UTF-8 so curly quotes / en-dashes render right.
+        doc = f"<!doctype html><html><body>{html}</body></html>"
+        msg.add_alternative(doc, subtype="html", charset="utf-8")
     return base64.urlsafe_b64encode(msg.as_bytes()).decode("ascii")
 
 

@@ -1,5 +1,9 @@
 # Detailed Setup Guide
 
+> **Legacy.** This covers the original Slack-based triage pipeline. For the current
+> product (the inbox-keeper menu-bar app) use the README: `./install.sh`, then
+> `./bin/inbox-keeper app`. Keep reading only if you want the opt-in Slack/draft flow.
+
 This guide walks through setting up mail-triage from scratch on a new macOS machine.
 
 ## Prerequisites

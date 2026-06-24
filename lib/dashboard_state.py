@@ -155,11 +155,9 @@ def build(accounts_path, max_loops):
     with open(accounts_path) as f:
         data = json.load(f)
     accounts = data if isinstance(data, list) else data.get("accounts", [])
-    states = []
     # Accounts are independent; build them concurrently but keep input order.
     with ThreadPoolExecutor(max_workers=max(1, len(accounts))) as ex:
-        results = list(ex.map(lambda a: _account_state(a, max_loops), accounts))
-    states = results
+        states = list(ex.map(lambda a: _account_state(a, max_loops), accounts))
     policy = ""
     policy_path = os.path.join(ROOT, "keep-policy.md")
     if os.path.exists(policy_path):

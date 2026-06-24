@@ -49,6 +49,28 @@ def _gws_env():
 _state_lock = threading.Lock()
 
 
+def _drop_loop(slug, tid):
+    """Surgically remove one loop from the cached state (used by dismiss + send)."""
+    def _m(st):
+        for a in st.get("accounts", []):
+            if a.get("slug") != slug:
+                continue
+            before = len(a.get("loops", []))
+            a["loops"] = [l for l in a.get("loops", []) if l.get("thread_id") != tid]
+            if len(a["loops"]) < before:
+                a["inbox_threads"] = max(0, a.get("inbox_threads", 1) - 1)
+    _patch_state(_m)
+
+
+def _find_label(cfg, name):
+    """The Gmail label id for a name, or None."""
+    import draftutil as du  # noqa: E402
+    labels = du._gws(cfg, ["gmail", "users", "labels", "list",
+                           "--params", json.dumps({"userId": "me"})]).get("labels", [])
+    lab = next((l for l in labels if l.get("name") == name), None)
+    return lab["id"] if lab else None
+
+
 def _patch_state(mutate):
     """Apply a surgical change to the cached state.json (under a lock) so a single
     dismiss/undo stays consistent without a full ~9s rebuild."""
@@ -116,11 +138,7 @@ def _run_undo(payload):
     label_name = payload.get("label")
     if not slug or not label_name:
         raise ValueError("undo requires slug and label")
-    acct = next((a for a in _load_accounts()
-                 if (a.get("slug") or a.get("email")) == slug), None)
-    if not acct:
-        raise ValueError(f"unknown account {slug!r}")
-    cfg = acct["config_dir"]
+    cfg = _acct(slug)["config_dir"]
     labels = du._gws(cfg, ["gmail", "users", "labels", "list",
                            "--params", json.dumps({"userId": "me"})]).get("labels", [])
     lab = next((l for l in labels if l.get("name") == label_name), None)
@@ -162,11 +180,7 @@ def _dismiss(payload):
     tid = payload.get("thread_id")
     if not slug or not tid:
         raise ValueError("dismiss requires slug and thread_id")
-    acct = next((a for a in _load_accounts()
-                 if (a.get("slug") or a.get("email")) == slug), None)
-    if not acct:
-        raise ValueError(f"unknown account {slug!r}")
-    cfg = acct["config_dir"]
+    cfg = _acct(slug)["config_dir"]
 
     # Undo a just-dismissed thread: put it back in the inbox and net out the signal.
     if payload.get("undo"):
@@ -175,10 +189,8 @@ def _dismiss(payload):
         label = payload.get("label")
         if not label:
             raise ValueError("undo requires the recovery label from the dismiss")
-        labels = du._gws(cfg, ["gmail", "users", "labels", "list",
-                               "--params", json.dumps({"userId": "me"})]).get("labels", [])
-        lab = next((l for l in labels if l.get("name") == label), None)
-        remove = [lab["id"]] if lab else []
+        lid = _find_label(cfg, label)
+        remove = [lid] if lid else []
         du._gws(cfg, ["gmail", "users", "threads", "modify",
                       "--params", json.dumps({"userId": "me", "id": tid}),
                       "--json", json.dumps({"addLabelIds": ["INBOX"], "removeLabelIds": remove})],
@@ -211,16 +223,7 @@ def _dismiss(payload):
                      "sender_email": payload.get("sender_email", ""),
                      "subject": payload.get("subject", ""),
                      "snippet": payload.get("snippet", "")})
-
-    def _remove(st):
-        for a in st.get("accounts", []):
-            if a.get("slug") != slug:
-                continue
-            before = len(a.get("loops", []))
-            a["loops"] = [l for l in a.get("loops", []) if l.get("thread_id") != tid]
-            if len(a["loops"]) < before:
-                a["inbox_threads"] = max(0, a.get("inbox_threads", 1) - 1)
-    _patch_state(_remove)
+    _drop_loop(slug, tid)
     return {"ok": True, "label": label, "thread_id": tid}
 
 
@@ -230,6 +233,14 @@ def _acct(slug):
     if not a:
         raise ValueError(f"unknown account {slug!r}")
     return a
+
+
+def _name_from_email(email):
+    """Best-effort display name from an address local-part (e.g. jane.doe -> Jane Doe)."""
+    import re
+    local = (email or "").split("@")[0]
+    parts = [p for p in re.split(r"[._-]+", local) if p and not p.isdigit()]
+    return " ".join(p.capitalize() for p in parts)
 
 
 def _gen_draft(payload):
@@ -243,7 +254,10 @@ def _gen_draft(payload):
     steer = (payload.get("steer") or "").strip()
     if not slug or not tid:
         raise ValueError("draft requires slug and thread_id")
-    cfg = _acct(slug)["config_dir"]
+    acct = _acct(slug)
+    cfg = acct["config_dir"]
+    owner_name = (acct.get("name") or _name_from_email(acct.get("email", ""))).strip()
+    owner_first = owner_name.split()[0] if owner_name else ""
     t = du._gws(cfg, ["gmail", "users", "threads", "get",
                       "--params", json.dumps({"userId": "me", "id": tid, "format": "metadata",
                                               "metadataHeaders": ["From", "Subject", "Date"]})])
@@ -271,11 +285,13 @@ def _gen_draft(payload):
     to_email = parseaddr(chosen)[1] or ""
     voice = learning.learned_text()
     voice_block = f"\nVOICE NOTES learned from the user's past edits:\n{voice}\n" if voice.strip() else ""
+    voice_desc = f"{owner_name}'s voice" if owner_name else "the user's voice"
+    sign = f' Sign off as "{owner_first}".' if owner_first else ""
     prompt = (
-        "Draft a reply, in Tayo Onabule's voice, to the email thread below. British English, "
-        "first person, warm and concise (2-6 sentences), mirror the sender's formality, reference "
-        "real thread context, never invent facts or figures (use placeholders like [day]/[amount] "
-        f"if needed), sign off as \"Tayo\". Reply to {to_name}.{voice_block}"
+        f"Draft a reply in {voice_desc} to the email thread below. First person, warm and concise "
+        "(2-6 sentences), match the sender's language and level of formality, reference real thread "
+        "context, never invent facts, figures or dates (use placeholders like [day]/[amount] if "
+        f"needed).{sign} Reply to {to_name}.{voice_block}"
         + (f"\nADJUSTMENT requested: {steer}\n" if steer else "")
         + f"\nSubject: {subject}\nThread (oldest to newest):\n" + "\n".join(convo[-8:])
         + "\n\nOutput ONLY the reply body text, no preamble, no subject line."
@@ -316,19 +332,24 @@ def _send_draft(payload):
     d = du._gws(cfg, ["gmail", "users", "drafts", "create",
                       "--params", json.dumps({"userId": "me"}),
                       "--json", json.dumps({"message": {"raw": raw, "threadId": tid}})])
-    du._gws(cfg, ["gmail", "users", "drafts", "send",
-                  "--params", json.dumps({"userId": "me"}),
-                  "--json", json.dumps({"id": d["id"]})])
+    try:
+        du._gws(cfg, ["gmail", "users", "drafts", "send",
+                      "--params", json.dumps({"userId": "me"}),
+                      "--json", json.dumps({"id": d["id"]})])
+    except Exception as exc:
+        # The draft was created but didn't send; remove it so a retry can't
+        # double-send or leave an orphan, and tell the user plainly.
+        try:
+            du._gws(cfg, ["gmail", "users", "drafts", "delete",
+                          "--params", json.dumps({"userId": "me", "id": d["id"]})],
+                    allow_empty=True)
+        except Exception:
+            pass
+        raise RuntimeError(f"couldn't send the reply ({exc}); nothing was sent")
     if original and original.strip() != final.strip():
         learning.record({"type": "draft_edit", "thread_id": tid,
                          "original_snippet": original[:200], "final": final[:400]})
-    # Replying resolves the loop; drop it from the cached state.
-    def _remove(st):
-        for a in st.get("accounts", []):
-            if a.get("slug") == slug:
-                a["loops"] = [l for l in a.get("loops", []) if l.get("thread_id") != tid]
-                a["inbox_threads"] = max(0, a.get("inbox_threads", 1) - 1)
-    _patch_state(_remove)
+    _drop_loop(slug, tid)  # replying resolves the loop
     return {"ok": True, "sent": tid}
 
 

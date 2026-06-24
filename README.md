@@ -94,7 +94,9 @@ As you set loops aside and edit drafts, the keeper learns your preferences and
 applies them; you can see what it learned in the **Policy** tab.
 
 To run it automatically every morning, point a `launchd` job at
-`./bin/inbox-keeper run` (the repo's `run.sh` shows the full daily pipeline).
+`./bin/inbox-keeper run`. (`run.sh` is the older, fuller pipeline this grew out of,
+including the legacy label-triage and Slack steps; `bin/inbox-keeper run` is the
+clean keeper-only daily job and the one to schedule.)
 
 ## How "needs you" is decided
 
@@ -132,7 +134,7 @@ directly; it reads a cached state file so it opens instantly.
 - Everything runs locally on your Mac. No server, no third party sees your mail.
 - The panel binds to `127.0.0.1` only.
 - Nothing is ever deleted. Archiving is a reversible label change.
-- `accounts.json` and any Slack config stay out of git (see `.gitignore`).
+- `accounts.json` and the learning store stay out of git (see `.gitignore`).
 
 ## Beyond the keeper
 

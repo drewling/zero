@@ -33,22 +33,45 @@ def _candidate_q(grace_days):
         keep += f" -newer_than:{grace_days}d"
     return f"in:inbox {keep}"
 
+# Fallback if the user hasn't written a keep-policy.md (owner-neutral).
+DEFAULT_POLICY = (
+    "Keep a thread only if it genuinely needs the user to act now: a real person awaiting their reply "
+    "or decision; an unanswered direct question or request to them; a live payment PROBLEM; a legal or "
+    "dispute matter; or an explicit deadline with a consequence.\n"
+    "Archive everything else (reversibly): cold outreach, sales, pitches and prospecting even from "
+    "named senders the user has never replied to; receipts, invoices, statements, confirmations, "
+    "notifications, alerts, digests, newsletters, marketing, social, surveys, calendar RSVPs, meeting "
+    "summaries, past security alerts; and any thread whose last message was from the user (already "
+    "handled). When unsure, keep personal, family, legal, and payment-problem mail."
+)
+
+KEEP_POLICY_PATH = os.path.join(os.path.dirname(HERE), "keep-policy.md")
+
+
+def _policy_text():
+    """The user's keep-policy.md (authoritative), or the owner-neutral default."""
+    try:
+        if os.path.exists(KEEP_POLICY_PATH):
+            t = open(KEEP_POLICY_PATH).read().strip()
+            if t:
+                return t
+    except Exception:
+        pass
+    return DEFAULT_POLICY
+
+
+# {policy} is filled from keep-policy.md at call time, so editing the policy
+# (file or Policy tab) actually changes behaviour.
 PROMPT_HEAD = (
-    "You are doing a FINAL, ruthless cleanup of Tayo's inbox. Only emails that genuinely need "
-    "Tayo to DO something now should survive. For EACH numbered thread you see: last_sender, "
-    "last_from_tayo (did Tayo send the most recent message), replied_before (has Tayo ever written "
-    "to this person), subject, snippet. Decide \"keep\" or \"archive\".\n\n"
-    "KEEP only if ALL of the sense applies: there is an UNRESOLVED item that needs Tayo to act now -- "
-    "a real person awaiting his reply/decision, an unanswered direct question/request to him, a live "
-    "payment PROBLEM, a legal/dispute matter, or an explicit deadline with consequence.\n\n"
-    "ARCHIVE (already dealt with or never a real loop):\n"
-    "- last_from_tayo=YES (he already replied; nothing left for him to do)\n"
-    "- cold outreach / sales / pitch / prospecting (replied_before=NO and not personal/family/legal)\n"
-    "- anything informational: receipts, invoices, statements, confirmations, notifications, digests, "
-    "newsletters, marketing, social, surveys, calendar RSVPs, meeting summaries, past security alerts\n"
-    "- threads that read resolved / FYI / no open question to Tayo\n\n"
-    "Bias hard toward ARCHIVE. Only keep a thread if you can name what Tayo still needs to do. "
-    "Personal/family mail and legal/payment-problems are kept even if unsure.\n\n"
+    "You are tidying the user's inbox. For EACH numbered thread decide \"keep\" or \"archive\". "
+    "Keep only what genuinely needs the user to act now; bias hard toward archive (everything archived "
+    "is reversible, so when in doubt about noise, archive it). Each line gives: last_sender, "
+    "last_from_owner (did the USER send the most recent message), replied_before (has the user ever "
+    "written to this sender), subject, snippet.\n\n"
+    "THE USER'S KEEP POLICY (authoritative -- follow it exactly):\n{policy}\n\n"
+    "Hard rules regardless of the above: if last_from_owner=YES the user already replied, so archive "
+    "(nothing left to do). Personal, family, legal, and live-payment-problem mail are kept even if "
+    "unsure.\n\n"
     'Output ONLY a JSON object mapping each number to "keep" or "archive". No prose.\n\nTHREADS:\n'
 )
 
@@ -122,12 +145,12 @@ def _classify(chunk):
     lines = []
     for i, c in enumerate(chunk):
         lines.append(
-            f'{i}. last_sender: {c["last_from"]} | last_from_tayo: {"YES" if c["last_from_tayo"] else "NO"}'
+            f'{i}. last_sender: {c["last_from"]} | last_from_owner: {"YES" if c["last_from_tayo"] else "NO"}'
             f' | replied_before: {"YES" if c["replied_before"] else "NO"} | subject: {c["subject"]}'
             f' | snippet: {c["snippet"]}')
+    prompt = (_learned_preface() + PROMPT_HEAD.format(policy=_policy_text()) + "\n".join(lines))
     try:
-        r = subprocess.run([CLAUDE, "-p", _learned_preface() + PROMPT_HEAD + "\n".join(lines),
-                            "--model", "haiku"],
+        r = subprocess.run([CLAUDE, "-p", prompt, "--model", "haiku"],
                            capture_output=True, text=True, timeout=150)
     except subprocess.TimeoutExpired:
         return {}
