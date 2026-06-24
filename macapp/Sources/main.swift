@@ -14,9 +14,9 @@ let PORT = ProcessInfo.processInfo.environment["KEEPER_PORT"] ?? "8765"
 let PANEL_W: CGFloat = 420
 let PANEL_H: CGFloat = 640
 let CORNER: CGFloat = 17        // menu-surface corner radius
-let ARROW_A: CGFloat = 17       // the arrow is a small glass square rotated 45°
-let ARROW_H: CGFloat = 13       // how far the arrow tip protrudes above the body
-let ARROW_CLAMP: CGFloat = 28   // keep the arrow off the rounded top corners
+let ARROW_W: CGFloat = 26       // arrow base width
+let ARROW_H: CGFloat = 10       // how far the arrow tip protrudes above the body
+let ARROW_CLAMP: CGFloat = 32   // keep the arrow off the rounded top corners
 let GAP: CGFloat = 5            // arrow tip to the menu bar
 
 // Charcoal tint that turns the regular glass into a dark "Raycast" surface.
@@ -60,7 +60,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     let model = KeeperModel(port: PORT)
     var panel: KeyablePanel!
-    var arrowGlass: NSGlassEffectView?
+    var arrowLayer: CAShapeLayer?
     var server: Process?
     var repoMissing = false
     var clickMonitor: Any?
@@ -102,11 +102,11 @@ final class AppController: NSObject, NSApplicationDelegate {
         setupPanel()
     }
 
-    /// Build the dark Liquid Glass surface hosting the SwiftUI panel, with an upward
-    /// arrow pointing at the menu-bar item. The arrow is a small glass square rotated
-    /// 45°; an NSGlassEffectContainerView merges it with the body so they read as one
-    /// continuous surface (the body overlaps the arrow's lower half, leaving the tip).
-    /// Returns a container sized to include the arrow protrusion at the top.
+    /// Build the dark Liquid Glass surface hosting the SwiftUI panel. The body is a
+    /// rounded-rect glass; the arrow is a crisp CAShapeLayer triangle drawn behind the
+    /// body, filled to match the dark glass. (NSGlassEffectView can't be masked or
+    /// rotated into an arrow — masks are ignored and frameCenterRotation traps in
+    /// layout — so the pointer is a matched solid triangle, which also stays clean.)
     func makeGlassContent() -> NSView {
         let dark = NSAppearance(named: .darkAqua)
         let total = NSRect(x: 0, y: 0, width: PANEL_W, height: PANEL_H + ARROW_H)
@@ -117,7 +117,7 @@ final class AppController: NSObject, NSApplicationDelegate {
         hosting.wantsLayer = true
         hosting.layer?.backgroundColor = .clear
         hosting.layer?.cornerRadius = CORNER
-        hosting.layer?.cornerCurve = .continuous      // match the glass's continuous corners (fixes corner seams)
+        hosting.layer?.cornerCurve = .continuous      // match the glass's continuous corners
         hosting.layer?.masksToBounds = true
         hosting.appearance = dark
 
@@ -127,33 +127,30 @@ final class AppController: NSObject, NSApplicationDelegate {
         body.contentView = hosting
         body.appearance = dark
 
-        let arrow = NSGlassEffectView(frame: NSRect(x: 0, y: 0, width: ARROW_A, height: ARROW_A))
-        arrow.cornerRadius = 4                         // a touch of softness on the tip
-        arrow.tintColor = GLASS_TINT
-        arrow.appearance = dark
-        arrow.wantsLayer = true
-        arrowGlass = arrow
+        let arrow = CAShapeLayer()
+        arrow.fillColor = NSColor(srgbRed: 0.145, green: 0.137, blue: 0.130, alpha: 0.97).cgColor
+        arrowLayer = arrow
 
-        // Arrow first (below), body second (on top) so the body covers the arrow's
-        // lower half and only the tip protrudes.
         let wrap = NSView(frame: total)
-        wrap.addSubview(arrow)
+        wrap.wantsLayer = true
+        wrap.layer?.addSublayer(arrow)                // behind the body's subview layer
         wrap.addSubview(body)
-
-        let container = NSGlassEffectContainerView(frame: total)
-        container.spacing = 28                          // merge the arrow into the body
-        container.contentView = wrap
-        container.appearance = dark
-        return container
+        setArrowX(PANEL_W - 40)
+        return wrap
     }
 
-    /// Place the arrow horizontally under the menu-bar item (clamped off the corners)
-    /// with its centre on the body's top edge, rotated to a diamond so the tip points up.
+    /// Point the arrow at the menu-bar item: a triangle on the body's top edge,
+    /// clamped off the rounded corners. Layer space is y-up, so the body top is at
+    /// PANEL_H and the tip is ARROW_H above it.
     func setArrowX(_ x: CGFloat) {
-        guard let arrow = arrowGlass else { return }
+        guard let arrow = arrowLayer else { return }
         let cx = max(ARROW_CLAMP, min(x, PANEL_W - ARROW_CLAMP))
-        arrow.frame = NSRect(x: cx - ARROW_A / 2, y: PANEL_H - ARROW_A / 2, width: ARROW_A, height: ARROW_A)
-        arrow.frameCenterRotation = 45
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: cx - ARROW_W / 2, y: PANEL_H - 2))   // base tucks under the body edge
+        path.addLine(to: CGPoint(x: cx, y: PANEL_H + ARROW_H))
+        path.addLine(to: CGPoint(x: cx + ARROW_W / 2, y: PANEL_H - 2))
+        path.closeSubpath()
+        arrow.path = path
     }
 
     func setupStatusItem() {
