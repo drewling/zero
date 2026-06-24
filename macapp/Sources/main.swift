@@ -13,8 +13,14 @@ import SwiftUI
 let PORT = ProcessInfo.processInfo.environment["KEEPER_PORT"] ?? "8765"
 let PANEL_W: CGFloat = 420
 let PANEL_H: CGFloat = 640
-let CORNER: CGFloat = 18        // modern macOS-26 menu-surface radius (arrowless)
-let GAP: CGFloat = 6            // panel top to the menu bar
+let CORNER: CGFloat = 17        // menu-surface corner radius
+let ARROW_A: CGFloat = 17       // the arrow is a small glass square rotated 45°
+let ARROW_H: CGFloat = 13       // how far the arrow tip protrudes above the body
+let ARROW_CLAMP: CGFloat = 28   // keep the arrow off the rounded top corners
+let GAP: CGFloat = 5            // arrow tip to the menu bar
+
+// Charcoal tint that turns the regular glass into a dark "Raycast" surface.
+let GLASS_TINT = NSColor(srgbRed: 0.12, green: 0.112, blue: 0.106, alpha: 0.55)
 
 func resolveRepoRoot() -> String? {
     let fm = FileManager.default
@@ -54,6 +60,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     let model = KeeperModel(port: PORT)
     var panel: KeyablePanel!
+    var arrowGlass: NSGlassEffectView?
     var server: Process?
     var repoMissing = false
     var clickMonitor: Any?
@@ -66,20 +73,27 @@ final class AppController: NSObject, NSApplicationDelegate {
         // until clicked and can't be captured headlessly).
         if ProcessInfo.processInfo.environment["KEEPER_PREVIEW"] != nil {
             NSApp.setActivationPolicy(.regular)
-            let win = NSWindow(contentRect: NSRect(x: 0, y: 0, width: PANEL_W, height: PANEL_H),
-                               styleMask: [.titled, .closable], backing: .buffered, defer: false)
-            win.title = "inbox-keeper preview"
-            win.isOpaque = false
-            win.backgroundColor = .clear
-            win.contentView = makeGlassContent()
+            // Borderless, like the real panel, so the screenshot shows the true chrome
+            // (arrow, rounded corners, shadow) — not a titlebar window.
+            let total = NSRect(x: 0, y: 0, width: PANEL_W, height: PANEL_H + ARROW_H)
+            panel = KeyablePanel(contentRect: total, styleMask: [.borderless, .nonactivatingPanel],
+                                 backing: .buffered, defer: false)
+            panel.isFloatingPanel = true
+            panel.level = .popUpMenu
+            panel.isOpaque = false
+            panel.backgroundColor = .clear
+            panel.hasShadow = true
+            panel.contentView = makeGlassContent()
+            setArrowX(PANEL_W - 40)
             if let vf = NSScreen.main?.visibleFrame {
-                win.setFrameTopLeftPoint(NSPoint(x: vf.minX + 80, y: vf.maxY - 80))
+                panel.setFrameTopLeftPoint(NSPoint(x: vf.minX + 140, y: vf.maxY - 40))
             }
-            win.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
             if let t = ProcessInfo.processInfo.environment["KEEPER_TAB"], let tab = Tab(rawValue: t) {
                 model.tab = tab
             }
+            panel.makeKeyAndOrderFront(nil)
+            panel.invalidateShadow()
+            NSApp.activate(ignoringOtherApps: true)
             model.onPanelOpen()
             return
         }
@@ -88,27 +102,58 @@ final class AppController: NSObject, NSApplicationDelegate {
         setupPanel()
     }
 
-    /// Build the real Liquid Glass surface hosting the SwiftUI panel. Shared by the
-    /// menu-bar panel and the preview window.
-    func makeGlassContent() -> NSGlassEffectView {
-        let content = NSRect(x: 0, y: 0, width: PANEL_W, height: PANEL_H)
+    /// Build the dark Liquid Glass surface hosting the SwiftUI panel, with an upward
+    /// arrow pointing at the menu-bar item. The arrow is a small glass square rotated
+    /// 45°; an NSGlassEffectContainerView merges it with the body so they read as one
+    /// continuous surface (the body overlaps the arrow's lower half, leaving the tip).
+    /// Returns a container sized to include the arrow protrusion at the top.
+    func makeGlassContent() -> NSView {
+        let dark = NSAppearance(named: .darkAqua)
+        let total = NSRect(x: 0, y: 0, width: PANEL_W, height: PANEL_H + ARROW_H)
+        let bodyRect = NSRect(x: 0, y: 0, width: PANEL_W, height: PANEL_H)
+
         let hosting = NSHostingView(rootView: PanelView().environmentObject(model))
-        hosting.frame = content
+        hosting.frame = bodyRect
         hosting.wantsLayer = true
         hosting.layer?.backgroundColor = .clear
-        hosting.layer?.cornerRadius = CORNER          // clip content to the glass silhouette
+        hosting.layer?.cornerRadius = CORNER
+        hosting.layer?.cornerCurve = .continuous      // match the glass's continuous corners (fixes corner seams)
         hosting.layer?.masksToBounds = true
-        hosting.appearance = NSAppearance(named: .aqua)
+        hosting.appearance = dark
 
-        let glass = NSGlassEffectView(frame: content)
-        glass.cornerRadius = CORNER
-        // Just a hint of warmth so the material still reads as glass (it samples and
-        // refracts the desktop) rather than a flat tinted card. The brand warmth
-        // comes from the content surfaces, not from drowning the material in tint.
-        glass.tintColor = NSColor(srgbRed: 0.99, green: 0.96, blue: 0.91, alpha: 0.14)
-        glass.contentView = hosting
-        glass.appearance = NSAppearance(named: .aqua)
-        return glass
+        let body = NSGlassEffectView(frame: bodyRect)
+        body.cornerRadius = CORNER
+        body.tintColor = GLASS_TINT
+        body.contentView = hosting
+        body.appearance = dark
+
+        let arrow = NSGlassEffectView(frame: NSRect(x: 0, y: 0, width: ARROW_A, height: ARROW_A))
+        arrow.cornerRadius = 4                         // a touch of softness on the tip
+        arrow.tintColor = GLASS_TINT
+        arrow.appearance = dark
+        arrow.wantsLayer = true
+        arrowGlass = arrow
+
+        // Arrow first (below), body second (on top) so the body covers the arrow's
+        // lower half and only the tip protrudes.
+        let wrap = NSView(frame: total)
+        wrap.addSubview(arrow)
+        wrap.addSubview(body)
+
+        let container = NSGlassEffectContainerView(frame: total)
+        container.spacing = 28                          // merge the arrow into the body
+        container.contentView = wrap
+        container.appearance = dark
+        return container
+    }
+
+    /// Place the arrow horizontally under the menu-bar item (clamped off the corners)
+    /// with its centre on the body's top edge, rotated to a diamond so the tip points up.
+    func setArrowX(_ x: CGFloat) {
+        guard let arrow = arrowGlass else { return }
+        let cx = max(ARROW_CLAMP, min(x, PANEL_W - ARROW_CLAMP))
+        arrow.frame = NSRect(x: cx - ARROW_A / 2, y: PANEL_H - ARROW_A / 2, width: ARROW_A, height: ARROW_A)
+        arrow.frameCenterRotation = 45
     }
 
     func setupStatusItem() {
@@ -122,11 +167,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     }
 
     func setupPanel() {
-        let content = NSRect(x: 0, y: 0, width: PANEL_W, height: PANEL_H)
-        // The real Liquid Glass material. Regular style, a whisper of warm tint to
-        // keep the brand's paper character; the rounded corners and the window
-        // shadow that follows them define the floating surface — no arrow, matching
-        // modern macOS menu surfaces.
+        let content = NSRect(x: 0, y: 0, width: PANEL_W, height: PANEL_H + ARROW_H)
         let glass = makeGlassContent()
 
         panel = KeyablePanel(contentRect: content,
@@ -178,17 +219,20 @@ final class AppController: NSObject, NSApplicationDelegate {
         if let m = escMonitor { NSEvent.removeMonitor(m); escMonitor = nil }
     }
 
-    // Snug under the menu-bar item: top-right of the panel sits below the item,
-    // clamped to the screen.
+    // Snug under the menu-bar item: the arrow tip sits just below the bar, pointing
+    // at the item's centre; the window is clamped to the screen.
     func positionPanel() {
         guard let button = statusItem.button, let bWin = button.window else { return }
         let f = bWin.convertToScreen(button.convert(button.bounds, to: nil))
         let visible = (bWin.screen ?? NSScreen.main)?.visibleFrame
             ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
-        var originX = f.midX - (PANEL_W - 30)
+        let winH = PANEL_H + ARROW_H
+        var originX = f.midX - (PANEL_W - 40)
         originX = max(visible.minX + 8, min(originX, visible.maxX - PANEL_W - 8))
-        let originY = f.minY - GAP - PANEL_H
-        panel.setFrame(NSRect(x: originX, y: originY, width: PANEL_W, height: PANEL_H), display: true)
+        let originY = f.minY - GAP - winH
+        setArrowX(f.midX - originX)                  // item centre in window coords
+        panel.setFrame(NSRect(x: originX, y: originY, width: PANEL_W, height: winH), display: true)
+        panel.invalidateShadow()                     // shadow follows the rounded glass silhouette
     }
 
     func startServer() {

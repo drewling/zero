@@ -1,8 +1,8 @@
 // PanelView.swift — the entire panel UI in SwiftUI. Hosted (via NSHostingView)
 // inside a real NSGlassEffectView, so this view tree draws no opaque full-bleed
-// background: ink text and translucent warm surfaces sit directly on the live
-// glass. Ports every feature of the old web panel: the four views, the reply
-// composer, optimistic set-aside with undo, and the run/job status.
+// background: bright text and subtle surface overlays sit directly on the dark
+// "Raycast" glass. Ports every feature of the old web panel: the four views, the
+// reply composer, optimistic set-aside with undo, and the run/job status.
 
 import SwiftUI
 
@@ -33,7 +33,7 @@ struct PanelView: View {
         .frame(width: PANEL_W, height: PANEL_H)
         .foregroundStyle(Paper.ink)
         .tint(Paper.accent)
-        .environment(\.colorScheme, .light)
+        .environment(\.colorScheme, .dark)
         .animation(.easeOut(duration: 0.22), value: m.toastInfo)
         .animation(.snappy(duration: 0.28), value: m.composer?.id)
     }
@@ -68,8 +68,8 @@ private struct TopBar: View {
             }
         }
         .padding(.horizontal, 18).padding(.top, 13).padding(.bottom, 11)
-        .background(Paper.raised.opacity(0.26))
-        .overlay(alignment: .bottom) { Rectangle().fill(Paper.hairline.opacity(0.55)).frame(height: 0.5) }
+        .background(Paper.raised.opacity(0.05))
+        .overlay(alignment: .bottom) { Rectangle().fill(Paper.hairline.opacity(0.1)).frame(height: 0.5) }
     }
 }
 
@@ -118,7 +118,7 @@ private struct SegmentedNav: View {
                         .background {
                             if on {
                                 RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                    .fill(Paper.paper.opacity(0.92))
+                                    .fill(Paper.raised.opacity(0.13))
                                     .shadow(color: .black.opacity(0.06), radius: 1.5, y: 1)
                                     .matchedGeometryEffect(id: "seg", in: ns)
                             }
@@ -129,7 +129,7 @@ private struct SegmentedNav: View {
             }
         }
         .padding(3)
-        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Paper.sunken.opacity(0.34)))
+        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Paper.sunken.opacity(0.24)))
         .padding(.horizontal, 14).padding(.vertical, 10)
     }
 }
@@ -235,7 +235,7 @@ private struct LoopRowView: View {
         }
         .padding(.horizontal, 10).padding(.vertical, 9)
         .background(RoundedRectangle(cornerRadius: 9, style: .continuous)
-            .fill(hovering ? Paper.raised.opacity(0.6) : .clear))
+            .fill(hovering ? Paper.raised.opacity(0.08) : .clear))
         .onHover { hovering = $0 }
     }
 }
@@ -248,7 +248,7 @@ private struct RowAction: View {
             Image(systemName: symbol).font(.system(size: 13, weight: .medium))
                 .foregroundStyle(over ? Paper.accent : Paper.ink3)
                 .frame(width: 28, height: 28)
-                .background(RoundedRectangle(cornerRadius: 7).fill(over ? Paper.accentSoft.opacity(0.6) : .clear))
+                .background(RoundedRectangle(cornerRadius: 7).fill(over ? Paper.accentSoft.opacity(0.16) : .clear))
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain).help(help).accessibilityLabel(help).onHover { over = $0 }
@@ -301,8 +301,8 @@ private struct AccountCard: View {
             }
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Paper.raised.opacity(0.4))
-            .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Paper.hairline.opacity(0.55), lineWidth: 0.5)))
+        .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Paper.raised.opacity(0.06))
+            .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Paper.hairline.opacity(0.1), lineWidth: 0.5)))
     }
     private var statLine: String {
         guard account.ok else { return "Couldn’t reach this account" }
@@ -356,8 +356,8 @@ private struct UndoRow: View {
                 .buttonStyle(GhostButtonStyle()).disabled(m.isBusy)
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Paper.raised.opacity(0.4))
-            .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Paper.hairline.opacity(0.55), lineWidth: 0.5)))
+        .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Paper.raised.opacity(0.06))
+            .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Paper.hairline.opacity(0.1), lineWidth: 0.5)))
     }
 }
 
@@ -376,8 +376,8 @@ private struct PolicyView: View {
                     .scrollContentBackground(.hidden)
                     .frame(minHeight: 150)
                     .padding(8)
-                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Paper.sunken.opacity(0.34))
-                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Paper.hairline.opacity(0.6), lineWidth: 0.5)))
+                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Paper.sunken.opacity(0.24))
+                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Paper.hairline.opacity(0.12), lineWidth: 0.5)))
 
                 let learned = (m.state?.learned ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
                 if learned.isEmpty {
@@ -442,8 +442,8 @@ private struct ComposerView: View {
                         .buttonStyle(.plain).foregroundStyle(Paper.ink3).accessibilityLabel("Close")
                 }
                 .padding(14)
-                .background(Paper.sunken.opacity(0.34))
-                .overlay(alignment: .bottom) { Rectangle().fill(Paper.hairline.opacity(0.5)).frame(height: 0.5) }
+                .background(Paper.sunken.opacity(0.24))
+                .overlay(alignment: .bottom) { Rectangle().fill(Paper.hairline.opacity(0.1)).frame(height: 0.5) }
 
                 if m.composerLoading {
                     HStack(spacing: 8) {
@@ -460,7 +460,7 @@ private struct ComposerView: View {
                         TextField("Adjust the draft (e.g. shorter, warmer, decline politely)", text: $m.composerSteer)
                             .textFieldStyle(.plain).font(.system(size: 12))
                             .padding(.horizontal, 10).frame(height: 30)
-                            .background(RoundedRectangle(cornerRadius: 8).fill(Paper.sunken.opacity(0.34)))
+                            .background(RoundedRectangle(cornerRadius: 8).fill(Paper.sunken.opacity(0.24)))
                         Button { m.regenerate() } label: { Image(systemName: "arrow.clockwise") }
                             .buttonStyle(GhostButtonStyle()).accessibilityLabel("Regenerate draft")
                     }
@@ -478,10 +478,10 @@ private struct ComposerView: View {
                     .buttonStyle(PrimaryButtonStyle()).disabled(m.composerLoading || m.composerSending)
                 }
                 .padding(12)
-                .background(Paper.sunken.opacity(0.34))
-                .overlay(alignment: .top) { Rectangle().fill(Paper.hairline.opacity(0.5)).frame(height: 0.5) }
+                .background(Paper.sunken.opacity(0.24))
+                .overlay(alignment: .top) { Rectangle().fill(Paper.hairline.opacity(0.1)).frame(height: 0.5) }
             }
-            .background(Paper.paper.opacity(0.9))
+            .background(Paper.paper.opacity(0.94))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .shadow(color: .black.opacity(0.18), radius: 22, y: 8)
             .padding(10)
@@ -507,7 +507,7 @@ private struct FormatBar: View {
     private func fmt<L: View>(@ViewBuilder _ label: () -> L, _ a11y: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             label().frame(width: 28, height: 26)
-                .background(RoundedRectangle(cornerRadius: 6).fill(Paper.sunken.opacity(0.4)))
+                .background(RoundedRectangle(cornerRadius: 6).fill(Paper.sunken.opacity(0.24)))
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain).accessibilityLabel(a11y)
@@ -538,8 +538,8 @@ private struct ActionBar: View {
             }
         }
         .padding(.horizontal, 16).padding(.vertical, 12)
-        .background(Paper.raised.opacity(0.26))
-        .overlay(alignment: .top) { Rectangle().fill(Paper.hairline.opacity(0.55)).frame(height: 0.5) }
+        .background(Paper.raised.opacity(0.05))
+        .overlay(alignment: .top) { Rectangle().fill(Paper.hairline.opacity(0.1)).frame(height: 0.5) }
     }
     private var statusText: String {
         if m.isBusy { return m.job?.message ?? "Working…" }
@@ -603,10 +603,10 @@ private struct SkeletonView: View {
         VStack(spacing: 14) {
             ForEach(0..<6, id: \.self) { _ in
                 HStack(spacing: 11) {
-                    RoundedRectangle(cornerRadius: 7).fill(Paper.sunken.opacity(0.6)).frame(width: 26, height: 26)
+                    RoundedRectangle(cornerRadius: 7).fill(Paper.raised.opacity(0.09)).frame(width: 26, height: 26)
                     VStack(alignment: .leading, spacing: 7) {
-                        RoundedRectangle(cornerRadius: 3).fill(Paper.sunken.opacity(0.6)).frame(width: 120, height: 9)
-                        RoundedRectangle(cornerRadius: 3).fill(Paper.sunken.opacity(0.45)).frame(maxWidth: .infinity).frame(height: 9)
+                        RoundedRectangle(cornerRadius: 3).fill(Paper.raised.opacity(0.09)).frame(width: 120, height: 9)
+                        RoundedRectangle(cornerRadius: 3).fill(Paper.raised.opacity(0.06)).frame(maxWidth: .infinity).frame(height: 9)
                     }
                 }
             }
@@ -627,6 +627,6 @@ private struct ToastView: View {
             }
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
-        .background(Capsule().fill(Paper.ink.opacity(0.94)).shadow(color: .black.opacity(0.22), radius: 12, y: 4))
+        .background(Capsule().fill(Paper.paper.opacity(0.96)).shadow(color: .black.opacity(0.22), radius: 12, y: 4))
     }
 }
