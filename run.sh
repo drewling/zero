@@ -10,7 +10,7 @@ source "$SCRIPT_DIR/config.sh"
 
 # cron/launchd give a minimal PATH; set everything the pipeline needs.
 # Adjust this line if your tools live elsewhere (check `which gws`, `which claude`).
-export PATH="/Users/user/.local/bin:/Users/user/.nvm/versions/node/v22.16.0/bin:/opt/homebrew/bin:/opt/homebrew/anaconda3/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin"
+export PATH="/opt/homebrew/bin:/opt/homebrew/anaconda3/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 # Do NOT export HOME here — let the launchd plist / shell environment supply it.
 export GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file
 

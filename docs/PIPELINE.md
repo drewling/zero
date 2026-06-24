@@ -89,8 +89,8 @@ the file keyring backend). See [docs/SETUP.md](docs/SETUP.md) for step-by-step a
 
 ```bash
 # 1. Clone
-git clone https://github.com/YOUR_ORG/mail-triage.git ~/mail-triage
-cd ~/mail-triage
+git clone https://github.com/drewling/inbox-keeper.git ~/inbox-keeper
+cd ~/inbox-keeper
 
 # 2. Check deps + create venv + scaffold config files
 bash setup.sh

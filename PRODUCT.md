@@ -72,8 +72,11 @@ Saying no is the whole discipline. Out of scope, on purpose:
   older Slack-based draft-review flow is retired from the default experience; it
   remains in the repo for anyone who wants it.)
 - **Not a unified inbox / mail client.** Your existing apps are the UI.
-- **Not labels-as-organization.** It maintains exactly one thing — what's an open
-  loop — not an elaborate folder taxonomy you have to maintain back.
+- **Not labels-as-organization.** The one job is keeping the inbox at open loops,
+  not building a folder taxonomy you have to maintain. There is an optional
+  categories layer (Finance, Clients, etc.) that the agent applies and maintains
+  automatically — you never hand-file anything. It is a lightweight tag on top of
+  the keep/archive decision, not a second organizing system to manage.
 - **Not real-time.** Once a morning is the right cadence. Real-time would make it
   something you watch; the point is that you don't.
 

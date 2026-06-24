@@ -42,8 +42,8 @@ brew install jq
 ## 2. Clone the repo
 
 ```bash
-git clone https://github.com/YOUR_ORG/mail-triage.git ~/mail-triage
-cd ~/mail-triage
+git clone https://github.com/drewling/inbox-keeper.git ~/inbox-keeper
+cd ~/inbox-keeper
 ```
 
 The repo root is the only path that matters. Everything else is relative.

@@ -1,7 +1,7 @@
 """
 briefing.py — Build and post the morning briefing Block Kit message.
 
-Reads /Users/user/mail-triage/drafts/briefing.json (written by run.sh before
+Reads $MAIL_TRIAGE_DIR/drafts/briefing.json (written by run.sh before
 this is called) and the draft queue (for pending-draft count) to produce a
 single rich summary card posted to the review channel.
 
@@ -85,7 +85,7 @@ def build_briefing_blocks() -> list[dict]:
             "type": "header",
             "text": {
                 "type": "plain_text",
-                "text": f"🌅 Good morning, Tayo — {_weekday_label()}",
+                "text": f"🌅 Good morning — {_weekday_label()}",
                 "emoji": True,
             },
         },
