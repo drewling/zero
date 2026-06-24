@@ -17,20 +17,24 @@ extension Color {
     }
 }
 
+// Dark "Raycast" theme. The surface is dark translucent glass; text is bright warm
+// off-white; terracotta stays the single accent. `raised` is a near-white meant to
+// be used at LOW alpha as a lifting overlay; `sunken` is near-black for recessed
+// insets; `paper` is a solid charcoal for opaque surfaces (composer, toast).
 enum Paper {
-    static let paper       = Color(0.985, 0.973, 0.953)
-    static let raised      = Color(0.967, 0.952, 0.929)
-    static let sunken      = Color(0.949, 0.933, 0.909)
-    static let ink         = Color(0.227, 0.196, 0.165)
-    static let ink2        = Color(0.435, 0.392, 0.341)
-    static let ink3        = Color(0.612, 0.561, 0.498)
-    static let ink4        = Color(0.722, 0.671, 0.604)
-    static let hairline    = Color(0.895, 0.866, 0.827)
-    static let accent      = Color(0.792, 0.420, 0.298)
-    static let accentPress = Color(0.706, 0.353, 0.243)
-    static let accentSoft  = Color(0.953, 0.878, 0.831)
-    static let clear       = Color(0.353, 0.596, 0.451)
-    static let danger      = Color(0.776, 0.298, 0.255)
+    static let paper       = Color(0.135, 0.128, 0.122)   // solid dark surface
+    static let raised      = Color(0.97, 0.96, 0.94)      // light overlay (use at low alpha)
+    static let sunken      = Color(0.0, 0.0, 0.0)         // dark inset (use at low alpha)
+    static let ink         = Color(0.95, 0.94, 0.92)      // primary text
+    static let ink2        = Color(0.78, 0.76, 0.73)
+    static let ink3        = Color(0.60, 0.585, 0.55)
+    static let ink4        = Color(0.47, 0.455, 0.43)
+    static let hairline    = Color(1.0, 1.0, 1.0)         // dividers (use at low alpha)
+    static let accent      = Color(0.87, 0.52, 0.40)      // terracotta, brightened for dark
+    static let accentPress = Color(0.79, 0.45, 0.34)
+    static let accentSoft  = Color(0.90, 0.62, 0.50)      // accent text on dark (toast undo)
+    static let clear       = Color(0.46, 0.78, 0.58)      // reward green
+    static let danger      = Color(0.91, 0.46, 0.43)
 }
 
 // Compact relative time: "now", "5m", "3h", "2d", "1w", "2mo".
@@ -72,9 +76,9 @@ struct GhostButtonStyle: ButtonStyle {
             .padding(.horizontal, 13).frame(height: 30)
             .background(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Paper.raised.opacity(configuration.isPressed ? 0.95 : 0.6))
+                    .fill(Paper.raised.opacity(configuration.isPressed ? 0.16 : 0.08))
                     .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .strokeBorder(Paper.hairline.opacity(0.7), lineWidth: 0.5))
+                        .strokeBorder(Paper.hairline.opacity(0.14), lineWidth: 0.5))
             )
             .contentShape(Rectangle())
     }
