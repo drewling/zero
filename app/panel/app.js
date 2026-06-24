@@ -45,16 +45,23 @@ function gmailUrl(acct, threadId) {
   return `https://mail.google.com/mail/?authuser=${who}#all/${threadId}`;
 }
 
-async function api(path, opts) {
+async function api(path, opts, timeoutMs = 20000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const r = await fetch(path, opts);
+    const r = await fetch(path, { ...(opts || {}), signal: ctrl.signal });
     const ct = r.headers.get("content-type") || "";
     const data = ct.includes("json") ? await r.json() : await r.text();
     return { ok: r.ok, status: r.status, data };
   } catch (e) {
-    return { ok: false, status: 0, data: null };  // server unreachable
+    // Timed out or server unreachable.
+    return { ok: false, status: 0, data: null, aborted: e && e.name === "AbortError" };
+  } finally {
+    clearTimeout(timer);
   }
 }
+// Pull a human error out of an api() result.
+const apiErr = (data) => (data && data.error) ? String(data.error) : "";
 
 let toastTimer = null;
 function _toastEl() {
@@ -189,6 +196,15 @@ function renderLoops() {
 
 function renderAccounts() {
   if (!STATE) return skeleton();
+  if (!(STATE.accounts || []).length) {
+    return `<div class="empty">
+      <div class="mark">${archiveSvg()}</div>
+      <h2>Connect your first inbox</h2>
+      <p>Add a Gmail account and the keeper starts watching for what needs you.</p>
+      <button class="add-account" data-add-account style="margin-top:18px;max-width:260px">
+        <span class="plus">+</span> Add a Gmail account</button>
+    </div>`;
+  }
   const cards = (STATE.accounts || []).map((a) => {
     const undoN = (a.undo_points || []).reduce((n, u) => n + (u.count || 0), 0);
     const bits = [`${a.unread} unread`];
@@ -226,7 +242,7 @@ function renderUndo() {
   }
 
   const intro = `<p class="undo-intro">Nothing is ever deleted. Each point restores a day’s
-    archived threads back to the inbox in one tap.</p>`;
+    set-aside threads back to the inbox in one tap.</p>`;
   const list = items.map((u, i) => `<li class="undo-item">
       <span>
         <span class="what">${u.count} ${u.count === 1 ? "thread" : "threads"} set aside</span>
@@ -446,10 +462,12 @@ function pollJob() {
     if (data.state === "done") {
       stopPoll();
       await loadState();
-      toast("Inbox updated");
+      toast({ add_account: "Account added", run: "Inbox updated",
+              undo: "Restored", refresh: "Updated" }[data.kind] || "Done");
     } else if (data.state === "error") {
       stopPoll();
-      toast("Run failed: " + (data.error || "unknown"));
+      const what = data.kind === "add_account" ? "Couldn’t add account" : "Run failed";
+      toast(what + ": " + (data.error || "unknown"));
       await loadState();
     }
   }, 900);
@@ -470,6 +488,7 @@ async function doUndo(slug, label, btn) {
 let COMPOSER = null;
 
 function openComposer(d) {
+  if (COMPOSER) return;  // one reply at a time; close the open one first
   COMPOSER = { slug: d.slug, thread: d.thread, sender: d.sender,
                subject: d.subject, to_email: d.email, original: "" };
   let el = $(".composer", panelEl);
@@ -509,10 +528,12 @@ function openComposer(d) {
       e.preventDefault();
       const cmd = b.dataset.cmd;
       if (cmd === "createLink") {
-        const url = prompt("Link URL:");
-        if (url) document.execCommand("createLink", false, url);
-      } else {
-        document.execCommand(cmd, false, null);
+        let url = (prompt("Link URL:") || "").trim();
+        if (!url) return;
+        if (!/^(https?:|mailto:)/i.test(url)) url = "https://" + url;
+        if (!document.execCommand("createLink", false, url)) toast("Select the text to link first");
+      } else if (!document.execCommand(cmd, false, null)) {
+        toast("Couldn’t apply that here");
       }
       syncFmtState(el);
     };
@@ -532,6 +553,28 @@ function textToHtml(t) {
   return esc(t).split(/\n\n+/).map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("");
 }
 
+// Structure-aware plain-text from the rich editor (keeps link URLs + list markers,
+// unlike innerText which drops hrefs and is layout-dependent).
+function editorText(el) {
+  const walk = (node) => {
+    let out = "";
+    node.childNodes.forEach((n) => {
+      if (n.nodeType === 3) { out += n.nodeValue; return; }
+      if (n.nodeType !== 1) return;
+      const tag = n.tagName.toLowerCase();
+      if (tag === "br") out += "\n";
+      else if (tag === "a") {
+        const t = n.textContent, h = n.getAttribute("href") || "";
+        out += (h && h !== t) ? `${t} (${h})` : t;
+      } else if (tag === "li") out += "- " + walk(n) + "\n";
+      else if (["p", "div", "ul", "ol"].includes(tag)) out += walk(n) + "\n";
+      else out += walk(n);
+    });
+    return out;
+  };
+  return walk(el).replace(/\n{3,}/g, "\n\n").trim();
+}
+
 function closeComposer() {
   const el = $(".composer", panelEl);
   if (el) { el.classList.remove("show"); setTimeout(() => el.remove(), 200); }
@@ -546,12 +589,19 @@ async function generateDraft(isRegen) {
   const send = $("[data-c-send]", el), regen = $("[data-c-regen]", el);
   editor.hidden = true; load.hidden = false; send.disabled = true; regen.disabled = true;
   const steer = isRegen ? (prompt("Adjust the draft (e.g. ‘shorter’, ‘warmer’, ‘decline politely’):") || "") : "";
-  const { ok, data } = await api("/api/draft", {
+  const { ok, data, aborted } = await api("/api/draft", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ slug: COMPOSER.slug, thread_id: COMPOSER.thread, steer }),
-  });
+  }, 135000);
   load.hidden = true;
-  if (!ok || !data || !data.body) { toast("Couldn’t draft a reply"); closeComposer(); return; }
+  if (!ok || !data || !data.body) {
+    toast(aborted ? "Drafting took too long, try Regenerate"
+          : (apiErr(data) ? "Couldn’t draft: " + apiErr(data) : "Couldn’t draft a reply"));
+    // Leave the composer open and usable: write or Regenerate.
+    if (!ta.innerHTML) ta.innerHTML = "";
+    editor.hidden = false; send.disabled = false; regen.disabled = false;
+    return;
+  }
   COMPOSER.original = data.body;
   COMPOSER.to_email = data.to_email || COMPOSER.to_email;
   COMPOSER.subject = data.subject || COMPOSER.subject;
@@ -564,17 +614,22 @@ async function sendDraft() {
   const el = $(".composer", panelEl);
   if (!el || !COMPOSER) return;
   const ta = $(".composer-text", el), send = $("[data-c-send]", el);
-  const text = (ta.innerText || "").trim();
+  if (send.disabled) return;                 // guard against double-fire
+  const text = editorText(ta);
   const html = ta.innerHTML;
   if (!text) { toast("Write a reply first"); return; }
   send.disabled = true; send.textContent = "Sending…";
-  const { ok } = await api("/api/draft/send", {
+  const { ok, data, aborted } = await api("/api/draft/send", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ slug: COMPOSER.slug, thread_id: COMPOSER.thread,
       to_email: COMPOSER.to_email, subject: COMPOSER.subject,
       body: text, html, original: COMPOSER.original }),
-  });
-  if (!ok) { toast("Couldn’t send"); send.disabled = false; send.textContent = "Send reply"; return; }
+  }, 60000);
+  if (!ok) {
+    toast(aborted ? "Send timed out, check Gmail before retrying"
+          : (apiErr(data) ? "Couldn’t send: " + apiErr(data) : "Couldn’t send"));
+    send.disabled = false; send.textContent = "Send reply"; return;
+  }
   dropLoop(COMPOSER.slug, COMPOSER.thread);
   closeComposer();
   if (VIEW === "loops") render();

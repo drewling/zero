@@ -318,7 +318,6 @@ html.in-app .panel {
 }
 .row .meta { text-align: right; white-space: nowrap; padding-top: 1px; }
 .row .when { font-size: 11px; color: var(--ink-4); font-variant-numeric: tabular-nums; }
-.row .tag { font-size: 10px; color: var(--ink-4); margin-top: 3px; display: block; }
 
 /* ---- accounts view ---------------------------------------------------- */
 .acct-list { list-style: none; padding-top: 10px; }
