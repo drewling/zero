@@ -2,10 +2,8 @@
 """Local HTTP server behind the inbox-keeper menu-bar panel.
 
 Stdlib only (no dependencies) so the open-source install stays trivial. Binds to
-127.0.0.1, serves the static panel, and exposes a small JSON API:
+127.0.0.1 and exposes a small JSON API:
 
-  GET  /                 -> panel/index.html
-  GET  /<asset>          -> static panel assets (css/js)
   GET  /api/state        -> app/state.json (instant; built by dashboard_state.py)
   POST /api/refresh      -> rebuild state in the background, returns {job}
   POST /api/run          -> run the keeper (open-loop sweep), then rebuild state
@@ -24,17 +22,12 @@ from urllib.parse import urlparse, parse_qs
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-PANEL_DIR = os.path.join(ROOT, "app", "panel")
 STATE_PATH = os.path.join(ROOT, "app", "state.json")
 POLICY_PATH = os.path.join(ROOT, "keep-policy.md")
 ACCOUNTS_PATH = os.path.join(ROOT, "accounts.json")
 CATEGORIES_PATH = os.path.join(ROOT, "categories.json")
 PYTHON = sys.executable or "python3"
 CLAUDE = os.environ.get("CLAUDE_BIN", "claude")
-
-_ASSET_TYPES = {".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8",
-                ".js": "text/javascript; charset=utf-8", ".svg": "image/svg+xml",
-                ".png": "image/png", ".woff2": "font/woff2", ".json": "application/json"}
 
 # Default category appearance — single source of truth; used in _DEFAULT_CATEGORIES
 # and the PUT /api/categories handler.
@@ -733,13 +726,8 @@ def _add_account(payload):
                 shutil.rmtree(created_dir, ignore_errors=True)
 
 
-_DEFAULT_CATEGORIES = [
-    {"name": "Needs reply",      "description": "Someone is waiting on a direct response from me.", "color": "#4285F4", "emoji": "✉️"},
-    {"name": "Waiting on others","description": "I'm blocked on someone else; tracking, no action yet.", "color": "#AB47BC", "emoji": "⏳"},
-    {"name": "To schedule",      "description": "Needs a meeting, call, or calendar action.",       "color": "#0F9D58", "emoji": "📅"},
-    {"name": "Read later",       "description": "Worth reading but not urgent or action-bearing.",  "color": "#00838F", "emoji": "🔖"},
-    {"name": "Action required",  "description": "A task or deadline I personally need to handle.",  "color": "#DB4437", "emoji": "⚡"},
-]
+sys.path.insert(0, HERE)
+from dashboard_state import _DEFAULT_CATEGORIES  # noqa: E402 — canonical definition lives there
 
 
 def _read_categories():
@@ -828,19 +816,6 @@ class Handler(BaseHTTPRequestHandler):
         except Exception:
             return {}
 
-    def _serve_static(self, path):
-        rel = "index.html" if path in ("/", "") else path.lstrip("/")
-        full = os.path.normpath(os.path.join(PANEL_DIR, rel))
-        # Guard against sibling-prefix escapes (e.g. /../panelX): require the
-        # resolved path to live strictly inside PANEL_DIR.
-        if (full != PANEL_DIR and not full.startswith(PANEL_DIR + os.sep)) \
-                or not os.path.isfile(full):
-            return self._send(404, {"error": "not found"})
-        ext = os.path.splitext(full)[1]
-        with open(full, "rb") as f:
-            data = f.read()
-        self._send(200, data, _ASSET_TYPES.get(ext, "application/octet-stream"))
-
     def do_GET(self):
         parsed = urlparse(self.path)
         p = parsed.path
@@ -870,7 +845,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"policy": text})
         if p == "/api/categories":
             return self._send(200, {"categories": _read_categories()})
-        return self._serve_static(p)
+        return self._send(404, {"error": "not found"})
 
     def do_POST(self):
         if not self._is_local_request():
@@ -992,7 +967,7 @@ def main():
             # a skeleton until /api/refresh succeeds; make the cause visible in logs.
             print(f"warning: initial state build failed: {exc}", file=sys.stderr)
     httpd = ThreadingHTTPServer((host, port), Handler)
-    print(f"inbox-keeper panel on http://{host}:{port}")
+    print(f"inbox-keeper API on http://{host}:{port}")
     sys.stdout.flush()
     try:
         httpd.serve_forever()

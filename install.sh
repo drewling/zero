@@ -77,10 +77,7 @@ cat <<'NEXT'
 
 1. Edit accounts.json with your real gws config_dir paths (if you haven't already).
 
-2. Launch the web panel:
-     ./bin/inbox-keeper dashboard
-
-   Or open the native menu-bar app (requires the build step above):
+2. Open the native menu-bar app (requires the build step above):
      ./bin/inbox-keeper app
 
 3. Run the keeper across all accounts now:

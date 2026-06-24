@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build inbox-keeper.app — a tiny native menu-bar shell around the web panel.
+# Build inbox-keeper.app — a native SwiftUI menu-bar app.
 # No Xcode project needed: compiles main.swift with swiftc and assembles a
 # minimal .app bundle, then copies a runtime payload into Resources/.
 # Output: macapp/build/inbox-keeper.app
@@ -46,10 +46,6 @@ mkdir -p "$PAYLOAD"
 mkdir -p "$PAYLOAD/lib"
 rsync -a --include='*/' --include='*.py' --include='*.sh' --exclude='*' \
   "$REPO/lib/" "$PAYLOAD/lib/"
-
-# --- app/panel/ only (web fallback UI) ---
-mkdir -p "$PAYLOAD/app"
-rsync -a "$REPO/app/panel/" "$PAYLOAD/app/panel/"
 
 # --- bin/ ---
 rsync -a "$REPO/bin/" "$PAYLOAD/bin/"

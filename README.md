@@ -62,9 +62,9 @@ menu-bar app (SwiftUI)  -->  local server (keeper_server.py, 127.0.0.1)
 ```
 
 The Swift shell is deliberately thin: it starts the local Python server and
-shows the web panel. All judgment runs in Python with Gmail reached via the
-`gws` CLI. The panel reads a cached state file so it opens instantly; it never
-talks to Gmail directly.
+renders a native SwiftUI panel against its JSON API. All judgment runs in Python
+with Gmail reached via the `gws` CLI. The panel reads a cached state file so it
+opens instantly; it never talks to Gmail directly.
 
 ## Why you can trust it
 

@@ -11,23 +11,6 @@ SUBCOMMAND="${1:-}"
 
 case "$SUBCOMMAND" in
 
-  dashboard)
-    export GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file
-
-    # Start keeper_server.py in the background if port 8765 is not already serving.
-    if ! curl -s http://127.0.0.1:8765/ >/dev/null 2>&1; then
-      echo "Starting keeper server..."
-      "$MAIL_TRIAGE_PYTHON" "$MAIL_TRIAGE_LIB/keeper_server.py" &
-      # Give it a moment to start.
-      sleep 1
-    else
-      echo "Keeper server already running."
-    fi
-
-    echo "Opening http://127.0.0.1:8765"
-    open http://127.0.0.1:8765
-    ;;
-
   app)
     APP_BUNDLE="$MAIL_TRIAGE_DIR/macapp/build/inbox-keeper.app"
     if [ ! -d "$APP_BUNDLE" ]; then
@@ -129,12 +112,11 @@ inbox-keeper — keep every inbox at "only what needs you"
 
 Usage:
   inbox-keeper app           Build (if needed) and open the native menu-bar app
-  inbox-keeper dashboard     Start the web panel and open it in your browser
   inbox-keeper run           Run the keeper across all accounts, then refresh state
-  inbox-keeper state         Refresh the panel's data without opening anything
+  inbox-keeper state         Refresh the app's cached state without opening anything
   inbox-keeper schedule [H]  Run the keeper automatically every morning (hour H, default 7)
   inbox-keeper unschedule    Remove the daily schedule
-  inbox-keeper stop          Stop the local panel server
+  inbox-keeper stop          Stop the local API server
 
 USAGE
     ;;

@@ -44,7 +44,7 @@ server directly:
 python3 lib/keeper_server.py
 ```
 
-Then open the panel in a browser at the address it prints (bound to 127.0.0.1).
+The server binds to 127.0.0.1 and serves the JSON API the native app uses.
 Use `./bin/inbox-keeper run` to trigger a sweep from the command line, or `POST
 /api/run` to the server.
 
@@ -78,9 +78,8 @@ macapp/                SwiftUI menu-bar app (thin shell)
   build.sh             Build script (produces .app)
   make-dmg.sh          DMG packaging
 
-app/                   Web panel (HTML/CSS/JS, no framework, no build step)
-  panel/               Static assets served by keeper_server.py
-  state.json           Cached panel data (gitignored, written at runtime)
+app/
+  state.json           Cached state (gitignored, written at runtime by dashboard_state.py)
 
 keep-policy.md         The plain-English keep policy (the only user config)
 accounts.json          Per-account registry (gitignored, from accounts.json.example)
@@ -112,11 +111,6 @@ voice; do not introduce a different style in the same file.
   the logic already lives), do it there. Only put things in Swift that genuinely
   need native macOS integration.
 - Match the SwiftUI patterns already in `Sources/`.
-
-**Web panel (app/panel/):**
-
-- No build step, no framework, no bundler. Plain HTML, CSS, and vanilla JS.
-- Keep it small. The panel should open instantly.
 
 **General:**
 
