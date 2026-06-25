@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-06-25
+
+A depth release: the learning loop actually closes, labeling reaches your archive, the engine is provider-agnostic, the panel seam is gone, and the whole surface is more consistently glassy. The product landing page is rebuilt and live.
+
+### Added
+
+- **Works with the AI engine you already use.** The engine is now a data-driven provider abstraction: Claude runs today, and Codex, Hermes, or any other agent CLI is used automatically if it's installed and selected. Adding a new engine is a single data entry, not a code change. Unavailable engines are clearly shown as "Not detected" and can't be selected into a broken state.
+- **Labeling now reaches your archive.** A new "also label archived mail from the last N days" setting (`label_archived_days`, default 30) sorts recently-archived mail into your categories too, so there's always plenty labelled, not just the inbox. Off, 7, 30, 90, or 365 days. Idempotent: already-labelled threads are skipped.
+- **Beautiful API documentation.** The local engine's JSON API is now documented with a Scalar reference site (`docs/api/`), framed clearly as a local, private, contributor-facing API. Added `docs/MAINTENANCE.md` so the docs, settings, and release process stay in sync across future work.
+
+### Changed
+
+- **Auto-learned preferences actually close the loop.** zero now also learns "archive more like this" from the senders you repeatedly dismiss (recurring senders only, so one-offs don't become noise), and voice learning refreshes right after you send an edited draft instead of waiting for the next run. Learned preferences feed both the keep/archive judgement and the draft voice.
+- **Settings redesigned for calm.** The "Learned from your actions" section breathes properly (optically aligned rows, comfortable empty state, clean multi-group headings); Daily routine is now cohesive cards instead of card-plus-loose-rows; the category emoji/colour token reads as two clear taps; the Intelligence engine rows are balanced and the "connected" note is grouped.
+- **Label cleanup is reassurance-first.** The cleanup sheet leads with "only labels are removed, your mail is never deleted", distinguishes zero-created labels from your own, and reports partial results ("Removed N, M couldn't be removed") instead of a blanket success.
+- **More consistently glassy.** Removed a double-glass layer in the segmented nav, moved the emoji/colour popovers and the "sent" confirmation onto real material, and introduced a named corner-radius system (`Radius`) for concentric, inset-rounded corners throughout.
+- **Landing page rebuilt and published.** A sharper "Three questions it asks for you" how-it-works (the questions the agent answers on your behalf), a before/after inbox visual, a heavyweight standalone trust section, and tighter copy. It is live and auto-deploys.
+
+### Fixed
+
+- **The panel pointer seam is gone.** The little arrow at the top of the panel now shares the header's exact graphite material, with no seam or tint break where it meets the body. (It was rendering with a different, lighter glass than the header.)
+- **Fewer transient inbox errors.** Calls to the Google Workspace CLI now retry rate-limit, 5xx, and network blips with exponential backoff, so a momentary hiccup no longer surfaces as "HTTP request failed". Category labeling now counts and reports failures instead of swallowing them silently.
+
+### Maintenance
+
+- Claude is no longer added as a git co-author (set globally).
+- Genericized a leftover personal email address in a design mock.
+
 ## [1.5.1] - 2026-06-25
 
 Polish and connect-flow fixes from hands-on testing of 1.5.0.
@@ -134,7 +162,8 @@ Initial public release.
 - Native macOS 26 Liquid Glass menu-bar app with a popover panel.
 - `.dmg` installer with guided onboarding for first-time setup.
 
-[Unreleased]: https://github.com/drewling/zero/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/drewling/zero/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/drewling/zero/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/drewling/zero/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/drewling/zero/compare/v1.4.1...v1.5.0
 [1.1.0]: https://github.com/drewling/zero/compare/v1.0.0...v1.1.0

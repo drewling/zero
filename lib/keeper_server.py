@@ -237,8 +237,12 @@ def _run_keeper(payload):
 
 def _run_populate(payload):
     """Label-only backfill: sort the last N days of inbox mail into category labels.
-    One account (slug) or all. Never archives — purely additive labeling."""
+    One account (slug) or all. Never archives — purely additive labeling.
+    Also labels recently-archived mail if label_archived_days > 0."""
+    settings = _read_settings()
     window = max(1, min(int(payload.get("window_days", 30)), 365))
+    archive_days = int(payload.get("archive_days", settings.get("label_archived_days", 30)))
+    archive_days = max(0, min(archive_days, 365))
     slug = payload.get("slug")
     accts = [_acct(slug)] if slug else _load_accounts()
     failures, labeled = [], 0
@@ -247,7 +251,9 @@ def _run_populate(payload):
         email = acct.get("email", acct.get("slug", cfg))
         _set_job_message(f"Sorting {email} ({i}/{len(accts)})…")
         r = subprocess.run([PYTHON, os.path.join(HERE, "review_open_loops.py"),
-                            cfg, email, "--label-only", "--window-days", str(window)],
+                            cfg, email, "--label-only",
+                            "--window-days", str(window),
+                            "--archive-days", str(archive_days)],
                            env=_gws_env(), capture_output=True, text=True, timeout=900)
         if r.returncode != 0:
             failures.append(f"{email}: {(r.stderr or r.stdout or '').strip()[-200:]}")
@@ -731,6 +737,18 @@ def _send_draft(payload):
     if original and original.strip() != final.strip():
         learning.record({"type": "draft_edit", "thread_id": tid,
                          "original_snippet": original[:200], "final": final[:400]})
+        # Trigger voice-learning rollup best-effort, off the request thread so the send
+        # returns immediately. A daemon thread running subprocess.run() reaps the child
+        # itself (the long-lived server installs no SIGCHLD handler, so a bare Popen would
+        # leak a zombie per send); the thread is fire-and-forget and never blocks the send.
+        def _learn_bg():
+            try:
+                subprocess.run([PYTHON, os.path.join(HERE, "learn.py")],
+                               env=_gws_env(), stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL, timeout=180)
+            except Exception:
+                pass
+        threading.Thread(target=_learn_bg, daemon=True).start()
     _drop_loop(slug, tid)  # replying resolves the loop
     return {"ok": True, "sent": tid}
 
@@ -1058,6 +1076,8 @@ _DEFAULT_SETTINGS = {
     # Notifications & automation
     "notify_on_run": True,
     "auto_draft": False,
+    # Labeling window for archived (non-inbox) mail; 0 = off.
+    "label_archived_days": 30,
     # LLM provider (see lib/llm.py)
     "provider": "claude",
 }
@@ -1222,7 +1242,8 @@ class Handler(BaseHTTPRequestHandler):
             return sfs in ("same-origin", "none")
         origin = self.headers.get("Origin")
         if origin:
-            return origin in (f"http://127.0.0.1:{PORT}", f"http://localhost:{PORT}")
+            port = self.server.server_address[1]
+            return origin in (f"http://127.0.0.1:{port}", f"http://localhost:{port}")
         return True
 
     def _body_json(self):
@@ -1468,6 +1489,13 @@ class Handler(BaseHTTPRequestHandler):
                     errors.append("auto_draft must be a bool")
                 else:
                     validated["auto_draft"] = ad
+            # label_archived_days: 0 (off) to 365
+            lad = payload.get("label_archived_days")
+            if lad is not None:
+                if not isinstance(lad, int) or isinstance(lad, bool) or not (0 <= lad <= 365):
+                    errors.append("label_archived_days must be an int 0–365")
+                else:
+                    validated["label_archived_days"] = lad
             # provider: must be a known provider name AND currently available
             prov = payload.get("provider")
             if prov is not None:

@@ -159,6 +159,8 @@ When unsure, the policy keeps the thread. Everything archived is one tap away.
 For the full step-by-step (including multi-account auth and CLI equivalents), see
 [docs/SETUP.md](docs/SETUP.md).
 
+> **Contributor resources:** [Architecture](docs/ARCHITECTURE.md) · [API reference](docs/api/) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+
 ### Build from source
 
 Requires: Xcode command-line tools (`xcode-select --install`), macOS 26 (Tahoe, Apple Silicon).

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>zero API reference</title>
+  <style>
+    /* Local-only callout banner above the Scalar frame */
+    #local-notice {
+      background: #1a1f2e;
+      border-bottom: 1px solid #2a3148;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      color: #8b9dc3;
+    }
+    #local-notice .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4285F4;
+      flex-shrink: 0;
+      box-shadow: 0 0 6px #4285F4;
+    }
+    #local-notice strong { color: #c8d5f0; }
+    #local-notice code {
+      background: #252b3d;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 12px;
+      color: #7ec8e3;
+    }
+    html, body { margin: 0; padding: 0; height: 100%; background: #111318; }
+    #app { height: calc(100vh - 37px); }
+  </style>
+</head>
+<body>
+  <div id="local-notice">
+    <div class="dot"></div>
+    <span>
+      <strong>Local-only API.</strong>
+      This server runs on <code>127.0.0.1:8765</code> on your Mac and is not reachable from the network.
+      Start it with <code>python3 lib/keeper_server.py</code> (or launch <strong>zero.app</strong>).
+    </span>
+  </div>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.28.5"></script>
+  <script>
+    Scalar.createApiReference('#app', {
+      url: './openapi.json',
+      darkMode: true,
+      hideTestRequestButton: true,
+      layout: 'modern',
+      baseServerURL: 'http://127.0.0.1:8765',
+      metaData: {
+        title: 'zero API reference',
+        description: 'Local engine API for the zero macOS mail-triage app. Runs on 127.0.0.1:8765 only.',
+        ogTitle: 'zero local API',
+        ogDescription: 'Contributor-facing API reference for the zero menu-bar app engine.',
+      },
+      theme: 'kepler',
+      customCss: `
+        :root {
+          --scalar-color-1: #c8d5f0;
+          --scalar-color-2: #8b9dc3;
+          --scalar-color-3: #5a6a8a;
+          --scalar-background-1: #111318;
+          --scalar-background-2: #161b26;
+          --scalar-background-3: #1e2436;
+          --scalar-border-color: #2a3148;
+          --scalar-color-accent: #4285F4;
+          --scalar-sidebar-background-1: #0e1018;
+        }
+      `,
+    });
+  </script>
+</body>
+</html>

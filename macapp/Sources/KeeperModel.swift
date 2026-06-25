@@ -84,6 +84,7 @@ final class KeeperModel: ObservableObject {
     @Published var notifyOnRun: Bool = true
     @Published var autoDraft: Bool = false
     @Published var provider: String = "claude"
+    @Published var labelArchivedDays: Int = 30
     // Provider availability — fetched alongside settings on panel open.
     @Published var providerStatus: ProviderStatus?
     // First-run backlog offer: shown once after the first inbox connects.
@@ -213,6 +214,7 @@ final class KeeperModel: ObservableObject {
         notifyOnRun = s.notifyOnRun
         autoDraft = s.autoDraft
         provider = s.provider
+        labelArchivedDays = s.labelArchivedDays
     }
 
     /// Persist the grace window; honored by the next keeper run.
@@ -253,6 +255,14 @@ final class KeeperModel: ObservableObject {
         Task {
             do { try await api.saveSettings(["auto_draft": v]) }
             catch { toast("Couldn't save draft preference") }
+        }
+    }
+
+    func saveLabelArchivedDays(_ n: Int) {
+        labelArchivedDays = n
+        Task {
+            do { try await api.saveSettings(["label_archived_days": n]) }
+            catch { toast("Couldn't save label setting") }
         }
     }
 

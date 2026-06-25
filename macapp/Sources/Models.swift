@@ -238,9 +238,12 @@ struct Settings: Decodable {
     var notifyOnRun: Bool = true
     var autoDraft: Bool = false
     var provider: String = "claude"
+    /// Also label the last N days of archived mail with category labels (0 = off).
+    var labelArchivedDays: Int = 30
 
     enum K: String, CodingKey {
         case graceDays, scheduleHour, scheduleMinute, scheduleDays, notifyOnRun, autoDraft, provider
+        case labelArchivedDays
     }
     init() {}
     init(from d: Decoder) throws {
@@ -252,6 +255,7 @@ struct Settings: Decodable {
         notifyOnRun = try c.decodeIfPresent(Bool.self, forKey: .notifyOnRun) ?? true
         autoDraft = try c.decodeIfPresent(Bool.self, forKey: .autoDraft) ?? false
         provider = try c.decodeIfPresent(String.self, forKey: .provider) ?? "claude"
+        labelArchivedDays = try c.decodeIfPresent(Int.self, forKey: .labelArchivedDays) ?? 30
     }
 }
 

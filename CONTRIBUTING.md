@@ -4,6 +4,8 @@ Thanks for your interest. zero is a focused tool with a clear scope:
 keep your inbox at "only what still needs you" and never lose anything. The best
 contributions stay true to that one job.
 
+> See also: [Architecture](docs/ARCHITECTURE.md) · [API reference](docs/api/) · [Maintenance checklist](docs/MAINTENANCE.md) · [Security](SECURITY.md)
+
 ## License note
 
 zero is published under the [PolyForm Noncommercial 1.0.0](LICENSE)
@@ -133,24 +135,48 @@ voice; do not introduce a different style in the same file.
 4. The core invariant is that nothing is ever deleted and every archive is
    reversible. Any PR that risks that property will not be merged.
 
+## API docs
+
+The `docs/api/openapi.json` spec is hand-written (no codegen). When you change an
+endpoint — path, parameters, request body, response shape — update it manually. Validate:
+
+```bash
+python3 -m json.tool docs/api/openapi.json >/dev/null && echo OK
+```
+
+Preview the Scalar render locally:
+
+```bash
+python3 -m http.server 8080 --directory docs/api
+open http://localhost:8080
+```
+
+See `docs/MAINTENANCE.md` for the full list of what to keep in sync on each change.
+
 ## Releasing
 
 > This section is for maintainers.
 
-1. Bump the version in any relevant source files (Swift `CFBundleShortVersionString`, etc.).
-2. Add a `## [X.Y.Z] - YYYY-MM-DD` section to `CHANGELOG.md` (following Keep a Changelog 1.1.0).
+Before running `bin/release`:
+
+1. Bump the version in `macapp/Sources/zero-Info.plist` (`CFBundleShortVersionString`).
+2. Add a `## [X.Y.Z] - YYYY-MM-DD` section to `CHANGELOG.md` (Keep a Changelog 1.1.0).
    Move items out of `## [Unreleased]` into the new section.
-3. Commit those changes to `master` and push.
+3. Commit and **push `master`** (the script only pushes the tag, not the branch):
+   ```bash
+   git push origin master
+   ```
 4. Run the release script:
    ```bash
    bin/release X.Y.Z
    ```
-   The script will verify the working tree is clean, confirm the changelog section exists, build the
-   `.app` and `.dmg`, create and push the git tag, then publish a GitHub release with the extracted
-   changelog notes and the `.dmg` attached.
+   The script verifies the working tree is clean on `master`, confirms the changelog
+   section exists, builds the `.app` and `.dmg`, creates and pushes the `vX.Y.Z` tag,
+   publishes a GitHub release with the changelog notes and `.dmg` attached, then
+   installs the new app to `/Applications/zero.app`.
 
-**Known caveat — unsigned/un-notarized binary.** The `.dmg` is not signed or notarized. Users who
-download it must right-click the app and choose "Open" on first launch to bypass Gatekeeper.
+**Known caveat — unsigned/un-notarized binary.** The `.dmg` is not signed or notarized.
+Users must right-click → Open on first launch to bypass Gatekeeper.
 
 ## Reporting bugs
 

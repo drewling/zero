@@ -1,0 +1,1166 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "zero local engine API",
+    "version": "1.5.1",
+    "description": "A private, contributor-facing JSON API served by `lib/keeper_server.py` on `127.0.0.1:8765`.\n\nThis server runs on — and only on — the Mac running the zero app. It is never reachable from the network. The Swift menu-bar app is the primary client, but contributors can also call it directly with `curl` or any HTTP client while `python3 lib/keeper_server.py` is running.\n\n**Cross-site protection.** POST and PUT endpoints reject requests whose `Origin` header is set to anything other than `http://127.0.0.1:8765` (or `http://localhost:8765`). `curl` and the app WebView send no `Origin` and are always accepted.\n\n**One background job at a time.** Async endpoints return `202 {job, kind}` and start a background job. Only one job runs at a time; a second request while one is active returns `409`. Poll `GET /api/job` for progress.",
+    "contact": {
+      "name": "zero project",
+      "url": "https://github.com/drewling/zero"
+    },
+    "license": {
+      "name": "PolyForm Noncommercial 1.0.0",
+      "url": "https://polyformproject.org/licenses/noncommercial/1.0.0/"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8765",
+      "description": "The local engine that powers the zero macOS app; only reachable on the Mac running zero, never remotely."
+    }
+  ],
+  "tags": [
+    { "name": "State",       "description": "Cached inbox state — open loops, accounts, totals." },
+    { "name": "Triage",      "description": "Run the keeper, dismiss individual loops, undo archives." },
+    { "name": "Drafts",      "description": "Generate and send reply drafts in the user's voice." },
+    { "name": "Accounts",    "description": "Add Gmail accounts and cancel in-progress sign-in." },
+    { "name": "Labels",      "description": "List and delete Gmail labels for an account." },
+    { "name": "Settings",    "description": "Read and write user preferences (grace window, schedule, provider, notifications)." },
+    { "name": "Policy",      "description": "Read and write the plain-English keep policy." },
+    { "name": "Categories",  "description": "Read and write email category definitions." },
+    { "name": "Credentials", "description": "Check and store the Google OAuth client credentials." },
+    { "name": "Providers",   "description": "Query which LLM providers are available and active." }
+  ],
+  "paths": {
+    "/api/state": {
+      "get": {
+        "summary": "Get cached inbox state",
+        "operationId": "getState",
+        "tags": ["State"],
+        "description": "Returns the contents of `app/state.json` — the last-built snapshot of all accounts, their open loops, counts, and undo points. Returns immediately from the cached file; never blocks on Gmail.\n\nWhen no state file exists yet (fresh install or deleted) the response includes `\"needs_build\": true`. While a background state rebuild is running the response includes `\"building\": true`.",
+        "responses": {
+          "200": {
+            "description": "Current state (may be stale if a job is running).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/State" },
+                "examples": {
+                  "normal": {
+                    "summary": "Typical response with one account",
+                    "value": {
+                      "ok": true,
+                      "total_loops": 3,
+                      "building": false,
+                      "accounts": [
+                        {
+                          "slug": "work",
+                          "email": "me@company.com",
+                          "ok": true,
+                          "inbox_threads": 3,
+                          "unread": 1,
+                          "loops": [
+                            {
+                              "thread_id": "18f1234abcd",
+                              "sender": "Jane Smith",
+                              "sender_email": "jane@example.com",
+                              "subject": "Re: Q3 proposal",
+                              "snippet": "Sounds good — can we jump on a call?",
+                              "epoch": 1719273600,
+                              "account_slug": "work"
+                            }
+                          ],
+                          "undo_points": [
+                            { "label": "zero/undo/2026-06-24", "date": "2026-06-24", "count": 14 }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "no_state": {
+                    "summary": "No state file yet",
+                    "value": {
+                      "ok": false,
+                      "accounts": [],
+                      "total_loops": 0,
+                      "needs_build": true,
+                      "building": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/job": {
+      "get": {
+        "summary": "Get background job status",
+        "operationId": "getJob",
+        "tags": ["State"],
+        "description": "Returns the current state of the single background job slot. Poll this while a job is `running`. The `message` field carries human-readable progress text.",
+        "responses": {
+          "200": {
+            "description": "Job status.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Job" },
+                "examples": {
+                  "running": {
+                    "value": {
+                      "id": 3,
+                      "kind": "run",
+                      "state": "running",
+                      "started": 1719273600,
+                      "finished": 0,
+                      "message": "Reviewing me@company.com (1/2)…",
+                      "error": null,
+                      "auth_url": null
+                    }
+                  },
+                  "done": {
+                    "value": {
+                      "id": 3,
+                      "kind": "run",
+                      "state": "done",
+                      "started": 1719273600,
+                      "finished": 1719273780,
+                      "message": "Set aside 12, 3 still need you",
+                      "error": null,
+                      "auth_url": null
+                    }
+                  },
+                  "idle": {
+                    "value": {
+                      "id": 0,
+                      "kind": null,
+                      "state": "idle",
+                      "started": 0,
+                      "finished": 0,
+                      "message": "",
+                      "error": null,
+                      "auth_url": null
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/refresh": {
+      "post": {
+        "summary": "Rebuild state in background",
+        "operationId": "postRefresh",
+        "tags": ["State"],
+        "description": "Triggers a background call to `dashboard_state.py` which re-reads Gmail and writes a fresh `app/state.json`. Returns immediately with a job id; poll `/api/job` for completion.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "202": { "$ref": "#/components/responses/JobStarted" },
+          "409": { "$ref": "#/components/responses/JobBusy" }
+        }
+      }
+    },
+    "/api/run": {
+      "post": {
+        "summary": "Run the keeper (full triage sweep)",
+        "operationId": "postRun",
+        "tags": ["Triage"],
+        "description": "Runs the open-loop sweep across all enabled accounts: for each thread the LLM judges it against `keep-policy.md` and archives everything that no longer needs the user. Archives are reversible (dated recovery label, nothing deleted). After the sweep, rebuilds state and optionally posts a macOS notification.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "grace_days": {
+                    "type": "integer",
+                    "description": "Protect mail newer than this many days from archiving. Overrides the `grace_days` setting for this run only. Default: the persisted `grace_days` setting (default 0).",
+                    "minimum": 0,
+                    "maximum": 90,
+                    "default": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": { "$ref": "#/components/responses/JobStarted" },
+          "409": { "$ref": "#/components/responses/JobBusy" }
+        }
+      }
+    },
+    "/api/dismiss": {
+      "post": {
+        "summary": "Set aside (dismiss) one open loop",
+        "operationId": "postDismiss",
+        "tags": ["Triage"],
+        "description": "Reversibly archives a single thread (removes `INBOX`, adds a dated recovery label) and records a learning signal that the user chose to archive without replying. Returns synchronously so the panel can remove the row immediately.\n\nTo undo a just-dismissed thread, call again with `undo: true` and pass back the `label` from the dismiss response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["slug", "thread_id"],
+                "properties": {
+                  "slug": {
+                    "type": "string",
+                    "description": "Account slug (from `accounts.json`)."
+                  },
+                  "thread_id": {
+                    "type": "string",
+                    "description": "Gmail thread id."
+                  },
+                  "undo": {
+                    "type": "boolean",
+                    "description": "If true, restore the thread to the inbox (undo a prior dismiss). Requires `label`.",
+                    "default": false
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Recovery label name from the original dismiss response. Required when `undo: true`."
+                  },
+                  "sender": { "type": "string", "description": "Display name of sender (for learning signal)." },
+                  "sender_email": { "type": "string", "description": "Email of sender (for learning signal)." },
+                  "subject": { "type": "string", "description": "Thread subject (for learning signal)." },
+                  "snippet": { "type": "string", "description": "Message snippet (for learning signal)." },
+                  "epoch": { "type": "integer", "description": "Message timestamp as Unix epoch." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thread archived (or restored).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "title": "Dismissed",
+                      "type": "object",
+                      "properties": {
+                        "ok": { "type": "boolean" },
+                        "label": { "type": "string", "description": "Dated recovery label name, e.g. `zero/undo/2026-06-24`." },
+                        "thread_id": { "type": "string" }
+                      }
+                    },
+                    {
+                      "title": "Restored",
+                      "type": "object",
+                      "properties": {
+                        "ok": { "type": "boolean" },
+                        "restored": { "type": "string", "description": "Thread id that was restored." }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/undo": {
+      "post": {
+        "summary": "Restore a day's archived mail",
+        "operationId": "postUndo",
+        "tags": ["Triage"],
+        "description": "Moves all messages carrying a dated recovery label (e.g. `zero/undo/2026-06-24`) back to the inbox. This is the bulk Undo shown in the Undo tab. Runs in the background; rebuilds state on completion.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["slug", "label"],
+                "properties": {
+                  "slug": { "type": "string", "description": "Account slug." },
+                  "label": { "type": "string", "description": "Exact recovery label name (e.g. `zero/undo/2026-06-24`)." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": { "$ref": "#/components/responses/JobStarted" },
+          "409": { "$ref": "#/components/responses/JobBusy" }
+        }
+      }
+    },
+    "/api/archive-before": {
+      "post": {
+        "summary": "Reversibly archive all inbox mail before a date",
+        "operationId": "postArchiveBefore",
+        "tags": ["Triage"],
+        "description": "Archives every inbox thread older than `before` (date in `YYYY/MM/DD` format), excluding high-stakes mail. Runs in the background. Recovery labels appear in the Undo view.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["before"],
+                "properties": {
+                  "before": {
+                    "type": "string",
+                    "pattern": "^\\d{4}/\\d{2}/\\d{2}$",
+                    "description": "Archive threads older than this date (exclusive). Format: `YYYY/MM/DD`.",
+                    "example": "2026/01/01"
+                  },
+                  "slug": {
+                    "type": "string",
+                    "description": "Account slug. If omitted, applies to all accounts."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": { "$ref": "#/components/responses/JobStarted" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "409": { "$ref": "#/components/responses/JobBusy" }
+        }
+      }
+    },
+    "/api/draft": {
+      "post": {
+        "summary": "Generate a reply draft",
+        "operationId": "postDraft",
+        "tags": ["Drafts"],
+        "description": "Generates a draft reply to a Gmail thread in the user's own voice, using their sent-mail exemplars, voice notes from prior edits, and an optional per-account knowledge file. Returns the draft text synchronously (calls the LLM; may take a few seconds).\n\nThe draft is not saved to Gmail — it is returned as text for the user to review, edit, and send via `POST /api/draft/send`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["slug", "thread_id"],
+                "properties": {
+                  "slug": { "type": "string", "description": "Account slug." },
+                  "thread_id": { "type": "string", "description": "Gmail thread id to reply to." },
+                  "steer": {
+                    "type": "string",
+                    "description": "Optional free-text instruction to steer the draft (e.g. `keep it under 3 sentences`)."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Draft generated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "to_name": { "type": "string", "description": "Inferred recipient display name." },
+                    "to_email": { "type": "string", "description": "Inferred recipient email address." },
+                    "subject": { "type": "string", "description": "Thread subject." },
+                    "body": { "type": "string", "description": "Draft body text (plain text)." }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/draft/send": {
+      "post": {
+        "summary": "Send a reply draft",
+        "operationId": "postDraftSend",
+        "tags": ["Drafts"],
+        "description": "Creates a Gmail draft and immediately sends it. If the user edited the generated body, records an edit signal for voice learning. Nothing is sent without this explicit call — the draft endpoint only returns text.\n\nIf the draft is created but the send fails, the orphan draft is deleted before returning the error.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["slug", "thread_id", "to_email", "body"],
+                "properties": {
+                  "slug": { "type": "string" },
+                  "thread_id": { "type": "string" },
+                  "to_email": { "type": "string" },
+                  "subject": { "type": "string" },
+                  "body": { "type": "string", "description": "Final plain-text body (possibly user-edited)." },
+                  "html": { "type": "string", "description": "Optional rich HTML body. Appends Gmail signature." },
+                  "original": {
+                    "type": "string",
+                    "description": "Original AI-generated body (before user edits). If different from `body`, records a draft-edit learning signal."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reply sent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "sent": { "type": "string", "description": "Thread id of the sent reply." }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/learned/reject": {
+      "post": {
+        "summary": "Reject a learned voice preference",
+        "operationId": "postLearnedReject",
+        "tags": ["Drafts"],
+        "description": "Removes a learned voice note from `learning/learned.md` and adds it to the reject store so it is not re-learned.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["text"],
+                "properties": {
+                  "text": { "type": "string", "description": "Exact text of the learned preference to reject." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preference rejected.",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "ok": { "type": "boolean" } } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/add-account": {
+      "post": {
+        "summary": "Add a Gmail account (browser OAuth flow)",
+        "operationId": "postAddAccount",
+        "tags": ["Accounts"],
+        "description": "Starts a `gws auth login` subprocess that opens the user's browser for Google OAuth consent. Runs as a background job (may take up to 3 minutes for the user to complete sign-in).\n\nWhile running, `GET /api/job` returns `auth_url` — the Google consent URL — as a fallback if the browser did not open. Cancel with `POST /api/job/cancel`.\n\nOn success, appends the new account to `accounts.json` and rebuilds state.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "202": { "$ref": "#/components/responses/JobStarted" },
+          "409": { "$ref": "#/components/responses/JobBusy" }
+        }
+      }
+    },
+    "/api/job/cancel": {
+      "post": {
+        "summary": "Cancel the current background job",
+        "operationId": "postJobCancel",
+        "tags": ["Accounts"],
+        "description": "Sets the cancel flag and kills any live auth process group. Idempotent — always returns ok, even when no job is running. Most useful for cancelling an `add_account` job while the browser sign-in is in progress.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cancel signal sent.",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "ok": { "type": "boolean" } } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/labels": {
+      "get": {
+        "summary": "List labels for an account",
+        "operationId": "getLabels",
+        "tags": ["Labels"],
+        "description": "Returns all user-created Gmail labels for the given account, annotated with their thread count and whether they were created by zero. System labels (INBOX, SENT, etc.) are excluded. Label thread counts are fetched in parallel (up to 8 concurrent requests).",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Account slug."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Label list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "labels": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/LabelInfo" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/labels/delete": {
+      "post": {
+        "summary": "Delete Gmail labels by id",
+        "operationId": "postLabelsDelete",
+        "tags": ["Labels"],
+        "description": "Permanently deletes user-created Gmail labels by their Gmail label id. System labels are refused. The live label list is re-fetched before deletion to guard against stale ids.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["slug", "ids"],
+                "properties": {
+                  "slug": { "type": "string", "description": "Account slug." },
+                  "ids": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Non-empty list of Gmail label ids to delete."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deletion result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "deleted": { "type": "integer", "description": "Number of labels successfully deleted." },
+                    "failed": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "error": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/labels/populate": {
+      "post": {
+        "summary": "Sort recent inbox mail into category labels",
+        "operationId": "postLabelsPopulate",
+        "tags": ["Labels"],
+        "description": "Runs a label-only backfill: reads the last N days of inbox mail and applies category labels without archiving anything. Runs in the background.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "window_days": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 365,
+                    "default": 30,
+                    "description": "How many days of inbox history to label."
+                  },
+                  "slug": {
+                    "type": "string",
+                    "description": "Account slug. If omitted, applies to all accounts."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": { "$ref": "#/components/responses/JobStarted" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "409": { "$ref": "#/components/responses/JobBusy" }
+        }
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "summary": "Get user settings",
+        "operationId": "getSettings",
+        "tags": ["Settings"],
+        "description": "Returns the current settings, merging the persisted `app/settings.json` with compiled-in defaults. Any key absent from the file takes its default.",
+        "responses": {
+          "200": {
+            "description": "Current settings.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Settings" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update user settings",
+        "operationId": "putSettings",
+        "tags": ["Settings"],
+        "description": "Updates one or more settings keys. A partial PUT merges over the current values — omitting a key leaves it unchanged. If schedule keys change the launchd plist is rewritten and reloaded automatically.\n\nReturns the full updated settings object.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SettingsUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated settings.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Settings" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/policy": {
+      "get": {
+        "summary": "Get keep policy",
+        "operationId": "getPolicy",
+        "tags": ["Policy"],
+        "description": "Returns the plain-English keep policy from `keep-policy.md`. Returns the built-in default if the file is missing or blank.",
+        "responses": {
+          "200": {
+            "description": "Keep policy text.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "policy": { "type": "string", "description": "Markdown-formatted keep policy." }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update keep policy",
+        "operationId": "putPolicy",
+        "tags": ["Policy"],
+        "description": "Overwrites `keep-policy.md` with the supplied text. Takes effect on the next run.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["policy"],
+                "properties": {
+                  "policy": { "type": "string", "description": "New policy text (Markdown)." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Policy saved.",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "ok": { "type": "boolean" } } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "summary": "Get email categories",
+        "operationId": "getCategories",
+        "tags": ["Categories"],
+        "description": "Returns the current category definitions from `categories.json`, or the built-in defaults if the file is missing or empty.",
+        "responses": {
+          "200": {
+            "description": "Category list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "categories": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Category" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update email categories",
+        "operationId": "putCategories",
+        "tags": ["Categories"],
+        "description": "Replaces the full categories list. Old category names are added to the label history so their Gmail labels are cleaned up on the next run.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["categories"],
+                "properties": {
+                  "categories": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/CategoryInput" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Categories saved.",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "ok": { "type": "boolean" } } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/credentials-status": {
+      "get": {
+        "summary": "Check Google OAuth client credential status",
+        "operationId": "getCredentialsStatus",
+        "tags": ["Credentials"],
+        "description": "Returns whether a Google OAuth client is configured (via `~/.config/gws/client_secret.json` or env vars) and whether any Gmail accounts are connected. Used by onboarding to skip steps that are already done.",
+        "responses": {
+          "200": {
+            "description": "Credential status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "has_client": {
+                      "type": "boolean",
+                      "description": "True if a Google OAuth client credential is configured."
+                    },
+                    "has_accounts": {
+                      "type": "boolean",
+                      "description": "True if at least one Gmail account is in `accounts.json`."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/set-credentials": {
+      "post": {
+        "summary": "Store Google OAuth client credentials",
+        "operationId": "postSetCredentials",
+        "tags": ["Credentials"],
+        "description": "Writes the user's Google OAuth *client* credentials to `~/.config/gws/client_secret.json` so the `gws` CLI can run the browser sign-in. Accepts either the full JSON downloaded from Google Cloud Console (`{\"json\": \"<pasted string>\"}`) or raw `{client_id, client_secret}`.\n\nThis is the OAuth app identity, not the user's password or tokens. The file is created with mode 0600.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "title": "Pasted client_secret.json content",
+                    "type": "object",
+                    "required": ["json"],
+                    "properties": {
+                      "json": { "type": "string", "description": "Full content of the Google-downloaded `client_secret.json`." }
+                    }
+                  },
+                  {
+                    "title": "Raw client id + secret",
+                    "type": "object",
+                    "required": ["client_id", "client_secret"],
+                    "properties": {
+                      "client_id": { "type": "string", "description": "Google OAuth client id (ends in `.apps.googleusercontent.com`)." },
+                      "client_secret": { "type": "string" }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credentials saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "path": { "type": "string", "description": "Absolute path where the file was written." }
+                  }
+                }
+              }
+            }
+          },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/provider-status": {
+      "get": {
+        "summary": "Get LLM provider status",
+        "operationId": "getProviderStatus",
+        "tags": ["Providers"],
+        "description": "Returns all known LLM providers (claude, codex, hermes) with their availability status and version. A provider is `available` only if zero can drive it AND its binary is on PATH. The `active` field indicates which provider is currently selected in settings.\n\nCurrently only the `claude` provider is fully wired; codex and hermes are listed for the roadmap and will show `available: false` until implemented.",
+        "responses": {
+          "200": {
+            "description": "Provider list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "providers": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ProviderStatus" }
+                    },
+                    "active": {
+                      "type": "string",
+                      "description": "Name of the currently active provider.",
+                      "example": "claude"
+                    }
+                  }
+                },
+                "example": {
+                  "providers": [
+                    { "name": "claude",  "label": "Claude (Anthropic)", "available": true,  "version": "1.0.3", "active": true  },
+                    { "name": "codex",   "label": "Codex (OpenAI)",      "available": false, "version": null,    "active": false },
+                    { "name": "hermes",  "label": "Hermes (local)",      "available": false, "version": null,    "active": false }
+                  ],
+                  "active": "claude"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "State": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "True if all accounts loaded successfully on the last build."
+          },
+          "total_loops": {
+            "type": "integer",
+            "description": "Sum of `inbox_threads` across all ok accounts."
+          },
+          "building": {
+            "type": "boolean",
+            "description": "True while a background state rebuild is in progress."
+          },
+          "needs_build": {
+            "type": "boolean",
+            "description": "True when no state file exists yet (first run or deleted)."
+          },
+          "accounts": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AccountState" }
+          }
+        }
+      },
+      "AccountState": {
+        "type": "object",
+        "properties": {
+          "slug":          { "type": "string" },
+          "email":         { "type": "string" },
+          "ok":            { "type": "boolean", "description": "False if this account failed to load." },
+          "error":         { "type": ["string", "null"], "description": "Error message when `ok` is false." },
+          "inbox_threads": { "type": "integer", "description": "Number of open loops (threads awaiting the user)." },
+          "unread":        { "type": "integer", "description": "Unread count in inbox." },
+          "loops": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Loop" }
+          },
+          "undo_points": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UndoPoint" }
+          }
+        }
+      },
+      "Loop": {
+        "type": "object",
+        "properties": {
+          "thread_id":    { "type": "string" },
+          "sender":       { "type": "string" },
+          "sender_email": { "type": "string" },
+          "subject":      { "type": "string" },
+          "snippet":      { "type": "string" },
+          "epoch":        { "type": "integer", "description": "Most recent message timestamp (Unix epoch)." },
+          "account_slug": { "type": "string" }
+        }
+      },
+      "UndoPoint": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string", "description": "Dated recovery label name (e.g. `zero/undo/2026-06-24`)." },
+          "date":  { "type": "string", "description": "Date string `YYYY-MM-DD` or `\"earlier\"`." },
+          "count": { "type": "integer", "description": "Number of threads under this label." }
+        }
+      },
+      "Job": {
+        "type": "object",
+        "properties": {
+          "id":       { "type": "integer", "description": "Auto-incrementing job id." },
+          "kind":     { "type": ["string", "null"], "enum": ["refresh", "run", "undo", "add_account", "populate", "archive_before", null] },
+          "state":    { "type": "string", "enum": ["idle", "running", "done", "error"] },
+          "started":  { "type": "integer", "description": "Unix epoch when the job started (0 if idle)." },
+          "finished": { "type": "integer", "description": "Unix epoch when the job finished (0 if still running)." },
+          "message":  { "type": "string", "description": "Human-readable progress or summary message." },
+          "error":    { "type": ["string", "null"], "description": "Error text if state is `error`." },
+          "auth_url": { "type": ["string", "null"], "description": "Google consent URL (set during `add_account` job if the browser did not open)." }
+        }
+      },
+      "LabelInfo": {
+        "type": "object",
+        "properties": {
+          "id":      { "type": "string", "description": "Gmail label id." },
+          "name":    { "type": "string", "description": "Label name." },
+          "threads": { "type": "integer", "description": "Number of threads carrying this label." },
+          "ours":    { "type": "boolean", "description": "True if this label was created by zero." }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "name":        { "type": "string" },
+          "description": { "type": "string" },
+          "color":       { "type": "string", "description": "Hex color (e.g. `#4285F4`)." },
+          "emoji":       { "type": "string", "description": "Single emoji used as the label prefix." }
+        }
+      },
+      "CategoryInput": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name":        { "type": "string" },
+          "description": { "type": "string", "default": "" },
+          "color":       { "type": "string", "default": "#5C6BC0" },
+          "emoji":       { "type": "string", "default": "🏷️" }
+        }
+      },
+      "Settings": {
+        "type": "object",
+        "properties": {
+          "grace_days": {
+            "type": "integer",
+            "description": "Protect mail newer than this many days from archiving. Default 0 (no grace window).",
+            "minimum": 0,
+            "maximum": 90,
+            "default": 0
+          },
+          "schedule_hour": {
+            "type": "integer",
+            "description": "Hour at which the daily routine runs (0–23, local time).",
+            "minimum": 0,
+            "maximum": 23,
+            "default": 7
+          },
+          "schedule_minute": {
+            "type": "integer",
+            "description": "Minute at which the daily routine runs (0–59).",
+            "minimum": 0,
+            "maximum": 59,
+            "default": 0
+          },
+          "schedule_days": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0, "maximum": 6 },
+            "description": "Days of the week to run (0=Sun … 6=Sat). Default [1,2,3,4,5] (Mon–Fri).",
+            "default": [1, 2, 3, 4, 5]
+          },
+          "notify_on_run": {
+            "type": "boolean",
+            "description": "Post a macOS notification when a run completes.",
+            "default": true
+          },
+          "auto_draft": {
+            "type": "boolean",
+            "description": "Automatically generate reply drafts (experimental).",
+            "default": false
+          },
+          "provider": {
+            "type": "string",
+            "description": "Active LLM provider. Must be a known provider name AND available on this system. Currently only `claude` is wired.",
+            "default": "claude",
+            "enum": ["claude", "codex", "hermes"]
+          },
+          "label_archived_days": {
+            "type": "integer",
+            "description": "Re-label recently archived mail within this many days with a `recently archived` marker, making it easy to spot in Gmail. Set to 0 to disable. Default 30.",
+            "minimum": 0,
+            "maximum": 365,
+            "default": 30
+          }
+        }
+      },
+      "SettingsUpdate": {
+        "type": "object",
+        "description": "Partial settings object. Only supplied keys are updated; omitted keys retain their current values.",
+        "properties": {
+          "grace_days":       { "type": "integer", "minimum": 0, "maximum": 90 },
+          "schedule_hour":    { "type": "integer", "minimum": 0, "maximum": 23 },
+          "schedule_minute":  { "type": "integer", "minimum": 0, "maximum": 59 },
+          "schedule_days":    { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 6 } },
+          "notify_on_run":    { "type": "boolean" },
+          "auto_draft":       { "type": "boolean" },
+          "provider":         { "type": "string", "enum": ["claude", "codex", "hermes"] },
+          "label_archived_days": { "type": "integer", "minimum": 0, "maximum": 365 }
+        }
+      },
+      "ProviderStatus": {
+        "type": "object",
+        "properties": {
+          "name":      { "type": "string", "description": "Provider key used in settings (e.g. `claude`)." },
+          "label":     { "type": "string", "description": "Display name (e.g. `Claude (Anthropic)`)." },
+          "available": { "type": "boolean", "description": "True if the provider is wired AND its binary is on PATH." },
+          "version":   { "type": ["string", "null"], "description": "Version string from `<binary> --version`, or null if unavailable." },
+          "active":    { "type": "boolean", "description": "True if this is the currently selected provider." }
+        }
+      }
+    },
+    "responses": {
+      "JobStarted": {
+        "description": "Job started in the background.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "job":  { "type": "integer", "description": "Job id. Poll `GET /api/job` for progress." },
+                "kind": { "type": "string", "description": "Job kind." }
+              }
+            },
+            "example": { "job": 4, "kind": "run" }
+          }
+        }
+      },
+      "JobBusy": {
+        "description": "A job is already running.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": { "error": { "type": "string" } }
+            },
+            "example": { "error": "a job is already running" }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Bad request — validation error.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": { "error": { "type": "string" } }
+            }
+          }
+        }
+      },
+      "ServerError": {
+        "description": "Server-side error.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": { "error": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

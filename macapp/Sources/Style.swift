@@ -53,6 +53,16 @@ enum Paper {
     static let danger      = Color(0.94, 0.40, 0.40)      // error red, kept distinct from the blue accent
 }
 
+// Concentric corner-radius system. Apple's nested-corner rule: inner radius ≈ outer − padding.
+// Modal (14) → card inner (11) → small interactive (7/8) → pill (32+).
+enum Radius {
+    static let modal: CGFloat = 14      // sheets, composer, cleanup overlay
+    static let card: CGFloat  = 11      // section cards, category rows
+    static let inner: CGFloat = 8       // controls inside a card (search fields, steppers)
+    static let small: CGFloat = 7       // small interactive chips (tab pill, day pills, format buttons)
+    static let pill:  CGFloat = 32      // full capsules / circles
+}
+
 // Control-layer surface, rendered with the native macOS 26 Liquid Glass material
 // (.glassEffect) so cards, the composer, and buttons get the system's real glass
 // refraction + adaptive edge — not a hand-painted imitation. `interactive` turns on

@@ -228,7 +228,7 @@ private struct SegmentedNav: View {
                 }
             }
             .padding(3)
-            .glassSurface(9)
+            // ponytail: GlassEffectContainer already provides the glass container; no second glassSurface needed.
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
         .focusEffectDisabled()         // no blue focus ring on the first-load selected tab
@@ -698,43 +698,69 @@ private struct DailyRoutineSection: View {
             .padding(12)
             .glassSurface(11)
 
-            // ── Grace window ──────────────────────────────────────────────
-            HStack(spacing: 10) {
-                Text("Protect mail newer than").font(.system(size: 12.5)).foregroundStyle(Paper.ink2)
-                Picker("", selection: Binding(get: { m.graceDays }, set: { m.saveGraceDays($0) })) {
-                    Text("Off").tag(0)
-                    Text("1 day").tag(1)
-                    Text("2 days").tag(2)
-                    Text("3 days").tag(3)
-                    Text("7 days").tag(7)
-                }
-                .pickerStyle(.menu).labelsHidden().fixedSize().controlSize(.small)
-                Spacer(minLength: 0)
-            }
-
-            // ── Toggles ───────────────────────────────────────────────────
+            // ── Grace window + notify (one cohesive card) ─────────────────
             VStack(spacing: 0) {
+                HStack(spacing: 10) {
+                    Text("Protect mail newer than").font(.system(size: 12.5)).foregroundStyle(Paper.ink2)
+                    Picker("", selection: Binding(get: { m.graceDays }, set: { m.saveGraceDays($0) })) {
+                        Text("Off").tag(0)
+                        Text("1 day").tag(1)
+                        Text("2 days").tag(2)
+                        Text("3 days").tag(3)
+                        Text("7 days").tag(7)
+                    }
+                    .pickerStyle(.menu).labelsHidden().fixedSize().controlSize(.small)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 12).padding(.vertical, 10)
+                Rectangle().fill(Paper.hairline.opacity(0.10)).frame(height: 0.5)
                 SettingsToggleRow(
                     label: "Notify me when a run finishes",
                     value: Binding(get: { m.notifyOnRun }, set: { m.saveNotifyOnRun($0) })
                 )
             }
-            .glassSurface(11)
+            .glassSurface(Radius.card)
+
+            // ── Archived mail labeling ────────────────────────────────────
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 10) {
+                    Text("Also label archived mail from").font(.system(size: 12.5)).foregroundStyle(Paper.ink2)
+                    Picker("", selection: Binding(get: { m.labelArchivedDays }, set: { m.saveLabelArchivedDays($0) })) {
+                        Text("Off").tag(0)
+                        Text("7 days").tag(7)
+                        Text("30 days").tag(30)
+                        Text("90 days").tag(90)
+                        Text("1 year").tag(365)
+                    }
+                    .pickerStyle(.menu).labelsHidden().fixedSize().controlSize(.small)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 12).padding(.vertical, 10)
+                Text("Keeps recent archived mail sorted into categories so there's always plenty labelled. Set to Off to skip.")
+                    .font(.system(size: 11)).foregroundStyle(Paper.ink3)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 12).padding(.bottom, 10)
+            }
+            .glassSurface(Radius.card)
 
             // ── Backlog clear (one-off) ────────────────────────────────────
-            HStack(spacing: 10) {
-                Text("Clear everything before").font(.system(size: 12.5)).foregroundStyle(Paper.ink2)
-                DatePicker("", selection: $beforeDate, in: ...Date(), displayedComponents: .date)
-                    .datePickerStyle(.field).labelsHidden().fixedSize()
-                Spacer(minLength: 6)
-                Button { m.archiveBefore(before: Self.fmt.string(from: beforeDate)) } label: {
-                    Text("Clear backlog")
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 10) {
+                    Text("Clear everything before").font(.system(size: 12.5)).foregroundStyle(Paper.ink2)
+                    DatePicker("", selection: $beforeDate, in: ...Date(), displayedComponents: .date)
+                        .datePickerStyle(.field).labelsHidden().fixedSize()
+                    Spacer(minLength: 6)
+                    Button { m.archiveBefore(before: Self.fmt.string(from: beforeDate)) } label: {
+                        Text("Clear backlog")
+                    }
+                    .buttonStyle(GhostButtonStyle()).disabled(m.isBusy)
                 }
-                .buttonStyle(GhostButtonStyle()).disabled(m.isBusy)
+                Text("Clearing removes the inbox label and adds a dated recovery label — undo any time from the Undo tab. Starred, flagged, and live sign/pay/legal mail is always kept.")
+                    .font(.system(size: 11)).foregroundStyle(Paper.ink3)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            Text("Clearing removes the inbox label and adds a dated recovery label — undo any time from the Undo tab. Starred, flagged, and live sign/pay/legal mail is always kept.")
-                .font(.system(size: 11)).foregroundStyle(Paper.ink4)
-                .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 12).padding(.vertical, 10)
+            .glassSurface(Radius.card)
         }
     }
 }
@@ -874,12 +900,15 @@ private struct IntelligenceSection: View {
                 // Active provider version note
                 if let active = ps.providers.first(where: { $0.active && $0.available }),
                    let version = active.version {
-                    HStack(spacing: 5) {
+                    HStack(spacing: 6) {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 10)).foregroundStyle(Paper.accentSoft)
                         Text("Connected to \(active.label) · \(version)")
                             .font(.system(size: 11)).foregroundStyle(Paper.ink3)
+                        Spacer(minLength: 0)
                     }
+                    .padding(.horizontal, 10).padding(.vertical, 7)
+                    .glassSurface(Radius.card)
                 }
             } else {
                 // Loading / unreachable
@@ -991,7 +1020,7 @@ private struct CategoryEditRow: View {
             // Emoji + colour together form the category's identity "token"
             CategoryToken(emoji: $cat.emoji, hex: $cat.color)
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 5) {
                 TextField("Name", text: $cat.name)
                     .textFieldStyle(.plain)
                     .font(.system(size: 13, weight: .semibold))
@@ -1030,7 +1059,8 @@ private struct CategoryToken: View {
     var body: some View {
         HStack(spacing: 0) {
             CuteEmojiPicker(emoji: $emoji, tint: tint, onChange: triggerPulse)
-            Rectangle().fill(tint.opacity(0.25)).frame(width: 0.5, height: 22)
+            Rectangle().fill(tint.opacity(0.35)).frame(width: 1, height: 20)
+                .padding(.horizontal, 3)
             CuteColorPicker(hex: $hex, onChange: triggerPulse)
         }
         .background(
@@ -1331,7 +1361,7 @@ private struct CuteEmojiPicker: View {
                 }
             }
             .padding(12).frame(width: 300)
-            .background(Paper.paper)
+            .background(.ultraThickMaterial)   // system popover glass — stays consistent with native popovers
             .environment(\.colorScheme, .dark)
         }
         .onChange(of: open) { _, isOpen in
@@ -1466,7 +1496,7 @@ private struct ColorPickerPopover: View {
         }
         .padding(14)
         .frame(width: 224)
-        .background(Paper.paper)
+        .background(.ultraThickMaterial)   // system popover glass
         .environment(\.colorScheme, .dark)
         .onAppear { hsb = HSBColor(hex: hex) }
     }
@@ -1559,14 +1589,14 @@ private struct LearnedSection: View {
             SettingsHeader("Learned from your actions",
                            "Built from your draft edits and what you restore. Delete anything that's off; it won't come back.")
             if learned.isEmpty {
-                HStack(spacing: 9) {
-                    Image(systemName: "sparkles").font(.system(size: 12)).foregroundStyle(Paper.accentSoft)
+                HStack(spacing: 13) {
+                    Image(systemName: "sparkles").font(.system(size: 15)).foregroundStyle(Paper.accentSoft)
                     Text("Nothing yet. As you edit drafts and restore threads, zero learns your voice and what matters to you here.")
-                        .font(.system(size: 12)).foregroundStyle(Paper.ink3)
+                        .font(.system(size: 12.5)).foregroundStyle(Paper.ink3).lineSpacing(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-                .glassSurface(11)
+                .padding(.horizontal, 14).padding(.vertical, 16).frame(maxWidth: .infinity, alignment: .leading)
+                .glassSurface(Radius.card)
             } else {
                 LearnedList(text: learned)
             }
@@ -1604,11 +1634,12 @@ private struct LearnedList: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            ForEach(items) { item in
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(Array(items.enumerated()), id: \.element.id) { idx, item in
                 if item.heading {
                     Text(item.text.uppercased()).font(.system(size: 10, weight: .semibold)).kerning(0.6)
-                        .foregroundStyle(Paper.ink3).padding(.top, 8).padding(.horizontal, 2)
+                        .foregroundStyle(Paper.ink3)
+                        .padding(.top, idx == 0 ? 0 : 10).padding(.horizontal, 2)
                 } else {
                     LearnedItemRow(text: item.text)
                 }
@@ -1622,9 +1653,9 @@ private struct LearnedItemRow: View {
     let text: String
     @State private var hovering = false
     var body: some View {
-        HStack(alignment: .top, spacing: 11) {
+        HStack(alignment: .firstTextBaseline, spacing: 11) {
             Image(systemName: "sparkle").font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Paper.accentSoft).padding(.top, 1)
+                .foregroundStyle(Paper.accentSoft)
             Text(inline(text)).font(.system(size: 12.5)).foregroundStyle(Paper.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
@@ -1755,7 +1786,7 @@ private struct SentConfirmationOverlay: View {
                 .opacity(appeared ? 1 : 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.ultraThinMaterial.opacity(0.7))
+        .glassSurface(14, tint: Color(0, 0, 0).opacity(0.35))   // matches composer glass, hides content beneath
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .onAppear {
             withAnimation(Motion.pop) { appeared = true }
@@ -1887,20 +1918,32 @@ private struct CleanupView: View {
                 .padding(14).background(Paper.sunken.opacity(0.24))
                 .overlay(alignment: .bottom) { Rectangle().fill(Paper.hairline.opacity(0.1)).frame(height: 0.5) }
 
+                // Reassurance banner — always visible so users know what they're doing.
+                HStack(spacing: 7) {
+                    Image(systemName: "lock.shield").font(.system(size: 11)).foregroundStyle(Paper.accentSoft)
+                    Text("Only labels are removed. Your mail is never deleted — every thread stays in All Mail.")
+                        .font(.system(size: 11)).foregroundStyle(Paper.ink3)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 12).padding(.vertical, 8)
+                .background(Paper.accentSoft.opacity(0.06))
+                .overlay(alignment: .bottom) { Rectangle().fill(Paper.hairline.opacity(0.1)).frame(height: 0.5) }
+
                 // Body
                 if c?.loading == true {
                     VStack(spacing: 10) {
                         ProgressView().controlSize(.small)
                         Text("Reading labels…").font(.system(size: 12.5)).foregroundStyle(Paper.ink3)
                     }
-                    .frame(maxWidth: .infinity, minHeight: 220)
+                    .frame(maxWidth: .infinity, minHeight: 200)
                 } else if let err = c?.error {
                     EmptyState(symbol: "exclamationmark.triangle", warn: true,
-                               title: "Couldn't read labels", message: err).frame(minHeight: 220)
+                               title: "Couldn't read labels", message: err).frame(minHeight: 200)
                 } else if c?.labels.isEmpty ?? true {
                     EmptyState(symbol: "tag", warn: false, title: "No custom labels",
                                message: "This account only has Gmail's built-in labels — nothing to clean up.")
-                        .frame(minHeight: 220)
+                        .frame(minHeight: 200)
                 } else {
                     let total = c!.labels.count, sel = c!.selected.count
                     HStack {
@@ -1920,7 +1963,7 @@ private struct CleanupView: View {
                         }
                         .padding(.horizontal, 12).padding(.bottom, 12)
                     }
-                    .frame(maxHeight: 300)
+                    .frame(maxHeight: 280)
                 }
 
                 // Sort recent mail into category labels (label-only backfill — never
@@ -1948,13 +1991,11 @@ private struct CleanupView: View {
 
                 // Footer
                 HStack(spacing: 9) {
-                    Image(systemName: "checkmark.shield").font(.system(size: 11)).foregroundStyle(Paper.clear)
-                    Text("Deleting a label never deletes mail.").font(.system(size: 11)).foregroundStyle(Paper.ink4)
-                    Spacer(minLength: 6)
+                    Spacer(minLength: 0)
                     Button { confirming = true } label: {
                         HStack(spacing: 6) {
                             if c?.deleting == true { ProgressView().controlSize(.small).tint(.white) }
-                            Text("Delete \(c?.selected.count ?? 0)")
+                            Text("Remove \(c?.selected.count ?? 0) label\((c?.selected.count ?? 0) == 1 ? "" : "s")")
                         }
                     }
                     .buttonStyle(DangerButtonStyle(enabled: (c?.selected.isEmpty == false) && c?.deleting != true))
@@ -1970,12 +2011,12 @@ private struct CleanupView: View {
             .shadow(color: .black.opacity(0.32), radius: 24, y: 10)
             .padding(10)
         }
-        .confirmationDialog("Delete \(c?.selected.count ?? 0) label\((c?.selected.count ?? 0) == 1 ? "" : "s")?",
+        .confirmationDialog("Remove \(c?.selected.count ?? 0) label\((c?.selected.count ?? 0) == 1 ? "" : "s")?",
                             isPresented: $confirming, titleVisibility: .visible) {
-            Button("Delete labels", role: .destructive) { m.deleteCleanupSelected() }
+            Button("Remove labels only", role: .destructive) { m.deleteCleanupSelected() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Removes the labels from this account. Your mail isn't deleted — threads stay in All Mail.")
+            Text("Only labels are removed. No mail is deleted — every thread stays in All Mail and can be found there any time.")
         }
     }
 }
@@ -1995,11 +2036,18 @@ private struct LabelCleanRow: View {
                         .padding(.horizontal, 5).padding(.vertical, 1.5)
                         .background(Capsule().fill(Paper.accentSoft.opacity(0.16)))
                 }
+                if label.threads == 0 {
+                    Text("empty").font(.system(size: 9, weight: .medium)).foregroundStyle(Paper.ink4)
+                        .padding(.horizontal, 5).padding(.vertical, 1.5)
+                        .background(Capsule().fill(Paper.hairline.opacity(0.12)))
+                }
                 Spacer(minLength: 6)
-                Text("\(label.threads)").font(.system(size: 11)).foregroundStyle(Paper.ink4).monospacedDigit()
+                if label.threads > 0 {
+                    Text("\(label.threads)").font(.system(size: 11)).foregroundStyle(Paper.ink4).monospacedDigit()
+                }
             }
             .padding(.vertical, 8).padding(.horizontal, 11)
-            .background(RoundedRectangle(cornerRadius: 9, style: .continuous)
+            .background(RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
                 .fill(selected ? Paper.accentSoft.opacity(0.10) : Paper.raised.opacity(0.04)))
             .contentShape(Rectangle())
         }

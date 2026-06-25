@@ -146,7 +146,11 @@ def _replied_before(cfg, email):
         d = iz.gws(cfg, ["gmail", "users", "messages", "list", "--params",
                          json.dumps({"userId": "me", "q": f"from:me to:{email}", "maxResults": 1})])
         v = bool(d.get("messages"))
-    except Exception:
+    except Exception as e:
+        # Lookup failed (transient gws/network blip). Bias conservatively toward "keep"
+        # (assume replied-before) so we never wrongly archive, but log it: a spike of
+        # these means classification is silently keep-biased, not that you reply to everyone.
+        print(f"replied_before({email}) lookup failed, assuming replied: {e}", file=sys.stderr)
         v = True
     _REPLIED[email] = v
     return v
@@ -253,16 +257,19 @@ def _classify(chunk):
     return normalized
 
 
-def apply_category(cfg, thread_id, category_name):
+def apply_category(cfg, thread_id, category_name, _labels_cache=None):
     """Apply a category label to a kept thread: add '<emoji> <name>', remove any other
     category labels from our set (current OR historical). Never touches non-category
-    labels. Non-fatal on error.
+    labels. Non-fatal on error. Returns True on success, False on failure.
 
     Args:
-        cfg:           gws config_dir for the account.
-        thread_id:     Gmail thread id.
-        category_name: The category name string (must be in _categories()), or None to
-                       only remove stale category labels without adding a new one.
+        cfg:            gws config_dir for the account.
+        thread_id:      Gmail thread id.
+        category_name:  The category name string (must be in _categories()), or None to
+                        only remove stale category labels without adding a new one.
+        _labels_cache:  Optional pre-fetched labels list (list of dicts with id/name)
+                        to avoid a redundant labels.list API call. Pass when calling
+                        in a batch loop; omit for one-off calls.
     """
     cats = _categories()
     cat_label_names = {_category_label_name(c) for c in cats}
@@ -287,10 +294,13 @@ def apply_category(cfg, thread_id, category_name):
         for m in (t.get("messages") or []):
             thread_label_ids.update(m.get("labelIds") or [])
 
-        # Resolve label ids -> names for our category labels only.
-        label_data = iz.gws(cfg, ["gmail", "users", "labels", "list",
-                                  "--params", json.dumps({"userId": "me"})])
-        all_labels = label_data.get("labels", []) or []
+        # Resolve label ids -> names; use the caller-supplied cache if available.
+        if _labels_cache is not None:
+            all_labels = _labels_cache
+        else:
+            label_data = iz.gws(cfg, ["gmail", "users", "labels", "list",
+                                      "--params", json.dumps({"userId": "me"})])
+            all_labels = label_data.get("labels", []) or []
         id_to_name = {l["id"]: l["name"] for l in all_labels}
         name_to_id = {l["name"]: l["id"] for l in all_labels}
 
@@ -303,7 +313,7 @@ def apply_category(cfg, thread_id, category_name):
         ]
 
         if not target_label and not remove_ids:
-            return  # nothing to do
+            return True  # nothing to do
 
         add_ids = []
         if target_label:
@@ -324,8 +334,9 @@ def apply_category(cfg, thread_id, category_name):
                          "--json", json.dumps({"addLabelIds": add_ids,
                                                "removeLabelIds": remove_ids})],
                    allow_empty=True)
+        return True
     except Exception:
-        pass  # category labeling is additive; never block the keeper run
+        return False  # category labeling is additive; never block the keeper run
 
 
 def _known_category_label_names():
@@ -354,37 +365,60 @@ def _backfill_partition(infos, cat_label_names, id_to_name):
     return to_judge, skipped_labeled, skipped_handled
 
 
-def _run_label_only(cfg, me, window_days, chunk):
+def _run_label_only(cfg, me, window_days, chunk, archive_days=0):
     """Label-only backfill: classify recent inbox mail and apply category labels to
     keepers. Never archives. Light: bounded window, skips already-labeled and
-    owner-handled threads (no Haiku call for those), batched classification."""
+    owner-handled threads (no Haiku call for those), batched classification.
+
+    If archive_days > 0, also labels recently-archived mail (non-inbox) so the
+    label taxonomy stays populated across the full mailbox view.
+    """
     cat_label_names = _known_category_label_names()
-    # One labels.list for the whole run to resolve thread label ids -> names.
+    # One labels.list for the whole run — shared with apply_category via _labels_cache
+    # to avoid 2 extra API calls per thread (cuts volume = fewer 429s).
     label_data = iz.gws(cfg, ["gmail", "users", "labels", "list",
                               "--params", json.dumps({"userId": "me"})])
-    id_to_name = {l["id"]: l["name"] for l in (label_data.get("labels") or [])}
+    all_labels_list = label_data.get("labels") or []
+    id_to_name = {l["id"]: l["name"] for l in all_labels_list}
 
-    tids = _thread_ids_q(cfg, f"in:inbox newer_than:{window_days}d")
-    infos = [i for i in (_thread_info(cfg, tid, me) for tid in tids) if i]
+    # Inbox window.
+    inbox_tids = set(_thread_ids_q(cfg, f"in:inbox newer_than:{window_days}d"))
+    # Archived window (non-inbox recent mail), unioned with inbox set.
+    archived_tids = set()
+    if archive_days and archive_days > 0:
+        archived_tids = set(_thread_ids_q(
+            cfg, f"-in:inbox in:all newer_than:{archive_days}d")) - inbox_tids
+
+    all_tids = list(inbox_tids | archived_tids)
+    infos = [i for i in (_thread_info(cfg, tid, me) for tid in all_tids) if i]
     to_judge, skipped_labeled, skipped_handled = _backfill_partition(
         infos, cat_label_names, id_to_name)
 
     for c in to_judge:
         c["replied_before"] = _replied_before(cfg, c["last_email"])
 
-    labeled = 0
+    labeled = label_failed = 0
     for i in range(0, len(to_judge), chunk):
         batch = to_judge[i:i + chunk]
         verdict = _classify(batch)
         for j, c in enumerate(batch):
             v = verdict.get(str(j), {})
             if isinstance(v, dict) and v.get("decision") == "keep" and v.get("category"):
-                apply_category(cfg, c["id"], v["category"])
-                labeled += 1
+                ok = apply_category(cfg, c["id"], v["category"],
+                                    _labels_cache=all_labels_list)
+                if ok:
+                    labeled += 1
+                else:
+                    label_failed += 1
+
+    if label_failed:
+        print(f"label-only: labeled {labeled}, {label_failed} failed", file=sys.stderr)
 
     return {"mode": "label-only", "window_days": window_days,
-            "considered": len(infos), "skipped_already_labeled": skipped_labeled,
-            "skipped_handled": skipped_handled, "labeled": labeled}
+            "archive_days": archive_days, "considered": len(infos),
+            "skipped_already_labeled": skipped_labeled,
+            "skipped_handled": skipped_handled, "labeled": labeled,
+            "label_failed": label_failed}
 
 
 def main():
@@ -399,6 +433,8 @@ def main():
                     help="don't archive; just apply category labels to recent keepers")
     ap.add_argument("--window-days", type=int, default=30,
                     help="label-only: only consider inbox mail newer than N days")
+    ap.add_argument("--archive-days", type=int, default=0,
+                    help="label-only: also label archived mail newer than N days (0=off)")
     a = ap.parse_args()
 
     try:
@@ -407,7 +443,8 @@ def main():
         me = a.account_label
 
     if a.label_only:
-        result = _run_label_only(a.config_dir, me, a.window_days, a.chunk)
+        result = _run_label_only(a.config_dir, me, a.window_days, a.chunk,
+                                 archive_days=a.archive_days)
         result["account"] = a.account_label
         print(json.dumps(result, ensure_ascii=False))
         return
@@ -421,6 +458,7 @@ def main():
             infos.append(info)
 
     archive_msg_ids, kept, keep_s = [], 0, []
+    label_ok = label_failed = 0
     # Deterministic fast-path: last message from the owner -> dealt with -> archive.
     to_judge = []
     for c in infos:
@@ -444,14 +482,22 @@ def main():
                 if len(keep_s) < 25:
                     keep_s.append({"from": c["last_from"], "subject": c["subject"],
                                    "category": category})
-                # Apply category label when executing; non-fatal if it fails.
+                # Apply category label when executing; tally ok/failed (never fatal).
                 if a.execute and category:
-                    apply_category(a.config_dir, c["id"], category)
+                    if apply_category(a.config_dir, c["id"], category):
+                        label_ok += 1
+                    else:
+                        label_failed += 1
+
+    if label_failed:
+        print(f"keeper: labeled {label_ok}, {label_failed} label failures",
+              file=sys.stderr)
 
     result = {"account": a.account_label, "threads": len(infos),
               "dealt_with_last_from_owner": sum(1 for c in infos if c["last_from_owner"]),
               "to_archive_threads": len(infos) - kept, "to_keep_threads": kept,
-              "mode": "execute" if a.execute else "dry-run", "keep_sample": keep_s}
+              "mode": "execute" if a.execute else "dry-run", "keep_sample": keep_s,
+              "label_ok": label_ok, "label_failed": label_failed}
 
     if a.execute and archive_msg_ids:
         lab = iz._dated_label(iz._BASE_LABEL)

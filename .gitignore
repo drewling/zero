@@ -51,3 +51,6 @@ app/settings.json
 
 # Learning store (user-specific signals + rollup, generated at runtime)
 learning/
+
+# Session scratch (landing drafts, screenshots)
+scratchpad/

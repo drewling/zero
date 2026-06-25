@@ -110,9 +110,20 @@ final class KeyablePanel: NSPanel {
 /// Dark frosted surface for the panel — classic vibrancy (what Raycast-style panels
 /// use), masked to a rounded body + upward arrow. Unlike NSGlassEffectView this has
 /// no bright specular rim, so there's no hairline outline around the window.
+///
+/// SEAM FIX: The beak shares the same mask + vibrancy as the body, but the SwiftUI
+/// graphite gradient overlay (in PanelView) only covers the body rect. Without a
+/// matching tint the beak shows as raw hudWindow vibrancy — lighter and distinctly
+/// different from the dark header just below it. We paint a matching graphite gradient
+/// CAGradientLayer directly over the beak region so the beak reads as one continuous
+/// surface with the header. The body gradient is intentionally excluded (the SwiftUI
+/// layer covers that area) so we don't double-tint the body.
 final class GlassSurface: NSView {
     let effect = NSVisualEffectView()
-    var arrowX: CGFloat = PANEL_W - 40 { didSet { if oldValue != arrowX { applyMask() } } }
+    var arrowX: CGFloat = PANEL_W - 40 { didSet { if oldValue != arrowX { applyMask(); updateBeakGradient() } } }
+
+    // ponytail: CAGradientLayer is cheap; one gradient over the beak-only region.
+    private let beakGradient = CAGradientLayer()
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -124,7 +135,20 @@ final class GlassSurface: NSView {
         effect.frame = bounds
         effect.autoresizingMask = [.width, .height]
         addSubview(effect)
+
+        // Solid graphite tint over the beak only — exactly the color the PanelView body
+        // gradient carries at its top edge (Color(0.125,0.122,0.118).opacity(0.30)), where
+        // the beak joins. A *flat* fill (both stops equal) is deliberate: the beak is only
+        // ~26pt tall, so the body gradient barely shifts across it, and a solid fill is
+        // immune to CAGradientLayer's y-orientation (which is bottom-up on a non-flipped
+        // macOS layer). The whole beak therefore reads as one continuous surface with the
+        // header — no seam at the join, no mis-tinted tip. Rendered above the vibrancy.
+        let beakTint = NSColor(red: 0.125, green: 0.122, blue: 0.118, alpha: 0.30).cgColor
+        beakGradient.colors = [beakTint, beakTint]
+        layer?.addSublayer(beakGradient)
+
         applyMask()
+        updateBeakGradient()
     }
     required init?(coder: NSCoder) { fatalError("unused") }
 
@@ -157,6 +181,12 @@ final class GlassSurface: NSView {
     override func viewDidChangeBackingProperties() {
         super.viewDidChangeBackingProperties()
         applyMask()
+        updateBeakGradient()
+    }
+
+    override func layout() {
+        super.layout()
+        updateBeakGradient()
     }
 
     // Rasterize the bubble+arrow at the display's backing scale so the mask edge
@@ -181,6 +211,48 @@ final class GlassSurface: NSView {
         let img = NSImage(size: bounds.size)
         img.addRepresentation(rep)
         effect.maskImage = img
+    }
+
+    // Position the beak gradient CALayer over the beak region with a matching clip mask,
+    // so only the beak area gets the graphite tint — not the body (SwiftUI covers that).
+    private func updateBeakGradient() {
+        guard bounds.width > 0 else { return }
+        let cx = max(ARROW_CLAMP, min(arrowX, bounds.width - ARROW_CLAMP))
+        let w = ARROW_W / 2
+        // Beak region: a tight rect enclosing just the arrow, with a small margin.
+        let margin: CGFloat = 4
+        let beakRect = CGRect(x: cx - w - margin, y: PANEL_H - 2,
+                              width: (w + margin) * 2, height: ARROW_H + 2)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        beakGradient.frame = beakRect
+        // Clip the gradient to the exact beak shape using the rasterised bitmap mask.
+        let scale = window?.backingScaleFactor ?? 2
+        let pw = Int((beakRect.width * scale).rounded())
+        let ph = Int((beakRect.height * scale).rounded())
+        guard pw > 0, ph > 0,
+              let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: pw, pixelsHigh: ph,
+                      bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                      colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else {
+            CATransaction.commit(); return
+        }
+        rep.size = beakRect.size
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        // Translate the path into beak-local coordinates.
+        let xform = AffineTransform(translationByX: -(cx - w - margin), byY: -(PANEL_H - 2))
+        let localPath = beakPath()
+        localPath.transform(using: xform)
+        NSColor.black.setFill()
+        localPath.fill()
+        NSGraphicsContext.restoreGraphicsState()
+        let maskImg = NSImage(size: beakRect.size)
+        maskImg.addRepresentation(rep)
+        let maskLayer = CALayer()
+        maskLayer.frame = CGRect(origin: .zero, size: beakRect.size)
+        maskLayer.contents = maskImg
+        beakGradient.mask = maskLayer
+        CATransaction.commit()
     }
 }
 

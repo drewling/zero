@@ -2,6 +2,12 @@
 
 Step-by-step first-time setup on a fresh Mac.
 
+> **Just want to use the app?** Download it from the [Releases page](https://github.com/drewling/zero/releases),
+> drag to Applications, and follow the in-app onboarding. The steps below are for contributors
+> who want to build from source or run the Python engine directly.
+>
+> See also: [Architecture](ARCHITECTURE.md) · [API reference](api/) · [Maintenance](MAINTENANCE.md)
+
 ---
 
 ## 1. Install dependencies
@@ -36,6 +42,10 @@ bash setup.sh
 ```
 
 `setup.sh` checks that all dependencies are present and creates `logs/` and `drafts/`.
+
+> **Note:** The distributed `zero.app` runs from `~/Library/Application Support/zero`
+> (it copies itself there on first launch). The source checkout is only needed to build
+> from source or to run the Python engine directly during development.
 
 ---
 

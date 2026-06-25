@@ -1,5 +1,7 @@
 # Architecture
 
+> See also: [API reference](api/) · [Setup](SETUP.md) · [Maintenance](MAINTENANCE.md)
+
 How zero is put together: a native macOS menu-bar app over a small local HTTP
 service that drives Gmail through your own credentials. Everything runs on your
 Mac. Nothing is deleted, and no mail is sent without you.
@@ -101,4 +103,6 @@ refreshes state and, if enabled, posts a macOS notification with the result.
 | `MAIL_TRIAGE_PYTHON` | `python3` (shell) / `sys.executable` (Python) | Override the Python binary |
 | `CLAUDE_BIN` | `claude` | Override the Claude CLI binary |
 | `GWS_BIN` | `gws` | Override the gws binary |
+| `KEEPER_HOST` | `127.0.0.1` | Bind address for the local engine (never change in production) |
+| `KEEPER_PORT` | `8765` | Port for the local engine |
 | `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND` | `file` | gws keyring backend (set by the app) |

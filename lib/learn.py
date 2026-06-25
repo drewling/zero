@@ -113,11 +113,59 @@ def _build_restore_section(restores):
     return "## Keep more like this\n" + "\n".join(bullets) + "\n\n"
 
 
+def _build_archive_section(signals, min_recurrence=2, max_bullets=8):
+    """'Archive more like this' section from keep_override (archived-without-reply) signals.
+
+    Only includes senders/domains that appear >= min_recurrence times so one-off
+    archives don't become noise.
+    """
+    archives = [s for s in signals if s.get("type") == "keep_override"
+                and s.get("action") == "archived_without_reply"]
+    if not archives:
+        return ""
+
+    from collections import Counter
+    # Count by sender_email (fall back to domain, then sender display name).
+    sender_counts = Counter()
+    sender_label = {}  # canonical key -> best display string
+    for s in archives:
+        email = (s.get("sender_email") or "").lower().strip()
+        display = (s.get("sender") or "").strip()
+        if email:
+            domain = email.split("@")[-1] if "@" in email else email
+            key = email
+            label = display or email
+        elif display:
+            key = display.lower()
+            label = display
+            domain = ""
+        else:
+            continue
+        sender_counts[key] += 1
+        # Prefer the display name over a raw email address.
+        if key not in sender_label or (display and not sender_label[key].startswith(display)):
+            sender_label[key] = label
+
+    recurring = [(key, cnt) for key, cnt in sender_counts.items()
+                 if cnt >= min_recurrence]
+    if not recurring:
+        return ""
+    # Sort by frequency desc, take top max_bullets.
+    recurring.sort(key=lambda x: -x[1])
+    bullets = []
+    for key, cnt in recurring[:max_bullets]:
+        bullets.append(f"- Archive: {sender_label[key]} (archived {cnt}×)")
+
+    return "## Archive more like this\n" + "\n".join(bullets) + "\n\n"
+
+
 def build(min_signals):
     import json as _json
     signals = learning.recent(800)
     edits = [s for s in signals if s.get("type") == "draft_edit"]
     restores = _active_restores(signals)
+    archives = [s for s in signals if s.get("type") == "keep_override"
+                and s.get("action") == "archived_without_reply"]
     # Need at least one of the high-signal types to write anything.
     if len(edits) + len(restores) < min_signals:
         return None, len(restores), len(edits)
@@ -129,6 +177,13 @@ def build(min_signals):
     restore_section = _build_restore_section(restores)
     if restore_section:
         filtered = _filter_rejected(restore_section, rejected)
+        if filtered.strip():
+            sections.append(filtered.strip())
+
+    # Archive section: recurring senders the user archives without replying.
+    archive_section = _build_archive_section(signals)
+    if archive_section:
+        filtered = _filter_rejected(archive_section, rejected)
         if filtered.strip():
             sections.append(filtered.strip())
 
@@ -171,5 +226,45 @@ def main():
     print(f"learn: updated {learning.LEARNED} from {n_restore} restores + {n_edit} edits.")
 
 
+def _demo():
+    """Self-check for _build_archive_section recurrence logic. No network needed."""
+    import time as _time
+    now = int(_time.time())
+
+    def _sig(email, display=""):
+        return {"type": "keep_override", "action": "archived_without_reply",
+                "sender_email": email, "sender": display, "ts": now}
+
+    # Sender seen once: must be excluded.
+    once = [_sig("once@example.com")]
+    assert _build_archive_section(once) == "", "once-seen sender should not appear"
+
+    # Sender seen twice: must be included.
+    twice = [_sig("repeat@news.com", "News Digest"), _sig("repeat@news.com", "News Digest")]
+    section = _build_archive_section(twice)
+    assert "## Archive more like this" in section, "recurring sender should appear"
+    assert "News Digest" in section, "display name should be used"
+    assert "2×" in section, "count should appear"
+
+    # Mix: one once-only + one recurring.
+    mixed = [_sig("once@x.com"), _sig("bulk@spam.com"), _sig("bulk@spam.com")]
+    section = _build_archive_section(mixed)
+    assert "bulk@spam.com" in section, "recurring should be in mixed result"
+    assert "once@x.com" not in section, "once-only should be excluded from mixed result"
+
+    # Cap at max_bullets.
+    many = []
+    for i in range(15):
+        many += [_sig(f"sender{i}@example.com")] * 2
+    section = _build_archive_section(many, max_bullets=8)
+    assert section.count("- Archive:") == 8, "should cap at max_bullets"
+
+    print("learn.py self-check OK")
+
+
 if __name__ == "__main__":
-    main()
+    import sys as _sys
+    if len(_sys.argv) == 2 and _sys.argv[1] == "--self-check":
+        _demo()
+    else:
+        main()

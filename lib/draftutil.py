@@ -11,13 +11,25 @@ Subject and body are passed base64 (utf-8) to avoid shell-escaping problems.
 All gws calls run against the account whose config dir is given, using the
 file keyring backend so they work headlessly.
 """
-import argparse, base64, html as _html, json, os, subprocess, sys
+import argparse, base64, html as _html, json, os, subprocess, sys, time
 from email.message import EmailMessage
 from email.utils import formataddr, parseaddr
 
 GWS = os.environ.get("GWS_BIN", "gws")
 
 _SIG_CACHE = {}  # ponytail: module-level cache, keyed by config_dir
+
+# Transient error patterns that are safe to retry (rate-limit, server-side, network).
+# Note: "quota" is deliberately NOT here — Gmail surfaces hard per-project quota
+# denials that won't clear in seconds; only genuine rate-limiting (429 / "rate limit")
+# is transient.
+_RETRYABLE = ("429", "500", "502", "503", "504", "rate limit", "timeout",
+              "connection", "reset by peer", "temporarily unavailable")
+
+# Permanent failures — never retry these, even if the message also happens to contain
+# a retryable keyword. Checked first so auth/permission always wins over a coincidence.
+_FATAL = ("401", "403", "404", "unauthorized", "forbidden", "permission",
+          "insufficient", "invalid_grant", "not found", "invalid credentials")
 
 
 def _fetch_signature(config_dir):
@@ -49,30 +61,49 @@ def _env(config_dir):
     return e
 
 
-def _gws(config_dir, args, allow_empty=False):
-    r = subprocess.run([GWS] + args, capture_output=True, text=True, env=_env(config_dir))
-    # Check returncode first — a non-zero exit always means failure.
-    if r.returncode != 0:
-        err = "\n".join(l for l in r.stderr.splitlines() if "keyring" not in l).strip()
-        if not err:
-            err = "\n".join(l for l in r.stdout.splitlines() if "keyring" not in l).strip()
-        raise RuntimeError(err or f"gws exited with code {r.returncode}")
-    line = "\n".join(l for l in r.stdout.splitlines() if "keyring" not in l)
-    if not line.strip():
-        # Some endpoints (e.g. drafts.delete) return 204 No Content on success.
-        if allow_empty:
-            return {}
-        err = "\n".join(l for l in r.stderr.splitlines() if "keyring" not in l)
-        raise RuntimeError(err or "empty gws response")
-    try:
-        data = json.loads(line)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(
-            f"gws response not valid JSON: {exc} — snippet: {line[:200]!r}"
-        ) from exc
-    if isinstance(data, dict) and data.get("error"):
-        raise RuntimeError(json.dumps(data["error"]))
-    return data
+def _gws(config_dir, args, allow_empty=False, _retries=3):
+    """Run a gws subcommand, retrying transient errors with exponential backoff.
+
+    Retries up to _retries times (delays: 1s, 2s, 4s) on 429/5xx/network blips.
+    Auth/permission/not-found errors are raised immediately (no retry).
+    """
+    last_exc = None
+    for attempt in range(_retries):
+        r = subprocess.run([GWS] + args, capture_output=True, text=True, env=_env(config_dir))
+        # Check returncode first — a non-zero exit always means failure.
+        if r.returncode != 0:
+            err = "\n".join(l for l in r.stderr.splitlines() if "keyring" not in l).strip()
+            if not err:
+                err = "\n".join(l for l in r.stdout.splitlines() if "keyring" not in l).strip()
+            msg = err or f"gws exited with code {r.returncode}"
+            msg_lc = msg.lower()
+            # Fatal-first: auth/permission/not-found never retry, even if the message
+            # also contains a retryable keyword (e.g. a 403 body mentioning "connection").
+            if any(p in msg_lc for p in _FATAL):
+                raise RuntimeError(msg)
+            # Only retry on transient/rate-limit errors.
+            if any(p in msg_lc for p in _RETRYABLE) and attempt < _retries - 1:
+                last_exc = RuntimeError(msg)
+                time.sleep(2 ** attempt)   # 1s, 2s, 4s
+                continue
+            raise RuntimeError(msg)
+        line = "\n".join(l for l in r.stdout.splitlines() if "keyring" not in l)
+        if not line.strip():
+            # Some endpoints (e.g. drafts.delete) return 204 No Content on success.
+            if allow_empty:
+                return {}
+            err = "\n".join(l for l in r.stderr.splitlines() if "keyring" not in l)
+            raise RuntimeError(err or "empty gws response")
+        try:
+            data = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(
+                f"gws response not valid JSON: {exc} — snippet: {line[:200]!r}"
+            ) from exc
+        if isinstance(data, dict) and data.get("error"):
+            raise RuntimeError(json.dumps(data["error"]))
+        return data
+    raise last_exc  # all retries exhausted
 
 
 def _b64d(s):
