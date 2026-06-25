@@ -844,113 +844,70 @@ private struct DailyRoutineSection: View {
             SettingsHeader("Daily routine",
                            "When zero automatically runs. Changes take effect the next time the launch agent reschedules (if it's installed).")
 
-            // ── When it runs ──────────────────────────────────────────────
-            // Three clean rows: time · days · quick presets. Each label is fixed
-            // width so it never gets squeezed into a vertical char stack.
-            VStack(alignment: .leading, spacing: 11) {
+            // ── Schedule ──────────────────────────────────────────────────
+            // Leads with a plain-language summary you can read at a glance, then
+            // the time + days that compose it, directly editable beneath.
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Runs \(Text(daysPhrase).foregroundStyle(Paper.ink)) at \(Text(timeText).foregroundStyle(Paper.ink))")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Paper.ink2)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                // Time row
-                HStack(spacing: 8) {
-                    Text("Run at").font(.system(size: 12.5)).foregroundStyle(Paper.ink2)
-                        .fixedSize()
-                    TimeStepperField(value: $m.scheduleHour, range: 0...23,
-                                     format: { String(format: "%02d", $0) })
-                    Text(":").font(.system(size: 13, weight: .semibold)).foregroundStyle(Paper.ink2)
-                    TimeStepperField(value: $m.scheduleMinute, range: 0...59,
-                                     format: { String(format: "%02d", $0) },
-                                     step: 5)
-                    Spacer(minLength: 0)
+                // Time + quick presets share a row: type the time, or one-tap a preset.
+                HStack(spacing: 10) {
+                    Text("Time").font(.system(size: 12.5)).foregroundStyle(Paper.ink3)
+                        .frame(width: 40, alignment: .leading)
+                    DatePicker("", selection: timeBinding, displayedComponents: .hourAndMinute)
+                        .datePickerStyle(.stepperField).labelsHidden().fixedSize()
+                    Spacer(minLength: 8)
+                    Button("Weekdays") { m.scheduleDays = [1, 2, 3, 4, 5]; m.saveSchedule() }
+                        .buttonStyle(GhostButtonStyle()).fixedSize()
+                    Button("Every day") { m.scheduleDays = [0, 1, 2, 3, 4, 5, 6]; m.saveSchedule() }
+                        .buttonStyle(GhostButtonStyle()).fixedSize()
                 }
-                .onChange(of: m.scheduleHour)   { _, _ in m.saveSchedule() }
-                .onChange(of: m.scheduleMinute) { _, _ in m.saveSchedule() }
 
-                // Days-of-week pills
-                HStack(spacing: 5) {
-                    Text("On").font(.system(size: 12.5)).foregroundStyle(Paper.ink2)
-                        .fixedSize()
-                    HStack(spacing: 4) {
-                        ForEach(0..<7, id: \.self) { day in
-                            DayPill(label: Self.dayLabels[day],
-                                    on: m.scheduleDays.contains(day)) {
-                                if m.scheduleDays.contains(day) {
-                                    if m.scheduleDays.count > 1 { m.scheduleDays.remove(day) }
-                                } else {
-                                    m.scheduleDays.insert(day)
-                                }
-                                m.saveSchedule()
-                            }
+                // Days-of-week pills.
+                HStack(spacing: 6) {
+                    Text("Days").font(.system(size: 12.5)).foregroundStyle(Paper.ink3)
+                        .frame(width: 40, alignment: .leading)
+                    ForEach(0..<7, id: \.self) { day in
+                        DayPill(label: Self.dayLabels[day], on: m.scheduleDays.contains(day)) {
+                            toggleDay(day)
                         }
                     }
                     Spacer(minLength: 0)
                 }
-
-                // Quick presets on their own row so nothing crowds the time/day rows.
-                HStack(spacing: 8) {
-                    Button("Weekdays") {
-                        m.scheduleDays = [1, 2, 3, 4, 5]; m.saveSchedule()
-                    }
-                    .buttonStyle(GhostButtonStyle())
-                    .lineLimit(1).fixedSize(horizontal: true, vertical: false)
-                    Button("Every day") {
-                        m.scheduleDays = [0, 1, 2, 3, 4, 5, 6]; m.saveSchedule()
-                    }
-                    .buttonStyle(GhostButtonStyle())
-                    .lineLimit(1).fixedSize(horizontal: true, vertical: false)
-                    Spacer(minLength: 0)
-                }
             }
-            .padding(12)
-            .glassSurface(11)
+            .padding(14)
+            .glassSurface(Radius.card)
 
-            // ── Grace window + notify (one cohesive card) ─────────────────
+            // ── Run options ───────────────────────────────────────────────
+            // How each run behaves, grouped into one card with hairline rows.
             VStack(spacing: 0) {
-                HStack(spacing: 10) {
-                    Text("Protect mail newer than").font(.system(size: 12.5)).foregroundStyle(Paper.ink2)
-                    Picker("", selection: Binding(get: { m.graceDays }, set: { m.saveGraceDays($0) })) {
-                        Text("Off").tag(0)
-                        Text("1 day").tag(1)
-                        Text("2 days").tag(2)
-                        Text("3 days").tag(3)
-                        Text("7 days").tag(7)
-                    }
-                    .pickerStyle(.menu).labelsHidden().fixedSize().controlSize(.small)
-                    Spacer(minLength: 0)
-                }
-                .padding(.horizontal, 12).padding(.vertical, 10)
-                Rectangle().fill(Paper.hairline.opacity(0.10)).frame(height: 0.5)
+                SettingsPickerRow(
+                    label: "Protect mail newer than",
+                    selection: Binding(get: { m.graceDays }, set: { m.saveGraceDays($0) }),
+                    options: [(0, "Off"), (1, "1 day"), (2, "2 days"), (3, "3 days"), (7, "7 days")])
+                rowDivider
                 SettingsToggleRow(
                     label: "Notify me when a run finishes",
-                    value: Binding(get: { m.notifyOnRun }, set: { m.saveNotifyOnRun($0) })
-                )
+                    value: Binding(get: { m.notifyOnRun }, set: { m.saveNotifyOnRun($0) }))
+                rowDivider
+                SettingsPickerRow(
+                    label: "Also label archived mail",
+                    sublabel: "Keeps recent archived mail sorted into categories so there's always plenty labelled.",
+                    selection: Binding(get: { m.labelArchivedDays }, set: { m.saveLabelArchivedDays($0) }),
+                    options: [(0, "Off"), (7, "7 days"), (30, "30 days"), (90, "90 days"), (365, "1 year")])
             }
             .glassSurface(Radius.card)
 
-            // ── Archived mail labeling ────────────────────────────────────
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 10) {
-                    Text("Also label archived mail from").font(.system(size: 12.5)).foregroundStyle(Paper.ink2)
-                    Picker("", selection: Binding(get: { m.labelArchivedDays }, set: { m.saveLabelArchivedDays($0) })) {
-                        Text("Off").tag(0)
-                        Text("7 days").tag(7)
-                        Text("30 days").tag(30)
-                        Text("90 days").tag(90)
-                        Text("1 year").tag(365)
-                    }
-                    .pickerStyle(.menu).labelsHidden().fixedSize().controlSize(.small)
-                    Spacer(minLength: 0)
-                }
-                .padding(.horizontal, 12).padding(.vertical, 10)
-                Text("Keeps recent archived mail sorted into categories so there's always plenty labelled. Set to Off to skip.")
-                    .font(.system(size: 11)).foregroundStyle(Paper.ink3)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 12).padding(.bottom, 10)
-            }
-            .glassSurface(Radius.card)
-
-            // ── Backlog clear (one-off) ────────────────────────────────────
+            // ── One-time: clear the existing backlog (reversible, set apart). ─
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 10) {
-                    Text("Clear everything before").font(.system(size: 12.5)).foregroundStyle(Paper.ink2)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Clear the backlog").font(.system(size: 12.5)).foregroundStyle(Paper.ink)
+                        Text("Everything before").font(.system(size: 11)).foregroundStyle(Paper.ink3)
+                    }
                     DatePicker("", selection: $beforeDate, in: ...Date(), displayedComponents: .date)
                         .datePickerStyle(.field).labelsHidden().fixedSize()
                     Spacer(minLength: 6)
@@ -959,13 +916,65 @@ private struct DailyRoutineSection: View {
                     }
                     .buttonStyle(GhostButtonStyle()).disabled(m.isBusy)
                 }
-                Text("Clearing removes the inbox label and adds a dated recovery label — undo any time from the Undo tab. Starred, flagged, and live sign/pay/legal mail is always kept.")
+                Text("Removes the inbox label and adds a dated recovery label — undo any time from the Undo tab. Starred, flagged, and live sign/pay/legal mail is always kept.")
                     .font(.system(size: 11)).foregroundStyle(Paper.ink3)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.horizontal, 12).padding(.vertical, 10)
+            .padding(14)
             .glassSurface(Radius.card)
         }
+    }
+
+    private var rowDivider: some View {
+        Rectangle().fill(Paper.hairline.opacity(0.10)).frame(height: 0.5)
+    }
+
+    private func toggleDay(_ day: Int) {
+        if m.scheduleDays.contains(day) {
+            if m.scheduleDays.count > 1 { m.scheduleDays.remove(day) }
+        } else {
+            m.scheduleDays.insert(day)
+        }
+        m.saveSchedule()
+    }
+
+    // Schedule hour/minute (Ints, server contract) bridged to a Date for the native
+    // time field, so it stays type-able and locale-aware (12/24h follows the system).
+    private var timeBinding: Binding<Date> {
+        Binding(
+            get: {
+                var c = DateComponents(); c.hour = m.scheduleHour; c.minute = m.scheduleMinute
+                return Calendar.current.date(from: c) ?? Date()
+            },
+            set: {
+                let c = Calendar.current.dateComponents([.hour, .minute], from: $0)
+                m.scheduleHour = c.hour ?? 0
+                m.scheduleMinute = c.minute ?? 0
+                m.saveSchedule()
+            })
+    }
+
+    private static let timeFmt: DateFormatter = {
+        let f = DateFormatter(); f.timeStyle = .short; f.dateStyle = .none; return f
+    }()
+    private static let dayFull  = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    private static let dayShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
+    private var timeText: String {
+        var c = DateComponents(); c.hour = m.scheduleHour; c.minute = m.scheduleMinute
+        return Self.timeFmt.string(from: Calendar.current.date(from: c) ?? Date())
+    }
+
+    // The days set as a readable phrase: "every day", "every weekday", "on weekends",
+    // "every Monday", or "on Mon, Wed, Fri" (Mon-first reading order).
+    private var daysPhrase: String {
+        let d = m.scheduleDays
+        if d == [0, 1, 2, 3, 4, 5, 6] { return "every day" }
+        if d == [1, 2, 3, 4, 5] { return "every weekday" }
+        if d == [0, 6] { return "on weekends" }
+        if d.count == 1, let only = d.first { return "every \(Self.dayFull[only])" }
+        let names = [1, 2, 3, 4, 5, 6, 0].filter { d.contains($0) }.map { Self.dayShort[$0] }
+        return "on " + names.joined(separator: ", ")
     }
 }
 
@@ -994,52 +1003,29 @@ private struct DayPill: View {
     }
 }
 
-// An inline stepper field for hour/minute — no system date picker, just up/down arrows
-// flanking a fixed-width display. Wraps at range bounds.
-private struct TimeStepperField: View {
-    @Binding var value: Int
-    let range: ClosedRange<Int>
-    let format: (Int) -> String
-    var step: Int = 1
-
+// A menu-picker row that fits inside a glassSurface card (mirrors SettingsToggleRow's
+// height rhythm), with an optional sublabel beneath the title.
+private struct SettingsPickerRow: View {
+    let label: String
+    var sublabel: String? = nil
+    @Binding var selection: Int
+    let options: [(Int, String)]
     var body: some View {
-        HStack(spacing: 0) {
-            Button { stepDown() } label: {
-                Image(systemName: "chevron.left").font(.system(size: 9, weight: .semibold))
-                    .frame(width: 20, height: 26)
-                    .foregroundStyle(Paper.ink3)
-                    .contentShape(Rectangle())
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label).font(.system(size: 12.5)).foregroundStyle(Paper.ink)
+                if let sub = sublabel {
+                    Text(sub).font(.system(size: 11)).foregroundStyle(Paper.ink4)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-            .buttonStyle(.plain)
-
-            Text(format(value))
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                .foregroundStyle(Paper.ink)
-                .frame(width: 26, alignment: .center)
-
-            Button { stepUp() } label: {
-                Image(systemName: "chevron.right").font(.system(size: 9, weight: .semibold))
-                    .frame(width: 20, height: 26)
-                    .foregroundStyle(Paper.ink3)
-                    .contentShape(Rectangle())
+            Spacer(minLength: 8)
+            Picker("", selection: $selection) {
+                ForEach(options, id: \.0) { Text($0.1).tag($0.0) }
             }
-            .buttonStyle(.plain)
+            .pickerStyle(.menu).labelsHidden().fixedSize().controlSize(.small)
         }
-        .background(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(Paper.sunken.opacity(0.22))
-                .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .strokeBorder(Paper.hairline.opacity(0.14), lineWidth: 0.5))
-        )
-    }
-
-    private func stepUp() {
-        let next = value + step
-        value = next > range.upperBound ? range.lowerBound : next
-    }
-    private func stepDown() {
-        let prev = value - step
-        value = prev < range.lowerBound ? range.upperBound : prev
+        .padding(.horizontal, 12).padding(.vertical, 10)
     }
 }
 

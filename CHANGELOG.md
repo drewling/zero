@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.11] - 2026-06-25
+
+### Changed
+
+- **Daily routine settings, rethought for how you actually set them.** The schedule now leads with a plain-language summary you can read at a glance ("Runs every weekday at 7:00 AM"), with the time and days editable right beneath it. The hour/minute is a native, type-able time field instead of click-one-at-a-time arrows. The separate cards for the grace window, run notification, and archived-mail labeling are merged into a single "Run options" card with clean hairline rows, so the section reads as three clear groups, what runs, how it behaves, and the one-time backlog clear, rather than a stack of equal-weight boxes.
+
 ## [1.6.10] - 2026-06-25
 
 ### Added
