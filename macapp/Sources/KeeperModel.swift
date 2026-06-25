@@ -93,6 +93,11 @@ final class KeeperModel: ObservableObject {
     @Published var undoThreads: [String: [UndoThread]] = [:]
     @Published var undoLoading: Set<String> = []
     @Published var undoRestored: [String: Int] = [:]   // per-batch count restored this session
+    // Open loops: read-in-place preview. Which rows are expanded + the fetched bodies,
+    // both keyed by threadId so re-expanding never refetches.
+    @Published var expandedLoops: Set<String> = []
+    @Published var previews: [String: MessagePreview] = [:]
+    @Published var previewLoading: Set<String> = []
     // First-run backlog offer: shown once after the first inbox connects.
     @Published var backlogOffered: Bool = UserDefaults.standard.bool(forKey: "backlogOffered")
 
@@ -385,6 +390,20 @@ final class KeeperModel: ObservableObject {
     }
     func undo(_ point: UndoPoint, slug: String) {
         beginJob(kind: "undo", starting: "Restoring…") { try await self.api.undo(slug: slug, label: point.label) }
+    }
+
+    /// Expand/collapse a loop's inline preview, lazily fetching the body on first open.
+    func togglePreview(_ row: LoopRow) {
+        let tid = row.loop.threadId
+        if expandedLoops.contains(tid) { expandedLoops.remove(tid); return }
+        expandedLoops.insert(tid)
+        guard previews[tid] == nil, !previewLoading.contains(tid) else { return }
+        previewLoading.insert(tid)
+        Task {
+            let p = try? await api.threadPreview(slug: row.account.slug, threadId: tid)
+            previews[tid] = p ?? MessagePreview(body: "", sender: row.loop.sender, subject: row.loop.subject)
+            previewLoading.remove(tid)
+        }
     }
 
     func undoKey(_ slug: String, _ label: String) -> String { slug + "|" + label }

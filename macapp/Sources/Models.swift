@@ -200,6 +200,13 @@ struct UndoThread: Decodable, Identifiable {
     }
 }
 
+/// A read-in-place preview of a thread's latest message (body only, capped server-side).
+struct MessagePreview: Decodable {
+    var body = ""
+    var sender = ""
+    var subject = ""
+}
+
 struct Job: Decodable {
     var id = 0
     var kind: String?
@@ -376,6 +383,11 @@ struct KeeperAPI {
         _ = try await postRaw("/api/undo/thread",
                               ["slug": slug, "label": label, "id": id, "thread_id": threadId])
     }
+    /// The latest message in a thread as plain text — a read-in-place preview.
+    func threadPreview(slug: String, threadId: String) async throws -> MessagePreview {
+        try await post("/api/thread/preview", ["slug": slug, "thread_id": threadId], timeout: 30)
+    }
+
     @discardableResult func addAccount() async throws -> Int { try await startJob("/api/add-account", [:]) }
     @discardableResult func refresh() async throws -> Int { try await startJob("/api/refresh", [:]) }
 

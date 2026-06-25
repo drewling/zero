@@ -407,6 +407,70 @@ def _undo_thread(payload):
     return {"ok": True}
 
 
+def _b64(data):
+    """Decode a Gmail base64url body part to text (lenient on padding + encoding)."""
+    import base64  # noqa: E402
+    return base64.urlsafe_b64decode(data + "===").decode("utf-8", "replace")
+
+
+def _strip_html(s):
+    """Crude HTML -> readable text for previews (drop tags, unescape entities)."""
+    import html as _html  # noqa: E402
+    s = re.sub(r"(?is)<(script|style|head)\b.*?</\1>", " ", s)
+    s = re.sub(r"(?i)<br\s*/?>", "\n", s)
+    s = re.sub(r"(?i)</(p|div|tr|li|h[1-6])>", "\n", s)
+    s = re.sub(r"(?s)<[^>]+>", " ", s)
+    s = _html.unescape(s)
+    s = re.sub(r"[ \t]+", " ", s)
+    s = re.sub(r"\n[ \t]+", "\n", s)
+    return re.sub(r"\n{3,}", "\n\n", s).strip()
+
+
+def _extract_body(payload):
+    """Walk a Gmail message payload, preferring text/plain, else stripped text/html."""
+    found = {}
+
+    def walk(part):
+        mime = part.get("mimeType", "")
+        data = part.get("body", {}).get("data")
+        if data and mime in ("text/plain", "text/html"):
+            found.setdefault(mime, _b64(data))   # first of each wins
+        for p in part.get("parts") or []:
+            walk(p)
+
+    walk(payload)
+    if found.get("text/plain"):
+        return found["text/plain"].strip()
+    if found.get("text/html"):
+        return _strip_html(found["text/html"])
+    return ""
+
+
+def _thread_preview(payload):
+    """Latest message in a thread as plain text — enough to read the gist without
+    leaving the app. Not a full client: one message, body only, capped. Synchronous."""
+    sys.path.insert(0, HERE)
+    import draftutil as du  # noqa: E402
+    slug = payload.get("slug")
+    tid = payload.get("thread_id")
+    if not (slug and tid):
+        raise ValueError("need slug and thread_id")
+    cfg = _acct(slug)["config_dir"]
+    t = du._gws(cfg, ["gmail", "users", "threads", "get",
+                      "--params", json.dumps({"userId": "me", "id": tid, "format": "full"})])
+    msgs = t.get("messages", []) or []
+    if not msgs:
+        return {"body": "", "sender": "", "subject": ""}
+    m = msgs[-1]   # newest message in the thread
+    h = {x.get("name", "").lower(): x.get("value", "")
+         for x in m.get("payload", {}).get("headers", [])}
+    body = _extract_body(m.get("payload", {})).replace("\r\n", "\n").replace("\r", "\n")
+    body = re.sub(r"\n{3,}", "\n\n", body)[:6000].strip()
+    return {"body": body,
+            "sender": _display_from(h.get("from", "")),
+            "subject": h.get("subject", "") or "(no subject)"}
+
+
 def _dismiss(payload):
     """Set one loop aside: archive its whole thread reversibly and record that the
     user chose to archive rather than reply (a learning signal). Fast + synchronous
@@ -1485,6 +1549,7 @@ class Handler(BaseHTTPRequestHandler):
                  "/api/draft/send": _send_draft,
                  "/api/undo/threads": _undo_threads,
                  "/api/undo/thread": _undo_thread,
+                 "/api/thread/preview": _thread_preview,
                  "/api/set-credentials": _set_client_credentials}
         if p in _sync:
             try:

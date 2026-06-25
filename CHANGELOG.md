@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.5] - 2026-06-25
+
+### Added
+
+- **Read a message without leaving the app.** Tap any open loop to expand a read-in-place preview of the email's latest message, fetched on demand, scrollable, and selectable. It's enough to know the whole content at a glance, with "Open in Gmail" one click away for the full thread. Not a full mail client by design.
+
+### Changed
+
+- **Smoother, more native tab switching.** The four tabs now live on a single horizontal track that slides on one spring, the way native macOS panes move, instead of tearing each view down and rebuilding it. Switching tabs is calmer, and each tab keeps its own scroll position and any expanded previews instead of resetting every time.
+
 ## [1.6.4] - 2026-06-25
 
 ### Added

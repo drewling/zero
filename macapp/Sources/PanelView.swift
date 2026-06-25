@@ -250,36 +250,27 @@ private struct SegmentedNav: View {
 
 private struct ContentArea: View {
     @EnvironmentObject var m: KeeperModel
-    // Moment 8: track previous tab for directional slide.
-    @State private var prevTab: Tab = .loops
 
+    // All four panes stay alive in a horizontal track; switching tabs slides the
+    // track on a single spring. Native macOS pane-switch feel, and each view keeps
+    // its own scroll position + expanded previews instead of being torn down.
     var body: some View {
-        Group {
-            switch m.tab {
-            case .loops: LoopsView()
-            case .accounts: AccountsView()
-            case .undo: UndoView()
-            case .policy: PolicyView()
+        GeometryReader { geo in
+            let w = geo.size.width
+            HStack(spacing: 0) {
+                LoopsView().frame(width: w)
+                AccountsView().frame(width: w)
+                UndoView().frame(width: w)
+                PolicyView().frame(width: w)
             }
+            .frame(width: w, alignment: .leading)
+            .offset(x: -CGFloat(tabIndex) * w)
+            .animation(Motion.morph, value: m.tab)
         }
-        .id(m.tab)
-        // Moment 8: incoming content slides from the direction of the tab it came from.
-        // Tab order: loops(0) → accounts(1) → undo(2) → policy(3).
-        .transition(spatialTransition(from: prevTab, to: m.tab))
-        .onChange(of: m.tab) { old, _ in prevTab = old }
+        .clipped()
     }
 
-    // ponytail: directional slide ~32pt offset + fade; quick so nav doesn't feel slow.
-    private func spatialTransition(from: Tab, to: Tab) -> AnyTransition {
-        let allTabs = Tab.allCases
-        guard let fromIdx = allTabs.firstIndex(of: from),
-              let toIdx   = allTabs.firstIndex(of: to) else { return .opacity }
-        let movingRight = toIdx > fromIdx
-        let offset: CGFloat = movingRight ? 32 : -32
-        return .asymmetric(
-            insertion: .opacity.combined(with: .offset(x: offset, y: 0)),
-            removal:   .opacity.combined(with: .offset(x: -offset, y: 0)))
-    }
+    private var tabIndex: Int { Tab.allCases.firstIndex(of: m.tab) ?? 0 }
 }
 
 // MARK: - Open loops
@@ -401,32 +392,40 @@ private struct LoopRowView: View {
     @EnvironmentObject var m: KeeperModel
     let row: LoopRow
     @State private var hovering = false
+    private var expanded: Bool { m.expandedLoops.contains(row.loop.threadId) }
     var body: some View {
-        HStack(spacing: 11) {
-            Avatar(text: row.account.short, color: Color(hex: row.account.color), photoURL: row.account.photoURL)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(row.loop.sender).font(.system(size: 13, weight: .semibold)).lineLimit(1)
-                    if let cat = m.state?.category(named: row.loop.category) {
-                        CategoryTag(category: cat)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 11) {
+                Avatar(text: row.account.short, color: Color(hex: row.account.color), photoURL: row.account.photoURL)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(row.loop.sender).font(.system(size: 13, weight: .semibold)).lineLimit(1)
+                        if let cat = m.state?.category(named: row.loop.category) {
+                            CategoryTag(category: cat)
+                        }
+                    }
+                    Text(row.loop.subject).font(.system(size: 12.5)).foregroundStyle(Paper.ink3).lineLimit(1)
+                }
+                .legibleOnGlass()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                // Chevron cues that the row opens a read-in-place preview.
+                Image(systemName: "chevron.down").font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Paper.ink4).rotationEffect(.degrees(expanded ? 180 : 0))
+                    .opacity(hovering || expanded ? 1 : 0.4)
+                Text(relTime(row.loop.epoch)).font(.system(size: 11)).foregroundStyle(Paper.ink4).legibleOnGlass()
+
+                HStack(spacing: 2) {
+                    RowAction(symbol: "arrowshape.turn.up.left", help: "Draft a reply") { m.openComposer(row) }
+                    RowAction(symbol: "archivebox", help: "Set aside (reversible)") {
+                        withAnimation(Motion.sweep) { m.dismiss(row) }
                     }
                 }
-                Text(row.loop.subject).font(.system(size: 12.5)).foregroundStyle(Paper.ink3).lineLimit(1)
+                .opacity(hovering ? 1 : 0.55)
             }
-            .legibleOnGlass()
-            .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
-            .onTapGesture { m.open(row) }
+            .onTapGesture { withAnimation(Motion.settle) { m.togglePreview(row) } }
 
-            Text(relTime(row.loop.epoch)).font(.system(size: 11)).foregroundStyle(Paper.ink4).legibleOnGlass()
-
-            HStack(spacing: 2) {
-                RowAction(symbol: "arrowshape.turn.up.left", help: "Draft a reply") { m.openComposer(row) }
-                RowAction(symbol: "archivebox", help: "Set aside (reversible)") {
-                    withAnimation(Motion.sweep) { m.dismiss(row) }
-                }
-            }
-            .opacity(hovering ? 1 : 0.55)
+            if expanded { LoopPreview(row: row).transition(.opacity) }
         }
         .padding(.horizontal, 10).padding(.vertical, 9)
         .glassSurface(9, interactive: true)
@@ -441,6 +440,43 @@ private struct LoopRowView: View {
         .transition(.asymmetric(
             insertion: .opacity,
             removal: .opacity.combined(with: .scale(scale: 0.94)).combined(with: .move(edge: .trailing))))
+    }
+}
+
+// Read-in-place preview: the latest message's body, fetched on demand. Not a full
+// client — enough to know the content without leaving the panel.
+private struct LoopPreview: View {
+    @EnvironmentObject var m: KeeperModel
+    let row: LoopRow
+    private var tid: String { row.loop.threadId }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Rectangle().fill(Paper.hairline.opacity(0.18)).frame(height: 0.75).padding(.top, 9)
+            if m.previews[tid] == nil && m.previewLoading.contains(tid) {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text("Reading the message…").font(.system(size: 12)).foregroundStyle(Paper.ink3)
+                }.padding(.vertical, 6)
+            } else if let p = m.previews[tid], !p.body.isEmpty {
+                ScrollView {
+                    Text(p.body)
+                        .font(.system(size: 12.5)).foregroundStyle(Paper.ink2)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxHeight: 240)
+            } else {
+                Text("No readable text in this message.")
+                    .font(.system(size: 12)).foregroundStyle(Paper.ink3).padding(.vertical, 4)
+            }
+            Button { m.open(row) } label: {
+                Label("Open in Gmail", systemImage: "arrow.up.right.square")
+                    .font(.system(size: 11.5, weight: .medium))
+            }
+            .buttonStyle(.plain).foregroundStyle(Paper.accentSoft)
+            .help("Open the full thread in Gmail")
+        }
+        .legibleOnGlass()
     }
 }
 
