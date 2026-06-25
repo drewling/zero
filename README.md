@@ -9,6 +9,7 @@ isn't waiting on you, and keeps the rest one tap away. Nothing is ever deleted.
 
 <img src="design/screenshots/panel-loops.png" width="320" alt="zero open loops panel">
 
+[![Website](https://img.shields.io/badge/website-zero.headless.com-1A73E8)](https://zero.headless.com)
 [![Platform: macOS](https://img.shields.io/badge/platform-macOS%2026%2B-black?logo=apple)](https://github.com/drewling/zero/releases)
 [![License: PolyForm-NC](https://img.shields.io/badge/license-PolyForm--NC-blue)](LICENSE)
 
