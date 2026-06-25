@@ -96,9 +96,14 @@ fi
 echo "  Leak guard passed."
 
 # ---------------------------------------------------------------------------
-# Ad-hoc code signature so Gatekeeper lets a locally built app run.
+# Ad-hoc code signature. Apple Silicon requires every binary to be signed (at
+# least ad-hoc) to run at all. This is a flat single-binary bundle (no nested
+# frameworks/helpers), so sign the bundle directly — `--deep` is deprecated for
+# signing and can emit an invalid signature. NOTE: ad-hoc is NOT notarized, so a
+# *downloaded* copy is quarantined and Gatekeeper rejects it. End users must
+# install via macapp/install-zero.sh (strips the quarantine flag) — see that file.
 # ---------------------------------------------------------------------------
-codesign --force --deep --sign - "$APP" 2>/dev/null || \
+codesign --force --sign - "$APP" 2>/dev/null || \
   echo "  (codesign skipped — app still runs locally)"
 
 echo ""

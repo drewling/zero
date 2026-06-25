@@ -34,12 +34,30 @@ func resolveRepoRoot() -> String? {
     var dir = URL(fileURLWithPath: CommandLine.arguments[0]).deletingLastPathComponent()
     for _ in 0..<6 {
         if fm.fileExists(atPath: dir.appendingPathComponent("lib/keeper_server.py").path) {
+            // Don't auto-run from a source checkout that lives inside a TCC-protected
+            // folder (~/Documents, ~/Desktop, ~/Downloads). The server reads and writes
+            // repo files (logs, state, learning, drafts) on every launch and on the
+            // daily LaunchAgent run — doing that inside ~/Documents triggers the macOS
+            // "zero would like to access your Documents folder" prompt every time.
+            // Seed into Application Support instead (not TCC-protected). A dev who wants
+            // live source from such a location can still force it via MAIL_TRIAGE_DIR.
+            if isInTCCProtectedDir(dir.path) { break }
             return dir.path
         }
         dir = dir.deletingLastPathComponent()
     }
-    // Packaged .app: seed the bundled runtime into a writable support dir and use it.
+    // Packaged .app (or a checkout inside a protected folder): seed the bundled
+    // runtime into a writable support dir and run from there.
     return seedFromBundle()
+}
+
+/// True if `path` is inside one of the macOS TCC-gated home folders, where any
+/// file access pops the per-folder privacy prompt.
+private func isInTCCProtectedDir(_ path: String) -> Bool {
+    let home = FileManager.default.homeDirectoryForCurrentUser.path
+    let protected = ["\(home)/Documents", "\(home)/Desktop", "\(home)/Downloads"]
+    let p = URL(fileURLWithPath: path).standardized.path
+    return protected.contains { p == $0 || p.hasPrefix($0 + "/") }
 }
 
 /// Application Support location the packaged app runs from. The code lives in the
@@ -48,6 +66,16 @@ func resolveRepoRoot() -> String? {
 func supportDirURL() -> URL {
     FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/zero", isDirectory: true)
+}
+
+/// First run = no connected account yet. accounts.json is written only after the
+/// user connects an inbox; seedFromBundle never creates it (only the .example). Read
+/// the file directly so we can decide at launch, before the server is up.
+func hasConnectedAccount() -> Bool {
+    let url = supportDirURL().appendingPathComponent("accounts.json")
+    guard let data = try? Data(contentsOf: url),
+          let arr = try? JSONSerialization.jsonObject(with: data) as? [Any] else { return false }
+    return !arr.isEmpty
 }
 
 /// Copy the bundled `Contents/Resources/payload` into the support dir. Pure code is
@@ -270,11 +298,11 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
     var notifDrainTimer: Timer?
 
     func applicationDidFinishLaunching(_ note: Notification) {
-        startServer()
         // Dev-only: KEEPER_PREVIEW renders the panel in a normal window for a
         // screenshot of the live glass material (the menu-bar popover is hidden
         // until clicked and can't be captured headlessly).
         if ProcessInfo.processInfo.environment["KEEPER_PREVIEW"] != nil {
+            startServer()
             NSApp.setActivationPolicy(.regular)
             // Borderless, like the real panel, so the screenshot shows the true chrome
             // (arrow, rounded corners, shadow) — not a titlebar window.
@@ -300,10 +328,31 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
             model.onPanelOpen()
             return
         }
+        // Menu-bar path: put the icon on screen FIRST, before any disk work. On a
+        // fresh install startServer() copies the whole bundled payload into
+        // Application Support (seedFromBundle) — synchronous file IO that must never
+        // delay or hide the status item. So we set up the UI, then boot the server
+        // off the main thread. The model already polls the server with retries on
+        // panel open, so the icon never waits on the server coming up.
         NSApp.setActivationPolicy(.accessory)
         setupStatusItem()
         setupPanel()
         setupNotifications()
+        startServerAsync()
+
+        // First-run safety net: a brand-new user's only UI is the menu-bar icon. If
+        // the bar is full or the icon lands under the notch, the system gives the item
+        // no window and nothing shows — the app looks dead though it's running. Pop the
+        // onboarding panel (centred via positionPanel's fallback) so first launch is
+        // always visible and setup is reachable regardless of the icon.
+        if !hasConnectedAccount() { showPanel() }
+    }
+
+    // Re-opening the app from Finder/Spotlight (the natural move when you can't find
+    // the menu-bar icon) re-shows the panel instead of silently doing nothing.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        showPanel()
+        return true
     }
 
     // MARK: notifications
@@ -366,9 +415,15 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
 
     func setupStatusItem() {
         if let button = statusItem.button {
-            let img = NSImage(systemSymbolName: "tray.full", accessibilityDescription: "zero")
-            img?.isTemplate = true
-            button.image = img
+            if let img = NSImage(systemSymbolName: "tray.full", accessibilityDescription: "zero") {
+                img.isTemplate = true
+                button.image = img
+            } else {
+                // Fallback so the item is never zero-width (= invisible) if the SF
+                // Symbol can't be loaded — a menu-bar app with no image and no title
+                // renders nothing at all.
+                button.title = "zero"
+            }
             button.action = #selector(statusItemClicked)
             button.target = self
             // Receive both mouse-up events so we can distinguish right-click.
@@ -451,7 +506,15 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
     // Snug under the menu-bar item: the arrow tip sits just below the bar, pointing
     // at the item's centre; the window is clamped to the screen.
     func positionPanel() {
-        guard let button = statusItem.button, let bWin = button.window else { return }
+        // If the status item has no on-screen window, the system couldn't place the
+        // icon — the menu bar is full or it's hidden under the notch (the classic
+        // "menu-bar app runs but shows no icon" case). Don't bail and leave the panel
+        // off-screen: centre it near the top of the main screen so it's always visible
+        // and the user can still see + use zero (and finish onboarding).
+        guard let button = statusItem.button, let bWin = button.window else {
+            centerPanelOnScreen()
+            return
+        }
         let f = bWin.convertToScreen(button.convert(button.bounds, to: nil))
         let visible = (bWin.screen ?? NSScreen.main)?.visibleFrame
             ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
@@ -464,11 +527,22 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         panel.invalidateShadow()                     // shadow follows the rounded glass silhouette
     }
 
-    func startServer() {
-        guard let root = resolveRepoRoot() else {
-            repoMissing = true
-            return
-        }
+    // Fallback placement when there's no menu-bar item to anchor to (full bar / notch):
+    // top-centre of the main screen, arrow pointed at its own centre, fully on-screen.
+    func centerPanelOnScreen() {
+        let winH = PANEL_H + ARROW_H
+        let visible = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        let originX = visible.midX - PANEL_W / 2
+        let originY = visible.maxY - winH - 12
+        setArrowX(PANEL_W / 2)
+        panel.setFrame(NSRect(x: originX, y: originY, width: PANEL_W, height: winH), display: true)
+        panel.invalidateShadow()
+    }
+
+    /// Build and launch the Python keeper server. Pure (no main-actor state) so it
+    /// can run off the main thread on first launch, where resolveRepoRoot()/
+    /// seedFromBundle() do synchronous payload-copy disk IO. Returns nil on failure.
+    nonisolated static func launchServer(root: String) -> Process? {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         p.arguments = ["python3", "\(root)/lib/keeper_server.py"]
@@ -483,11 +557,30 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         env.removeValue(forKey: "GOOGLE_WORKSPACE_CLI_TOKEN")
         p.environment = env
         p.currentDirectoryURL = URL(fileURLWithPath: root)
-        do {
-            try p.run()
-            server = p
-        } catch {
+        do { try p.run(); return p } catch { return nil }
+    }
+
+    // Synchronous boot — used by the dev/preview path that needs the server up
+    // before it renders the screenshot window.
+    func startServer() {
+        guard let root = resolveRepoRoot(), let p = Self.launchServer(root: root) else {
             repoMissing = true
+            return
+        }
+        server = p
+    }
+
+    // Menu-bar boot — resolve the root (copies the bundled payload on first launch)
+    // and launch the server entirely off the main thread, so the status item that
+    // was already put up in applicationDidFinishLaunching is never blocked by disk IO.
+    func startServerAsync() {
+        // Strong self: AppController is the app delegate and lives for the whole
+        // process, so there's nothing to leak and nothing to outlive.
+        Task.detached(priority: .userInitiated) {
+            let proc = resolveRepoRoot().flatMap { Self.launchServer(root: $0) }
+            await MainActor.run {
+                if let proc { self.server = proc } else { self.repoMissing = true }
+            }
         }
     }
 

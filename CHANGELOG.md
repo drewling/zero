@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.12] - 2026-06-25
+
+### Fixed
+
+- **zero now always shows itself on first launch, even when the menu bar can't display its icon.** A menu-bar app's only UI is its icon, and on a full menu bar (or under the notch on newer MacBooks) macOS can give that icon no on-screen slot — the app runs but shows nothing, looking dead. zero now detects this and centers its panel on screen instead of staying hidden, pops the onboarding panel automatically on first launch, and re-shows the panel whenever you re-open the app from Finder or Spotlight. The icon is also put up immediately on launch, before any first-run disk work or server start, so it can never be delayed or hidden by setup.
+
+### Changed
+
+- **Accurate Google setup instructions, verified against the current console.** The README, in-app onboarding, and `docs/SETUP.md` now reflect Google's current "Google Auth Platform" console and — critically — tell you to set the OAuth app's publishing status to **In production**. In "Testing" status Google expires the refresh token after 7 days, which would silently stop zero from syncing about a week after setup. Verification (with its annual third-party audit) is not needed for personal use.
+- **Release and install instructions no longer hit the quarantine trap.** The Gatekeeper step now uses the absolute `/usr/bin/xattr` path — a Python or Homebrew `xattr` earlier in your PATH doesn't support the recursive flag and silently fails, leaving the app blocked — and points at the one-command installer.
+
 ## [1.6.11] - 2026-06-25
 
 ### Changed

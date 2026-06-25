@@ -106,6 +106,27 @@ When unsure, the policy keeps the thread. Everything archived is one tap away.
 
 ## Install & first run
 
+### Quick install (recommended)
+
+One command installs everything and launches the app:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/drewling/zero/master/macapp/install-zero.sh | bash
+```
+
+It installs the prerequisites if missing (Homebrew → Python 3 / Node → the `gws` and
+`claude` CLIs), copies `zero.app` to `/Applications`, **removes the macOS quarantine
+flag** (required — see below), and opens it. Re-running is safe.
+
+> **Why the quarantine step?** zero is signed ad-hoc, not notarized (no paid Apple
+> Developer account). macOS quarantines *downloaded* un-notarized apps and Gatekeeper
+> then refuses to launch them — so a hand-dragged DMG silently does nothing (a menu-bar
+> app has no window, so the block is invisible). The installer strips the flag, the
+> standard install path for un-notarized open-source Mac apps.
+
+Then jump to [first run](#first-run-connect-your-gmail). Prefer to do it by hand? See
+the manual steps below.
+
 ### Prerequisites
 
 | Requirement | Install | Notes |
@@ -128,7 +149,13 @@ When unsure, the policy keeps the thread. Everything archived is one tap away.
    ```
    Create a free OAuth client at [console.cloud.google.com](https://console.cloud.google.com/):
    - Enable the **Gmail API** on your project.
-   - **Credentials → Create Credentials → OAuth client ID → Desktop app** → download the JSON.
+   - Configure the consent screen under **Google Auth Platform** (Audience: **External**).
+   - **Set Publishing status to "In production"** — in "Testing" Google expires the
+     token after 7 days, so sync silently dies after a week. You can skip verification.
+   - **Clients → Create client → Desktop app** → download the JSON.
+
+   See [docs/SETUP.md §3](docs/SETUP.md) for the exact click-path and the
+   "unverified app" sign-in warning.
 
    Then authenticate (the `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file` env var is required
    for headless/launchd contexts — without it, auth silently fails):
@@ -147,8 +174,15 @@ When unsure, the policy keeps the thread. Everything archived is one tap away.
 4. **Download zero** from the [Releases page](https://github.com/drewling/zero/releases)
    and drag it to your Applications folder.
 
-   > **First launch:** Right-click the app icon → **Open** → confirm in the dialog.
-   > Or from Terminal: `xattr -dr com.apple.quarantine /Applications/zero.app`
+   > **First launch (required):** Because zero isn't notarized, macOS Gatekeeper blocks
+   > the downloaded app — and on macOS 26 the old "right-click → Open" trick no longer
+   > works for ad-hoc-signed apps. Remove the quarantine flag from Terminal:
+   > ```bash
+   > /usr/bin/xattr -cr /Applications/zero.app
+   > ```
+   > **Use the full `/usr/bin/xattr` path** — a Python/Homebrew `xattr` earlier in your
+   > PATH may not support these flags and will silently fail, leaving the app blocked.
+   > (The [quick-install script](#quick-install-recommended) handles this for you.)
 
 5. **Open zero.** On first launch the onboarding screen asks you to paste your OAuth
    client JSON (downloaded in step 2), then opens a browser sign-in for each account.

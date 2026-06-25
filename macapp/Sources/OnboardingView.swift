@@ -196,13 +196,15 @@ private struct CredentialsCard: View {
             Text("zero signs in through your own free Google app. Create an OAuth client, then paste it below — it never leaves this Mac.")
                 .font(.system(size: 12)).foregroundStyle(Paper.ink2)
                 .fixedSize(horizontal: false, vertical: true)
-            Link(destination: URL(string: "https://console.cloud.google.com/apis/credentials")!) {
+            Link(destination: URL(string: "https://console.cloud.google.com/auth/clients")!) {
                 HStack(spacing: 5) {
                     Image(systemName: "arrow.up.forward.square")
                     Text("Open Google Cloud Console")
                 }.font(.system(size: 11, weight: .medium)).foregroundStyle(Paper.accentSoft)
             }.buttonStyle(.plain)
-            Text("Create credentials → OAuth client ID → Desktop app → download the JSON. Enable the Gmail API for the project.")
+            // The publish-to-production line is load-bearing: in "Testing" status Google
+            // expires the refresh token after 7 days, so sync silently dies after a week.
+            Text("Enable the Gmail API, then Google Auth Platform → Clients → Create client → Desktop app → download the JSON. On the Audience tab, set Publishing status to In production (Testing expires access after 7 days).")
                 .font(.system(size: 10.5)).foregroundStyle(Paper.ink4)
                 .fixedSize(horizontal: false, vertical: true)
             ZStack(alignment: .topLeading) {
