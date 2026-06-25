@@ -612,6 +612,121 @@ footer { border-top: 1px solid var(--hairline); background: oklch(8% 0.006 255);
   .nav-links .gh-star span:not(.gh-count) { display: none; }
   .kept-reason { display: none; }
 }
+
+/* ─── Delight ───────────────────────────────────────────────────────── */
+
+/* macOS traffic lights reveal their glyphs on hover */
+.tl { position: relative; }
+.tl::after {
+  content: ""; position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 9px; font-weight: 700; line-height: 1;
+  color: oklch(0% 0 0 / 0.5); opacity: 0; transition: opacity .18s var(--ease);
+}
+.tl-r::after { content: "\00d7"; }
+.tl-y::after { content: "\2212"; }
+.tl-g::after { content: "+"; }
+.panel-titlebar:hover .tl::after { opacity: 1; }
+
+/* Hero kept-rows populate one at a time, like the morning summary filling in */
+.js-active .kept-row { opacity: 0; transform: translateY(6px); }
+.js-active .kept-row.kept-in { opacity: 1; transform: none; transition: opacity .45s var(--ease), transform .45s var(--ease); }
+
+/* Wordmark checkmark re-draws on hover */
+.wordmark-glyph .zcheck { stroke-dasharray: 48; }
+.wordmark:hover .zcheck { animation: retick .55s var(--ease); }
+@keyframes retick { 0% { stroke-dashoffset: 0; } 42% { stroke-dashoffset: 48; } 100% { stroke-dashoffset: 0; } }
+
+/* Primary button: specular sheen sweep + download-arrow bob on hover */
+.btn-primary { position: relative; overflow: hidden; }
+.btn-primary::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 38%;
+  background: linear-gradient(100deg, transparent, oklch(100% 0 0 / 0.55), transparent);
+  transform: skewX(-18deg); opacity: 0; pointer-events: none;
+}
+.btn-primary:hover::after { animation: sheen .6s var(--ease); }
+@keyframes sheen { 0% { left: -60%; opacity: 0; } 14% { opacity: 1; } 100% { left: 132%; opacity: 0; } }
+.btn-primary:hover svg { animation: arrow-bob .5s var(--ease); }
+@keyframes arrow-bob { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(2px); } }
+
+/* "nothing is ever deleted" — underline draws in when the section arrives */
+.problem-kicker strong {
+  background-image: linear-gradient(var(--accent-2), var(--accent-2));
+  background-repeat: no-repeat; background-position: 0 100%; background-size: 0% 1.5px;
+  padding-bottom: 2px; transition: background-size .6s var(--ease) .35s;
+}
+.problem-inner.visible .problem-kicker strong { background-size: 100% 1.5px; }
+
+/* Inbox: archived rows visibly settle (get set aside) when the panel arrives */
+.js-active .inbox-col.visible .inbox-row.dim { animation: settle 1.1s var(--ease) both; }
+@keyframes settle { 0% { opacity: 0.85; } 100% { opacity: 0.4; } }
+
+/* Bento cells lift their tint and brighten the icon on hover */
+.bento-cell { transition: background .25s var(--ease); }
+.bento-cell:hover { background: var(--bg-2); }
+.bento-icon { transition: color .25s var(--ease), transform .35s var(--ease); }
+.bento-cell:hover .bento-icon { color: var(--accent); transform: translateY(-1px); }
+
+/* Add-account card invites the click */
+.account-card.add { transition: box-shadow .25s var(--ease), background .25s var(--ease); }
+.account-card.add:hover { box-shadow: inset 0 0 0 1px var(--hairline-2); background: var(--surface); }
+.account-card.add .account-avatar { transition: transform .35s var(--ease), color .25s var(--ease); }
+.account-card.add:hover .account-avatar { transform: scale(1.12); color: var(--accent-2); }
+.account-card.add:hover .account-email { color: var(--text-2); }
+
+/* Engine chips are pickable */
+.engine-chip { cursor: pointer; border: 0; appearance: none; -webkit-appearance: none; background: transparent; transition: color .2s var(--ease), box-shadow .25s var(--ease), background .25s var(--ease), transform .12s var(--ease); }
+.engine-chip:active { transform: scale(0.96); }
+
+/* FAQ answers ease in when opened (native <details> keeps a11y + no-JS support) */
+.faq-item[open] .faq-a { animation: faq-in .32s var(--ease); }
+@keyframes faq-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+/* GitHub star count pops in when the API answers */
+#ghStars.pop { display: inline-block; animation: star-pop .42s var(--ease); }
+@keyframes star-pop { 0% { opacity: 0; transform: scale(0.6); } 60% { transform: scale(1.06); } 100% { opacity: 1; transform: scale(1); } }
+
+/* Draft composes itself, word by word, under a blinking caret */
+.draft-body .w { opacity: 0; }
+.draft-body.typed .w { opacity: 1; transition: opacity .26s var(--ease); }
+.draft-caret { display: inline-block; width: 2px; height: 0.95em; margin-left: 2px; vertical-align: text-bottom; background: var(--accent-2); animation: caret 1.05s steps(1) infinite; }
+@keyframes caret { 50% { opacity: 0; } }
+
+/* Visual mock panels come alive: a soft spotlight tracks the cursor (tilt added in JS) */
+.app-panel, .inbox-visual, .draft-panel {
+  position: relative;
+  transition: transform .45s var(--ease), box-shadow .45s var(--ease);
+}
+.app-panel::after, .inbox-visual::after, .draft-panel::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 3;
+  pointer-events: none; opacity: 0; transition: opacity .35s var(--ease);
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), oklch(72% 0.14 255 / 0.13), transparent 62%);
+}
+.app-panel:hover::after, .inbox-visual:hover::after, .draft-panel:hover::after { opacity: 1; }
+
+/* Tactile row + card hovers inside the visuals */
+.kept-row, .inbox-row { transition: background .2s var(--ease); }
+.kept-row:hover { background: oklch(100% 0 0 / 0.025); }
+.inbox-row:hover { background: oklch(100% 0 0 / 0.03); }
+.account-card:not(.add) { transition: box-shadow .25s var(--ease), transform .25s var(--ease); }
+.account-card:not(.add):hover { box-shadow: inset 0 0 0 1px var(--hairline-2), 0 0 0 1px var(--hairline); transform: translateY(-1px); }
+
+/* Hero glow eases toward the cursor; CTA glow breathes on its own */
+.glow { transition: transform .25s var(--ease); }
+#cta .glow { animation: breathe 7s ease-in-out infinite; }
+@keyframes breathe {
+  0%, 100% { opacity: 0.55; transform: translateX(-50%) scale(1); }
+  50%      { opacity: 0.8;  transform: translateX(-50%) scale(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js-active .kept-row { opacity: 1 !important; transform: none !important; }
+  .wordmark:hover .zcheck, .btn-primary:hover svg, #cta .glow, #ghStars.pop, .draft-caret, .faq-item[open] .faq-a { animation: none !important; }
+  .btn-primary::after { display: none !important; }
+  .js-active .inbox-col.visible .inbox-row.dim { animation: none !important; }
+  .problem-kicker strong { background-size: 100% 1.5px !important; transition: none !important; }
+  .draft-body .w { opacity: 1 !important; }
+  .glow { transition: none !important; }
+}
 </style>
 <script>document.documentElement.classList.add('js-active');</script>
 </head>
@@ -628,7 +743,7 @@ footer { border-top: 1px solid var(--hairline); background: oklch(8% 0.006 255);
               <stop offset="0" stop-color="#4285F4"/><stop offset="1" stop-color="#1761C2"/>
             </linearGradient></defs>
             <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#zmark)"/>
-            <path d="M18 34L28.5 44.5L48 19.5" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+            <path class="zcheck" d="M18 34L28.5 44.5L48 19.5" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
         zero
@@ -672,11 +787,11 @@ footer { border-top: 1px solid var(--hairline); background: oklch(8% 0.006 255);
           <div class="traffic-lights" aria-hidden="true">
             <div class="tl tl-r"></div><div class="tl tl-y"></div><div class="tl tl-g"></div>
           </div>
-          <div class="panel-title">zero · 6:47 am</div>
+          <div class="panel-title" id="panelClock">zero · 6:47 am</div>
         </div>
         <div class="kept-headline">
           <div class="kept-eyebrow">This morning, zero kept</div>
-          <div class="kept-num">3</div>
+          <div class="kept-num" data-countup="3">3</div>
           <div class="kept-num-sub">things that still need you</div>
         </div>
         <div class="kept-list">
@@ -698,7 +813,7 @@ footer { border-top: 1px solid var(--hairline); background: oklch(8% 0.006 255);
         </div>
         <div class="kept-footer">
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7.5 5.5 11 12 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span><strong>24</strong> set aside · nothing deleted · one search undoes it</span>
+          <span><strong data-countup="24">24</strong> set aside · nothing deleted · one search undoes it</span>
         </div>
       </div>
     </div>
@@ -782,7 +897,7 @@ footer { border-top: 1px solid var(--hairline); background: oklch(8% 0.006 255);
           <div class="inbox-row"><div class="inbox-dot inbox-dot-keep"></div><span class="inbox-from">Sarah Chen</span><span class="inbox-subj">Re: proposal review</span></div>
           <div class="inbox-row"><div class="inbox-dot inbox-dot-keep"></div><span class="inbox-from">Marcus Webb</span><span class="inbox-subj">Decision needed before Friday</span></div>
           <div class="inbox-row"><div class="inbox-dot inbox-dot-keep"></div><span class="inbox-from">Stripe</span><span class="inbox-subj">Payment failed: action required</span></div>
-          <div class="inbox-stat-row"><div class="inbox-stat"><strong>3</strong> open loops</div><div class="inbox-stat"><strong>24</strong> archived, not deleted</div></div>
+          <div class="inbox-stat-row"><div class="inbox-stat"><strong data-countup="3">3</strong> open loops</div><div class="inbox-stat"><strong data-countup="24">24</strong> archived, not deleted</div></div>
         </div>
       </div>
     </div>
@@ -895,11 +1010,11 @@ footer { border-top: 1px solid var(--hairline); background: oklch(8% 0.006 255);
         <div class="account-list">
           <div class="account-card">
             <div class="account-info"><div class="account-avatar">W</div><span class="account-email">you@work.com</span></div>
-            <div class="account-stats"><span class="acct-stat"><span class="num">5</span> kept</span><span class="acct-stat"><span class="num">31</span> archived</span></div>
+            <div class="account-stats"><span class="acct-stat"><span class="num" data-countup="5">5</span> kept</span><span class="acct-stat"><span class="num" data-countup="31">31</span> archived</span></div>
           </div>
           <div class="account-card">
             <div class="account-info"><div class="account-avatar">P</div><span class="account-email">you@personal.com</span></div>
-            <div class="account-stats"><span class="acct-stat"><span class="num">2</span> kept</span><span class="acct-stat"><span class="num">14</span> archived</span></div>
+            <div class="account-stats"><span class="acct-stat"><span class="num" data-countup="2">2</span> kept</span><span class="acct-stat"><span class="num" data-countup="14">14</span> archived</span></div>
           </div>
           <div class="account-card add">
             <div class="account-info"><div class="account-avatar">+</div><span class="account-email">zero add-account</span></div>
@@ -918,11 +1033,11 @@ footer { border-top: 1px solid var(--hairline); background: oklch(8% 0.006 255);
       <div class="eyebrow center">AI provider</div>
       <h2>Works with your AI engine.</h2>
       <p>Claude powers the judgment layer today. Codex, Hermes, and other agent CLIs are supported through a provider abstraction. zero uses whichever one you have.</p>
-      <div class="engine-chips">
-        <div class="engine-chip active">Claude · default</div>
-        <div class="engine-chip">Codex</div>
-        <div class="engine-chip">Hermes</div>
-        <div class="engine-chip">Other agent CLIs</div>
+      <div class="engine-chips" role="group" aria-label="AI provider">
+        <button type="button" class="engine-chip active">Claude · default</button>
+        <button type="button" class="engine-chip">Codex</button>
+        <button type="button" class="engine-chip">Hermes</button>
+        <button type="button" class="engine-chip">Other agent CLIs</button>
       </div>
       <p class="engine-note">You supply the API key, and it stays on your machine. The abstraction is intentional: the judgment logic is provider-agnostic.</p>
     </div>
@@ -1007,7 +1122,7 @@ footer { border-top: 1px solid var(--hairline); background: oklch(8% 0.006 255);
           <span class="wordmark-glyph" aria-hidden="true">
             <svg width="20" height="20" viewBox="0 0 64 64" aria-hidden="true">
               <rect x="2" y="2" width="60" height="60" rx="15" fill="#4285F4"/>
-              <path d="M18 34L28.5 44.5L48 19.5" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+              <path class="zcheck" d="M18 34L28.5 44.5L48 19.5" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </span>
           zero
@@ -1075,8 +1190,150 @@ footer { border-top: 1px solid var(--hairline); background: oklch(8% 0.006 255);
       if (typeof n !== 'number' || n < 1) return;
       el.textContent = n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k' : String(n);
       el.hidden = false;
+      el.classList.add('pop');
     })
     .catch(() => {});
+})();
+
+// ─── Delight ─────────────────────────────────────────────────────────────
+(function () {
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hasIO = !!window.IntersectionObserver;
+  // Fire fn once, when el scrolls into view — same trigger the reveal system uses
+  // (threshold 0 + bottom rootMargin is reliable; high thresholds miss small/inline targets)
+  function whenSeen(el, fn) {
+    if (!hasIO) { fn(); return; }
+    const o = new IntersectionObserver((es) => {
+      es.forEach(e => { if (e.isIntersecting) { o.unobserve(e.target); fn(); } });
+    }, { threshold: 0, rootMargin: '0px 0px -10% 0px' });
+    o.observe(el);
+  }
+
+  // Live clock in the hero panel titlebar — makes the mock feel like this morning
+  const clock = document.getElementById('panelClock');
+  if (clock) {
+    const t = new Date();
+    let h = t.getHours(); const ap = h < 12 ? 'am' : 'pm';
+    h = h % 12 || 12;
+    clock.textContent = 'zero · ' + h + ':' + String(t.getMinutes()).padStart(2, '0') + ' ' + ap;
+  }
+
+  // Count-up numbers when they arrive
+  function countUp(el) {
+    const target = parseInt(el.dataset.countup, 10);
+    if (isNaN(target)) return;
+    if (reduce) { el.textContent = String(target); return; }
+    const dur = 750, t0 = performance.now();
+    (function tick(now) {
+      const p = Math.min(1, (now - t0) / dur);
+      el.textContent = String(Math.round((1 - Math.pow(1 - p, 3)) * target));
+      if (p < 1) requestAnimationFrame(tick);
+    })(t0);
+    // Safety: land on the exact value even if rAF is throttled (background tab)
+    setTimeout(() => { el.textContent = String(target); }, dur + 120);
+  }
+  document.querySelectorAll('[data-countup]').forEach(el => {
+    if (reduce) { el.textContent = el.dataset.countup; return; }
+    el.textContent = '0';
+    whenSeen(el.closest('.reveal') || el, () => countUp(el));
+  });
+
+  // Hero kept-rows populate one at a time
+  document.querySelectorAll('.kept-list').forEach(list => {
+    whenSeen(list, () => {
+      list.querySelectorAll('.kept-row').forEach((r, i) => {
+        if (reduce) { r.classList.add('kept-in'); }
+        else setTimeout(() => r.classList.add('kept-in'), 180 + i * 140);
+      });
+    });
+  });
+
+  // Engine chips — pick your provider
+  document.querySelectorAll('.engine-chips').forEach(group => {
+    group.addEventListener('click', e => {
+      const chip = e.target.closest('.engine-chip');
+      if (!chip) return;
+      group.querySelectorAll('.engine-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+
+  // Draft composes itself, word by word, under a blinking caret
+  if (!reduce) {
+    const body = document.querySelector('.draft-body');
+    if (body) {
+      let i = 0;
+      body.querySelectorAll('p').forEach(p => {
+        const words = p.textContent.split(' ');
+        p.textContent = '';
+        words.forEach((w, j) => {
+          const s = document.createElement('span');
+          s.className = 'w';
+          s.textContent = (j ? ' ' : '') + w;
+          s.style.transitionDelay = (i++ * 0.05) + 's';
+          p.appendChild(s);
+        });
+      });
+      const ps = body.querySelectorAll('p');
+      if (ps.length) {
+        const caret = document.createElement('span');
+        caret.className = 'draft-caret';
+        caret.setAttribute('aria-hidden', 'true');
+        ps[ps.length - 1].appendChild(caret);
+      }
+      whenSeen(body, () => body.classList.add('typed'));
+    }
+  }
+
+  // Visual mock panels come alive under the cursor — subtle 3D tilt + spotlight
+  if (!reduce) {
+    const liven = (el, maxTilt) => {
+      if (!el) return;
+      let raf = 0;
+      el.addEventListener('pointermove', e => {
+        if (raf) return;
+        raf = requestAnimationFrame(() => {
+          raf = 0;
+          const r = el.getBoundingClientRect();
+          const x = e.clientX - r.left, y = e.clientY - r.top;
+          const px = x / r.width - 0.5, py = y / r.height - 0.5;
+          el.style.setProperty('--mx', x + 'px');
+          el.style.setProperty('--my', y + 'px');
+          el.style.transform = 'perspective(1100px) rotateX(' + (-py * maxTilt).toFixed(2) + 'deg) rotateY(' + (px * maxTilt).toFixed(2) + 'deg)';
+        });
+      });
+      el.addEventListener('pointerleave', () => { el.style.transform = ''; });
+    };
+    liven(document.querySelector('.app-panel'), 4);
+    liven(document.querySelector('.inbox-visual'), 3);
+    liven(document.querySelector('.draft-panel'), 4.5);
+  }
+
+  // Hero glow eases toward the cursor
+  if (!reduce) {
+    const hero = document.getElementById('hero');
+    const glow = hero && hero.querySelector('.glow');
+    if (hero && glow) {
+      let raf = 0;
+      hero.addEventListener('pointermove', e => {
+        if (raf) return;
+        raf = requestAnimationFrame(() => {
+          raf = 0;
+          const r = hero.getBoundingClientRect();
+          const dx = (e.clientX - r.left - r.width / 2) / r.width;
+          const dy = (e.clientY - r.top - r.height / 3) / r.height;
+          glow.style.transform = 'translateX(calc(-50% + ' + (dx * 36).toFixed(1) + 'px)) translateY(' + (dy * 30).toFixed(1) + 'px)';
+        });
+      });
+      hero.addEventListener('pointerleave', () => { glow.style.transform = ''; });
+    }
+  }
+
+  // For the curious — it's all readable
+  try {
+    console.log('%czero', 'font:600 22px ui-sans-serif,system-ui;color:#8AB4F8');
+    console.log('%cAn inbox you can finally ignore. It runs on your machine, on your keys — nothing is sent to us.\nEvery line is readable: https://github.com/drewling/zero', 'color:#8a8f98;font:13px ui-monospace,monospace;line-height:1.5');
+  } catch (e) {}
 })();
 </script>
 </body>
