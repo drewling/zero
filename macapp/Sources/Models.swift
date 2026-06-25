@@ -378,10 +378,13 @@ struct KeeperAPI {
         return w.threads
     }
 
-    /// Un-archive a single email from a recovery label.
-    func undoThread(slug: String, label: String, id: String, threadId: String) async throws {
+    /// Un-archive a single email from a recovery label. Sends the thread's metadata so
+    /// the server can put it straight back into Open loops, not just the inbox.
+    func undoThread(slug: String, label: String, thread: UndoThread) async throws {
         _ = try await postRaw("/api/undo/thread",
-                              ["slug": slug, "label": label, "id": id, "thread_id": threadId])
+                              ["slug": slug, "label": label, "id": thread.id,
+                               "thread_id": thread.threadId, "sender": thread.sender,
+                               "subject": thread.subject, "epoch": thread.epoch])
     }
     /// The latest message in a thread as plain text — a read-in-place preview.
     func threadPreview(slug: String, threadId: String) async throws -> MessagePreview {

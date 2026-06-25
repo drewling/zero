@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.7] - 2026-06-25
+
+### Added
+
+- **Read and open set-aside emails from the Undo tab.** The emails inside a recovery batch now behave like open loops: tap one to read its full content in place, or "Open in Gmail" for the whole thread. Restoring an email also puts it straight back into Open loops, where you'd expect to find it again, rather than silently into the inbox where you'd have to go hunting.
+
 ## [1.6.6] - 2026-06-25
 
 ### Changed

@@ -425,7 +425,10 @@ private struct LoopRowView: View {
             .contentShape(Rectangle())
             .onTapGesture { withAnimation(Motion.settle) { m.togglePreview(row) } }
 
-            if expanded { LoopPreview(row: row).transition(.opacity) }
+            if expanded {
+                ThreadPreview(slug: row.account.slug, email: row.account.email,
+                              threadId: row.loop.threadId).transition(.opacity)
+            }
         }
         .padding(.horizontal, 10).padding(.vertical, 9)
         .glassSurface(9, interactive: true)
@@ -443,21 +446,20 @@ private struct LoopRowView: View {
     }
 }
 
-// Read-in-place preview: the latest message's body, fetched on demand. Not a full
-// client — enough to know the content without leaving the panel.
-private struct LoopPreview: View {
+// Read-in-place preview: the latest message's body, fetched on demand. Shared by
+// Open loops + the Undo tab. Not a full client — enough to know the content here.
+private struct ThreadPreview: View {
     @EnvironmentObject var m: KeeperModel
-    let row: LoopRow
-    private var tid: String { row.loop.threadId }
+    let slug: String; let email: String; let threadId: String
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Rectangle().fill(Paper.hairline.opacity(0.18)).frame(height: 0.75).padding(.top, 9)
-            if m.previews[tid] == nil && m.previewLoading.contains(tid) {
+            if m.previews[threadId] == nil && m.previewLoading.contains(threadId) {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
                     Text("Reading the message…").font(.system(size: 12)).foregroundStyle(Paper.ink3)
                 }.padding(.vertical, 6)
-            } else if let p = m.previews[tid], !p.body.isEmpty {
+            } else if let p = m.previews[threadId], !p.body.isEmpty {
                 ScrollView {
                     Text(p.body)
                         .font(.system(size: 12.5)).foregroundStyle(Paper.ink2)
@@ -469,7 +471,7 @@ private struct LoopPreview: View {
                 Text("No readable text in this message.")
                     .font(.system(size: 12)).foregroundStyle(Paper.ink3).padding(.vertical, 4)
             }
-            Button { m.open(row) } label: {
+            Button { m.openInGmail(email: email, threadId: threadId) } label: {
                 Label("Open in Gmail", systemImage: "arrow.up.right.square")
                     .font(.system(size: 11.5, weight: .medium))
             }
@@ -660,9 +662,7 @@ private struct UndoBatch: View {
                 } else {
                     VStack(spacing: 0) {
                         ForEach(loaded) { t in
-                            UndoEmailRow(thread: t) {
-                                m.restoreThread(slug: account.slug, label: point.label, thread: t)
-                            }
+                            UndoEmailRow(thread: t, account: account, label: point.label)
                         }
                     }
                     if point.count > loaded.count {
@@ -688,22 +688,35 @@ private struct UndoBatch: View {
 }
 
 private struct UndoEmailRow: View {
+    @EnvironmentObject var m: KeeperModel
     let thread: UndoThread
-    let restore: () -> Void
+    let account: Account
+    let label: String
+    private var expanded: Bool { m.expandedLoops.contains(thread.threadId) }
     var body: some View {
-        HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(thread.subject.isEmpty ? "(no subject)" : thread.subject)
-                    .font(.system(size: 12.5)).lineLimit(1)
-                Text(senderLine).font(.system(size: 11)).foregroundStyle(Paper.ink3).lineLimit(1)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(thread.subject.isEmpty ? "(no subject)" : thread.subject)
+                        .font(.system(size: 12.5)).lineLimit(1)
+                    Text(senderLine).font(.system(size: 11)).foregroundStyle(Paper.ink3).lineLimit(1)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture { withAnimation(Motion.settle) { m.togglePreview(slug: account.slug, threadId: thread.threadId) } }
+                Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(Paper.ink4).rotationEffect(.degrees(expanded ? 180 : 0)).opacity(0.5)
+                Button { m.restoreThread(slug: account.slug, label: label, thread: thread) } label: {
+                    Image(systemName: "tray.and.arrow.up")
+                        .font(.system(size: 12, weight: .medium)).foregroundStyle(Paper.accentSoft)
+                        .frame(width: 28, height: 26).glassSurface(7, interactive: true)
+                }
+                .buttonStyle(.plain).help("Put this email back in the inbox")
             }
-            Spacer(minLength: 6)
-            Button(action: restore) {
-                Image(systemName: "tray.and.arrow.up")
-                    .font(.system(size: 12, weight: .medium)).foregroundStyle(Paper.accentSoft)
-                    .frame(width: 28, height: 26).glassSurface(7, interactive: true)
+            if expanded {
+                ThreadPreview(slug: account.slug, email: account.email,
+                              threadId: thread.threadId).transition(.opacity)
             }
-            .buttonStyle(.plain).help("Put this email back in the inbox")
         }
         .padding(.vertical, 7)
     }

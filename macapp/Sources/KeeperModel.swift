@@ -392,16 +392,18 @@ final class KeeperModel: ObservableObject {
         beginJob(kind: "undo", starting: "Restoring…") { try await self.api.undo(slug: slug, label: point.label) }
     }
 
-    /// Expand/collapse a loop's inline preview, lazily fetching the body on first open.
-    func togglePreview(_ row: LoopRow) {
-        let tid = row.loop.threadId
+    func togglePreview(_ row: LoopRow) { togglePreview(slug: row.account.slug, threadId: row.loop.threadId) }
+
+    /// Expand/collapse an inline preview for any thread (open loop or undo row),
+    /// lazily fetching the body once. Keyed by threadId, so both surfaces share the cache.
+    func togglePreview(slug: String, threadId tid: String) {
         if expandedLoops.contains(tid) { expandedLoops.remove(tid); return }
         expandedLoops.insert(tid)
         guard previews[tid] == nil, !previewLoading.contains(tid) else { return }
         previewLoading.insert(tid)
         Task {
-            let p = try? await api.threadPreview(slug: row.account.slug, threadId: tid)
-            previews[tid] = p ?? MessagePreview(body: "", sender: row.loop.sender, subject: row.loop.subject)
+            let p = try? await api.threadPreview(slug: slug, threadId: tid)
+            previews[tid] = p ?? MessagePreview()
             previewLoading.remove(tid)
         }
     }
@@ -425,13 +427,20 @@ final class KeeperModel: ObservableObject {
         let key = undoKey(slug, label)
         undoThreads[key]?.removeAll { $0.id == thread.id }
         undoRestored[key, default: 0] += 1
+        // Bring it straight back into Open loops where the user expects to see it.
+        let loop = Loop(threadId: thread.threadId, sender: thread.sender, senderEmail: nil,
+                        subject: thread.subject, snippet: nil, epoch: thread.epoch,
+                        accountSlug: slug, category: nil)
+        state?.readdLoop(slug: slug, loop: loop)
         Haptic.tap()
         Task {
-            do { try await api.undoThread(slug: slug, label: label, id: thread.id, threadId: thread.threadId) }
-            catch {
-                // Put it back so the user isn't misled into thinking it was restored.
+            do {
+                try await api.undoThread(slug: slug, label: label, thread: thread)
+            } catch {
+                // Roll back both surfaces so the user isn't misled.
                 undoThreads[key, default: []].append(thread)
                 undoRestored[key, default: 0] -= 1
+                state?.dropLoop(slug: slug, threadId: thread.threadId)
                 toast("Couldn't restore that email")
             }
         }
@@ -773,9 +782,12 @@ final class KeeperModel: ObservableObject {
 
     // MARK: opening in Gmail
 
-    func open(_ row: LoopRow) {
-        let who = row.account.email.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        if let url = URL(string: "https://mail.google.com/mail/?authuser=\(who)#all/\(row.loop.threadId)") {
+    func open(_ row: LoopRow) { openInGmail(email: row.account.email, threadId: row.loop.threadId) }
+
+    /// Open a thread in Gmail in the right account (authuser), from any surface.
+    func openInGmail(email: String, threadId: String) {
+        let who = email.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        if let url = URL(string: "https://mail.google.com/mail/?authuser=\(who)#all/\(threadId)") {
             NSWorkspace.shared.open(url)
         }
     }

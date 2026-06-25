@@ -411,13 +411,29 @@ def _undo_thread(payload):
         raise ValueError("need slug, label, id")
     cfg = _acct(slug)["config_dir"]
     lid = _find_label(cfg, label_name)
+    tid = payload.get("thread_id", mid)
     du._gws(cfg, ["gmail", "users", "messages", "modify",
                   "--params", json.dumps({"userId": "me", "id": mid}),
                   "--json", json.dumps({"addLabelIds": ["INBOX"],
                                         "removeLabelIds": [lid] if lid else []})],
             allow_empty=True)
-    learning.record({"type": "keep_override_undo", "account": slug,
-                     "thread_id": payload.get("thread_id", mid)})
+    learning.record({"type": "keep_override_undo", "account": slug, "thread_id": tid})
+
+    # Bring the thread back into Open loops + the inbox count so it persists across
+    # reloads (the app shows it instantly via its own optimistic re-add). The undo
+    # bucket count is tracked optimistically app-side, so we don't bump it here —
+    # bumping too would double-count it on the next reload.
+    def _readd(st):
+        for a in st.get("accounts", []):
+            if a.get("slug") == slug and not any(
+                    l.get("thread_id") == tid for l in a.get("loops", [])):
+                a.setdefault("loops", []).insert(0, {
+                    "thread_id": tid, "sender": payload.get("sender", ""),
+                    "subject": payload.get("subject", ""),
+                    "snippet": payload.get("snippet", ""),
+                    "epoch": payload.get("epoch", 0), "account_slug": slug})
+                a["inbox_threads"] = a.get("inbox_threads", 0) + 1
+    _patch_state(_readd)
     return {"ok": True}
 
 
