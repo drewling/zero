@@ -35,7 +35,6 @@ struct CleanupState {
     var labels: [LabelInfo] = []
     var selected: Set<String> = []   // selected label ids
     var loading = true
-    var deleting = false
     var error: String?
 }
 
@@ -163,7 +162,8 @@ final class KeeperModel: ObservableObject {
     /// A light, non-archiving job in flight (label backfill or backlog archive) —
     /// surfaced via the slim banner, never the full takeover.
     var isWorkingInline: Bool {
-        job?.isRunning == true && (job?.kind == "populate" || job?.kind == "archive_before")
+        job?.isRunning == true &&
+            (job?.kind == "populate" || job?.kind == "archive_before" || job?.kind == "cleanup")
     }
     /// Any background job is in flight — disable the action button.
     var isBusy: Bool { job?.isRunning == true }
@@ -498,6 +498,7 @@ final class KeeperModel: ObservableObject {
         case "run": msg = j.message.isEmpty ? "Inbox updated" : j.message
         case "populate": msg = j.message.isEmpty ? "Labels updated" : j.message
         case "archive_before": msg = (j.message.isEmpty ? "Backlog cleared" : j.message) + " — undo any time"
+        case "cleanup": msg = j.message.isEmpty ? "Labels removed" : j.message
         case "add_account": msg = "Account added"
         case "undo": msg = "Restored"
         default: msg = "Updated"
@@ -663,27 +664,17 @@ final class KeeperModel: ObservableObject {
         cleanup?.selected = on ? Set(labels.filter { !$0.isSystem }.map(\.id)) : []
     }
 
-    /// Delete the selected labels. Reversible-safe: this removes labels only, never
-    /// mail. Refreshes the sheet + state afterwards (counts/undo points can shift).
+    /// Remove the selected labels. Runs as a job so its status shows in the bottom
+    /// bar and survives the sheet/panel closing — same as every other operation.
+    /// Removes labels only, never mail.
     func deleteCleanupSelected() {
-        guard let c = cleanup, !c.selected.isEmpty, !c.deleting else { return }
+        guard let c = cleanup, !c.selected.isEmpty else { return }
+        guard !isBusy else { toast("zero is already running"); return }
         let slug = c.slug, ids = Array(c.selected)
-        cleanup?.deleting = true
-        Task {
-            defer { cleanup?.deleting = false }
-            do {
-                let r = try await api.deleteLabels(slug: slug, ids: ids)
-                Haptic.tap()
-                if cleanup?.slug == slug, let labels = try? await api.labels(slug: slug) {
-                    cleanup?.labels = labels
-                    cleanup?.selected = Set(labels.filter(\.ours).map(\.id))
-                }
-                await reload()
-                toast(r.failed == 0 ? "Removed \(r.deleted) label\(r.deleted == 1 ? "" : "s")"
-                                    : "Removed \(r.deleted), \(r.failed) failed")
-            } catch {
-                toast("Couldn't delete labels")
-            }
+        let n = ids.count
+        closeCleanup()   // status now lives in the bottom bar, not this sheet
+        beginJob(kind: "cleanup", starting: "Removing \(n) label\(n == 1 ? "" : "s")…") {
+            try await self.api.cleanupLabels(slug: slug, ids: ids)
         }
     }
 

@@ -516,11 +516,10 @@ struct KeeperAPI {
         return w.labels
     }
 
-    /// Delete the given labels. Returns (deleted, failed). Mail is never deleted.
-    @discardableResult
-    func deleteLabels(slug: String, ids: [String]) async throws -> (deleted: Int, failed: Int) {
-        let r = try await postRaw("/api/labels/delete", ["slug": slug, "ids": ids], timeout: 60)
-        return ((r["deleted"] as? Int) ?? 0, (r["failed"] as? [Any])?.count ?? 0)
+    /// Remove the given labels as a job (status flows through the bottom bar).
+    /// Mail is never deleted, only the labels.
+    @discardableResult func cleanupLabels(slug: String, ids: [String]) async throws -> Int {
+        try await startJob("/api/labels/delete", ["slug": slug, "ids": ids])
     }
 
     // MARK: - plumbing

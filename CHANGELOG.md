@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.9] - 2026-06-25
+
+### Changed
+
+- **Label cleanup now reports its status in the bottom bar, like every other operation.** Removing labels used to be tracked only inside its own sheet, so closing the sheet or the panel lost any sign of progress. It now runs through the same job pipeline as running, sorting, and clearing backlog: the bottom status bar shows "Removing N labels…" then "Removed N labels", the status survives closing the window, and you get the same completion notification. Partial failures are reported honestly ("Removed 8 · 1 couldn't be removed") instead of a generic error.
+
 ## [1.6.8] - 2026-06-25
 
 ### Changed

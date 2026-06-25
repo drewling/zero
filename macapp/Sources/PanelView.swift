@@ -2144,17 +2144,15 @@ private struct CleanupView: View {
                     .frame(maxHeight: 280)
                 }
 
-                // Footer
+                // Footer — starting the removal closes this sheet; progress then shows
+                // in the bottom bar (and survives closing the panel), like every job.
                 HStack(spacing: 9) {
                     Spacer(minLength: 0)
                     Button { confirming = true } label: {
-                        HStack(spacing: 6) {
-                            if c?.deleting == true { ProgressView().controlSize(.small).tint(.white) }
-                            Text("Remove \(c?.selected.count ?? 0) label\((c?.selected.count ?? 0) == 1 ? "" : "s")")
-                        }
+                        Text("Remove \(c?.selected.count ?? 0) label\((c?.selected.count ?? 0) == 1 ? "" : "s")")
                     }
-                    .buttonStyle(DangerButtonStyle(enabled: (c?.selected.isEmpty == false) && c?.deleting != true))
-                    .disabled((c?.selected.isEmpty ?? true) || c?.deleting == true)
+                    .buttonStyle(DangerButtonStyle(enabled: c?.selected.isEmpty == false))
+                    .disabled((c?.selected.isEmpty ?? true) || m.isBusy)
                 }
                 .padding(12).background(Paper.sunken.opacity(0.24))
                 .overlay(alignment: .top) { Rectangle().fill(Paper.hairline.opacity(0.1)).frame(height: 0.5) }

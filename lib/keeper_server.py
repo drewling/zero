@@ -700,6 +700,25 @@ def _list_account_labels(slug):
     return {"labels": results}
 
 
+def _run_cleanup(payload):
+    """Remove the selected user labels as a job, so its status flows through the
+    same bottom-bar pipeline as every other operation and survives the panel
+    closing. Partial success is success (see _run_populate)."""
+    slug = payload.get("slug")
+    ids = payload.get("ids") or []
+    _set_job_message(f"Removing {len(ids)} label{'' if len(ids) == 1 else 's'}…")
+    r = _delete_account_labels(slug, ids)
+    deleted, failed = r.get("deleted", 0), r.get("failed", [])
+    _build_state_blocking()
+    if failed and deleted == 0:
+        raise RuntimeError((failed[0].get("error") or "couldn't remove labels")[:200])
+    if failed:
+        _set_job_message(f"Removed {deleted} label{'' if deleted == 1 else 's'} · "
+                         f"{len(failed)} couldn't be removed")
+    else:
+        _set_job_message(f"Removed {deleted} label{'' if deleted == 1 else 's'}")
+
+
 def _delete_account_labels(slug, ids):
     """Delete user labels by id. Returns {ok, deleted, failed}."""
     sys.path.insert(0, HERE)
@@ -1394,7 +1413,8 @@ def _write_settings(settings):
 
 _JOB_KINDS = {"refresh": lambda p: _build_state_blocking(),
               "run": _run_keeper, "undo": _run_undo, "add_account": _add_account,
-              "populate": _run_populate, "archive_before": _run_archive_before}
+              "populate": _run_populate, "archive_before": _run_archive_before,
+              "cleanup": _run_cleanup}
 
 
 def _set_job_message(msg):
@@ -1565,10 +1585,12 @@ class Handler(BaseHTTPRequestHandler):
                 _acct(slug)  # validate slug maps to a known account
             except ValueError as exc:
                 return self._send(400, {"error": str(exc)})
-            try:
-                return self._send(200, _delete_account_labels(slug, ids))
-            except Exception as exc:
-                return self._send(500, {"error": str(exc)})
+            # Runs through the shared job slot so its status shows in the bottom bar
+            # and survives the panel closing, like every other operation.
+            jid = _start_job("cleanup", payload)
+            if jid is None:
+                return self._send(409, {"error": "a job is already running"})
+            return self._send(202, {"job": jid, "kind": "cleanup"})
 
         # Time-windowed jobs: validate, then start like any other job (202 + job id).
         if p in ("/api/labels/populate", "/api/archive-before"):
