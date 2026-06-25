@@ -27,6 +27,10 @@ POLICY_PATH = os.path.join(ROOT, "keep-policy.md")
 ACCOUNTS_PATH = os.path.join(ROOT, "accounts.json")
 CATEGORIES_PATH = os.path.join(ROOT, "categories.json")
 SETTINGS_PATH = os.path.join(ROOT, "app", "settings.json")
+# A run drops a one-shot notification here; the app pops it and posts a native
+# notification (so it carries the app icon and opens the panel on click).
+PENDING_NOTIFICATION_PATH = os.path.join(ROOT, "app", "pending_notification.json")
+_notif_lock = threading.Lock()
 _DATE_RE = re.compile(r"^\d{4}/\d{2}/\d{2}$")
 PYTHON = sys.executable or "python3"
 # ponytail: CLAUDE_BIN lookup moved to lib/llm.py; removed module-level constant
@@ -222,15 +226,9 @@ def _run_keeper(payload):
     summary_msg = f"Set aside {set_aside}, {kept} still need you"
     _set_job_message(summary_msg)
     _build_state_blocking()
-    # macOS notification (notify_on_run setting, default True).
-    if settings.get("notify_on_run", True):
-        try:
-            subprocess.run(
-                ["osascript", "-e",
-                 f'display notification "{summary_msg}" with title "zero"'],
-                capture_output=True, timeout=10)
-        except Exception:
-            pass
+    # Hand the summary to the app, which posts a native notification (carries the
+    # app icon, and tapping it opens the panel on Open loops). Gating lives in the writer.
+    _queue_run_notification(set_aside, kept)
     if failures:
         raise RuntimeError("Some accounts failed: " + " | ".join(failures))
 
@@ -1163,6 +1161,39 @@ def _read_settings():
     return s
 
 
+def _queue_run_notification(set_aside, kept):
+    """Drop a one-shot 'run complete' notification for the app to post natively.
+    Gated by notify_on_run (default True), so the gate lives in exactly one place."""
+    try:
+        if not _read_settings().get("notify_on_run", True):
+            return
+        body = f"Set aside {set_aside}, {kept} still need you"
+        os.makedirs(os.path.dirname(PENDING_NOTIFICATION_PATH), exist_ok=True)
+        with _notif_lock:
+            with open(PENDING_NOTIFICATION_PATH, "w") as f:
+                json.dump({"title": "zero", "body": body, "ts": int(time.time())}, f)
+    except Exception:
+        pass
+
+
+def _pop_pending_notification():
+    """Atomically read-and-delete the pending notification, if any. Returns the
+    dict or None. Under a lock so a timer-drain and a job-drain can't double-post."""
+    with _notif_lock:
+        try:
+            with open(PENDING_NOTIFICATION_PATH) as f:
+                data = json.load(f)
+        except FileNotFoundError:
+            return None
+        except Exception:
+            data = None
+        try:
+            os.remove(PENDING_NOTIFICATION_PATH)
+        except Exception:
+            pass
+        return data
+
+
 def _write_settings(settings):
     """Persist the whitelisted settings keys. Merges over the current file so a
     partial PUT (e.g. only grace_days) doesn't reset other keys to defaults."""
@@ -1307,6 +1338,8 @@ class Handler(BaseHTTPRequestHandler):
             providers = _llm.detect_providers()
             active = next((pr["name"] for pr in providers if pr["active"]), "claude")
             return self._send(200, {"providers": providers, "active": active})
+        if p == "/api/pending-notification":
+            return self._send(200, {"notification": _pop_pending_notification()})
         return self._send(404, {"error": "not found"})
 
     def do_POST(self):

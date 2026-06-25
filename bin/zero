@@ -52,11 +52,23 @@ for a in accts:
                      a.get("slug", a.get("email", ""))]))
 ' "$MAIL_TRIAGE_ACCOUNTS")
 
+    total_aside=0; total_kept=0
     while IFS=$'\t' read -r config_dir email slug; do
       [ -z "$config_dir" ] && continue
       echo "--- Running keeper pass for: $slug ($email) ---"
-      "$MAIL_TRIAGE_PYTHON" "$MAIL_TRIAGE_LIB/review_open_loops.py" \
-        "$config_dir" "$email" --grace-days "$GRACE_DAYS" --execute
+      acct_out=$("$MAIL_TRIAGE_PYTHON" "$MAIL_TRIAGE_LIB/review_open_loops.py" \
+        "$config_dir" "$email" --grace-days "$GRACE_DAYS" --execute)
+      printf '%s\n' "$acct_out"
+      # Sum the per-account result line (same keys keeper_server reads) for the notification.
+      counts=$(printf '%s\n' "$acct_out" | "$MAIL_TRIAGE_PYTHON" -c '
+import sys, json
+lines = [l for l in sys.stdin if l.strip().startswith("{")]
+d = json.loads(lines[-1]) if lines else {}
+print(int(d.get("to_archive_threads", 0) or 0), int(d.get("to_keep_threads", 0) or 0))
+' 2>/dev/null || echo "0 0")
+      set -- $counts
+      total_aside=$((total_aside + ${1:-0}))
+      total_kept=$((total_kept + ${2:-0}))
     done <<< "$accounts"
 
     echo "--- Learning from recent actions ---"
@@ -64,6 +76,9 @@ for a in accts:
 
     echo "--- Refreshing dashboard state ---"
     "$MAIL_TRIAGE_PYTHON" "$MAIL_TRIAGE_LIB/dashboard_state.py"
+
+    # Queue a native 'run complete' notification (honors notify_on_run).
+    "$MAIL_TRIAGE_PYTHON" "$MAIL_TRIAGE_LIB/notify_run.py" "$total_aside" "$total_kept" || true
     echo "Done."
     ;;
 

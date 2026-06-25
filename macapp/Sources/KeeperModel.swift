@@ -440,6 +440,16 @@ final class KeeperModel: ObservableObject {
         default: msg = "Updated"
         }
         toast(msg)
+        // A manual run just wrote its notification server-side; post it now so the
+        // banner is immediate (scheduled runs are caught by the launch/timer drain).
+        if j.kind == "run" { await drainPendingNotification() }
+    }
+
+    /// Pop any queued run notification from the server and post it as a native,
+    /// app-owned banner (carries the app icon; tapping opens the panel on Open loops).
+    func drainPendingNotification() async {
+        guard let note = try? await api.pendingNotification() else { return }
+        RunNotifier.post(title: note.title, body: note.body)
     }
 
     private func failJob(_ j: Job) async {

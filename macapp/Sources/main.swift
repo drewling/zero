@@ -9,6 +9,7 @@
 
 import AppKit
 import SwiftUI
+import UserNotifications
 
 let PORT = ProcessInfo.processInfo.environment["KEEPER_PORT"] ?? "8765"
 let PANEL_W: CGFloat = 420
@@ -257,7 +258,7 @@ final class GlassSurface: NSView {
 }
 
 @MainActor
-final class AppController: NSObject, NSApplicationDelegate {
+final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     let model = KeeperModel(port: PORT)
     var panel: KeyablePanel!
@@ -266,6 +267,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     var repoMissing = false
     var clickMonitor: Any?
     var escMonitor: Any?
+    var notifDrainTimer: Timer?
 
     func applicationDidFinishLaunching(_ note: Notification) {
         startServer()
@@ -301,6 +303,40 @@ final class AppController: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
         setupStatusItem()
         setupPanel()
+        setupNotifications()
+    }
+
+    // MARK: notifications
+
+    /// Own notifications at the app level so they carry the app icon and a tap
+    /// opens the panel on Open loops. Runs drop a one-shot via the server; we drain
+    /// it on launch, on a light timer (catches scheduled runs while idle), and the
+    /// model also drains the instant a manual run finishes.
+    private func setupNotifications() {
+        UNUserNotificationCenter.current().delegate = self
+        RunNotifier.requestAuthorization()
+        Task { await model.drainPendingNotification() }
+        notifDrainTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor in await self.model.drainPendingNotification() }
+        }
+    }
+
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                            willPresent notification: UNNotification,
+                                            withCompletionHandler completionHandler:
+                                                @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.banner, .sound])   // show even though we're a menu-bar app
+    }
+
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                            didReceive response: UNNotificationResponse,
+                                            withCompletionHandler completionHandler: @escaping () -> Void) {
+        Task { @MainActor in
+            self.model.tab = .loops
+            self.showPanel()
+            completionHandler()
+        }
     }
 
     /// Build the dark frosted surface (masked vibrancy, body + arrow) hosting the

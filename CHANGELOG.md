@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.3] - 2026-06-25
+
+### Changed
+
+- **Run notifications are now native and clickable.** The "set aside / still need you" notification is posted by zero itself instead of through AppleScript, so it carries the app icon, and clicking it opens the panel straight to **Open loops**. Previously the notification had no icon and its Show button opened the Script Editor. Scheduled morning runs now notify too, with the same behaviour — before, only manual runs did.
+
 ## [1.6.2] - 2026-06-25
 
 ### Fixed
@@ -178,7 +184,8 @@ Initial public release.
 - Native macOS 26 Liquid Glass menu-bar app with a popover panel.
 - `.dmg` installer with guided onboarding for first-time setup.
 
-[Unreleased]: https://github.com/drewling/zero/compare/v1.6.2...HEAD
+[Unreleased]: https://github.com/drewling/zero/compare/v1.6.3...HEAD
+[1.6.3]: https://github.com/drewling/zero/compare/v1.6.2...v1.6.3
 [1.6.2]: https://github.com/drewling/zero/compare/v1.6.1...v1.6.2
 [1.6.1]: https://github.com/drewling/zero/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/drewling/zero/compare/v1.5.1...v1.6.0

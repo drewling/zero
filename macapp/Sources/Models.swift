@@ -314,6 +314,9 @@ struct Draft: Decodable {
 /// Google OAuth client + account presence, from /api/credentials-status.
 struct CredStatus: Decodable { var hasClient = false; var hasAccounts = false }
 
+/// A queued "run complete" notification, from /api/pending-notification.
+struct PendingNotification: Decodable { var title = "zero"; var body = "" }
+
 /// Thin async wrapper over the local keeper server. All calls are best-effort and
 /// throw `KeeperError` on transport/decoding failure so callers can surface a toast.
 struct KeeperAPI {
@@ -419,6 +422,13 @@ struct KeeperAPI {
 
     /// Which AI providers are installed and which one is active.
     func providerStatus() async throws -> ProviderStatus { try await get("/api/provider-status") }
+
+    /// Pop a queued "run complete" notification (returns nil when none pending).
+    func pendingNotification() async throws -> PendingNotification? {
+        struct Wrap: Decodable { var notification: PendingNotification? }
+        let w: Wrap = try await get("/api/pending-notification")
+        return w.notification
+    }
 
     /// Whether a Google OAuth client is configured + whether any account is connected.
     func credentialsStatus() async throws -> CredStatus { try await get("/api/credentials-status") }
