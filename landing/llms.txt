@@ -1,0 +1,21 @@
+# zero
+
+> zero is a quiet macOS 26 menu-bar app that reads every Gmail thread each morning, keeps only the threads that still need you, and archives the rest reversibly. Nothing is ever deleted. It runs locally on your own Google and Claude credentials, so there is no server and no account.
+
+## What it does
+- Reads each Gmail thread and judges it the way you would: is anyone waiting on you, is there a live consequence, would you regret missing it today.
+- Keeps only open loops in the Inbox; archives everything else by removing the Inbox label and adding a dated recovery label.
+- Never deletes mail. One Gmail search of the dated recovery label (e.g. `label:"🗄️ Auto-Archived 2026-06-25"`) restores an entire run.
+- Drafts replies in your voice on demand. It never sends on its own.
+- Works across multiple Gmail accounts against one plain-language keep-rule.
+
+## Facts
+- Platform: macOS 26, menu-bar app.
+- Price: free and source-available. You pay only for your own Claude API usage.
+- Privacy: runs entirely on your Mac with your own keys. No zero server, no account, no access to your mail.
+- AI provider: Claude by default; Codex, Hermes, and other agent CLIs supported via a provider abstraction.
+
+## Links
+- Site: https://zero.headless.com/
+- Source & download: https://github.com/drewling/zero
+- Changelog: https://github.com/drewling/zero/blob/master/CHANGELOG.md
