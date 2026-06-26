@@ -1732,13 +1732,22 @@ def _is_gmail_api_disabled(err_text):
 def _is_consent_blocked(err_text):
     """True if sign-in succeeded but this account isn't allowed to use the project —
     the consent screen is 'Internal' (Workspace-only) or in 'Testing' without this
-    email as a test user. Distinct from the Gmail-API-not-enabled case."""
+    email as a test user. Distinct from the Gmail-API-not-enabled case.
+
+    'access_denied' alone is NOT enough: Google returns it just as often when the
+    user cancels the consent dialog, or for the unverified-app block on an app that
+    is already External/In-production — neither of which is a consent-screen setting
+    the user can fix from the Audience page. We only call it consent-blocked when it
+    co-occurs with wording that actually points at the audience/test-user config."""
     t = (err_text or "").lower()
-    return ("does not have required permission to use project" in t
+    if ("does not have required permission to use project" in t
             or "caller does not have permission" in t
             or "has not been registered as a test user" in t
-            or "access_denied" in t
-            or "org_internal" in t)
+            or "org_internal" in t):
+        return True
+    return "access_denied" in t and any(
+        s in t for s in ("test user", "testing", "internal",
+                         "verification", "not been verified", "audience"))
 
 
 def _consent_screen_url(err_text):

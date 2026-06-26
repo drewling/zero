@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.20] - 2026-06-26
+
+### Fixed
+
+- **A failed "Add account" no longer blames the wrong thing.** When Google turned a sign-in away with a bare `access_denied` — which most often means the sign-in was cancelled, or the app's Google project hasn't been verified for the scopes it needs — zero would confidently tell you the OAuth consent screen was "Internal" or "in Testing," even when it wasn't. It now says that only when Google's response actually points at the audience or test-user settings, and otherwise shows the real error so you can act on it.
+
 ## [1.6.19] - 2026-06-26
 
 ### Added
