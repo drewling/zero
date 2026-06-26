@@ -104,101 +104,85 @@ When unsure, the policy keeps the thread. Everything archived is one tap away.
 
 ---
 
-## Install & first run
+## Install
 
-### Quick install (recommended)
+> **Requirements:** macOS 26 (Tahoe) on Apple Silicon. Everything else — Python, Node,
+> the `gws` and `claude` CLIs — the installer sets up for you.
 
-One command installs everything and launches the app:
+### One command
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/drewling/zero/master/macapp/install-zero.sh | bash
 ```
 
-It installs the prerequisites if missing (Homebrew → Python 3 / Node → the `gws` and
-`claude` CLIs), copies `zero.app` to `/Applications`, **removes the macOS quarantine
-flag** (required — see below), and opens it. Re-running is safe.
+This installs any missing prerequisites (Homebrew → Python 3 / Node → the `gws` and
+`claude` CLIs), copies `zero.app` to `/Applications`, clears the macOS quarantine flag,
+and launches it. Re-running is safe. When it opens, skip to **[First run](#first-run)**.
 
-> **Why the quarantine step?** zero is signed ad-hoc, not notarized (no paid Apple
-> Developer account). macOS quarantines *downloaded* un-notarized apps and Gatekeeper
-> then refuses to launch them — so a hand-dragged DMG silently does nothing (a menu-bar
-> app has no window, so the block is invisible). The installer strips the flag, the
-> standard install path for un-notarized open-source Mac apps.
+<details>
+<summary><b>Why the quarantine step?</b></summary>
 
-Then jump to [first run](#first-run-connect-your-gmail). Prefer to do it by hand? See
-the manual steps below.
+zero is signed ad-hoc, not notarized (there's no paid Apple Developer account behind a
+free app). macOS quarantines *downloaded* un-notarized apps, and Gatekeeper then refuses
+to launch them — so a hand-dragged DMG silently does nothing, and because zero is a
+menu-bar app with no window, the block is invisible. Clearing the flag is the standard
+install path for un-notarized open-source Mac apps; the script does it for you.
+</details>
 
-### Prerequisites
+<details>
+<summary><b>Manual install</b> — prefer to do each step yourself</summary>
 
-| Requirement | Install | Notes |
-|---|---|---|
-| macOS 26 (Tahoe, Apple Silicon) | — | Uses the native Liquid Glass API; Intel untested |
-| Python 3 | `brew install python3` | Used by the local server and all judgment logic |
-| `gws` CLI | `npm install -g @googleworkspace/cli` | Official Google Workspace CLI |
-| `claude` CLI | `npm install -g @anthropic-ai/claude-code` | Per-thread judgment and reply drafts |
+```bash
+# 1. Prerequisites
+brew install node python3
+npm install -g @googleworkspace/cli @anthropic-ai/claude-code
+claude            # finish Claude login on first run
 
-### Step-by-step (app path)
+# 2. Download zero from the Releases page, then clear the quarantine flag.
+#    Use the FULL path — a Homebrew/Python `xattr` earlier in PATH may silently no-op.
+/usr/bin/xattr -cr /Applications/zero.app
+```
 
-1. **Install Node** (needed for `gws` and `claude`):
-   ```bash
-   brew install node
-   ```
+Grab the app from the [Releases page](https://github.com/drewling/zero/releases) and drag
+it to `/Applications` before running the `xattr` line. Then open it and follow
+**[First run](#first-run)** below.
+</details>
 
-2. **Install the Google Workspace CLI and authenticate**:
-   ```bash
-   npm install -g @googleworkspace/cli
-   ```
-   Create a free OAuth client at [console.cloud.google.com](https://console.cloud.google.com/):
-   - Enable the **Gmail API** on your project.
-   - Configure the consent screen under **Google Auth Platform** (Audience: **External**).
-   - **Set Publishing status to "In production"** — in "Testing" Google expires the
-     token after 7 days, so sync silently dies after a week. You can skip verification.
-   - **Clients → Create client → Desktop app** → download the JSON.
+### First run
 
-   See [docs/SETUP.md §3](docs/SETUP.md) for the exact click-path and the
-   "unverified app" sign-in warning.
+Open zero — it lives in the menu bar (no Dock icon, no window). The onboarding walks you
+through connecting Google and your AI, both in your browser, and **nothing leaves your Mac**:
 
-   Then authenticate (the `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file` env var is required
-   for headless/launchd contexts — without it, auth silently fails):
-   ```bash
-   GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file gws auth login
-   ```
-   Repeat for each Gmail account you want to add, pointing `GOOGLE_WORKSPACE_CLI_CONFIG_DIR`
-   at each account's config directory.
+1. **Connect Google.** Sign in to each Gmail account you want zero to watch. zero asks for
+   one Gmail permission and your basic identity — [nothing else](#privacy-and-trust). For
+   now this uses *your own* Google OAuth client (a one-time setup — see **Bring your own
+   Google Cloud project** below); built-in one-click sign-in is in Google verification.
+2. **Connect your AI.** zero uses the `claude` CLI you logged into above to read and judge
+   threads. Prefer a different engine? Pick Codex, a local model, or another agent CLI
+   under **Settings → AI engine**.
+3. **Run it.** Hit **Run zero now** for the first sweep. To run it automatically each
+   morning, set a time under **Settings → Daily schedule** (or `./bin/zero schedule`).
 
-3. **Install Claude Code CLI and log in**:
-   ```bash
-   npm install -g @anthropic-ai/claude-code
-   claude    # completes login on first run
-   ```
+<details>
+<summary><b>Bringing your own Google Cloud project</b> — advanced</summary>
 
-4. **Download zero** from the [Releases page](https://github.com/drewling/zero/releases)
-   and drag it to your Applications folder.
+Until zero's own Google client clears verification, sign-in uses a Cloud project you
+create. It's a one-time setup: make a **Desktop app** OAuth client at
+[console.cloud.google.com](https://console.cloud.google.com/) (APIs & Services →
+Credentials), enable the **Gmail API**, and paste the downloaded JSON into zero's
+onboarding screen.
 
-   > **First launch (required):** Because zero isn't notarized, macOS Gatekeeper blocks
-   > the downloaded app — and on macOS 26 the old "right-click → Open" trick no longer
-   > works for ad-hoc-signed apps. Remove the quarantine flag from Terminal:
-   > ```bash
-   > /usr/bin/xattr -cr /Applications/zero.app
-   > ```
-   > **Use the full `/usr/bin/xattr` path** — a Python/Homebrew `xattr` earlier in your
-   > PATH may not support these flags and will silently fail, leaving the app blocked.
-   > (The [quick-install script](#quick-install-recommended) handles this for you.)
-
-5. **Open zero.** On first launch the onboarding screen asks you to paste your OAuth
-   client JSON (downloaded in step 2), then opens a browser sign-in for each account.
-   Nothing leaves your Mac.
-
-6. **Run zero now.** Hit **Run zero now** in the app to tidy your inbox for the first
-   time. To schedule it daily: `./bin/zero schedule`.
-
-For the full step-by-step (including multi-account auth and CLI equivalents), see
-[docs/SETUP.md](docs/SETUP.md).
-
-> **Contributor resources:** [Architecture](docs/ARCHITECTURE.md) · [API reference](docs/api/) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+One catch worth knowing: Gmail's `gmail.modify` is a *restricted* scope, so an
+**unverified** personal client can only grant it while the consent screen is in
+**Testing** with your address added as a **test user** — and Google then expires that
+grant after **7 days**, so you'll re-authorize weekly. (A client in "production" but
+unverified can't grant restricted scopes at all.) Verifying your own client removes the
+weekly re-auth. See [docs/SETUP.md](docs/SETUP.md) for the full click-path.
+</details>
 
 ### Build from source
 
-Requires: Xcode command-line tools (`xcode-select --install`), macOS 26 (Tahoe, Apple Silicon).
+Requires Xcode command-line tools (`xcode-select --install`) on macOS 26 (Apple Silicon).
 
 ```bash
 git clone https://github.com/drewling/zero.git
@@ -206,6 +190,8 @@ cd zero/macapp
 ./build.sh           # produces zero.app in macapp/build/
 ./make-dmg.sh        # optional: packages it as a .dmg
 ```
+
+> **Contributor resources:** [Architecture](docs/ARCHITECTURE.md) · [API reference](docs/api/) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 ---
 
