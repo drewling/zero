@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.16] - 2026-06-26
+
+### Fixed
+
+- **The panel opens under the menu-bar icon on first launch.** The very first time you opened zero it could appear floating in the middle of the screen instead of tucked under its icon; clicking the icon afterwards always placed it correctly. The first open happened before macOS had finished putting the icon in the menu bar, so there was nothing to anchor to yet. zero now waits for the icon to land, then opens beneath it.
+
+### Changed
+
+- **Steadier panel background.** The panel could look almost see-through over a light window behind it and noticeably more solid over a dark one. The surface is firmer now, so it reads consistently whatever is behind it, while keeping its glassy feel.
+
 ## [1.6.15] - 2026-06-26
 
 ### Fixed

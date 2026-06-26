@@ -188,13 +188,15 @@ final class GlassSurface: NSView {
         effect.autoresizingMask = [.width, .height]
         addSubview(effect)
 
-        // Uniform graphite across the whole surface (body + beak), at a MIDDLE opacity:
-        // translucent enough to still read as glass over a dark backdrop, opaque enough
-        // that a bright/white backdrop behind the panel doesn't bleed up and wash out the
-        // surface + text (the low-contrast-over-white problem). ~0.42 was too see-through
-        // over white, ~0.94 too opaque/flat; ~0.66 keeps the glass while holding contrast.
-        // sRGB to match SwiftUI Color().
-        let graphite = CGColor(srgbRed: 0.135, green: 0.132, blue: 0.127, alpha: 0.66)
+        // Uniform graphite across the whole surface (body + beak). The vibrancy below
+        // samples whatever is behind the panel, so the LOWER this alpha, the more the
+        // backdrop bleeds through — which is exactly why the panel looked super
+        // transparent over a white window and solid over a dark one. Raising it shrinks
+        // that backdrop bleed so the surface reads consistently regardless of what is
+        // behind it, while staying short of fully opaque so it still reads as glass.
+        // ~0.42 was too see-through over white, ~0.94 too flat, ~0.66 still bled ~34%;
+        // ~0.80 cuts the bleed to ~20% for a consistent look. sRGB to match SwiftUI Color().
+        let graphite = CGColor(srgbRed: 0.135, green: 0.132, blue: 0.127, alpha: 0.80)
         tint.colors = [graphite, graphite]
         tint.mask = tintMask
         layer?.addSublayer(tint)
@@ -347,7 +349,32 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         // one you're looking at), and macOS gives no way to pin it. Pop the onboarding
         // panel on the screen under the mouse so first launch is always visible and
         // setup is reachable regardless of where the icon went.
-        if !hasConnectedAccount() { showPanel(on: screenUnderMouse()) }
+        if !hasConnectedAccount() { showPanelWhenIconReady() }
+    }
+
+    /// True once macOS has actually placed the status item in the bar — its button
+    /// window exists, sits on a real screen, and has a non-zero frame. Until then
+    /// the button frame is bogus and anchoring the panel to it lands it floating.
+    func iconReady() -> Bool {
+        guard let button = statusItem?.button, let bWin = button.window,
+              bWin.screen != nil else { return false }
+        let f = bWin.convertToScreen(button.convert(button.bounds, to: nil))
+        return f.width > 1 && NSScreen.screens.contains { $0.frame.intersects(f) }
+    }
+
+    /// First-run auto-open: applicationDidFinishLaunching fires before the menu-bar
+    /// icon is laid out, so opening the panel synchronously anchors it to a stale
+    /// frame (the "floating, not under the icon" bug). Wait a few runloop turns for
+    /// a real icon frame, then open under it. After ~0.5s open regardless, so the
+    /// panel never fails to appear even if the icon is on another display or hidden.
+    func showPanelWhenIconReady(attempt: Int = 0) {
+        if iconReady() || attempt >= 10 {
+            showPanel(on: screenUnderMouse())
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                self?.showPanelWhenIconReady(attempt: attempt + 1)
+            }
+        }
     }
 
     /// ⌥⌘Z toggles the panel from anywhere — the reliable way in when the menu-bar
