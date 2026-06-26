@@ -72,13 +72,34 @@ is approved:
 - **Onboarding** — when a bundled client is present, use it as the default and skip
   the "paste your client JSON" step, so sign-in is one click.
 
-## Local cutover (optional, for testing before verification)
+## Local cutover — migrating your own 3 accounts to the new client
 
-To validate the new client end-to-end now, re-auth the three accounts against it
-(they're test users, so testing mode works). Cost: Google expires testing-mode
-tokens every ~7 days, so you'd re-auth weekly until verification lands. Recommended
-to **hold** the cutover until verified, keeping the accounts on their current
-durable tokens.
+The app (v1.6.21+) already bundles the new client, so **fresh installs** get
+one-click login. Your existing accounts still run on the old `drewl-366215` client
+(durable tokens) — the bundled client only seeds when `~/.config/gws/client_secret.json`
+is absent, so it never disturbed them.
+
+To move your own accounts onto the new client, the client files must be swapped and
+each account re-authenticated. Re-auth is an **interactive Google sign-in** (you must
+click through the consent), so run these yourself — in this chat prefix with `!`, or
+in a terminal. The old clients are backed up under `~/.config/zero-build/oldclient-backup-*`.
+
+```bash
+NEW=~/.config/zero-build/client_secret.json
+SCOPES="openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/userinfo.profile,https://www.googleapis.com/auth/gmail.modify"
+for d in pending-1782485992 lightstormvisuals alexander; do
+  cp "$NEW" ~/.config/gws/accounts/$d/client_secret.json
+  GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws/accounts/$d \
+  GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file \
+    gws auth login --scopes "$SCOPES"   # sign in as the matching account, Advanced → proceed → Allow
+done
+cp "$NEW" ~/.config/gws/client_secret.json   # default, for future add-account
+```
+
+**Cost while unverified:** Google expires testing-mode tokens every ~7 days, so
+you'd re-auth weekly until verification is approved. **Recommended: hold this until
+verification lands** (the new client becomes durable then) and keep using the current
+durable tokens meanwhile. Nothing breaks by waiting — the old client still works.
 
 ## Already done
 
