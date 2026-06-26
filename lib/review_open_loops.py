@@ -426,7 +426,7 @@ def main():
     ap.add_argument("config_dir")
     ap.add_argument("account_label")
     ap.add_argument("--execute", action="store_true")
-    ap.add_argument("--chunk", type=int, default=50)
+    ap.add_argument("--chunk", type=int, default=100)
     ap.add_argument("--grace-days", type=int, default=2,
                     help="protect mail newer than N days from review (0 = review everything)")
     ap.add_argument("--label-only", action="store_true",
@@ -457,11 +457,18 @@ def main():
             info["replied_before"] = _replied_before(a.config_dir, info["last_email"])
             infos.append(info)
 
+    # Threads the user explicitly restored must never be re-archived.
+    keep_set = learning.kept_thread_ids()
+
     archive_msg_ids, kept, keep_s = [], 0, []
     label_ok = label_failed = 0
     # Deterministic fast-path: last message from the owner -> dealt with -> archive.
+    # Guard runs FIRST so restored threads skip both this path and the LLM batch.
     to_judge = []
     for c in infos:
+        if c["id"] in keep_set:
+            kept += 1  # count as kept; never archive
+            continue
         if c["last_from_owner"]:
             archive_msg_ids += c["ids"]
         else:

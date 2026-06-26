@@ -4,12 +4,18 @@
 // browser OAuth flow the server already exposes. The app never sees a password.
 
 import SwiftUI
+import AppKit   // NSPasteboard — "Set it up with Claude" copies the setup prompt
 
 struct OnboardingView: View {
     @EnvironmentObject var m: KeeperModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+      // Scroll when the content is taller than the panel (prereqs + credentials card +
+      // paste box can overflow 640pt), but stay vertically centred when it fits — the
+      // minHeight: geo.height trick lets the Spacers expand only when there's room.
+      GeometryReader { geo in
+        ScrollView {
         VStack(spacing: 0) {
             Spacer(minLength: 30)
 
@@ -33,13 +39,16 @@ struct OnboardingView: View {
                 .font(.system(size: 13)).foregroundStyle(Paper.ink3)
                 .multilineTextAlignment(.center).frame(maxWidth: 300).padding(.top, 6)
 
-            // Three quiet trust points.
-            VStack(alignment: .leading, spacing: 9) {
-                TrustRow(symbol: "arrow.uturn.backward", text: "Reversible by design. Archiving just removes the inbox label, restorable any time.")
-                TrustRow(symbol: "moon.stars", text: "Ambient. It works quietly behind your existing mail apps, once a morning.")
-                TrustRow(symbol: "brain", text: "Judged by an agent reading each thread, not brittle filter rules.")
+            // Three quiet trust points — the "why trust this" screen. Hidden during the
+            // Google-setup step so that screen does exactly one job (one thing at a time).
+            if !m.needsCredentials {
+                VStack(alignment: .leading, spacing: 9) {
+                    TrustRow(symbol: "arrow.uturn.backward", text: "Reversible by design. Archiving just removes the inbox label, restorable any time.")
+                    TrustRow(symbol: "moon.stars", text: "Ambient. It works quietly behind your existing mail apps, once a morning.")
+                    TrustRow(symbol: "brain", text: "Judged by an agent reading each thread, not brittle filter rules.")
+                }
+                .padding(16).glassSurface(13).frame(maxWidth: 320).padding(.top, 20)
             }
-            .padding(16).glassSurface(13).frame(maxWidth: 320).padding(.top, 20)
 
             // Missing prerequisites (only if the check ran and found gaps).
             if m.preflight.checked && !m.preflight.allGood {
@@ -106,7 +115,9 @@ struct OnboardingView: View {
             Spacer(minLength: 24)
         }
         .padding(.horizontal, 20)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, minHeight: geo.size.height)
+        }
+      }
     }
 }
 
@@ -189,42 +200,171 @@ struct BacklogStep: View {
 private struct CredentialsCard: View {
     @EnvironmentObject var m: KeeperModel
     @State private var pasted = ""
+    @State private var claudeCopied = false
+
+    // The Google Cloud OAuth step is the one real wall in setup. "Set it up with
+    // Claude" copies this prompt; the user pastes it into Claude Code (which most zero
+    // users already have) and Claude drives the console with them. Self-contained so a
+    // fresh Claude session has everything it needs. The "In production" step is spelled
+    // out because skipping it silently breaks sync after 7 days.
+    private static let claudePrompt = """
+    I'm setting up "zero", a macOS menu-bar app that triages my Gmail. It needs its own \
+    free Google OAuth client (a Google Cloud app I own) so it can sign in to my inboxes. \
+    Please set this up with me, end to end.
+
+    Do it in my browser — use browser automation if you have it; otherwise give me one \
+    click at a time and wait for me. Steps:
+    1. Open https://console.cloud.google.com and create a project named "zero" (or reuse one).
+    2. Enable the Gmail API for that project.
+    3. In "Google Auth Platform", configure the consent screen: External user type, app \
+    name "zero", my own email as the support and developer contact.
+    4. CRITICAL: on the Audience tab, set Publishing status to "In production". In \
+    "Testing" status Google expires access after 7 days and zero silently stops syncing.
+    5. Go to Clients → Create client → Application type "Desktop app" → create, then \
+    download the client JSON.
+    6. Show me the full contents of that downloaded JSON so I can paste it into zero's \
+    "Set up Google access" box. It stays on my Mac.
+
+    Stop if Google asks for app verification — it isn't required for personal use. Walk \
+    me through anything you can't click yourself.
+    """
+
+    private func copyClaudePrompt() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(Self.claudePrompt, forType: .string)
+        withAnimation(Motion.pop) { claudeCopied = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            withAnimation(Motion.pop) { claudeCopied = false }
+        }
+    }
+
+    private var pasteReady: Bool { !pasted.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 9) {
-            Text("SET UP GOOGLE ACCESS").font(.system(size: 10, weight: .semibold)).kerning(0.5)
+        VStack(alignment: .leading, spacing: 0) {
+            Text("CONNECT GOOGLE").font(.system(size: 10, weight: .semibold)).kerning(0.6)
                 .foregroundStyle(Paper.ink4)
-            Text("zero signs in through your own free Google app. Create an OAuth client, then paste it below — it never leaves this Mac.")
-                .font(.system(size: 12)).foregroundStyle(Paper.ink2)
+            Text("zero signs in through your own free Google app. You create it once; it stays on this Mac.")
+                .font(.system(size: 12.5)).foregroundStyle(Paper.ink2)
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 7)
+
+            // Fastest path, led with on purpose: hand the whole console dance to Claude.
+            Button { copyClaudePrompt() } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: claudeCopied ? "checkmark.circle.fill" : "sparkles")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(claudeCopied ? Paper.clear : Paper.accentSoft)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(claudeCopied ? "Copied. Paste into Claude Code." : "Set it up with Claude")
+                            .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(Paper.ink)
+                        Text(claudeCopied ? "Claude takes it from here." : "It opens the console and does it with you.")
+                            .font(.system(size: 10.5)).foregroundStyle(Paper.ink3)
+                    }
+                    Spacer(minLength: 0)
+                    if !claudeCopied {
+                        Image(systemName: "doc.on.clipboard").font(.system(size: 11)).foregroundStyle(Paper.ink4)
+                    }
+                }
+                .padding(.vertical, 10).padding(.horizontal, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .glassSurface(11, tint: Paper.accent.opacity(0.14))
+                .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .strokeBorder(Paper.accent.opacity(0.30), lineWidth: 0.75))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 13)
+
+            // Divider into the manual route.
+            HStack(spacing: 10) {
+                Rectangle().fill(Paper.hairline.opacity(0.10)).frame(height: 0.5)
+                Text("or set it up yourself").font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Paper.ink4).fixedSize()
+                Rectangle().fill(Paper.hairline.opacity(0.10)).frame(height: 0.5)
+            }
+            .padding(.top, 14)
+
             Link(destination: URL(string: "https://console.cloud.google.com/auth/clients")!) {
                 HStack(spacing: 5) {
                     Image(systemName: "arrow.up.forward.square")
                     Text("Open Google Cloud Console")
-                }.font(.system(size: 11, weight: .medium)).foregroundStyle(Paper.accentSoft)
+                }.font(.system(size: 11.5, weight: .medium)).foregroundStyle(Paper.accentSoft)
             }.buttonStyle(.plain)
-            // The publish-to-production line is load-bearing: in "Testing" status Google
-            // expires the refresh token after 7 days, so sync silently dies after a week.
-            Text("Enable the Gmail API, then Google Auth Platform → Clients → Create client → Desktop app → download the JSON. On the Audience tab, set Publishing status to In production (Testing expires access after 7 days).")
-                .font(.system(size: 10.5)).foregroundStyle(Paper.ink4)
-                .fixedSize(horizontal: false, vertical: true)
+            .padding(.top, 12)
+
+            VStack(alignment: .leading, spacing: 9) {
+                StepRow(n: 1, text: "Enable the Gmail API for a new project.")
+                StepRow(n: 2, text: "Create an OAuth client, type Desktop app.")
+                StepRow(n: 3, text: "Set Publishing status to In production.",
+                        warn: "In Testing, Google cuts access after 7 days.")
+                StepRow(n: 4, text: "Download the JSON, then paste it below.")
+            }
+            .padding(.top, 11)
+
             ZStack(alignment: .topLeading) {
                 TextEditor(text: $pasted)
                     .font(.system(size: 11, design: .monospaced))
                     .scrollContentBackground(.hidden)
-                    .frame(height: 60).padding(8).glassSurface(8)
+                    .frame(height: 58).padding(8).glassSurface(8)
                 if pasted.isEmpty {
                     Text("Paste client_secret.json here")
                         .font(.system(size: 11)).foregroundStyle(Paper.ink4)
                         .padding(.horizontal, 13).padding(.vertical, 16).allowsHitTesting(false)
                 }
             }
+            .padding(.top, 12)
+
             Button { m.saveCredentials(pasted) } label: {
                 Text("Save Google access").frame(maxWidth: .infinity)
             }
-            .buttonStyle(PrimaryButtonStyle(enabled: !pasted.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
-            .disabled(pasted.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .buttonStyle(PrimaryButtonStyle(enabled: pasteReady))
+            .disabled(!pasteReady)
+            .padding(.top, 9)
+
+            HStack(spacing: 0) {
+                Link(destination: URL(string: "https://github.com/drewling/zero/blob/master/docs/SETUP.md")!) {
+                    HStack(spacing: 4) {
+                        Text("Guided walkthrough")
+                        Image(systemName: "arrow.up.forward")
+                    }.font(.system(size: 11, weight: .medium)).foregroundStyle(Paper.accentSoft)
+                }.buttonStyle(.plain)
+                Spacer(minLength: 0)
+            }
+            .padding(.top, 13)
+
+            Text("Sign-in opens in your browser; the app never sees your password.")
+                .font(.system(size: 10)).foregroundStyle(Paper.ink4)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 7)
         }
-        .padding(14).glassSurface(13).frame(maxWidth: 320).padding(.top, 14)
+        .padding(16).glassSurface(13).frame(maxWidth: 320).padding(.top, 14)
+    }
+}
+
+// A numbered manual-setup step: badge + concise instruction, with an optional warning
+// line for the load-bearing detail (the "In production" gotcha that silently kills sync).
+private struct StepRow: View {
+    let n: Int
+    let text: String
+    var warn: String? = nil
+    var body: some View {
+        HStack(alignment: .top, spacing: 9) {
+            Text("\(n)")
+                .font(.system(size: 10, weight: .bold)).foregroundStyle(Paper.ink2)
+                .frame(width: 18, height: 18)
+                .background(Circle().fill(Paper.raised.opacity(0.10)))
+                .overlay(Circle().strokeBorder(Paper.hairline.opacity(0.14), lineWidth: 0.5))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(text).font(.system(size: 11.5)).foregroundStyle(Paper.ink2)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let warn {
+                    Text(warn).font(.system(size: 10)).foregroundStyle(Paper.danger.opacity(0.92))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Spacer(minLength: 0)
+        }
     }
 }
 

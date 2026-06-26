@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.14] - 2026-06-26
+
+### Fixed
+
+- **Drafting settings now save reliably.** Saving your sign-off name and house style could fail with "Couldn't save drafting name" and silently wipe the field. The Save button sends both fields at once, and the two requests raced over the same temporary file, so one crashed and clobbered the other. Saves are now serialized and use separate temp files, so both fields always persist.
+- **The arrow above the panel now blends into it seamlessly.** The little arrow and the panel body were tinted by two separate layers that could never match, and the header sat on a darker fill than the rest, so a faint line showed at the top. The whole panel, arrow included, is now one continuous surface.
+- **The repeated "zero would like to access files in your Documents folder" prompt is gone.** It came from a leftover scheduled task from an old development build that pointed inside the project folder. The app itself never needs your Documents folder.
+- **Email previews read cleanly.** Long tracking links, rows of asterisks, and hard line breaks mid-sentence are tidied so a preview flows as normal text.
+
+### Changed
+
+- **Lighter, more even panel surface.** The panel no longer darkens toward the bottom, and the header and action bar share the one surface, for a calmer, glassier look that still holds its contrast over a bright window behind it.
+- **Calmer shimmer.** The loading shimmer is dimmer, slower, and rests longer between passes.
+
+### Improved
+
+- **Mail you bring back stays back.** If zero set something aside and you restored it, the next run could quietly set it aside again. Restored conversations are now remembered and never re-archived, so zero stops fighting your choices.
+- **Stops following a rule it should not.** A stale learned note could nudge zero toward archiving payment-failure alerts, which it should always keep. Learned notes are rebuilt cleanly each run so that cannot linger.
+- **Steadier under load.** Saving settings, restoring mail, and a daily run can no longer step on each other's files, and a single account that fails to refresh no longer fails the whole run.
+
 ## [1.6.13] - 2026-06-26
 
 ### Fixed

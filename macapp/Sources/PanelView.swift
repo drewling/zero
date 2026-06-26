@@ -51,19 +51,10 @@ struct PanelView: View {
             }
         }
         .frame(width: PANEL_W, height: PANEL_H)
-        .background(
-            // Graphite depth over the vibrancy: clean and neutral, a touch deeper
-            // toward the bottom (no brown).
-            LinearGradient(colors: [Color(0.125, 0.122, 0.118).opacity(0.30),
-                                    Color(0.085, 0.083, 0.08).opacity(0.50)],
-                           startPoint: .top, endPoint: .bottom)
-        )
-        .overlay(alignment: .top) {
-            // Liquid-glass specular: a hairline of light catching the very top rim.
-            LinearGradient(colors: [Paper.hairline.opacity(0.16), .clear],
-                           startPoint: .top, endPoint: .bottom)
-                .frame(height: 1.5).allowsHitTesting(false)
-        }
+        // The graphite depth-tint now lives on the GlassSurface behind this (transparent)
+        // content, spanning body+beak as ONE gradient — so the arrow and the box are the
+        // same shade with no seam. No SwiftUI body background or top specular hairline
+        // here: both used to draw a visible line/colour-break right at the beak join.
         .foregroundStyle(Paper.ink)
         .tint(Paper.accent)
         .environment(\.colorScheme, .dark)
@@ -135,7 +126,10 @@ private struct TopBar: View {
             .help("More")
         }
         .padding(.horizontal, 18).padding(.top, 13).padding(.bottom, 11)
-        .glassSurface(0)
+        // No separate glass fill on the header: it used a black-tinted glass layer that
+        // made the header darker than the panel background, so the (background-coloured)
+        // arrow above it met a darker header and showed a step at the top of the box. The
+        // header now shares the one panel surface; the divider below is enough to set it off.
         .overlay(alignment: .bottom) { Rectangle().fill(Paper.hairline.opacity(0.1)).frame(height: 0.5) }
         // Moment 9: a glass sheen sweeps across the header edge after each reload.
         .overlay(alignment: .leading) {
@@ -2297,7 +2291,8 @@ private struct ActionBar: View {
             .buttonStyle(PrimaryButtonStyle(enabled: !m.isBusy)).disabled(m.isBusy)
         }
         .padding(.horizontal, 16).padding(.vertical, 12)
-        .glassSurface(0)
+        // No separate dark glass fill on the bottom bar (matches the header): it shares
+        // the one panel surface, set off by the divider above it.
         .overlay(alignment: .top) { Rectangle().fill(Paper.hairline.opacity(0.1)).frame(height: 0.5) }
     }
     private var statusText: String {

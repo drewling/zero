@@ -96,12 +96,44 @@ def _find_label(cfg, name):
     return lab["id"] if lab else None
 
 
+_STATE_LOCK_PATH = STATE_PATH + ".lock"
+
+
+def _flock_state():
+    """Context manager: exclusive OS-level flock on the state.json sidecar lockfile.
+
+    Works across processes (e.g. the dashboard_state.py subprocess) unlike the
+    in-process _state_lock. Both _patch_state and dashboard_state.py must hold
+    this before reading/writing state.json.
+    """
+    import contextlib
+    @contextlib.contextmanager
+    def _cm():
+        os.makedirs(os.path.dirname(_STATE_LOCK_PATH), exist_ok=True)
+        f = open(_STATE_LOCK_PATH, "a")
+        try:
+            try:
+                import fcntl as _fcntl
+                _fcntl.flock(f.fileno(), _fcntl.LOCK_EX)
+            except ImportError:
+                pass  # non-POSIX: degrade gracefully (no flock available)
+            yield
+        finally:
+            try:
+                import fcntl as _fcntl
+                _fcntl.flock(f.fileno(), _fcntl.LOCK_UN)
+            except Exception:
+                pass
+            f.close()
+    return _cm()
+
+
 def _patch_state(mutate):
     """Apply a surgical change to the cached state.json (under a lock) so a single
     dismiss/undo stays consistent without a full ~9s rebuild."""
     if not os.path.isfile(STATE_PATH):
         return
-    with _state_lock:
+    with _state_lock, _flock_state():
         try:
             with open(STATE_PATH) as f:
                 st = json.load(f)
@@ -229,8 +261,16 @@ def _run_keeper(payload):
     # Hand the summary to the app, which posts a native notification (carries the
     # app icon, and tapping it opens the panel on Open loops). Gating lives in the writer.
     _queue_run_notification(set_aside, kept)
+    # Partial success is success: at least one account worked; surface the failures
+    # without failing the whole job. Only raise if ALL accounts failed (set_aside==0
+    # and kept==0 and there are failures). Mirrors _run_populate's approach.
+    if failures and set_aside == 0 and kept == 0:
+        raise RuntimeError("All accounts failed: " + " | ".join(failures))
     if failures:
-        raise RuntimeError("Some accounts failed: " + " | ".join(failures))
+        n = len(failures)
+        _set_job_message(
+            f"Set aside {set_aside}, {kept} still need you · "
+            f"{n} account{'' if n == 1 else 's'} couldn't be reached")
 
 
 def _run_populate(payload):
@@ -322,7 +362,9 @@ def _run_undo(payload):
     if not lab:
         raise ValueError(f"recovery label not found: {label_name!r}")
     # Collect all message ids carrying the label, then add INBOX + remove the label.
-    msg_ids, tok = [], None
+    # Also collect thread ids (via threads.list) so the keep-set guard can protect
+    # every restored thread on the next sweep.
+    msg_ids, thread_ids, tok = [], [], None
     while True:
         params = {"userId": "me", "labelIds": [lab["id"]], "maxResults": 500}
         if tok:
@@ -330,6 +372,18 @@ def _run_undo(payload):
         d = du._gws(cfg, ["gmail", "users", "messages", "list",
                           "--params", json.dumps(params)])
         msg_ids += [m["id"] for m in d.get("messages", []) or []]
+        tok = d.get("nextPageToken")
+        if not tok:
+            break
+    # threads.list with the same label gives us thread ids without extra per-message fetches.
+    tok = None
+    while True:
+        params = {"userId": "me", "labelIds": [lab["id"]], "maxResults": 500}
+        if tok:
+            params["pageToken"] = tok
+        d = du._gws(cfg, ["gmail", "users", "threads", "list",
+                          "--params", json.dumps(params)])
+        thread_ids += [t["id"] for t in d.get("threads", []) or []]
         tok = d.get("nextPageToken")
         if not tok:
             break
@@ -342,9 +396,16 @@ def _run_undo(payload):
                                             "removeLabelIds": [lab["id"]]})],
                 allow_empty=True)
     import learning  # noqa: E402
-    # Bulk restore = a strong "keep more of this batch" signal.
-    learning.record({"type": "keep_override_undo", "account": slug,
-                     "label": label_name, "message_count": len(msg_ids)})
+    # Record one keep_override_undo per thread so the next sweep's keep-set
+    # guard protects every restored thread by thread_id.
+    for tid in thread_ids:
+        learning.record({"type": "keep_override_undo", "account": slug,
+                         "label": label_name, "thread_id": tid})
+    if not thread_ids:
+        # Fallback: record the label-level signal (no thread_id) so at least
+        # learn.py can build the "Keep more like this" section from it.
+        learning.record({"type": "keep_override_undo", "account": slug,
+                         "label": label_name, "message_count": len(msg_ids)})
     _set_job_message(f"Restored {len(msg_ids)} messages. Refreshing...")
     _build_state_blocking()
 
@@ -417,7 +478,10 @@ def _undo_thread(payload):
                   "--json", json.dumps({"addLabelIds": ["INBOX"],
                                         "removeLabelIds": [lid] if lid else []})],
             allow_empty=True)
-    learning.record({"type": "keep_override_undo", "account": slug, "thread_id": tid})
+    learning.record({"type": "keep_override_undo", "account": slug, "thread_id": tid,
+                     "sender": payload.get("sender", ""),
+                     "sender_email": payload.get("sender_email", ""),
+                     "subject": payload.get("subject", "")})
 
     # Bring the thread back into Open loops + the inbox count so it persists across
     # reloads (the app shows it instantly via its own optimistic re-add). The undo
@@ -476,6 +540,30 @@ def _extract_body(payload):
     return ""
 
 
+def _tidy_preview(text):
+    """Light cleanup of a plaintext email body for the in-app preview. Conservative:
+    drops noise, never words. (1) Remove "( https://... )" link-reference parentheticals
+    (usually huge tracking URLs) and shorten any other very long bare URL to its host.
+    (2) Drop ASCII rule lines (****, ----, ====). (3) Un-wrap hard line breaks inside a
+    paragraph so it reads as flowing text, while keeping blank-line paragraph breaks and
+    sentence-ending line breaks."""
+    # 1. Tracking-URL noise.
+    text = re.sub(r"\(\s*https?://[^)]+\)", "", text)
+    text = re.sub(r"https?://\S{40,}",
+                  lambda m: re.sub(r"^https?://(?:www\.)?([^/\s]+).*", r"\1", m.group(0)),
+                  text)
+    # 2. ASCII rule lines (a line that's only 3+ repeats of one punctuation char).
+    text = "\n".join("" if re.fullmatch(r"\s*[\*\-=_~#]{3,}\s*", ln) else ln
+                     for ln in text.split("\n"))
+    # 3. Un-wrap: a lone newline mid-paragraph -> space. Preserved: \n\n (paragraph
+    #    breaks) and newlines after sentence/clause punctuation.
+    text = re.sub(r"(?<=[^\n.!?:;)\]])\n(?=[^\n\s])", " ", text)
+    # 4. Tidy whitespace.
+    text = re.sub(r"[ \t]{2,}", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
 def _thread_preview(payload):
     """Latest message in a thread as plain text — enough to read the gist without
     leaving the app. Not a full client: one message, body only, capped. Synchronous."""
@@ -495,7 +583,7 @@ def _thread_preview(payload):
     h = {x.get("name", "").lower(): x.get("value", "")
          for x in m.get("payload", {}).get("headers", [])}
     body = _extract_body(m.get("payload", {})).replace("\r\n", "\n").replace("\r", "\n")
-    body = re.sub(r"\n{3,}", "\n\n", body)[:6000].strip()
+    body = _tidy_preview(body)[:6000].strip()
     return {"body": body,
             "sender": _display_from(h.get("from", "")),
             "subject": h.get("subject", "") or "(no subject)"}
@@ -1410,15 +1498,37 @@ def _pop_pending_notification():
 
 def _write_settings(settings):
     """Persist the whitelisted settings keys. Merges over the current file so a
-    partial PUT (e.g. only grace_days) doesn't reset other keys to defaults."""
-    s = _read_settings()   # start from current persisted values (already merged with defaults)
-    s.update({k: v for k, v in (settings or {}).items() if k in _DEFAULT_SETTINGS})
+    partial PUT (e.g. only grace_days) doesn't reset other keys to defaults.
+
+    Concurrency-safe. The Drafting "Save" button fires one PUT per field, so two
+    requests hit this at once. The whole read-merge-write runs under an exclusive
+    flock so neither can lose the other's update, and each write uses a UNIQUE temp
+    file: the old shared "settings.json.tmp" let one request's os.replace yank the
+    temp out from under the other, raising ENOENT -> HTTP 500 ("Couldn't save ...")
+    and clobbering the field that lost the race."""
+    import fcntl
+    import tempfile
     os.makedirs(os.path.dirname(SETTINGS_PATH), exist_ok=True)
-    tmp = SETTINGS_PATH + ".tmp"
-    with open(tmp, "w") as f:
-        json.dump(s, f, indent=2)
-    os.replace(tmp, SETTINGS_PATH)
-    return s
+    with open(SETTINGS_PATH + ".lock", "a") as lock:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+        try:
+            s = _read_settings()   # current persisted values (merged with defaults)
+            s.update({k: v for k, v in (settings or {}).items() if k in _DEFAULT_SETTINGS})
+            fd, tmp = tempfile.mkstemp(dir=os.path.dirname(SETTINGS_PATH),
+                                       prefix="settings.", suffix=".tmp")
+            try:
+                with os.fdopen(fd, "w") as f:
+                    json.dump(s, f, indent=2)
+                os.replace(tmp, SETTINGS_PATH)
+            except Exception:
+                try:
+                    os.unlink(tmp)
+                except OSError:
+                    pass
+                raise
+            return s
+        finally:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
 
 
 _JOB_KINDS = {"refresh": lambda p: _build_state_blocking(),

@@ -343,6 +343,31 @@ def build(accounts_path, max_loops):
     }
 
 
+def _write_state(out_path, state):
+    """Atomically write state to out_path, holding an OS-level flock so concurrent
+    _patch_state calls in keeper_server.py don't clobber each other."""
+    lock_path = out_path + ".lock"
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    lf = open(lock_path, "a")
+    try:
+        try:
+            import fcntl as _fcntl
+            _fcntl.flock(lf.fileno(), _fcntl.LOCK_EX)
+        except ImportError:
+            pass  # non-POSIX: degrade gracefully
+        tmp = out_path + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(state, f, ensure_ascii=False, indent=2)
+        os.replace(tmp, out_path)
+    finally:
+        try:
+            import fcntl as _fcntl
+            _fcntl.flock(lf.fileno(), _fcntl.LOCK_UN)
+        except Exception:
+            pass
+        lf.close()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--accounts", default=os.path.join(ROOT, "accounts.json"))
@@ -351,11 +376,7 @@ def main():
                     help="max inbox threads to detail per account")
     a = ap.parse_args()
     state = build(a.accounts, a.max_loops)
-    os.makedirs(os.path.dirname(a.out), exist_ok=True)
-    tmp = a.out + ".tmp"
-    with open(tmp, "w") as f:
-        json.dump(state, f, ensure_ascii=False, indent=2)
-    os.replace(tmp, a.out)
+    _write_state(a.out, state)
     print(json.dumps({"ok": state["ok"], "total_loops": state["total_loops"],
                       "accounts": len(state["accounts"]), "out": a.out}))
 

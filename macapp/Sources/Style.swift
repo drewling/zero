@@ -72,7 +72,7 @@ extension View {
         // A subtle dark tint by default: keeps the glass reading as glass while
         // guaranteeing a dark-enough backing so text stays legible even when
         // something bright sits behind the panel.
-        var glass: Glass = .regular.tint(tint ?? Color(0, 0, 0).opacity(0.50))
+        var glass: Glass = .regular.tint(tint ?? Color(0, 0, 0).opacity(0.38))
         if interactive { glass = glass.interactive() }
         return self.glassEffect(glass, in: .rect(cornerRadius: radius))
     }
@@ -263,17 +263,18 @@ struct Shimmer: ViewModifier {
         content
             .overlay(
                 GeometryReader { geo in
-                    LinearGradient(colors: [.clear, Paper.hairline.opacity(0.22), .clear],
+                    LinearGradient(colors: [.clear, Paper.hairline.opacity(0.12), .clear],
                                    startPoint: .leading, endPoint: .trailing)
-                        .frame(width: geo.size.width * 0.55)
-                        .offset(x: phase * geo.size.width * 1.7)
+                        .frame(width: geo.size.width * 0.5)
+                        .offset(x: phase * geo.size.width * 1.9)
                         .blendMode(.plusLighter).allowsHitTesting(false)
                 }
             )
             .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
             .onAppear {
                 guard active, !reduceMotion else { return }
-                withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) { phase = 1 }
+                // Calmer: dimmer band, slower sweep, longer off-screen rest between passes.
+                withAnimation(.easeInOut(duration: 2.6).repeatForever(autoreverses: false)) { phase = 1 }
             }
     }
 }

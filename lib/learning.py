@@ -84,6 +84,48 @@ def _norm(text):
     return re.sub(r"\s+", " ", t).lower().strip()
 
 
+def kept_thread_ids(limit=2000) -> set:
+    """Thread ids that the user explicitly un-archived (keep_override_undo signals).
+
+    A thread in this set must never be re-archived by an automated sweep.
+    """
+    if not os.path.exists(SIGNALS):
+        return set()
+    out = set()
+    with _locked(SIGNALS, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                ev = json.loads(line)
+            except Exception:
+                continue
+            if ev.get("type") != "keep_override_undo":
+                continue
+            tid = ev.get("thread_id")
+            if tid:
+                out.add(tid)
+    # limit is a safety cap; keep the most-recently written entries
+    # (JSONL is oldest-first, so collect all and trim the tail)
+    if len(out) > limit:
+        # Re-read in order and keep last `limit` qualifying thread ids
+        ordered = []
+        with _locked(SIGNALS, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    ev = json.loads(line)
+                except Exception:
+                    continue
+                if ev.get("type") == "keep_override_undo" and ev.get("thread_id"):
+                    ordered.append(ev["thread_id"])
+        out = set(ordered[-limit:])
+    return out
+
+
 def reject_learning(text):
     """Permanently suppress a learned preference.
 

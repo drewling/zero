@@ -167,10 +167,15 @@ final class KeyablePanel: NSPanel {
 /// layer covers that area) so we don't double-tint the body.
 final class GlassSurface: NSView {
     let effect = NSVisualEffectView()
-    var arrowX: CGFloat = PANEL_W - 40 { didSet { if oldValue != arrowX { applyMask(); updateBeakGradient() } } }
+    var arrowX: CGFloat = PANEL_W - 40 { didSet { if oldValue != arrowX { applyMask() } } }
 
-    // ponytail: CAGradientLayer is cheap; one gradient over the beak-only region.
-    private let beakGradient = CAGradientLayer()
+    // ONE gradient tints the whole surface — body AND beak — so the two are the same
+    // shade by construction. This replaces the old split where the body was tinted by a
+    // SwiftUI gradient and the beak by a separate CALayer: those two sources could never
+    // be matched, so the beak always read as a lighter cap with a seam at the join.
+    // Masked to the body+beak silhouette, it sits behind the (transparent) SwiftUI content.
+    private let tint = CAGradientLayer()
+    private let tintMask = CALayer()
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -183,19 +188,18 @@ final class GlassSurface: NSView {
         effect.autoresizingMask = [.width, .height]
         addSubview(effect)
 
-        // Solid graphite tint over the beak only — exactly the color the PanelView body
-        // gradient carries at its top edge (Color(0.125,0.122,0.118).opacity(0.30)), where
-        // the beak joins. A *flat* fill (both stops equal) is deliberate: the beak is only
-        // ~26pt tall, so the body gradient barely shifts across it, and a solid fill is
-        // immune to CAGradientLayer's y-orientation (which is bottom-up on a non-flipped
-        // macOS layer). The whole beak therefore reads as one continuous surface with the
-        // header — no seam at the join, no mis-tinted tip. Rendered above the vibrancy.
-        let beakTint = NSColor(red: 0.125, green: 0.122, blue: 0.118, alpha: 0.30).cgColor
-        beakGradient.colors = [beakTint, beakTint]
-        layer?.addSublayer(beakGradient)
+        // Uniform graphite across the whole surface (body + beak), at a MIDDLE opacity:
+        // translucent enough to still read as glass over a dark backdrop, opaque enough
+        // that a bright/white backdrop behind the panel doesn't bleed up and wash out the
+        // surface + text (the low-contrast-over-white problem). ~0.42 was too see-through
+        // over white, ~0.94 too opaque/flat; ~0.66 keeps the glass while holding contrast.
+        // sRGB to match SwiftUI Color().
+        let graphite = CGColor(srgbRed: 0.135, green: 0.132, blue: 0.127, alpha: 0.66)
+        tint.colors = [graphite, graphite]
+        tint.mask = tintMask
+        layer?.addSublayer(tint)
 
         applyMask()
-        updateBeakGradient()
     }
     required init?(coder: NSCoder) { fatalError("unused") }
 
@@ -228,16 +232,15 @@ final class GlassSurface: NSView {
     override func viewDidChangeBackingProperties() {
         super.viewDidChangeBackingProperties()
         applyMask()
-        updateBeakGradient()
     }
 
     override func layout() {
         super.layout()
-        updateBeakGradient()
+        applyMask()
     }
 
-    // Rasterize the bubble+arrow at the display's backing scale so the mask edge
-    // stays crisp on Retina.
+    // Rasterize the body+beak silhouette at the display's backing scale (crisp on Retina)
+    // and use it to mask BOTH the vibrancy and the tint gradient — one shape, one shade.
     private func applyMask() {
         guard bounds.width > 0, bounds.height > 0 else { return }
         let scale = window?.backingScaleFactor ?? 2
@@ -258,47 +261,13 @@ final class GlassSurface: NSView {
         let img = NSImage(size: bounds.size)
         img.addRepresentation(rep)
         effect.maskImage = img
-    }
-
-    // Position the beak gradient CALayer over the beak region with a matching clip mask,
-    // so only the beak area gets the graphite tint — not the body (SwiftUI covers that).
-    private func updateBeakGradient() {
-        guard bounds.width > 0 else { return }
-        let cx = max(ARROW_CLAMP, min(arrowX, bounds.width - ARROW_CLAMP))
-        let w = ARROW_W / 2
-        // Beak region: a tight rect enclosing just the arrow, with a small margin.
-        let margin: CGFloat = 4
-        let beakRect = CGRect(x: cx - w - margin, y: PANEL_H - 2,
-                              width: (w + margin) * 2, height: ARROW_H + 2)
+        // The same silhouette masks the tint gradient, so body+beak read as one
+        // continuous shade with no seam. No implicit animation on resize.
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        beakGradient.frame = beakRect
-        // Clip the gradient to the exact beak shape using the rasterised bitmap mask.
-        let scale = window?.backingScaleFactor ?? 2
-        let pw = Int((beakRect.width * scale).rounded())
-        let ph = Int((beakRect.height * scale).rounded())
-        guard pw > 0, ph > 0,
-              let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: pw, pixelsHigh: ph,
-                      bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
-                      colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else {
-            CATransaction.commit(); return
-        }
-        rep.size = beakRect.size
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
-        // Translate the path into beak-local coordinates.
-        let xform = AffineTransform(translationByX: -(cx - w - margin), byY: -(PANEL_H - 2))
-        let localPath = beakPath()
-        localPath.transform(using: xform)
-        NSColor.black.setFill()
-        localPath.fill()
-        NSGraphicsContext.restoreGraphicsState()
-        let maskImg = NSImage(size: beakRect.size)
-        maskImg.addRepresentation(rep)
-        let maskLayer = CALayer()
-        maskLayer.frame = CGRect(origin: .zero, size: beakRect.size)
-        maskLayer.contents = maskImg
-        beakGradient.mask = maskLayer
+        tint.frame = bounds
+        tintMask.frame = bounds
+        tintMask.contents = img
         CATransaction.commit()
     }
 }
@@ -458,7 +427,11 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         let surface = GlassSurface(frame: total)
         glassSurface = surface
 
-        let hosting = NSHostingView(rootView: PanelView().environmentObject(model))
+        // focusEffectDisabled: kill the blue keyboard-focus ring that macOS otherwise
+        // paints on whichever button becomes first responder (the panel keeps auto-
+        // focusing the primary CTA, so it looks "pre-selected"). This is a mouse-driven
+        // popover, not a keyboard-nav surface, so the ring only ever reads as a bug.
+        let hosting = NSHostingView(rootView: PanelView().environmentObject(model).focusEffectDisabled())
         hosting.frame = bodyRect
         hosting.wantsLayer = true
         hosting.layer?.backgroundColor = .clear
@@ -614,23 +587,30 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
     func positionPanel(on target: NSScreen) {
         let winH = PANEL_H + ARROW_H
         let visible = target.visibleFrame
+        var originX: CGFloat, originY: CGFloat
         if let button = statusItem.button, let bWin = button.window,
            bWin.screen?.frame == target.frame {
             let f = bWin.convertToScreen(button.convert(button.bounds, to: nil))
-            var originX = f.midX - (PANEL_W - 40)
+            originX = f.midX - (PANEL_W - 40)
             originX = max(visible.minX + 8, min(originX, visible.maxX - PANEL_W - 8))
-            let originY = f.minY - GAP - winH
+            originY = f.minY - GAP - winH
             setArrowX(f.midX - originX)               // item centre in window coords
-            panel.setFrame(NSRect(x: originX, y: originY, width: PANEL_W, height: winH), display: true)
         } else {
             // Icon isn't on this screen (or isn't shown) — drop the panel at the
             // top-RIGHT, where a menu-bar item lives, so it reads as coming from the bar
             // rather than floating dead-centre.
-            let originX = visible.maxX - PANEL_W - 12
-            let originY = visible.maxY - winH - 12
+            originX = visible.maxX - PANEL_W - 12
+            originY = visible.maxY - winH - 12
             setArrowX(PANEL_W - 40)                    // arrow near the right edge
-            panel.setFrame(NSRect(x: originX, y: originY, width: PANEL_W, height: winH), display: true)
         }
+        // ALWAYS clamp fully on-screen. On first launch the panel can open before the
+        // status-item window exists (or while one is stale / on a display that just
+        // changed), and an unclamped originY lands the panel off the screen edge — the
+        // user sees nothing and the app looks dead. This is THE first-run safety net:
+        // wherever we anchored, the whole panel must end up inside the visible frame.
+        originX = max(visible.minX + 8, min(originX, visible.maxX - PANEL_W - 8))
+        originY = max(visible.minY + 8, min(originY, visible.maxY - winH - 8))
+        panel.setFrame(NSRect(x: originX, y: originY, width: PANEL_W, height: winH), display: true)
         panel.invalidateShadow()                      // shadow follows the rounded glass silhouette
     }
 
