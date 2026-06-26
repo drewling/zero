@@ -19,6 +19,7 @@ can read and edit. With too few signals it writes nothing.
 Usage: learn.py [--min 2]
 """
 import argparse, os, re, sys
+from collections import Counter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -118,13 +119,16 @@ def _build_archive_section(signals, min_recurrence=2, max_bullets=8):
 
     Only includes senders/domains that appear >= min_recurrence times so one-off
     archives don't become noise.
+
+    # ponytail: learn=False means "archive this one, don't generalize"; missing/None/True
+    # means eligible. Contract set by keeper_server; existing un-flagged signals count.
     """
     archives = [s for s in signals if s.get("type") == "keep_override"
-                and s.get("action") == "archived_without_reply"]
+                and s.get("action") == "archived_without_reply"
+                and s.get("learn") is not False]
     if not archives:
         return ""
 
-    from collections import Counter
     # Count by sender_email (fall back to domain, then sender display name).
     sender_counts = Counter()
     sender_label = {}  # canonical key -> best display string
@@ -164,10 +168,21 @@ def build(min_signals):
     signals = learning.recent(800)
     edits = [s for s in signals if s.get("type") == "draft_edit"]
     restores = _active_restores(signals)
-    archives = [s for s in signals if s.get("type") == "keep_override"
-                and s.get("action") == "archived_without_reply"]
-    # Need at least one of the high-signal types to write anything.
-    if len(edits) + len(restores) < min_signals:
+    # Eligible archive signals: learn not explicitly False, recurring (>=2) senders only.
+    # ponytail: count recurring archives toward threshold so first-week data (many archives,
+    # few edits/restores) still produces a learned.md. One-offs still excluded by
+    # _build_archive_section's min_recurrence guard — single archive = no rule.
+    archive_counts = Counter(
+        (s.get("sender_email") or s.get("sender") or "").lower()
+        for s in signals
+        if s.get("type") == "keep_override"
+        and s.get("action") == "archived_without_reply"
+        and s.get("learn") is not False
+        and (s.get("sender_email") or s.get("sender"))
+    )
+    recurring_archive_senders = sum(1 for cnt in archive_counts.values() if cnt >= 2)
+
+    if len(edits) + len(restores) + recurring_archive_senders < min_signals:
         return None, len(restores), len(edits)
 
     rejected = _rejected_norms()
@@ -258,6 +273,55 @@ def _demo():
         many += [_sig(f"sender{i}@example.com")] * 2
     section = _build_archive_section(many, max_bullets=8)
     assert section.count("- Archive:") == 8, "should cap at max_bullets"
+
+    # learn=False signals must be excluded from generalization.
+    learn_false = [
+        {"type": "keep_override", "action": "archived_without_reply",
+         "sender_email": "nope@example.com", "sender": "No Learn", "ts": now, "learn": False},
+        {"type": "keep_override", "action": "archived_without_reply",
+         "sender_email": "nope@example.com", "sender": "No Learn", "ts": now, "learn": False},
+    ]
+    section = _build_archive_section(learn_false)
+    assert section == "", "learn=False signals must not produce a rule"
+
+    # learn=True (explicit) and missing learn field both count.
+    learn_true = [
+        {"type": "keep_override", "action": "archived_without_reply",
+         "sender_email": "ok@example.com", "sender": "OK", "ts": now, "learn": True},
+        {"type": "keep_override", "action": "archived_without_reply",
+         "sender_email": "ok@example.com", "sender": "OK", "ts": now},  # missing = eligible
+    ]
+    section = _build_archive_section(learn_true)
+    assert "ok@example.com" in section or "OK" in section, "learn=True/missing should produce a rule"
+
+    # build() threshold: 3 archives of sender A (learn=True) + 1 of B + 1 learn=False of C
+    # → recurring_archive_senders=1 (only A), min_signals=1 → non-None result.
+    import unittest.mock as _mock, io as _io
+    def _fake_recent(_n):
+        return (
+            [{"type": "keep_override", "action": "archived_without_reply",
+              "sender_email": "a@example.com", "sender": "A", "ts": now, "learn": True}] * 3
+            + [{"type": "keep_override", "action": "archived_without_reply",
+                "sender_email": "b@example.com", "sender": "B", "ts": now}]  # once = no rule
+            + [{"type": "keep_override", "action": "archived_without_reply",
+                "sender_email": "c@example.com", "sender": "C", "ts": now, "learn": False},
+               {"type": "keep_override", "action": "archived_without_reply",
+                "sender_email": "c@example.com", "sender": "C", "ts": now, "learn": False}]
+            + [{"type": "keep_override_undo",
+                "sender_email": "d@example.com", "sender": "D", "ts": now}]
+        )
+    import learning as _learning_mod
+    original_recent = _learning_mod.recent
+    _learning_mod.recent = _fake_recent
+    try:
+        result, n_restore, n_edit = build(min_signals=1)
+    finally:
+        _learning_mod.recent = original_recent
+
+    assert result is not None, "build() should return non-None with recurring archives"
+    assert "a@example.com" in result or "A" in result, "A (3 archives, learn=True) should appear"
+    assert "b@example.com" not in result and "B (" not in result, "B (once) must not appear as a rule"
+    assert "c@example.com" not in result and "C (" not in result, "C (learn=False) must not generalize"
 
     print("learn.py self-check OK")
 

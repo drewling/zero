@@ -322,6 +322,10 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
 
     func applicationDidFinishLaunching(_ note: Notification) {
         Self.shared = self
+        // Give AsyncImage a real cache so the handful of Gmail avatar photos aren't
+        // re-fetched/re-decoded on every row rebuild (a reload happens after each
+        // archive). A few MB covers all accounts' faces for the whole session.
+        URLCache.shared = URLCache(memoryCapacity: 8 << 20, diskCapacity: 32 << 20)
         launchLog("didFinishLaunching: bundle=\(Bundle.main.bundlePath) id=\(Bundle.main.bundleIdentifier ?? "nil") translocated=\(Bundle.main.bundlePath.contains("/AppTranslocation/"))", reset: true)
         // Dev-only: KEEPER_PREVIEW renders the panel in a normal window for a
         // screenshot of the live glass material (the menu-bar popover is hidden
@@ -370,6 +374,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
                                                name: NSApplication.didChangeScreenParametersNotification,
                                                object: nil)
         startServerAsync()
+        model.startUpdateWatch()   // announce a just-applied update, then watch for new ones
         launchLog("didFinishLaunching: setup complete")
 
         // First-run safety net: a brand-new user's only UI is the menu-bar icon. With
@@ -455,7 +460,10 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         RunNotifier.requestAuthorization()
         launchLog("setupNotifications: done")
         Task { await model.drainPendingNotification() }
-        notifDrainTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+        // 5-minute cadence: this only catches *scheduled* runs (launch + manual-run
+        // completion drain immediately), so a tight interval just burns wakeups all day
+        // and defeats App Nap for an app that's resident from login.
+        notifDrainTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in await self.model.drainPendingNotification() }
         }
@@ -471,9 +479,15 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
                                             didReceive response: UNNotificationResponse,
                                             withCompletionHandler completionHandler: @escaping () -> Void) {
+        let info = response.notification.request.content.userInfo
         Task { @MainActor in
-            self.model.tab = .loops
-            self.showPanel(on: self.screenUnderMouse())   // pop on the display the user is on
+            if (info["target"] as? String) == "url",
+               let s = info["url"] as? String, let url = URL(string: s) {
+                NSWorkspace.shared.open(url)               // changelog / release page
+            } else {
+                self.model.tab = .loops
+                self.showPanel(on: self.screenUnderMouse())   // pop on the display the user is on
+            }
             completionHandler()
         }
     }
@@ -567,11 +581,29 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
             menu.addItem(versionItem)
             menu.addItem(.separator())
         }
+        let checkItem = NSMenuItem(title: model.updateAvailable != nil ? "Update zero…" : "Check for Updates…",
+                                   action: #selector(checkForUpdatesMenu), keyEquivalent: "")
+        checkItem.target = self
+        menu.addItem(checkItem)
+        menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit zero", action: #selector(NSApplication.terminate(_:)),
                                 keyEquivalent: "q"))
         statusItem.menu = menu
         statusItem.button?.performClick(nil)   // open the menu
         statusItem.menu = nil                  // clear immediately so left-click stays toggle
+    }
+
+    @objc func checkForUpdatesMenu() {
+        Task { @MainActor in
+            // If we already know an update's waiting, open the panel so the user sees
+            // the banner + "Update now"; otherwise run a manual check (toasts the result).
+            if model.updateAvailable != nil {
+                showPanel(on: screenUnderMouse())
+            } else {
+                await model.checkForUpdates(manual: true)
+                if model.updateAvailable != nil { showPanel(on: screenUnderMouse()) }
+            }
+        }
     }
 
     func setupPanel() {

@@ -21,8 +21,13 @@ KNOWN_PROVIDERS = [
         "bin": "claude",
         "bin_env": "CLAUDE_BIN",
         "wired": True,
-        # claude CLI: claude -p <prompt> --model <model>
-        "argv_template": ["-p", "{prompt}", "--model", "{model}"],
+        # claude CLI: claude -p <prompt> --model <model>. Extra flags keep this a pure
+        # text-in/JSON-out call with no side effects: --strict-mcp-config (don't load the
+        # user's MCP servers — slow + irrelevant here) and --no-session-persistence (don't
+        # write transcripts). Documents-walk avoidance is handled via CLAUDE_CONFIG_DIR
+        # in _run_cmd, not a flag (--bare would also drop OAuth login).
+        "argv_template": ["-p", "{prompt}", "--model", "{model}",
+                          "--strict-mcp-config", "--no-session-persistence"],
         "model_map": {
             "haiku": "haiku",
             "sonnet": "sonnet",
@@ -119,6 +124,77 @@ def _build_cmd(provider, binary, prompt, model_arg):
     ]
 
 
+def _claude_home():
+    """An isolated CLAUDE_CONFIG_DIR for the claude provider.
+
+    WHY: Claude Code stat-walks the project paths listed in the user's ~/.claude.json on
+    startup. When the spawning app is a sandboxed GUI without "Documents" access, that
+    walk into ~/Documents triggers a macOS TCC permission prompt — which is MODAL and
+    blocks claude's read, freezing the whole run at 0%. An isolated config with an empty
+    projects map has nothing under ~/Documents to walk, so no prompt, no hang — and it's
+    stable across the app's ad-hoc re-signing (a fresh signature otherwise re-prompts).
+
+    Returns the dir, or None if it can't be made usable (caller falls back to the default
+    config, so we never do worse than before)."""
+    home = os.path.join(ROOT, "claude-home")
+    try:
+        os.makedirs(home, exist_ok=True)
+        cfg = os.path.join(home, ".claude.json")
+        if not os.path.exists(cfg):
+            with open(cfg, "w") as f:
+                json.dump({}, f)                      # empty projects → no Documents walk
+        creds = os.path.join(home, ".credentials.json")
+        if not os.path.exists(creds):
+            # Seed login from the Keychain item the user's interactive claude created.
+            r = subprocess.run(["security", "find-generic-password",
+                                "-s", "Claude Code-credentials", "-w"],
+                               capture_output=True, text=True, timeout=10,
+                               stdin=subprocess.DEVNULL)
+            if r.returncode != 0 or not r.stdout.strip():
+                return None                           # no creds to seed → use default config
+            with open(creds, "w") as f:
+                f.write(r.stdout.strip())
+            os.chmod(creds, 0o600)
+        return home
+    except Exception:
+        return None
+
+
+def _run_cmd(cmd, provider_name, timeout):
+    """Run a provider command (stdin closed so it can never block on input).
+
+    For claude: try the isolated config first (no Documents-walk TCC prompt). If that
+    isn't logged in / fails for a non-timeout reason, retry once with the default config
+    so a stale seeded credential never breaks classification. Returns the
+    CompletedProcess, or None on timeout/spawn error."""
+    base = os.environ.copy()
+    # Run from the app's data dir, never an inherited cwd that might sit under ~/Documents
+    # (claude records its cwd as a project; we never want a Documents path in there).
+    cwd = ROOT if os.path.isdir(ROOT) else None
+    if provider_name == "claude":
+        home = _claude_home()
+        if home:
+            iso = dict(base); iso["CLAUDE_CONFIG_DIR"] = home
+            try:
+                r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
+                                   stdin=subprocess.DEVNULL, env=iso, cwd=cwd)
+                if r.returncode == 0:
+                    return r
+                # Non-zero (e.g. seeded creds went stale → "Not logged in"): fall through
+                # and retry on the default config below.
+            except subprocess.TimeoutExpired:
+                return None                           # hung; don't double the wait
+            except Exception:
+                pass
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
+                             stdin=subprocess.DEVNULL, env=base, cwd=cwd)
+    except subprocess.TimeoutExpired:
+        return None
+    except Exception:
+        return None
+
+
 def run_prompt(prompt, model="haiku", timeout=120):
     """Run a prompt through the active provider's CLI.
 
@@ -138,11 +214,8 @@ def run_prompt(prompt, model="haiku", timeout=120):
     model_arg = provider["model_map"].get(model, model)
     cmd = _build_cmd(provider, binary, prompt, model_arg)
 
-    try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        return ("", False)
-    except Exception:
+    r = _run_cmd(cmd, provider["name"], timeout)
+    if r is None:
         return ("", False)
     if r.returncode != 0:
         # If the active provider failed and it isn't already claude, try claude once.
@@ -154,13 +227,9 @@ def run_prompt(prompt, model="haiku", timeout=120):
             fb_binary = _bin_for(fallback)
             fb_model = fallback["model_map"].get(model, model)
             fb_cmd = _build_cmd(fallback, fb_binary, prompt, fb_model)
-            try:
-                r = subprocess.run(fb_cmd, capture_output=True, text=True, timeout=timeout)
-            except Exception as e:
-                print(f"llm: claude fallback errored: {e}", file=sys.stderr)
-                return ("", False)
-            if r.returncode != 0:
-                print(f"llm: claude fallback also failed (exit {r.returncode})", file=sys.stderr)
+            r = _run_cmd(fb_cmd, "claude", timeout)
+            if r is None or r.returncode != 0:
+                print("llm: claude fallback also failed", file=sys.stderr)
                 return ("", False)
             return (r.stdout, True)
         return ("", False)

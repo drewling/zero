@@ -241,16 +241,26 @@ def _undo_points(cfg):
     """
     data = du._gws(cfg, ["gmail", "users", "labels", "list",
                          "--params", json.dumps({"userId": "me"})])
-    # Collect counts per date bucket; track one representative label per bucket.
-    buckets = {}  # date -> {"label": str, "count": int}
-    for lab in data.get("labels", []) or []:
-        name = lab.get("name", "")
-        if not name.startswith(iz._BASE_LABEL):
-            continue
+    recovery = [lab for lab in (data.get("labels", []) or [])
+                if lab.get("name", "").startswith(iz._BASE_LABEL)]
+
+    # One gws subprocess per recovery label to read its thread count. These dated
+    # labels accumulate ~1/day/account forever, so a serial loop grows unbounded;
+    # fan them out (same pattern as the per-account/per-label pools elsewhere here).
+    def _count(lab):
         detail = du._gws(cfg, ["gmail", "users", "labels", "get",
                                "--params", json.dumps({"userId": "me", "id": lab["id"]})])
+        return lab.get("name", ""), int(detail.get("threadsTotal", 0) or 0)
+
+    # Collect counts per date bucket; track one representative label per bucket.
+    buckets = {}  # date -> {"label": str, "count": int}
+    if recovery:
+        with ThreadPoolExecutor(max_workers=8) as ex:
+            counted = list(ex.map(_count, recovery))
+    else:
+        counted = []
+    for name, count in counted:
         date = _parse_label_date(name)
-        count = int(detail.get("threadsTotal", 0) or 0)
         if date not in buckets:
             buckets[date] = {"label": name, "date": date, "count": count}
         else:

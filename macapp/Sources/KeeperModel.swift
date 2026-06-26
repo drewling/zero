@@ -74,6 +74,12 @@ final class KeeperModel: ObservableObject {
     // onboarding credential step never flashes before the check completes.
     @Published var hasClient = true
 
+    // Set when a connect succeeds at OAuth but the Gmail API isn't enabled for the
+    // user's Google project (items 7 + 9). Drives the onboarding recovery card: a clear
+    // message + a one-click "Enable Gmail API" link. Cleared when a connect is retried.
+    @Published var apiEnableMessage: String? = nil
+    @Published var apiEnableURL: String? = nil
+
     // Timing: protect mail newer than N days (the keeper run honors this).
     @Published var graceDays: Int = 0
     // Schedule settings (loaded from server; defaults match server defaults).
@@ -103,7 +109,18 @@ final class KeeperModel: ObservableObject {
     // First-run backlog offer: shown once after the first inbox connects.
     @Published var backlogOffered: Bool = UserDefaults.standard.bool(forKey: "backlogOffered")
 
+    // Auto-update (logic in Updater.swift). Defaults to checking automatically; the
+    // install itself is always a deliberate one-click action, never silent.
+    @Published var updateAvailable: GithubRelease? = nil
+    @Published var checkingForUpdates = false
+    @Published var installingUpdate = false
+    @Published var lastUpdateCheck: Date? = nil
+    @Published var autoCheckUpdates: Bool = (UserDefaults.standard.object(forKey: "autoCheckUpdates") as? Bool) ?? true
+
     // ponytail: transient flags for delight moments — no persistence needed
+    /// Set to an account slug when its top-bar dot is tapped, so the Accounts tab can
+    /// flash that card. Cleared after the pulse so the same dot can be tapped again.
+    @Published var pulseAccountSlug: String? = nil
     /// Pulses true briefly after a reload so the header can sweep a "fresh" sheen.
     @Published var refreshSheenToken: UUID = UUID()
     /// Set to true for ~0.8 s after a send succeeds so the composer can show a confirmation.
@@ -344,9 +361,12 @@ final class KeeperModel: ObservableObject {
         guard !text.isEmpty else { toast("Paste your client_secret.json first"); return }
         Task {
             do {
-                try await api.setCredentials(json: text)
+                let res = try await api.setCredentials(json: text)
                 hasClient = true
-                toast("Google access set up — now connect your inbox")
+                // Surface the server's validation result: a warning (e.g. a Web client
+                // where Desktop is expected) takes priority over the plain confirmation.
+                if let w = res.warning, !w.isEmpty { toast(w) }
+                else { toast(res.message ?? "Google access set up — now connect your inbox") }
             } catch let KeeperAPI.KeeperError.http(_, msg) where !msg.isEmpty {
                 toast(msg)   // surface the server's specific guidance (bad paste, etc.)
             } catch {
@@ -426,9 +446,16 @@ final class KeeperModel: ObservableObject {
         guard previews[tid] == nil, !previewLoading.contains(tid) else { return }
         previewLoading.insert(tid)
         Task {
-            let p = try? await api.threadPreview(slug: slug, threadId: tid)
-            previews[tid] = p ?? MessagePreview()
-            previewLoading.remove(tid)
+            defer { previewLoading.remove(tid) }
+            do {
+                // Cache only a real response (an empty thread legitimately renders
+                // "No readable text"). On error, collapse + toast so a failed fetch never
+                // looks like an empty email; leaving previews[tid] nil lets a re-tap retry.
+                previews[tid] = try await api.threadPreview(slug: slug, threadId: tid)
+            } catch {
+                expandedLoops.remove(tid)
+                toast("Couldn't load that message — tap again to retry")
+            }
         }
     }
 
@@ -470,6 +497,7 @@ final class KeeperModel: ObservableObject {
         }
     }
     func addAccount() {
+        apiEnableMessage = nil; apiEnableURL = nil   // clear any prior recovery card
         beginJob(kind: "add_account", starting: "Opening your browser…") { try await self.api.addAccount() }
     }
 
@@ -523,7 +551,7 @@ final class KeeperModel: ObservableObject {
         case "populate": msg = j.message.isEmpty ? "Labels updated" : j.message
         case "archive_before": msg = (j.message.isEmpty ? "Backlog cleared" : j.message) + " — undo any time"
         case "cleanup": msg = j.message.isEmpty ? "Labels removed" : j.message
-        case "add_account": msg = "Account added"
+        case "add_account": msg = "Account added"; apiEnableMessage = nil; apiEnableURL = nil
         case "undo": msg = "Restored"
         default: msg = "Updated"
         }
@@ -543,6 +571,23 @@ final class KeeperModel: ObservableObject {
     private func failJob(_ j: Job) async {
         await reload()
         if j.kind == "add_account" {
+            // Signed in, but the Gmail API isn't enabled for the user's project. This is
+            // the #1 first-run snag (items 7 + 9): the OAuth client is fine, so don't
+            // bounce to the CredentialsCard — surface a recovery card with a one-click
+            // enable link instead. Outside onboarding, toast the same guidance.
+            if j.needsApiEnable {
+                apiEnableMessage = j.humanMessage
+                    ?? "You're signed in, but the Gmail API isn't enabled for your Google project yet. Enable it, then connect again."
+                apiEnableURL = j.enableUrl
+                // The recovery card (onboarding connect step + Accounts tab) carries the
+                // full message + fix link; a short toast just points there so it isn't
+                // truncated. Make sure Accounts is visible when not in onboarding.
+                if !needsOnboarding {
+                    tab = .accounts
+                    toast("Couldn't add account — see how to fix it above")
+                }
+                return
+            }
             // Refresh credential status: if the OAuth client is now missing, let the
             // CredentialsCard surface (needsCredentials → true) rather than toasting the
             // long setup wall. If the client IS present, show the server's short error.
@@ -575,14 +620,18 @@ final class KeeperModel: ObservableObject {
 
     // MARK: set-aside (dismiss) + per-thread undo
 
-    func dismiss(_ row: LoopRow) {
+    /// Archive a thread. `learn: true` is "AI archive" — the server tags the signal so
+    /// the pipeline generalises from it; `false` is "archive just this one" (no rule learned).
+    func dismiss(_ row: LoopRow, learn: Bool = true) {
         let loop = row.loop, slug = row.account.slug
         state?.dropLoop(slug: slug, threadId: loop.threadId)   // optimistic
         Task {
             do {
-                let label = try await api.dismiss(loop, slug: slug)
+                let label = try await api.dismiss(loop, slug: slug, learn: learn)
                 Haptic.tap()
-                toast("Set aside") { [weak self] in self?.restoreThread(loop, slug: slug, label: label) }
+                toast(learn ? "Set aside — learning from this" : "Set aside") {
+                    [weak self] in self?.restoreThread(loop, slug: slug, label: label)
+                }
                 await reload()   // pull the server's bumped Undo bucket so the count moves now
             } catch {
                 toast("Couldn't set aside")
@@ -823,6 +872,18 @@ final class KeeperModel: ObservableObject {
     }
 
     func dismissToast() { toastInfo = nil }
+
+    /// Tapping an account dot in the top bar jumps to the Accounts tab and flashes that
+    /// account's card so the user can see which one they picked. Re-setting to nil first
+    /// lets onChange re-fire when the same dot is tapped twice.
+    func revealAccount(_ slug: String) {
+        withAnimation(Motion.morph) { tab = .accounts }
+        pulseAccountSlug = nil
+        DispatchQueue.main.async { self.pulseAccountSlug = slug }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+            if self.pulseAccountSlug == slug { self.pulseAccountSlug = nil }
+        }
+    }
 }
 
 // Optimistic local mutations so counts + lists stay consistent without waiting for

@@ -23,4 +23,27 @@ enum RunNotifier {
         let req = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(req)
     }
+
+    /// A new version is ready. Stable id keyed by version so re-checks don't stack
+    /// duplicates. Tap → open the changelog.
+    static func postUpdateAvailable(version: String, url: String) {
+        postUpdate(id: "zero-update-\(version)", title: "Update available",
+                   body: "zero \(version) is ready to install. Open zero to update — tap to see what's new.",
+                   url: url)
+    }
+
+    /// The update has applied and we've relaunched on the new build. Tap → changelog.
+    static func postUpdated(version: String, url: String) {
+        postUpdate(id: "zero-updated-\(version)", title: "zero updated",
+                   body: "You're now on \(version). Tap to see what's new.", url: url)
+    }
+
+    private static func postUpdate(id: String, title: String, body: String, url: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        content.userInfo = ["target": "url", "url": url]   // tap → open the changelog
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: nil))
+    }
 }

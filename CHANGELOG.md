@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.19] - 2026-06-26
+
+### Added
+
+- **zero keeps itself up to date.** It quietly checks GitHub for new releases in the background and, when one is ready, shows a banner with a one-tap "Update now" and a "See what's new" link to the changelog — the update downloads, swaps itself in, and relaunches on its own. You can also check any time from the three-dot menu ("Check for Updates…"), which tells you when you're already on the latest version, and zero posts a notification once an update has been applied. Auto-checking can be turned off in Settings.
+- **Links in email previews are clickable, and quoted history collapses.** Previews used to show the whole thread as one wall of text with dead links. Now the latest message is shown on its own with working links, earlier messages in the thread fold behind a "Show N earlier messages" toggle, and the quoted reply history under a message ("On … wrote:" and `>` lines) hides behind a caret you can expand — so a long back-and-forth reads as the one message that actually needs you.
+
+### Fixed
+
+- **The progress bar moves and says what it's doing.** A run could sit on "Sorting recent mail… 0%" the whole time and look frozen, even though it was working — with a single account there was nothing to move the bar and no detail while the slow part (reading each thread) ran. The bar now advances through real stages — "Reading mail (12 of 40)", then "Sorting with AI" — so you can see it's making progress.
+- **No more Documents permission prompt freezing a run.** The first run after an update could stall behind a macOS "zero would like to access your Documents folder" dialog you might never see (a menu-bar app has no window to surface it). The classifier no longer reaches anywhere near your Documents folder, so the prompt is gone and runs start cleanly.
+
 ## [1.6.18] - 2026-06-26
 
 ### Fixed

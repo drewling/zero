@@ -104,6 +104,11 @@ struct OnboardingView: View {
                     Button("Cancel sign-in") { m.cancelJob() }
                         .buttonStyle(GhostButtonStyle())
                         .padding(.top, 8)
+                } else if m.apiEnableMessage != nil {
+                    // Signed in, but Google needs a fix (API off, or consent screen
+                    // Internal/Testing). One clear message + a one-click link, then retry.
+                    APIEnableCard(retryHint: "Then tap “Connect your first inbox” above again.")
+                        .frame(maxWidth: 320).padding(.top, 12)
                 } else {
                     Text("Sign-in opens in your browser. The app never sees your password.")
                         .font(.system(size: 11)).foregroundStyle(Paper.ink4)
@@ -220,10 +225,10 @@ private struct CredentialsCard: View {
     name "zero", my own email as the support and developer contact.
     4. CRITICAL: on the Audience tab, set Publishing status to "In production". In \
     "Testing" status Google expires access after 7 days and zero silently stops syncing.
-    5. Go to Clients → Create client → Application type "Desktop app" → create, then \
-    download the client JSON.
+    5. Go to Clients → Create client → Application type "Desktop app", name it "zero" → \
+    create, then download the client JSON.
     6. Show me the full contents of that downloaded JSON so I can paste it into zero's \
-    "Set up Google access" box. It stays on my Mac.
+    setup box. It stays on my Mac.
 
     Stop if Google asks for app verification — it isn't required for personal use. Walk \
     me through anything you can't click yourself.
@@ -285,22 +290,64 @@ private struct CredentialsCard: View {
             }
             .padding(.top, 14)
 
-            Link(destination: URL(string: "https://console.cloud.google.com/auth/clients")!) {
-                HStack(spacing: 5) {
-                    Image(systemName: "arrow.up.forward.square")
+            // The manual route's entry action: a real, prominent button (not a buried
+            // link). Opening the console is the one necessary first move, so it reads as
+            // a button you press — then the numbered steps tell you what to do there.
+            Button { NSWorkspace.shared.open(URL(string: "https://console.cloud.google.com/welcome")!) } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.up.forward.square.fill")
+                        .font(.system(size: 14, weight: .semibold)).foregroundStyle(Paper.ink)
                     Text("Open Google Cloud Console")
-                }.font(.system(size: 11.5, weight: .medium)).foregroundStyle(Paper.accentSoft)
-            }.buttonStyle(.plain)
+                        .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(Paper.ink)
+                    Spacer(minLength: 0)
+                    Image(systemName: "arrow.up.forward").font(.system(size: 10)).foregroundStyle(Paper.ink4)
+                }
+                .padding(.vertical, 11).padding(.horizontal, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .glassSurface(11)
+                .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .strokeBorder(Paper.hairline.opacity(0.16), lineWidth: 0.75))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("Opens console.cloud.google.com in your browser")
             .padding(.top, 12)
 
+            // Numbered steps. Each load-bearing one carries its own direct link so a
+            // non-technical user lands exactly on the right page instead of hunting menus.
             VStack(alignment: .leading, spacing: 9) {
-                StepRow(n: 1, text: "Enable the Gmail API for a new project.")
-                StepRow(n: 2, text: "Create an OAuth client, type Desktop app.")
-                StepRow(n: 3, text: "Set Publishing status to In production.",
-                        warn: "In Testing, Google cuts access after 7 days.")
-                StepRow(n: 4, text: "Download the JSON, then paste it below.")
+                StepRow(n: 1, text: "Turn on the Gmail API for your project.",
+                        link: ("Open the Gmail API page → Enable",
+                               "https://console.cloud.google.com/apis/library/gmail.googleapis.com"))
+                StepRow(n: 2, text: "Make a sign-in key: Create credentials → OAuth client ID. Pick “Desktop app” and name it “zero”.",
+                        link: ("Open the Credentials page",
+                               "https://console.cloud.google.com/auth/clients"))
+                StepRow(n: 3, text: "On the Audience tab, set Publishing status to “In production”.",
+                        warn: "If you leave it on Testing, Google cuts access after 7 days.")
+                StepRow(n: 4, text: "Download that key as JSON, then paste it below.")
             }
-            .padding(.top, 11)
+            .padding(.top, 12)
+
+            // Explicit Paste control — right-click / ⌘V into a glass TextEditor can be
+            // finicky to focus, so a one-tap clipboard paste is always reachable.
+            HStack(spacing: 0) {
+                Text("Your downloaded JSON").font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Paper.ink4)
+                Spacer(minLength: 0)
+                Button {
+                    if let s = NSPasteboard.general.string(forType: .string), !s.isEmpty {
+                        withAnimation(Motion.pop) { pasted = s }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "doc.on.clipboard")
+                        Text("Paste")
+                    }.font(.system(size: 11, weight: .medium)).foregroundStyle(Paper.accentSoft)
+                }
+                .buttonStyle(.plain)
+                .help("Paste the JSON you copied from Google")
+            }
+            .padding(.top, 13)
 
             ZStack(alignment: .topLeading) {
                 TextEditor(text: $pasted)
@@ -313,10 +360,10 @@ private struct CredentialsCard: View {
                         .padding(.horizontal, 13).padding(.vertical, 16).allowsHitTesting(false)
                 }
             }
-            .padding(.top, 12)
+            .padding(.top, 6)
 
             Button { m.saveCredentials(pasted) } label: {
-                Text("Save Google access").frame(maxWidth: .infinity)
+                Text("Save & continue").frame(maxWidth: .infinity)
             }
             .buttonStyle(PrimaryButtonStyle(enabled: pasteReady))
             .disabled(!pasteReady)
@@ -339,6 +386,8 @@ private struct CredentialsCard: View {
                 .padding(.top, 7)
         }
         .padding(16).glassSurface(13).frame(maxWidth: 320).padding(.top, 14)
+        // Don't leave the pasted client_secret sitting in view memory once it's saved.
+        .onChange(of: m.hasClient) { _, has in if has { pasted = "" } }
     }
 }
 
@@ -348,6 +397,7 @@ private struct StepRow: View {
     let n: Int
     let text: String
     var warn: String? = nil
+    var link: (label: String, url: String)? = nil
     var body: some View {
         HStack(alignment: .top, spacing: 9) {
             Text("\(n)")
@@ -355,16 +405,59 @@ private struct StepRow: View {
                 .frame(width: 18, height: 18)
                 .background(Circle().fill(Paper.raised.opacity(0.10)))
                 .overlay(Circle().strokeBorder(Paper.hairline.opacity(0.14), lineWidth: 0.5))
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(text).font(.system(size: 11.5)).foregroundStyle(Paper.ink2)
                     .fixedSize(horizontal: false, vertical: true)
                 if let warn {
                     Text(warn).font(.system(size: 10)).foregroundStyle(Paper.danger.opacity(0.92))
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                if let link, let url = URL(string: link.url) {
+                    Link(destination: url) {
+                        HStack(spacing: 3) {
+                            Text(link.label)
+                            Image(systemName: "arrow.up.forward")
+                        }.font(.system(size: 10.5, weight: .medium)).foregroundStyle(Paper.accentSoft)
+                    }.buttonStyle(.plain)
+                }
             }
             Spacer(minLength: 0)
         }
+    }
+}
+
+// Recovery card for a connect that signed in but hit a Google-side block (Gmail API
+// not enabled, or consent screen Internal/Testing). Shown in onboarding's connect step
+// and at the top of the Accounts tab, since a second account is added from there.
+struct APIEnableCard: View {
+    @EnvironmentObject var m: KeeperModel
+    var retryHint: String = "Then add the account again."
+    var body: some View {
+        VStack(spacing: 10) {
+            HStack(alignment: .top, spacing: 9) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 13)).foregroundStyle(Paper.danger)
+                Text(m.apiEnableMessage ?? "").font(.system(size: 12)).foregroundStyle(Paper.ink2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            if let urlStr = m.apiEnableURL, let url = URL(string: urlStr) {
+                Button { NSWorkspace.shared.open(url) } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.up.forward.square.fill").font(.system(size: 11, weight: .semibold))
+                        Text("Fix it in Google Console").frame(maxWidth: .infinity)
+                    }
+                }
+                .buttonStyle(PrimaryButtonStyle())
+            }
+            Text(retryHint)
+                .font(.system(size: 10.5)).foregroundStyle(Paper.ink4)
+                .multilineTextAlignment(.center).frame(maxWidth: .infinity)
+        }
+        .padding(14)
+        .glassSurface(12, tint: Paper.danger.opacity(0.12))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .strokeBorder(Paper.danger.opacity(0.22), lineWidth: 0.75))
     }
 }
 

@@ -200,11 +200,22 @@ struct UndoThread: Decodable, Identifiable {
     }
 }
 
-/// A read-in-place preview of a thread's latest message (body only, capped server-side).
-struct MessagePreview: Decodable {
-    var body = ""
+/// One message within a thread preview — plain text, tidied + capped server-side.
+struct PreviewMessage: Decodable, Identifiable {
     var sender = ""
+    var epoch = 0
+    var body = ""       // the new text (quoted reply history trimmed off, server-side)
+    var quoted = ""     // the trimmed history, revealed on demand
+    var id = UUID()     // local identity for ForEach; not part of the server payload
+    enum CodingKeys: String, CodingKey { case sender, epoch, body, quoted }
+}
+
+/// A read-in-place preview of a whole thread: every message, oldest → newest. The UI
+/// shows the latest and collapses the rest.
+struct MessagePreview: Decodable {
     var subject = ""
+    var messages: [PreviewMessage] = []
+    enum CodingKeys: String, CodingKey { case subject, messages }
 }
 
 struct Job: Decodable {
@@ -217,10 +228,22 @@ struct Job: Decodable {
     var error: String?
 
     var authUrl: String?
+    // Granular run progress, 0–100 when the server reports it (null otherwise).
+    var progress: Int?
+    // Set when a connect fails because the Gmail API isn't enabled for the user's
+    // project — drives the onboarding "Enable Gmail API" recovery card (items 7 + 9).
+    var needsApiEnable = false
+    var enableUrl: String?
+    var humanMessage: String?
 
     var isRunning: Bool { state == "running" }
 
-    enum K: String, CodingKey { case id, kind, state, started, finished, message, error, authUrl }
+    enum K: String, CodingKey {
+        case id, kind, state, started, finished, message, error, authUrl, progress
+        case needsApiEnable = "needs_api_enable"
+        case enableUrl = "enable_url"
+        case humanMessage = "human_message"
+    }
     init() {}
     init(id: Int, kind: String?, state: String, message: String) {
         self.id = id; self.kind = kind; self.state = state; self.message = message
@@ -235,6 +258,10 @@ struct Job: Decodable {
         message = try c.decodeIfPresent(String.self, forKey: .message) ?? ""
         error = try c.decodeIfPresent(String.self, forKey: .error)
         authUrl = try c.decodeIfPresent(String.self, forKey: .authUrl)
+        progress = try c.decodeIfPresent(Int.self, forKey: .progress)
+        needsApiEnable = try c.decodeIfPresent(Bool.self, forKey: .needsApiEnable) ?? false
+        enableUrl = try c.decodeIfPresent(String.self, forKey: .enableUrl)
+        humanMessage = try c.decodeIfPresent(String.self, forKey: .humanMessage)
     }
 }
 
@@ -349,6 +376,9 @@ struct Draft: Decodable {
 
 /// Google OAuth client + account presence, from /api/credentials-status.
 struct CredStatus: Decodable { var hasClient = false; var hasAccounts = false }
+/// Result of saving pasted OAuth credentials: a confirmation message and an optional
+/// caution (e.g. the JSON looks like a Web client, not the expected Desktop one).
+struct CredSaveResult { var message: String?; var warning: String? }
 
 /// A queued "run complete" notification, from /api/pending-notification.
 struct PendingNotification: Decodable { var title = "zero"; var body = "" }
@@ -419,11 +449,14 @@ struct KeeperAPI {
     }
 
     // MARK: synchronous mutations
-    func dismiss(_ loop: Loop, slug: String) async throws -> String {
+    // `learn` distinguishes the two archive actions: true = "AI archive" (teach the
+    // pipeline to generalise from this), false = "archive just this one". Server records
+    // it on the keep_override signal; learn.py only generalises learn != false ones.
+    func dismiss(_ loop: Loop, slug: String, learn: Bool = true) async throws -> String {
         let body: [String: Any] = [
             "slug": slug, "thread_id": loop.threadId, "sender": loop.sender,
             "sender_email": loop.senderEmail ?? "", "subject": loop.subject,
-            "snippet": loop.snippet ?? "", "epoch": loop.epoch,
+            "snippet": loop.snippet ?? "", "epoch": loop.epoch, "learn": learn,
         ]
         let r = try await postRaw("/api/dismiss", body)
         return (r["label"] as? String) ?? ""
@@ -492,8 +525,12 @@ struct KeeperAPI {
 
     /// Write the user's pasted Google OAuth client credentials (client_secret.json).
     /// Throws KeeperError.http with the server's guidance message on a bad paste.
-    func setCredentials(json: String) async throws {
-        _ = try await postRaw("/api/set-credentials", ["json": json])
+    /// Returns the server's confirmation message and an optional warning (e.g. a Web
+    /// client where a Desktop one was expected) so the UI can reassure or caution.
+    @discardableResult
+    func setCredentials(json: String) async throws -> CredSaveResult {
+        let r = try await postRaw("/api/set-credentials", ["json": json])
+        return CredSaveResult(message: r["message"] as? String, warning: r["warning"] as? String)
     }
 
     /// Delete a learned preference and suppress it so it's never re-learned.

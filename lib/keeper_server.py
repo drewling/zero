@@ -50,7 +50,8 @@ DEFAULT_CATEGORY_EMOJI = "🏷️"
 # --- single background job slot -------------------------------------------------
 _job_lock = threading.Lock()
 _job = {"id": 0, "kind": None, "state": "idle", "started": 0, "finished": 0,
-        "message": "", "error": None, "auth_url": None}
+        "message": "", "error": None, "auth_url": None, "progress": None,
+        "needs_api_enable": False, "enable_url": None, "human_message": None}
 
 # --- non-blocking boot state ----------------------------------------------------
 # _building is True while the background boot rebuild is running so /api/state
@@ -221,6 +222,51 @@ def _load_accounts():
     return data if isinstance(data, list) else data.get("accounts", [])
 
 
+def _run_child(cmd, base, span, timeout, prefix=""):
+    """Run review_open_loops.py, forwarding its live progress onto the run bar.
+
+    The child prints '\x1fP\x1f<pct>\x1f<label>' lines as it works; we map each
+    <pct> (0–100 of the child's own work) into [base, base+span] of the run bar so
+    a single-account sweep actually moves instead of sitting at the account %.
+    Returns (returncode, stdout_text, stderr_text) — progress lines are stripped
+    from stdout, so the caller's result-JSON parsing is unchanged.
+
+    ponytail: stderr is drained only after exit (the child emits a few short lines).
+    If a child ever streams large stderr, drain it in a thread to avoid a pipe-fill stall."""
+    p = subprocess.Popen(cmd, env=_gws_env(), stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE, text=True)
+    out, fd = [], p.stdout.fileno()
+    deadline = time.monotonic() + timeout
+    import select
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            p.kill()
+            return (1, "".join(out), "timed out")
+        if not select.select([fd], [], [], min(remaining, 5.0))[0]:
+            continue  # no output yet; loop re-checks the deadline
+        line = p.stdout.readline()
+        if not line:
+            break  # EOF — child closed stdout
+        if line.startswith("\x1fP\x1f"):
+            parts = line.rstrip("\n").split("\x1f")  # ['', 'P', pct, label]
+            try:
+                pct = int(parts[2])
+            except (IndexError, ValueError):
+                continue
+            label = parts[3] if len(parts) > 3 else ""
+            _set_job_message(f"{prefix}{label}" if label else prefix,
+                             base + int(span * pct / 100))
+        else:
+            out.append(line)
+    try:
+        p.wait(timeout=max(1.0, deadline - time.monotonic()))
+    except subprocess.TimeoutExpired:
+        p.kill()
+        return (1, "".join(out), "timed out")
+    return (p.returncode, "".join(out), p.stderr.read())
+
+
 def _run_keeper(payload):
     """Run the open-loop sweep across all accounts at the daily grace, then rebuild."""
     # Grace = protect mail newer than N days. The user's persisted setting is the
@@ -230,20 +276,24 @@ def _run_keeper(payload):
     grace = int(payload.get("grace_days", settings["grace_days"]))
     accts = _load_accounts()
     failures, set_aside, kept = [], 0, 0
+    n_accts = len(accts)
     for i, acct in enumerate(accts, 1):
         # Per-account enable toggle (default: enabled). Lets the UI add a toggle later.
         if acct.get("enabled", True) is False:
             continue
         cfg = acct["config_dir"]
         email = acct.get("email", acct.get("slug", cfg))
-        _set_job_message(f"Reviewing {email} ({i}/{len(accts)})…")
-        r = subprocess.run([PYTHON, os.path.join(HERE, "review_open_loops.py"),
-                            cfg, email, "--grace-days", str(grace), "--execute"],
-                           env=_gws_env(), capture_output=True, text=True, timeout=600)
-        if r.returncode != 0:
-            failures.append(f"{email}: {(r.stderr or r.stdout or '').strip()[-200:]}")
+        base = int((i - 1) / max(n_accts, 1) * 80)  # 0–80 during sweep; 80–100 for learn+build
+        span = int(i / max(n_accts, 1) * 80) - base
+        _set_job_message(f"Sorting recent mail — {email} ({i} of {n_accts})…", base)
+        rc, stdout, stderr = _run_child(
+            [PYTHON, os.path.join(HERE, "review_open_loops.py"),
+             cfg, email, "--grace-days", str(grace), "--execute"],
+            base, span, timeout=600, prefix=f"{email} — ")
+        if rc != 0:
+            failures.append(f"{email}: {(stderr or stdout or '').strip()[-200:]}")
         else:
-            line = [l for l in r.stdout.splitlines() if l.strip().startswith("{")]
+            line = [l for l in stdout.splitlines() if l.strip().startswith("{")]
             if line:
                 try:
                     d = json.loads(line[-1])
@@ -251,12 +301,14 @@ def _run_keeper(payload):
                     kept += d.get("to_keep_threads", 0) or 0
                 except Exception:
                     pass
-        _set_job_message(f"Set aside {set_aside} so far · {kept} still need you…")
+        _set_job_message(f"Archiving threads — set aside {set_aside} so far, {kept} still need you…",
+                         int(i / max(n_accts, 1) * 80))
     # Update what we've learned from recent actions (best-effort; gated on signals).
+    _set_job_message("Updating preferences…", 85)
     subprocess.run([PYTHON, os.path.join(HERE, "learn.py")],
                    env=_gws_env(), capture_output=True, text=True, timeout=180)
     summary_msg = f"Set aside {set_aside}, {kept} still need you"
-    _set_job_message(summary_msg)
+    _set_job_message(summary_msg, 95)
     _build_state_blocking()
     # Hand the summary to the app, which posts a native notification (carries the
     # app icon, and tapping it opens the panel on Open loops). Gating lives in the writer.
@@ -284,26 +336,31 @@ def _run_populate(payload):
     slug = payload.get("slug")
     accts = [_acct(slug)] if slug else _load_accounts()
     failures, labeled = [], 0
+    n_accts = len(accts)
     for i, acct in enumerate(accts, 1):
         cfg = acct["config_dir"]
         email = acct.get("email", acct.get("slug", cfg))
-        _set_job_message(f"Sorting {email} ({i}/{len(accts)})…")
-        r = subprocess.run([PYTHON, os.path.join(HERE, "review_open_loops.py"),
-                            cfg, email, "--label-only",
-                            "--window-days", str(window),
-                            "--archive-days", str(archive_days)],
-                           env=_gws_env(), capture_output=True, text=True, timeout=900)
-        if r.returncode != 0:
-            failures.append(f"{email}: {(r.stderr or r.stdout or '').strip()[-200:]}")
+        base = int((i - 1) / max(n_accts, 1) * 85)
+        span = int(i / max(n_accts, 1) * 85) - base
+        _set_job_message(f"Labelling recent mail — {email} ({i} of {n_accts})…", base)
+        rc, stdout, stderr = _run_child(
+            [PYTHON, os.path.join(HERE, "review_open_loops.py"),
+             cfg, email, "--label-only",
+             "--window-days", str(window),
+             "--archive-days", str(archive_days)],
+            base, span, timeout=900, prefix=f"{email} — ")
+        if rc != 0:
+            failures.append(f"{email}: {(stderr or stdout or '').strip()[-200:]}")
             continue
-        line = [l for l in r.stdout.splitlines() if l.strip().startswith("{")]
+        line = [l for l in stdout.splitlines() if l.strip().startswith("{")]
         if line:
             try:
                 labeled += int(json.loads(line[-1]).get("labeled", 0) or 0)
             except Exception:
                 pass
-        _set_job_message(f"Labeled {labeled} so far…")
-    _set_job_message(f"Labeled {labeled} recent thread{'' if labeled == 1 else 's'}")
+        _set_job_message(f"Labelled {labeled} thread{'' if labeled == 1 else 's'} so far…",
+                         int(i / max(n_accts, 1) * 85))
+    _set_job_message(f"Labelled {labeled} recent thread{'' if labeled == 1 else 's'}", 95)
     _build_state_blocking()
     # Partial success is success: report what got labeled and how many accounts
     # couldn't be reached, rather than discarding the whole run. Only a total
@@ -326,16 +383,19 @@ def _run_archive_before(payload):
     slug = payload.get("slug")
     accts = [_acct(slug)] if slug else _load_accounts()
     failures, archived = [], 0
+    n_accts = len(accts)
     for i, acct in enumerate(accts, 1):
         cfg = acct["config_dir"]
         email = acct.get("email", acct.get("slug", cfg))
-        _set_job_message(f"Clearing {email} ({i}/{len(accts)})…")
+        pct = int((i - 1) / max(n_accts, 1) * 85)
+        _set_job_message(f"Archiving older mail — {email} ({i} of {n_accts})…", pct)
         try:
             archived += int(iz.archive_before(cfg, before).get("archived", 0) or 0)
         except Exception as exc:
             failures.append(f"{email}: {exc}")
-        _set_job_message(f"Archived {archived} so far…")
-    _set_job_message(f"Archived {archived} older thread{'' if archived == 1 else 's'}")
+        _set_job_message(f"Archived {archived} thread{'' if archived == 1 else 's'} so far…",
+                         int(i / max(n_accts, 1) * 85))
+    _set_job_message(f"Archived {archived} older thread{'' if archived == 1 else 's'}", 95)
     _build_state_blocking()
     # Partial success is success (see _run_populate): only a total failure raises.
     if failures and archived == 0:
@@ -564,9 +624,56 @@ def _tidy_preview(text):
     return text.strip()
 
 
+# Attribution line that introduces a quoted reply ("On <date>, <name> wrote:").
+_QUOTE_ATTR = re.compile(r"(?is)^on\b.{0,200}?\bwrote:?$")
+
+
+def _split_quote(text):
+    """Split a raw plaintext email body into (new_text, quoted_history). Cuts at the
+    first quoted-reply boundary so the app can collapse history that's inlined into a
+    single message (the common case — a reply carries the prior mail as ">" lines).
+    MUST run on the raw body, before _tidy_preview un-wraps the line breaks the markers
+    sit on. Returns ("", "") boundaries conservatively: if everything is quoted, keep it
+    all as new_text rather than hiding the whole message.
+    ponytail: line-marker heuristics (>, "On..wrote:", Outlook separators). A body whose
+    own new text starts with ">" would cut early — rare in mail; widen if it bites."""
+    lines = text.split("\n")
+    cut = None
+    for i, ln in enumerate(lines):
+        s = ln.strip()
+        if not s:
+            continue
+        if s.startswith(">"):
+            cut = i
+            break
+        if _QUOTE_ATTR.match(s):
+            cut = i
+            break
+        # Attribution that wraps onto a second line ending in "wrote:".
+        if re.match(r"(?i)^on\b.+[,<]$", s) and i + 1 < len(lines) \
+                and re.search(r"(?i)\bwrote:?$", lines[i + 1].strip()):
+            cut = i
+            break
+        # Outlook / forwarded separators.
+        if re.match(r"(?i)^-{2,}\s*(original message|forwarded message)\s*-{2,}$", s):
+            cut = i
+            break
+        if re.match(r"(?i)^from:\s.+", s) and i + 1 < len(lines) \
+                and re.match(r"(?i)^(sent|date|to):\s", lines[i + 1].strip()):
+            cut = i
+            break
+    if cut is None:
+        return text, ""
+    new = "\n".join(lines[:cut]).strip()
+    quoted = "\n".join(lines[cut:]).strip()
+    if not new:                      # whole body is quoted → don't hide everything
+        return text, ""
+    return new, quoted
+
+
 def _thread_preview(payload):
-    """Latest message in a thread as plain text — enough to read the gist without
-    leaving the app. Not a full client: one message, body only, capped. Synchronous."""
+    """A thread as plain text: every message (oldest → newest), each body tidied and
+    capped. The app shows the latest and collapses the earlier ones. Synchronous."""
     sys.path.insert(0, HERE)
     import draftutil as du  # noqa: E402
     slug = payload.get("slug")
@@ -576,17 +683,26 @@ def _thread_preview(payload):
     cfg = _acct(slug)["config_dir"]
     t = du._gws(cfg, ["gmail", "users", "threads", "get",
                       "--params", json.dumps({"userId": "me", "id": tid, "format": "full"})])
-    msgs = t.get("messages", []) or []
+    msgs = t.get("messages", []) or []   # Gmail returns these oldest → newest
     if not msgs:
-        return {"body": "", "sender": "", "subject": ""}
-    m = msgs[-1]   # newest message in the thread
-    h = {x.get("name", "").lower(): x.get("value", "")
-         for x in m.get("payload", {}).get("headers", [])}
-    body = _extract_body(m.get("payload", {})).replace("\r\n", "\n").replace("\r", "\n")
-    body = _tidy_preview(body)[:6000].strip()
-    return {"body": body,
-            "sender": _display_from(h.get("from", "")),
-            "subject": h.get("subject", "") or "(no subject)"}
+        return {"subject": "", "messages": []}
+    out = []
+    for m in msgs:
+        h = {x.get("name", "").lower(): x.get("value", "")
+             for x in m.get("payload", {}).get("headers", [])}
+        raw = _extract_body(m.get("payload", {})).replace("\r\n", "\n").replace("\r", "\n")
+        new, quoted = _split_quote(raw)   # collapse inlined reply history
+        try:
+            epoch = int(m.get("internalDate", 0)) // 1000   # ms → s, matches relTime()
+        except (TypeError, ValueError):
+            epoch = 0
+        out.append({"sender": _display_from(h.get("from", "")),
+                    "epoch": epoch,
+                    "body": _tidy_preview(new)[:6000].strip(),
+                    "quoted": _tidy_preview(quoted)[:6000].strip()})
+    last = {x.get("name", "").lower(): x.get("value", "")
+            for x in msgs[-1].get("payload", {}).get("headers", [])}
+    return {"subject": last.get("subject", "") or "(no subject)", "messages": out}
 
 
 def _dismiss(payload):
@@ -642,12 +758,15 @@ def _dismiss(payload):
                   "--params", json.dumps({"userId": "me", "id": tid}),
                   "--json", json.dumps({"addLabelIds": [lid], "removeLabelIds": ["INBOX"]})],
             allow_empty=True)
+    # learn=True (default) = AI archive (teach from it); learn=False = archive just this one.
+    learn = payload.get("learn", True)
     learning.record({"type": "keep_override", "action": "archived_without_reply",
                      "account": slug, "thread_id": tid,
                      "sender": payload.get("sender", ""),
                      "sender_email": payload.get("sender_email", ""),
                      "subject": payload.get("subject", ""),
-                     "snippet": payload.get("snippet", "")})
+                     "snippet": payload.get("snippet", ""),
+                     "learn": learn})
     _drop_loop(slug, tid)
     _bump_undo_point(slug, label, +1)   # show it in today's Undo bucket right away
     return {"ok": True, "label": label, "thread_id": tid}
@@ -794,9 +913,11 @@ def _run_cleanup(payload):
     closing. Partial success is success (see _run_populate)."""
     slug = payload.get("slug")
     ids = payload.get("ids") or []
-    _set_job_message(f"Removing {len(ids)} label{'' if len(ids) == 1 else 's'}…")
+    n = len(ids)
+    _set_job_message(f"Removing {n} label{'' if n == 1 else 's'}…", 10)
     r = _delete_account_labels(slug, ids)
     deleted, failed = r.get("deleted", 0), r.get("failed", [])
+    _set_job_message(f"Removed {deleted} label{'' if deleted == 1 else 's'}, refreshing…", 80)
     _build_state_blocking()
     if failed and deleted == 0:
         raise RuntimeError((failed[0].get("error") or "couldn't remove labels")[:200])
@@ -1243,9 +1364,30 @@ def _add_account(payload):
         try:
             email = du._profile_email(pending)
         except Exception as exc:
+            err_str = str(exc)
+            # Both branches set needs_api_enable (the "needs a fix in Google Console"
+            # flag the onboarding recovery card keys on); the message + URL differ.
+            if _is_gmail_api_disabled(err_str):
+                human = ("You're signed in, but the Gmail API isn't switched on for "
+                         "your Google project yet. Enable it, then connect again.")
+                with _job_lock:
+                    _job["needs_api_enable"] = True
+                    _job["enable_url"] = _gmail_api_enable_url(err_str)
+                    _job["human_message"] = human
+                raise RuntimeError(human)
+            if _is_consent_blocked(err_str):
+                human = ("This Google account isn't allowed to use your project. Your "
+                         "OAuth consent screen is set to “Internal” or still in “Testing”. "
+                         "Set the audience to “External” and publishing to “In production” "
+                         "(or add this email as a test user), then connect again.")
+                with _job_lock:
+                    _job["needs_api_enable"] = True
+                    _job["enable_url"] = _consent_screen_url(err_str)
+                    _job["human_message"] = human
+                raise RuntimeError(human)
             raise RuntimeError(
                 "signed in but couldn't read the account email: "
-                + str(exc).strip()[:200])
+                + err_str.strip()[:200])
         if not email:
             raise RuntimeError("signed in but couldn't read the account email")
         accts = _load_accounts()
@@ -1307,12 +1449,20 @@ def _set_client_credentials(payload):
     dst = os.path.join(gws_root, "client_secret.json")
 
     raw = payload.get("json")
+    _web_warning = None
     if isinstance(raw, str) and raw.strip():
         try:
             data = json.loads(raw)
         except Exception:
             raise RuntimeError("That doesn't look like valid JSON. Paste the whole "
                                "client_secret file you downloaded from Google.")
+        if not (data.get("installed") or data.get("web")):
+            raise RuntimeError(
+                "This doesn't look like a client_secret.json — make sure you picked "
+                "Desktop app when creating the OAuth client in Google Cloud Console.")
+        if data.get("web") and not data.get("installed"):
+            _web_warning = ("This looks like a Web client, not a Desktop app client. "
+                            "It may work, but a Desktop app client is recommended.")
         inner = data.get("installed") or data.get("web") or {}
         cid = str(inner.get("client_id", "")).strip()
         csec = str(inner.get("client_secret", "")).strip()
@@ -1345,7 +1495,11 @@ def _set_client_credentials(payload):
     with os.fdopen(fd, "w") as f:
         json.dump(out, f, indent=2)
     os.replace(tmp, dst)
-    return {"ok": True, "path": dst}
+    result = {"ok": True, "path": dst,
+              "message": _web_warning or "Looks like a valid Desktop client"}
+    if _web_warning:
+        result["warning"] = _web_warning
+    return result
 
 
 sys.path.insert(0, HERE)
@@ -1539,14 +1693,66 @@ _JOB_KINDS = {"refresh": lambda p: _build_state_blocking(),
               "cleanup": _run_cleanup}
 
 
-def _set_job_message(msg):
+def _set_job_message(msg, progress=None):
     with _job_lock:
         _job["message"] = msg
+        if progress is not None:
+            _job["progress"] = max(0, min(100, int(progress)))
 
 
 def _set_job_auth_url(url):
     with _job_lock:
         _job["auth_url"] = url
+
+
+def _gmail_api_enable_url(err_text):
+    """Parse a project id/number from a Gmail-API-not-enabled error and build the
+    Cloud Console enable URL. Returns a URL string always (falls back to no-project URL).
+
+    >>> _gmail_api_enable_url("has not been used in project 123456789 before")
+    'https://console.cloud.google.com/apis/library/gmail.googleapis.com?project=123456789'
+    >>> _gmail_api_enable_url("no project id here")
+    'https://console.cloud.google.com/apis/library/gmail.googleapis.com'
+    """
+    m = re.search(r"project[/ ](\d+)", err_text or "")
+    if m:
+        return (f"https://console.cloud.google.com/apis/library/"
+                f"gmail.googleapis.com?project={m.group(1)}")
+    return "https://console.cloud.google.com/apis/library/gmail.googleapis.com"
+
+
+def _is_gmail_api_disabled(err_text):
+    """Return True if the error indicates the Gmail API is not enabled."""
+    t = (err_text or "").lower()
+    return ("gmail api has not been used" in t
+            or "accessnotconfigured" in t
+            or "has not been enabled" in t)
+
+
+def _is_consent_blocked(err_text):
+    """True if sign-in succeeded but this account isn't allowed to use the project —
+    the consent screen is 'Internal' (Workspace-only) or in 'Testing' without this
+    email as a test user. Distinct from the Gmail-API-not-enabled case."""
+    t = (err_text or "").lower()
+    return ("does not have required permission to use project" in t
+            or "caller does not have permission" in t
+            or "has not been registered as a test user" in t
+            or "access_denied" in t
+            or "org_internal" in t)
+
+
+def _consent_screen_url(err_text):
+    """Build the OAuth-consent (Audience) page URL, scoped to the project id when the
+    error names it. Project here is referenced by ID (alphanumeric), not a number.
+
+    >>> _consent_screen_url("required permission to use project drewl-12ab before")
+    'https://console.cloud.google.com/auth/audience?project=drewl-12ab'
+    >>> _consent_screen_url("no project named")
+    'https://console.cloud.google.com/auth/audience'
+    """
+    m = re.search(r"project[/ ]([A-Za-z][A-Za-z0-9-]+)", err_text or "")
+    base = "https://console.cloud.google.com/auth/audience"
+    return f"{base}?project={m.group(1)}" if m else base
 
 
 def _start_job(kind, payload):
@@ -1555,7 +1761,8 @@ def _start_job(kind, payload):
             return None
         _job.update(id=_job["id"] + 1, kind=kind, state="running",
                     started=int(time.time()), finished=0, message="Starting...",
-                    error=None, auth_url=None)
+                    error=None, auth_url=None, progress=None,
+                    needs_api_enable=False, enable_url=None, human_message=None)
         jid = _job["id"]
 
     def worker():
@@ -1564,11 +1771,13 @@ def _start_job(kind, payload):
             with _job_lock:
                 # Keep the last informative message (e.g. "Set aside 26, 30 still
                 # need you") so the panel can show a real summary, not just "Done".
-                _job.update(state="done", finished=int(time.time()))
+                # progress→100 so the bar lands full, never frozen mid-run.
+                _job.update(state="done", finished=int(time.time()), progress=100)
         except Exception as exc:
             with _job_lock:
+                # progress→None so a failed run never reads as partial success.
                 _job.update(state="error", finished=int(time.time()),
-                            error=str(exc), message="Failed")
+                            error=str(exc), message="Failed", progress=None)
 
     threading.Thread(target=worker, daemon=True).start()
     return jid

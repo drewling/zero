@@ -28,6 +28,14 @@ _CATEGORIES_PATH = os.path.join(ROOT, "categories.json")
 _LABEL_HISTORY_PATH = os.path.join(ROOT, "app", "category_label_history.json")
 
 
+def _emit_progress(pct, label=""):
+    """Live progress marker for the parent (keeper_server) to map onto the run bar.
+    The parent reads these off stdout as we go; the only line that starts with '{'
+    is the final result JSON, so these markers never collide with it."""
+    sys.stdout.write(f"\x1fP\x1f{int(pct)}\x1f{label}\n")
+    sys.stdout.flush()
+
+
 def _load_label_history():
     """Return the persisted set of category label names (past + present)."""
     try:
@@ -389,8 +397,15 @@ def _run_label_only(cfg, me, window_days, chunk, archive_days=0):
         archived_tids = set(_thread_ids_q(
             cfg, f"-in:inbox in:all newer_than:{archive_days}d")) - inbox_tids
 
+    _emit_progress(2, "Finding recent mail")
     all_tids = list(inbox_tids | archived_tids)
-    infos = [i for i in (_thread_info(cfg, tid, me) for tid in all_tids) if i]
+    n_tids = max(len(all_tids), 1)
+    infos = []
+    for idx, tid in enumerate(all_tids, 1):
+        info = _thread_info(cfg, tid, me)
+        if info:
+            infos.append(info)
+        _emit_progress(2 + int(63 * idx / n_tids), f"Reading mail ({idx} of {len(all_tids)})")
     to_judge, skipped_labeled, skipped_handled = _backfill_partition(
         infos, cat_label_names, id_to_name)
 
@@ -398,8 +413,11 @@ def _run_label_only(cfg, me, window_days, chunk, archive_days=0):
         c["replied_before"] = _replied_before(cfg, c["last_email"])
 
     labeled = label_failed = 0
+    n_judge = max(len(to_judge), 1)
     for i in range(0, len(to_judge), chunk):
         batch = to_judge[i:i + chunk]
+        _emit_progress(65 + int(30 * i / n_judge),
+                       f"Sorting {len(to_judge)} thread{'' if len(to_judge) == 1 else 's'} with AI")
         verdict = _classify(batch)
         for j, c in enumerate(batch):
             v = verdict.get(str(j), {})
@@ -449,13 +467,18 @@ def main():
         print(json.dumps(result, ensure_ascii=False))
         return
 
+    _emit_progress(2, "Finding recent mail")
     tids = _thread_ids(a.config_dir, a.grace_days)
     infos = []
-    for tid in tids:
+    # Reading per-thread metadata is the long silent phase (2 gws calls/thread),
+    # so stream it: 2→65% of this account's slice of the run bar.
+    n_tids = max(len(tids), 1)
+    for idx, tid in enumerate(tids, 1):
         info = _thread_info(a.config_dir, tid, me)
         if info:
             info["replied_before"] = _replied_before(a.config_dir, info["last_email"])
             infos.append(info)
+        _emit_progress(2 + int(63 * idx / n_tids), f"Reading mail ({idx} of {len(tids)})")
 
     # Threads the user explicitly restored must never be re-archived.
     keep_set = learning.kept_thread_ids()
@@ -474,8 +497,11 @@ def main():
         else:
             to_judge.append(c)
 
+    n_judge = max(len(to_judge), 1)
     for i in range(0, len(to_judge), a.chunk):
         chunk = to_judge[i:i + a.chunk]
+        _emit_progress(65 + int(30 * i / n_judge),
+                       f"Sorting {len(to_judge)} thread{'' if len(to_judge) == 1 else 's'} with AI")
         verdict = _classify(chunk)
         for j, c in enumerate(chunk):
             # _classify always returns normalized dicts; fall back to keep on missing key.

@@ -23,6 +23,7 @@ struct PanelView: View {
             } else {
                 VStack(spacing: 0) {
                     TopBar()
+                    if let rel = m.updateAvailable { UpdateBanner(release: rel) }
                     SegmentedNav(ns: segNS)
                     ContentArea()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -102,6 +103,18 @@ private struct TopBar: View {
 
             // Overflow menu — quiet trailing icon, mirrors RowAction / AccountCard ellipsis style.
             Menu {
+                if m.updateAvailable != nil {
+                    Button { m.installUpdate() } label: {
+                        Label(m.installingUpdate ? "Updating…" : "Update zero now", systemImage: "arrow.down.circle.fill")
+                    }
+                    .disabled(m.installingUpdate)
+                } else {
+                    Button { Task { await m.checkForUpdates(manual: true) } } label: {
+                        Label(m.checkingForUpdates ? "Checking…" : "Check for Updates…", systemImage: "arrow.down.circle")
+                    }
+                    .disabled(m.checkingForUpdates)
+                }
+                Divider()
                 Button(role: .destructive) { NSApp.terminate(nil) } label: {
                     Label("Quit zero", systemImage: "power")
                 }
@@ -154,9 +167,16 @@ private struct TopBar: View {
 }
 
 private struct AccountDot: View {
+    @EnvironmentObject var m: KeeperModel
     let account: Account
     private let size: CGFloat = 27
     var body: some View {
+        // Tapping the dot jumps to the Accounts tab and flashes this account's card.
+        Button { m.revealAccount(account.slug) } label: { dot }
+            .buttonStyle(.plain)
+            .help(account.email + (account.ok ? " — view account" : " — needs attention"))
+    }
+    private var dot: some View {
         // Same circular avatar the rows and cards use, for one consistent account mark.
         Avatar(text: account.short, color: Color(hex: account.color), photoURL: account.photoURL, size: size)
             .overlay {
@@ -294,7 +314,7 @@ private struct LoopsView: View {
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 0) {
-                            if m.isKeeping || m.isWorkingInline { TidyingBanner(message: m.job?.message ?? "Starting…") }
+                            if m.isKeeping || m.isWorkingInline { TidyingBanner(message: m.job?.message ?? "Starting…", progress: m.job?.progress) }
                             if !failed.isEmpty { Banner(text: bannerText(failed), error: true) }
                             HeroCount(total: total, accounts: m.state?.accounts.count ?? 0)
                             SectionLabel("Waiting on you")
@@ -386,8 +406,44 @@ private struct LoopRowView: View {
     @EnvironmentObject var m: KeeperModel
     let row: LoopRow
     @State private var hovering = false
+    @State private var dragX: CGFloat = 0   // live horizontal swipe offset
     private var expanded: Bool { m.expandedLoops.contains(row.loop.threadId) }
+    private static let swipeTrigger: CGFloat = 64
+
     var body: some View {
+        // Swipe right → reply, swipe left → AI archive. Hints sit behind the card and
+        // bloom in as it slides; the card itself rides `dragX`.
+        ZStack {
+            swipeHints
+            card.offset(x: dragX)
+        }
+        // Mouse click-drag.
+        .gesture(swipe)
+        // Two-finger trackpad swipe (a scroll event, which DragGesture can't see). The
+        // handler is transparent to clicks and yields vertical scrolls to the list.
+        .background(TrackpadSwipe(
+            onChange: { dx in dragX = max(-110, min(110, dx)) },
+            onCommit: { dx in commitSwipe(dx) }))
+        // Leaving rows sweep right and dissolve, like being slid onto the set-aside
+        // pile; arrivals (undo) just fade so a restore feels gentle, not jarring.
+        .transition(.asymmetric(
+            insertion: .opacity,
+            removal: .opacity.combined(with: .scale(scale: 0.94)).combined(with: .move(edge: .trailing))))
+    }
+
+    // Shared by the mouse drag and the trackpad swipe: past the trigger, act; else snap back.
+    private func commitSwipe(_ dx: CGFloat) {
+        if dx <= -Self.swipeTrigger {
+            withAnimation(Motion.sweep) { dragX = 0; m.dismiss(row, learn: true) }
+        } else if dx >= Self.swipeTrigger {
+            withAnimation(Motion.pop) { dragX = 0 }
+            m.openComposer(row)
+        } else {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { dragX = 0 }
+        }
+    }
+
+    private var card: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 11) {
                 Avatar(text: row.account.short, color: Color(hex: row.account.color), photoURL: row.account.photoURL)
@@ -406,12 +462,18 @@ private struct LoopRowView: View {
                 Image(systemName: "chevron.down").font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(Paper.ink4).rotationEffect(.degrees(expanded ? 180 : 0))
                     .opacity(hovering || expanded ? 1 : 0.4)
+                    .help(expanded ? "Hide preview" : "Show preview")
                 Text(relTime(row.loop.epoch)).font(.system(size: 11)).foregroundStyle(Paper.ink4).legibleOnGlass()
 
                 HStack(spacing: 2) {
                     RowAction(symbol: "arrowshape.turn.up.left", help: "Draft a reply") { m.openComposer(row) }
-                    RowAction(symbol: "archivebox", help: "Set aside (reversible)") {
-                        withAnimation(Motion.sweep) { m.dismiss(row) }
+                    // Two archive actions (item 13): AI archive teaches the pipeline to
+                    // generalise from this; "just this one" archives without learning a rule.
+                    RowAction(symbol: "sparkles", help: "AI archive — learn to handle mail like this") {
+                        withAnimation(Motion.sweep) { m.dismiss(row, learn: true) }
+                    }
+                    RowAction(symbol: "archivebox", help: "Archive just this one (reversible)") {
+                        withAnimation(Motion.sweep) { m.dismiss(row, learn: false) }
                     }
                 }
                 .opacity(hovering ? 1 : 0.55)
@@ -432,11 +494,101 @@ private struct LoopRowView: View {
         .shadow(color: .black.opacity(hovering ? 0.18 : 0), radius: hovering ? 6 : 0, y: hovering ? 2 : 0)
         .animation(.easeOut(duration: 0.14), value: hovering)
         .onHover { hovering = $0 }
-        // Leaving rows sweep right and dissolve, like being slid onto the set-aside
-        // pile; arrivals (undo) just fade so a restore feels gentle, not jarring.
-        .transition(.asymmetric(
-            insertion: .opacity,
-            removal: .opacity.combined(with: .scale(scale: 0.94)).combined(with: .move(edge: .trailing))))
+    }
+
+    // Action hints revealed under the sliding card: reply on the left (swipe right),
+    // archive on the right (swipe left). Opacity tracks how far the swipe has travelled.
+    private var swipeHints: some View {
+        let progress = min(1, abs(dragX) / Self.swipeTrigger)
+        return HStack {
+            Label("Reply", systemImage: "arrowshape.turn.up.left")
+                .foregroundStyle(Paper.accentSoft).opacity(dragX > 2 ? progress : 0)
+            Spacer(minLength: 0)
+            Label("AI archive", systemImage: "sparkles")
+                .foregroundStyle(Paper.clear).opacity(dragX < -2 ? progress : 0)
+        }
+        .font(.system(size: 12, weight: .semibold)).labelStyle(.titleAndIcon)
+        .padding(.horizontal, 18)
+    }
+
+    private var swipe: some Gesture {
+        DragGesture(minimumDistance: 14)
+            .onChanged { v in
+                // Only engage on a clearly-horizontal drag so vertical scrolling still works.
+                guard abs(v.translation.width) > abs(v.translation.height) else { return }
+                dragX = max(-110, min(110, v.translation.width))
+            }
+            .onEnded { v in commitSwipe(v.translation.width) }
+    }
+}
+
+// Catches a two-finger horizontal trackpad swipe (a scrollWheel event with precise
+// deltas) over a row and reports it as an offset + commit, so swipe-to-archive/reply
+// works with the trackpad — not only a mouse click-drag. A local scrollWheel monitor
+// is used (rather than overriding scrollWheel) because a SwiftUI .background view isn't
+// reliably in the responder chain; the monitor consumes only a clearly-horizontal swipe
+// while the pointer is over this row, and passes every vertical scroll straight through
+// so the list still scrolls normally. hitTest→nil keeps it transparent to clicks.
+private struct TrackpadSwipe: NSViewRepresentable {
+    var onChange: (CGFloat) -> Void
+    var onCommit: (CGFloat) -> Void
+    func makeNSView(context: Context) -> NSView { V(onChange: onChange, onCommit: onCommit) }
+    func updateNSView(_ v: NSView, context: Context) {
+        guard let v = v as? V else { return }
+        v.onChange = onChange; v.onCommit = onCommit
+    }
+    final class V: NSView {
+        var onChange: (CGFloat) -> Void
+        var onCommit: (CGFloat) -> Void
+        private var monitor: Any?
+        private var accum: CGFloat = 0
+        private var active = false      // gesture resolved to horizontal
+        private var decided = false     // axis chosen for this gesture
+        init(onChange: @escaping (CGFloat) -> Void, onCommit: @escaping (CGFloat) -> Void) {
+            self.onChange = onChange; self.onCommit = onCommit
+            super.init(frame: .zero)
+        }
+        required init?(coder: NSCoder) { fatalError() }
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }   // clicks pass through
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            if window == nil { teardown(); return }
+            guard monitor == nil else { return }
+            monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] e in
+                self?.handle(e) ?? e
+            }
+        }
+        deinit { teardown() }
+        private func teardown() { if let m = monitor { NSEvent.removeMonitor(m); monitor = nil } }
+        private func pointerInside(_ e: NSEvent) -> Bool {
+            guard let win = window, e.window === win else { return false }
+            return bounds.contains(convert(e.locationInWindow, from: nil))
+        }
+        private func handle(_ e: NSEvent) -> NSEvent? {
+            guard e.hasPreciseScrollingDeltas else { return e }   // mouse wheel → ignore
+            switch e.phase {
+            case .began:
+                decided = false; active = false; accum = 0
+                return e
+            case .changed:
+                if !decided {
+                    guard pointerInside(e) else { return e }
+                    active = abs(e.scrollingDeltaX) > abs(e.scrollingDeltaY)
+                    decided = true
+                }
+                guard active else { return e }   // vertical → let the list scroll
+                accum += e.scrollingDeltaX
+                onChange(accum)
+                return nil                       // consume the horizontal swipe
+            case .ended, .cancelled:
+                defer { active = false; decided = false; accum = 0 }
+                guard active else { return e }
+                onCommit(accum)
+                return nil
+            default:
+                return active ? nil : e          // swallow momentum during a swipe
+            }
+        }
     }
 }
 
@@ -445,6 +597,8 @@ private struct LoopRowView: View {
 private struct ThreadPreview: View {
     @EnvironmentObject var m: KeeperModel
     let slug: String; let email: String; let threadId: String
+    @State private var showHistory = false   // reveal messages earlier than the latest
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Rectangle().fill(Paper.hairline.opacity(0.18)).frame(height: 0.75).padding(.top, 9)
@@ -453,14 +607,31 @@ private struct ThreadPreview: View {
                     ProgressView().controlSize(.small)
                     Text("Reading the message…").font(.system(size: 12)).foregroundStyle(Paper.ink3)
                 }.padding(.vertical, 6)
-            } else if let p = m.previews[threadId], !p.body.isEmpty {
+            } else if let p = m.previews[threadId], let latest = p.messages.last {
+                let earlier = Array(p.messages.dropLast())
                 ScrollView {
-                    Text(p.body)
-                        .font(.system(size: 12.5)).foregroundStyle(Paper.ink2)
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 10) {
+                        if !earlier.isEmpty {
+                            Button { withAnimation(.snappy(duration: 0.2)) { showHistory.toggle() } } label: {
+                                HStack(spacing: 5) {
+                                    Image(systemName: showHistory ? "chevron.down" : "chevron.right")
+                                        .font(.system(size: 9, weight: .bold))
+                                    Text(showHistory ? "Hide earlier messages"
+                                                     : "Show \(earlier.count) earlier message\(earlier.count == 1 ? "" : "s")")
+                                }
+                                .font(.system(size: 11, weight: .medium)).foregroundStyle(Paper.accentSoft)
+                            }
+                            .buttonStyle(.plain)
+                            if showHistory {
+                                ForEach(earlier) { MessageBlock(msg: $0, dim: true) }
+                                Rectangle().fill(Paper.hairline.opacity(0.14)).frame(height: 0.75)
+                            }
+                        }
+                        MessageBlock(msg: latest, dim: false)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(maxHeight: 240)
+                .frame(maxHeight: 280)
             } else {
                 Text("No readable text in this message.")
                     .font(.system(size: 12)).foregroundStyle(Paper.ink3).padding(.vertical, 4)
@@ -474,6 +645,63 @@ private struct ThreadPreview: View {
         }
         .legibleOnGlass()
     }
+}
+
+// One message in the preview: a quiet sender · time header, then the body with bare
+// URLs turned into tappable links. Earlier messages render dimmer.
+private struct MessageBlock: View {
+    let msg: PreviewMessage
+    var dim: Bool
+    @State private var showQuoted = false   // reveal the trimmed reply history
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if !header.isEmpty {
+                Text(header).font(.system(size: 10.5, weight: .medium)).foregroundStyle(Paper.ink4)
+            }
+            if msg.body.isEmpty && msg.quoted.isEmpty {
+                Text("No readable text.").font(.system(size: 12)).foregroundStyle(Paper.ink4)
+            } else if !msg.body.isEmpty {
+                bodyText(msg.body, dim: dim)
+            }
+            if !msg.quoted.isEmpty {
+                Button { withAnimation(.snappy(duration: 0.2)) { showQuoted.toggle() } } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 9, weight: .bold))
+                            .rotationEffect(.degrees(showQuoted ? 90 : 0))
+                        Text(showQuoted ? "Hide quoted text" : "Show quoted text")
+                    }
+                    .font(.system(size: 11, weight: .medium)).foregroundStyle(Paper.accentSoft)
+                }
+                .buttonStyle(.plain)
+                if showQuoted { bodyText(msg.quoted, dim: true) }
+            }
+        }
+    }
+    @ViewBuilder private func bodyText(_ s: String, dim: Bool) -> some View {
+        Text(linkified(s))
+            .font(.system(size: 12.5)).foregroundStyle(dim ? Paper.ink3 : Paper.ink2)
+            .textSelection(.enabled).tint(Paper.accentSoft)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    private var header: String {
+        let when = relTime(msg.epoch)
+        if msg.sender.isEmpty { return when }
+        return when.isEmpty ? msg.sender : "\(msg.sender) · \(when)"
+    }
+}
+
+// Bare URLs in plain body text → tappable links (SwiftUI opens them via openURL).
+func linkified(_ text: String) -> AttributedString {
+    var attr = AttributedString(text)
+    guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else { return attr }
+    let ns = text as NSString
+    for match in detector.matches(in: text, range: NSRange(location: 0, length: ns.length)) {
+        guard let url = match.url, let r = Range(match.range, in: attr) else { continue }
+        attr[r].link = url
+        attr[r].underlineStyle = .single
+    }
+    return attr
 }
 
 private struct RowAction: View {
@@ -510,7 +738,10 @@ private struct AccountsView: View {
                 VStack(spacing: 8) {
                     // Sort / backlog jobs are triggered from here, so show their live
                     // progress here too (not only on Open loops).
-                    if m.isWorkingInline { TidyingBanner(message: m.job?.message ?? "Working…") }
+                    if m.isWorkingInline { TidyingBanner(message: m.job?.message ?? "Working…", progress: m.job?.progress) }
+                    // A connect from here can hit a Google-side block (API off, consent
+                    // Internal/Testing) — surface the same recovery card, not just a toast.
+                    if m.apiEnableMessage != nil { APIEnableCard() }
                     ForEach(accts) { a in AccountCard(account: a) }
                     Button { m.addAccount() } label: {
                         Label("Add a Gmail account", systemImage: "plus").frame(maxWidth: .infinity)
@@ -526,6 +757,7 @@ private struct AccountsView: View {
 private struct AccountCard: View {
     @EnvironmentObject var m: KeeperModel
     let account: Account
+    @State private var pulsing = false
     var body: some View {
         HStack(spacing: 12) {
             Avatar(text: account.short, color: Color(hex: account.color), photoURL: account.photoURL, size: 34)
@@ -561,6 +793,16 @@ private struct AccountCard: View {
         }
         .padding(12)
         .glassSurface(12)
+        // Flashes when its top-bar dot is tapped (item 12).
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .strokeBorder(Paper.accentSoft.opacity(pulsing ? 0.9 : 0), lineWidth: 1.5))
+        .scaleEffect(pulsing ? 1.02 : 1)
+        .animation(.easeInOut(duration: 0.45), value: pulsing)
+        .onChange(of: m.pulseAccountSlug) { _, slug in
+            guard slug == account.slug else { return }
+            pulsing = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.85) { pulsing = false }
+        }
     }
     private var statLine: String {
         guard account.ok else { return "Couldn't reach this account" }
@@ -735,9 +977,91 @@ private struct PolicyView: View {
                 IntelligenceSection()
                 DraftingSection()
                 LearnedSection()
+                UpdatesSection()
             }
             .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 18)
         }
+    }
+}
+
+// In-panel banner shown above the nav whenever a newer release is waiting. One-click
+// install + a link to the changelog (the GitHub release page).
+private struct UpdateBanner: View {
+    @EnvironmentObject var m: KeeperModel
+    let release: GithubRelease
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "arrow.down.circle.fill")
+                .font(.system(size: 15)).foregroundStyle(Paper.accentSoft)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Update available — \(release.version)")
+                    .font(.system(size: 12, weight: .semibold)).foregroundStyle(Paper.ink)
+                if let u = URL(string: release.htmlURL) {
+                    Link("See what's new", destination: u)
+                        .font(.system(size: 11)).foregroundStyle(Paper.accentSoft)
+                }
+            }
+            Spacer(minLength: 6)
+            Button { m.installUpdate() } label: {
+                if m.installingUpdate {
+                    HStack(spacing: 5) { ProgressView().controlSize(.small); Text("Updating…") }
+                } else {
+                    Text("Update now")
+                }
+            }
+            .buttonStyle(GhostButtonStyle()).disabled(m.installingUpdate)
+        }
+        .padding(.horizontal, 16).padding(.vertical, 9)
+        .background(Paper.accent.opacity(0.10))
+    }
+}
+
+// Settings → Updates: the auto-check toggle, a manual check / update button, the
+// changelog link, and when we last looked.
+private struct UpdatesSection: View {
+    @EnvironmentObject var m: KeeperModel
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SettingsHeader("Updates",
+                           "zero keeps itself current — it checks for new versions and installs them in one click. Updating always relaunches the app; it never replaces a running copy without you.")
+            VStack(spacing: 0) {
+                SettingsToggleRow(label: "Automatically check for updates",
+                                  sublabel: "Checks on launch and every few hours.",
+                                  value: Binding(get: { m.autoCheckUpdates },
+                                                 set: { m.setAutoCheckUpdates($0) }))
+            }
+            .glassSurface(Radius.card)
+
+            HStack(spacing: 12) {
+                if m.updateAvailable != nil {
+                    Button { m.installUpdate() } label: {
+                        Text(m.installingUpdate ? "Updating…" : "Update now")
+                    }
+                    .buttonStyle(GhostButtonStyle()).disabled(m.installingUpdate)
+                } else {
+                    Button { Task { await m.checkForUpdates(manual: true) } } label: {
+                        HStack(spacing: 6) {
+                            if m.checkingForUpdates { ProgressView().controlSize(.small) }
+                            Text(m.checkingForUpdates ? "Checking…" : "Check for updates")
+                        }
+                    }
+                    .buttonStyle(GhostButtonStyle()).disabled(m.checkingForUpdates)
+                }
+                if let rel = m.updateAvailable, let u = URL(string: rel.htmlURL) {
+                    Link("Changelog", destination: u)
+                        .font(.system(size: 11.5)).foregroundStyle(Paper.accentSoft)
+                }
+                Spacer()
+                if let when = lastChecked {
+                    Text(when).font(.system(size: 10.5)).foregroundStyle(Paper.ink4)
+                }
+            }
+        }
+    }
+    private var lastChecked: String? {
+        guard let d = m.lastUpdateCheck else { return nil }
+        let f = DateFormatter(); f.dateStyle = .none; f.timeStyle = .short
+        return "Checked \(f.string(from: d))"
     }
 }
 
@@ -1894,7 +2218,7 @@ private struct ComposerView: View {
                         }
                         Spacer()
                         Button { m.closeComposer() } label: { Image(systemName: "xmark").font(.system(size: 13, weight: .medium)) }
-                            .buttonStyle(.plain).foregroundStyle(Paper.ink3).accessibilityLabel("Close")
+                            .buttonStyle(.plain).foregroundStyle(Paper.ink3).accessibilityLabel("Close").help("Close")
                     }
                     .padding(14)
                     .glassSurface(8)
@@ -2108,7 +2432,7 @@ private struct CleanupView: View {
                     }
                     Spacer()
                     Button { m.closeCleanup() } label: { Image(systemName: "xmark").font(.system(size: 13, weight: .medium)) }
-                        .buttonStyle(.plain).foregroundStyle(Paper.ink3).accessibilityLabel("Close")
+                        .buttonStyle(.plain).foregroundStyle(Paper.ink3).accessibilityLabel("Close").help("Close")
                 }
                 .padding(14).background(Paper.sunken.opacity(0.24))
                 .overlay(alignment: .bottom) { Rectangle().fill(Paper.hairline.opacity(0.1)).frame(height: 0.5) }
@@ -2289,6 +2613,7 @@ private struct ActionBar: View {
                 .animation(.easeOut(duration: 0.22), value: m.isBusy)
             }
             .buttonStyle(PrimaryButtonStyle(enabled: !m.isBusy)).disabled(m.isBusy)
+            .help("Reads every inbox now and sets aside anything that doesn't need you. Always reversible — runs automatically each morning too.")
         }
         .padding(.horizontal, 16).padding(.vertical, 12)
         // No separate dark glass fill on the bottom bar (matches the header): it shares
@@ -2308,17 +2633,48 @@ private struct ActionBar: View {
 // full-screen takeover. The footer action bar carries the same message + spinner.
 private struct TidyingBanner: View {
     let message: String
+    var progress: Int? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var sweep = false
     var body: some View {
-        HStack(spacing: 9) {
-            Circle().fill(Paper.accentSoft).frame(width: 8, height: 8)
-                .phaseAnimator(reduceMotion ? [1.0] : [0.45, 1.0]) { dot, o in
-                    dot.opacity(o)
-                } animation: { _ in .easeInOut(duration: 0.85) }
-            Text(message).font(.system(size: 11.5, weight: .medium)).foregroundStyle(Paper.accentSoft)
-                .lineLimit(1).contentTransition(.opacity)
-                .animation(.easeInOut(duration: 0.25), value: message)
-            Spacer(minLength: 0)
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(spacing: 9) {
+                Circle().fill(Paper.accentSoft).frame(width: 8, height: 8)
+                    .phaseAnimator(reduceMotion ? [1.0] : [0.45, 1.0]) { dot, o in
+                        dot.opacity(o)
+                    } animation: { _ in .easeInOut(duration: 0.85) }
+                Text(message).font(.system(size: 11.5, weight: .medium)).foregroundStyle(Paper.accentSoft)
+                    .lineLimit(1).contentTransition(.opacity)
+                    .animation(.easeInOut(duration: 0.25), value: message)
+                Spacer(minLength: 0)
+                // Only show a number once there's real progress — "0%" reads as stuck.
+                if let p = progress, p > 0 {
+                    Text("\(p)%").font(.system(size: 10.5, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Paper.accentSoft.opacity(0.8))
+                }
+            }
+            // > 0: determinate fill. == 0: a sweeping bar (a long step like AI
+            // classification can't sub-divide, so show motion, not a frozen 0%).
+            // nil: the pulsing dot alone carries "still working".
+            if let p = progress {
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Paper.sunken.opacity(0.35)).frame(height: 3)
+                        if p > 0 {
+                            Capsule().fill(Paper.accentSoft)
+                                .frame(width: max(3, geo.size.width * CGFloat(min(100, p)) / 100), height: 3)
+                                .animation(.easeOut(duration: 0.4), value: p)
+                        } else {
+                            let segW = geo.size.width * 0.35
+                            Capsule().fill(Paper.accentSoft).frame(width: segW, height: 3)
+                                .offset(x: sweep ? geo.size.width - segW : 0)
+                                .animation(reduceMotion ? nil
+                                    : .easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: sweep)
+                                .onAppear { sweep = true }
+                        }
+                    }
+                }.frame(height: 3)
+            }
         }
         .padding(.horizontal, 12).padding(.vertical, 9)
         .frame(maxWidth: .infinity, alignment: .leading)
