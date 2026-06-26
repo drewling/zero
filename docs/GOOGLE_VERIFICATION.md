@@ -37,40 +37,50 @@ was turned down. zero now asks for one restricted scope and three non-sensitive
 identity scopes, with a written justification already filled in on the Data access
 page.
 
-## What's left to get verified (needs you)
+## Decision: skip full verification, run production-unverified (2026-06-26)
 
-In order:
+Full verification of the restricted `gmail.modify` scope requires a **CASA security
+assessment** — an annual, paid, third-party audit. The quote came in at **~$1,800/yr**,
+which isn't worth it at zero's current scale. So we are **not** pursuing CASA or the
+data-access verification submission.
 
-1. **Verify the domain in Google Search Console.** `headless.com` must be verified
-   under tayo@drewl.com (DNS TXT record or HTML file). Until then branding
-   verification can't pass. → https://search.google.com/search-console
-   _Alternative: if headless.com is awkward to verify, move the landing +
-   privacy/terms to a drewl.com URL (already org-verified) and update the three
-   branding links + authorized domain to match._
-2. **Publish to production + submit for verification** on the Audience page, then
-   the Verification centre. (Branding verifies first, then data access.)
-3. **CASA security assessment** — required for the restricted `gmail.modify` scope.
-   It's an annual, paid, third-party assessment (a Google-authorized lab; ~$500–
-   $4,000/yr depending on assessor). This is the long pole — weeks, and it needs
-   payment, so only you can start it. Google emails the assessor details after you
-   submit.
-4. **Demo video** — a short YouTube video showing the consent flow and how
-   `gmail.modify` is used (read a thread → archive → draft a reply). Paste the link
-   in the "Demo video" field on the Data access page. Script lives in
-   `docs/verification-demo-script.md` _(write when recording)_.
+**The chosen model: production + unverified, under the 100-user cap.** This is the
+standard path for small/indie Gmail apps and it's already in effect:
 
-## App changes still to make (do NOT release until verified)
+- ✅ Publishing status pushed to **In production** (External). The key win: production
+  refresh tokens are **durable** — they no longer expire every ~7 days the way they
+  did in Testing. The user's own accounts benefit immediately (once migrated to the
+  new client; see below) and so do fresh installs.
+- ✅ `headless.com` verified as a Search Console Domain property under tayo@drewl.com.
+- **Cost of staying unverified:** each new user sees Google's "**Google hasn't verified
+  this app**" screen on first sign-in and must click **Advanced → Go to zero**. The
+  onboarding now tells them this is expected and safe. There is also a **100-user
+  lifetime cap** on the project — plenty for now.
+- **Branding verification** was attempted but Google's automated check flagged the
+  homepage (purpose/name match). Not pursued, because branding verification does **not**
+  remove the unverified warning while the restricted scope is unverified — it's only a
+  prerequisite for the CASA path we're declining. No user-facing benefit, so skipped.
 
-Releasing a build that bundles the new (unverified, testing) client would **break
-existing users** — their current tokens are on the old client, and they aren't test
-users on the new project. So these land in the repo but ship only once verification
-is approved:
+**Revisit CASA only if** zero approaches the 100-user cap or the unverified warning
+becomes a real adoption blocker. Until then, this costs $0 and works.
 
-- **`macapp/build.sh`** — copy `~/.config/zero-build/client_secret.json` into the
-  app payload as the default bundled client (keep it gitignored; inject at build
-  time so the secret never enters the public repo).
-- **Onboarding** — when a bundled client is present, use it as the default and skip
-  the "paste your client JSON" step, so sign-in is one click.
+## Demo video / branding fixes — only needed if CASA is ever pursued
+
+Parked, not deleted. If verification is revived later:
+- Fix the landing homepage so the automated branding check passes (it wants the app
+  name "zero" and a plain-text purpose statement crawlable on `zero.headless.com/`).
+- Record a demo video (consent flow + `gmail.modify` usage: read → archive → draft).
+
+## App changes — shipped (v1.6.21)
+
+Done and live (the "no other users but me" + production-unverified model makes this safe):
+
+- **`macapp/build.sh`** — copies `~/.config/zero-build/client_secret.json` into the
+  app payload as the default bundled client (gitignored; injected at build time so the
+  secret never enters the public repo).
+- **Onboarding** — when a bundled client is present it's used as the default and the
+  "paste your client JSON" step is skipped, so sign-in is one click. The sign-in step
+  now also coaches the user past the "unverified app" warning.
 
 ## Local cutover — migrating your own 3 accounts to the new client
 
@@ -107,3 +117,5 @@ durable tokens meanwhile. Nothing breaks by waiting — the old client still wor
 - Scopes narrowed in code (`OAUTH_SCOPES`, committed).
 - Privacy policy + Terms published at zero.headless.com/privacy.html and /terms.html.
 - Shared `drewl-366215` reverted to its original scopes (n8n/Twenty/etc. unaffected).
+- `headless.com` verified in Search Console under tayo@drewl.com (Domain property,
+  auto-verified via domain provider) — branding-domain requirement satisfied.

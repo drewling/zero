@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.22] - 2026-06-26
+
+### Changed
+
+- **Sign-in now expects the "unverified app" screen and walks you past it.** zero's Google sign-in is published and in production, but Google's review of restricted Gmail access is a paid, ongoing process we've chosen not to pursue at this scale — so the consent screen shows a "Google hasn't verified this app" warning. The onboarding now tells you this is expected and safe, and shows exactly what to tap (**Advanced → Go to zero**) to continue signing in to your own inbox.
+
 ## [1.6.21] - 2026-06-26
 
 ### Added

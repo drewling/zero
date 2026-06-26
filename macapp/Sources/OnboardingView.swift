@@ -101,6 +101,13 @@ struct OnboardingView: View {
                             .foregroundStyle(Paper.accentSoft)
                             .padding(.top, 2)
                     }
+                    // zero's Google app is published but not yet through Google's
+                    // (paid) restricted-scope review, so the consent screen shows an
+                    // "unverified" warning. Tell the user it's expected and safe.
+                    Text("If Google says it hasn’t verified zero, tap “Advanced”, then “Go to zero” — it’s a personal app signing in to your own inbox.")
+                        .font(.system(size: 11)).foregroundStyle(Paper.ink4)
+                        .multilineTextAlignment(.center).frame(maxWidth: 300)
+                        .padding(.top, 6)
                     Button("Cancel sign-in") { m.cancelJob() }
                         .buttonStyle(GhostButtonStyle())
                         .padding(.top, 8)
