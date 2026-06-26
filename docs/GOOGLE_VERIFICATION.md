@@ -106,10 +106,11 @@ done
 cp "$NEW" ~/.config/gws/client_secret.json   # default, for future add-account
 ```
 
-**Cost while unverified:** Google expires testing-mode tokens every ~7 days, so
-you'd re-auth weekly until verification is approved. **Recommended: hold this until
-verification lands** (the new client becomes durable then) and keep using the current
-durable tokens meanwhile. Nothing breaks by waiting — the old client still works.
+**No urgency.** Now that the new project is **in production**, both the old
+`drewl-366215` client and the new `zero-500617` client issue **durable** tokens (the
+~7-day expiry only applied in Testing). Your accounts already work on the old client,
+so migrating is **optional** — the only gain is aligning them with the shipped client
+and its narrower scopes. Do it whenever convenient; nothing breaks by leaving them.
 
 ## Already done
 
