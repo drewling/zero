@@ -83,6 +83,36 @@ extension View {
     func legibleOnGlass() -> some View {
         shadow(color: .black.opacity(0.5), radius: 1.5, y: 0.5)
     }
+
+    /// A *scroll-cheap* stand-in for `glassSurface`, for surfaces that repeat many times
+    /// in a scrolling list. `.glassEffect` is a live backdrop-refraction pass: fine for a
+    /// handful of chrome elements, but at ~180 list rows it's ~180 real-time blur passes
+    /// per frame and the list visibly stutters. This paints the same *result* the row
+    /// glass produced — the dark tint that guarantees legible text, a faint cool top
+    /// sheen, and a hairline rim — with one gradient fill and one stroke, which the GPU
+    /// renders essentially for free. The panel base underneath is still real vibrancy
+    /// (GlassSurface's NSVisualEffectView), so rows still sit on genuine glass; only the
+    /// per-row *re-refraction* of that backdrop is dropped.
+    func rowSurface(_ radius: CGFloat, hovering: Bool = false) -> some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        return self
+            .background {
+                shape
+                    .fill(LinearGradient(
+                        colors: [Color.white.opacity(hovering ? 0.085 : 0.055),
+                                 Color.white.opacity(hovering ? 0.038 : 0.022)],
+                        startPoint: .top, endPoint: .bottom))
+                    .background(shape.fill(Color.black.opacity(0.30)))
+            }
+            .overlay {
+                shape.strokeBorder(
+                    LinearGradient(colors: [Paper.hairline.opacity(hovering ? 0.34 : 0.22),
+                                            Paper.hairline.opacity(0.05)],
+                                   startPoint: .top, endPoint: .bottom),
+                    lineWidth: 0.75)
+            }
+            .compositingGroup()
+    }
 }
 
 // Compact relative time: "now", "5m", "3h", "2d", "1w", "2mo".
@@ -200,10 +230,18 @@ struct Avatar: View {
 // A small coloured tag marking which category the keeper sorted an open loop into.
 // When it first appears it springs in and a single specular band sweeps across it,
 // so the tag reads as a chip of tinted glass catching the light once.
+//
+// Scroll cost: in a LazyVStack a row's tag is rebuilt every time it scrolls back into
+// view, so the sweep used to re-fire (and re-run a GeometryReader + blend-mode overlay)
+// on every pass — one animation transaction per tag per scroll. `swept` is keyed on the
+// category name in a *static* set, so each distinct tag catches the light once per
+// session and afterwards renders as a plain capsule with no overlay at all.
 struct CategoryTag: View {
     let category: Category
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var sheen = false
+    @State private var animates = false
+    private static var swept: Set<String> = []
     var body: some View {
         let c = Color(hex: category.color)
         HStack(spacing: 3) {
@@ -214,19 +252,25 @@ struct CategoryTag: View {
         .padding(.horizontal, 6).padding(.vertical, 2.5)
         .background(Capsule().fill(c.opacity(0.16)))
         .overlay(Capsule().strokeBorder(c.opacity(0.30), lineWidth: 0.5))
-        .overlay(   // one-time specular sweep on appear
-            GeometryReader { geo in
-                Capsule().fill(LinearGradient(colors: [.clear, .white.opacity(0.55), .clear],
-                                              startPoint: .leading, endPoint: .trailing))
-                    .frame(width: geo.size.width * 0.5)
-                    .offset(x: sheen ? geo.size.width * 1.2 : -geo.size.width * 0.7)
-                    .blendMode(.plusLighter).allowsHitTesting(false)
+        .overlay(   // one-time specular sweep on first appearance only
+            Group {
+                if animates {
+                    GeometryReader { geo in
+                        Capsule().fill(LinearGradient(colors: [.clear, .white.opacity(0.55), .clear],
+                                                      startPoint: .leading, endPoint: .trailing))
+                            .frame(width: geo.size.width * 0.5)
+                            .offset(x: sheen ? geo.size.width * 1.2 : -geo.size.width * 0.7)
+                            .blendMode(.plusLighter).allowsHitTesting(false)
+                    }
+                    .clipShape(Capsule())
+                }
             }
-            .clipShape(Capsule())
         )
         .fixedSize()
         .onAppear {
-            guard !reduceMotion else { return }
+            guard !reduceMotion, !Self.swept.contains(category.name) else { return }
+            Self.swept.insert(category.name)
+            animates = true
             withAnimation(.easeInOut(duration: 0.7).delay(0.15)) { sheen = true }
         }
     }

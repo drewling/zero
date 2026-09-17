@@ -97,6 +97,10 @@ final class KeeperModel: ObservableObject {
     @Published var draftGuidance: String = ""
     // Provider availability — fetched alongside settings on panel open.
     @Published var providerStatus: ProviderStatus?
+    // Jev is the engine that sorts mail; its key is the whole setup, so the panel
+    // needs to show whether one is configured and let the user paste theirs in.
+    @Published var jevKeyConfigured = false
+    @Published var jevKeySaving = false
     // Undo tab: emails under each recovery batch, loaded on demand. Keyed "slug|label".
     @Published var undoThreads: [String: [UndoThread]] = [:]
     @Published var undoLoading: Set<String> = []
@@ -344,6 +348,35 @@ final class KeeperModel: ObservableObject {
     /// Refresh provider availability (e.g. user just installed a new CLI).
     func fetchProviderStatus() async {
         providerStatus = try? await api.providerStatus()
+    }
+
+    /// Whether the Jev key is set. Sorting cannot run without it, so the Settings
+    /// panel shows this plainly rather than letting a run fail later with no reason.
+    func fetchJevKeyStatus() async {
+        jevKeyConfigured = (try? await api.jevKeyStatus())?.configured ?? false
+    }
+
+    /// Save or clear the Jev API key. The server stores it, then checks it against
+    /// the real service; the toast reports which of those two things happened, so a
+    /// key that saves but is rejected can't look like success.
+    func saveJevKey(_ key: String) {
+        jevKeySaving = true
+        Task {
+            do {
+                let r = try await api.setJevKey(key)
+                jevKeyConfigured = r.configured
+                toast(r.message.isEmpty
+                        ? (r.configured ? "Key saved" : "Key removed")
+                        : r.message)
+            } catch let KeeperAPI.KeeperError.http(_, msg) where !msg.isEmpty {
+                toast(msg)                       // server's own wording is the clearest
+                await fetchJevKeyStatus()        // a rejected key must not flip the UI
+            } catch {
+                toast("Couldn't save the key")
+                await fetchJevKeyStatus()
+            }
+            jevKeySaving = false
+        }
     }
 
     /// Whether a Google OAuth client is configured. Drives the onboarding credential

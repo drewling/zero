@@ -343,6 +343,28 @@ struct ProviderInfo: Decodable, Identifiable {
     }
 }
 
+/// Whether the Jev API key is set. Jev is the engine that decides what stays in
+/// your inbox, so with no key configured zero cannot sort mail at all.
+struct JevKeyStatus: Decodable {
+    var configured: Bool = false
+
+    enum K: String, CodingKey { case configured }
+    init(from d: Decoder) throws {
+        let c = try d.container(keyedBy: K.self)
+        configured = try c.decodeIfPresent(Bool.self, forKey: .configured) ?? false
+    }
+    init(configured: Bool) { self.configured = configured }
+}
+
+/// Result of saving a key. `configured` means it was stored; `verified` means the
+/// service actually accepted it. Both matter: a stored-but-rejected key would
+/// otherwise fail silently on the next scheduled run.
+struct JevKeyResult {
+    var configured: Bool
+    var verified: Bool
+    var message: String
+}
+
 struct ProviderStatus: Decodable {
     var providers: [ProviderInfo] = []
     var active: String = ""
@@ -512,6 +534,20 @@ struct KeeperAPI {
 
     /// Which AI providers are installed and which one is active.
     func providerStatus() async throws -> ProviderStatus { try await get("/api/provider-status") }
+
+    /// Whether a Jev API key is configured. The key itself is never sent back.
+    func jevKeyStatus() async throws -> JevKeyStatus { try await get("/api/jev-key-status") }
+
+    /// Save (or, with an empty string, remove) the Jev API key. The server checks
+    /// the key against the real service, so `verified` tells the user now whether
+    /// sorting will actually work rather than at 7am tomorrow.
+    func setJevKey(_ key: String) async throws -> JevKeyResult {
+        let raw = try await postRaw("/api/set-jev-key", ["key": key], timeout: 30)
+        return JevKeyResult(
+            configured: raw["configured"] as? Bool ?? false,
+            verified: raw["verified"] as? Bool ?? false,
+            message: raw["message"] as? String ?? "")
+    }
 
     /// Pop a queued "run complete" notification (returns nil when none pending).
     func pendingNotification() async throws -> PendingNotification? {

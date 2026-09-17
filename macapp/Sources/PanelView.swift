@@ -351,33 +351,89 @@ private struct LoopsView: View {
 }
 
 // Moment 10: rows stagger in with ~30ms between each, capped so a big list still
-// finishes within ~0.4 s. Each row tracks its own visibility to avoid re-staggering
-// on minor list updates (only stagger if the row is new to this render pass).
+// finishes within ~0.4 s.
+//
+// Scroll cost (this was a real one): the stagger used to be driven from each row's
+// `.onAppear`, writing into a shared `revealed: Set<String>`. In a LazyVStack rows
+// appear continuously *while you scroll*, so scrolling kept scheduling main-queue
+// timers and kept mutating shared @State — and every mutation invalidated the whole
+// list body, so the further you scrolled the more expensive each frame became.
+// Now the cascade is time-based and runs ONCE: one timer chain on first load, each
+// row reads a pure function of its index, and scrolling mutates no state at all.
+// Later list changes (a row archived, a refresh) don't re-cascade either — they just
+// reveal immediately, so removals keep using LoopRowView's own sweep-out transition
+// instead of the whole list flashing back from zero.
 private struct StaggeredLoopList: View {
+    @EnvironmentObject var m: KeeperModel
     let rows: [LoopRow]
-    // ponytail: single ID set tracks which rows have already appeared this session.
-    @State private var revealed: Set<String> = []
+    // ponytail: one Int instead of a growing Set — the cascade is time-based, not
+    // visibility-based, so scrolling can't touch it.
+    @State private var shown = 0            // rows revealed so far by the intro cascade
+    @State private var introRan = false     // the one-time cascade has already played
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    /// Lower-cased category name → Category, built once per list render.
+    private var categoryMap: [String: Category] {
+        var map: [String: Category] = [:]
+        for c in m.state?.categories ?? [] where !c.name.isEmpty {
+            map[c.name.lowercased()] = c
+        }
+        return map
+    }
+
     var body: some View {
+        // Resolve each row's category ONCE per list build instead of inside every row's
+        // body. `category(named:)` is a linear scan of the category list doing a
+        // case-insensitive compare per entry, and a row body re-runs on every hover,
+        // swipe, expand, and scroll-in — so the scan was running constantly. The list
+        // is short (5 categories), but the map makes it O(1) and, more importantly,
+        // removes a `m.state` read from the row body, which is what tied every row's
+        // identity to the whole model object.
+        let cats = categoryMap
         LazyVStack(spacing: 0) {
             ForEach(Array(rows.enumerated()), id: \.element.id) { idx, row in
-                let isNew = !revealed.contains(row.id)
-                LoopRowView(row: row)
-                    .opacity(isNew ? 0 : 1)
-                    .offset(y: isNew ? 8 : 0)
-                    .onAppear {
-                        guard isNew else { return }
-                        if reduceMotion {
-                            _ = revealed.insert(row.id)
-                        } else {
-                            // Cap per-row delay so even 20+ rows finish in ~0.4s.
-                            let delay = min(Double(idx) * 0.030, 0.36)
-                            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                                withAnimation(Motion.sweep) { _ = revealed.insert(row.id) }
-                            }
-                        }
-                    }
+                let revealed = idx < shown
+                LoopRowView(row: row, category: row.loop.category.flatMap { cats[$0.lowercased()] })
+                    .opacity(revealed ? 1 : 0)
+                    .offset(y: revealed ? 0 : 8)
+            }
+        }
+        .onAppear { sync() }
+        // Only the COUNT is watched, and only to keep newly-arrived rows visible. Scroll
+        // position isn't state here, so scrolling fires none of this.
+        .onChange(of: rows.count) { _, _ in sync() }
+    }
+
+    private func sync() {
+        if introRan || rows.isEmpty {
+            // Post-intro: never re-animate the list. New rows are simply visible, and
+            // departing rows still play LoopRowView's own removal transition.
+            shown = rows.count
+            if rows.isEmpty { introRan = false }   // a genuine reload re-arms the intro
+        } else {
+            runIntro()
+        }
+    }
+
+    /// The one-time cascade. Reveals rows in ~30 ms steps, capped at ~0.4 s overall,
+    /// then never runs again for the life of this list view.
+    private func runIntro() {
+        introRan = true
+        let n = rows.count
+        guard !reduceMotion else { shown = n; return }
+        shown = 0
+        // Only ~7 rows are on screen at a time; past the 0.36 s cap they'd all pop at
+        // once anyway, so reveal the tail in one step instead of scheduling n timers.
+        let stepped = min(n, 13)
+        for i in 1...stepped {
+            let delay = min(Double(i - 1) * 0.030, 0.36)
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                withAnimation(Motion.sweep) { shown = max(shown, min(i, rows.count)) }
+            }
+        }
+        if n > stepped {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.39) {
+                withAnimation(Motion.sweep) { shown = rows.count }
             }
         }
     }
@@ -405,6 +461,8 @@ private struct HeroCount: View {
 private struct LoopRowView: View {
     @EnvironmentObject var m: KeeperModel
     let row: LoopRow
+    /// Resolved by the list, not looked up here — see StaggeredLoopList.categoryMap.
+    let category: Category?
     @State private var hovering = false
     @State private var dragX: CGFloat = 0   // live horizontal swipe offset
     private var expanded: Bool { m.expandedLoops.contains(row.loop.threadId) }
@@ -450,20 +508,26 @@ private struct LoopRowView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         Text(row.loop.sender).font(.system(size: 13, weight: .semibold)).lineLimit(1)
-                        if let cat = m.state?.category(named: row.loop.category) {
+                        if let cat = category {
                             CategoryTag(category: cat)
                         }
                     }
                     Text(row.loop.subject).font(.system(size: 12.5)).foregroundStyle(Paper.ink3).lineLimit(1)
                 }
-                .legibleOnGlass()
+                // Scroll cost: the sender/subject stack and the timestamp each carried
+                // `.legibleOnGlass()` — a blur-backed drop shadow, i.e. an offscreen
+                // render pass, ×2 per row ×180 rows. That halo exists for text sitting on
+                // *bare* panel vibrancy; this text sits on the row card, which already
+                // paints its own dark backing, so the shadow was buying contrast the card
+                // was already providing. Text on the bare panel (HeroCount, section
+                // labels, previews) keeps it.
                 .frame(maxWidth: .infinity, alignment: .leading)
                 // Chevron cues that the row opens a read-in-place preview.
                 Image(systemName: "chevron.down").font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(Paper.ink4).rotationEffect(.degrees(expanded ? 180 : 0))
                     .opacity(hovering || expanded ? 1 : 0.4)
                     .help(expanded ? "Hide preview" : "Show preview")
-                Text(relTime(row.loop.epoch)).font(.system(size: 11)).foregroundStyle(Paper.ink4).legibleOnGlass()
+                Text(relTime(row.loop.epoch)).font(.system(size: 11)).foregroundStyle(Paper.ink4)
 
                 HStack(spacing: 2) {
                     RowAction(symbol: "arrowshape.turn.up.left", help: "Draft a reply") { m.openComposer(row) }
@@ -487,11 +551,18 @@ private struct LoopRowView: View {
             }
         }
         .padding(.horizontal, 10).padding(.vertical, 9)
-        .glassSurface(9, interactive: true)
-        // Moment 5: subtle lift on hover — scale + elevated shadow so the row feels
-        // like it catches light and floats 1.5pt above the surface.
+        // Scroll cost: this used to be `.glassSurface(9, interactive: true)` — a live
+        // backdrop-refraction pass *per row*. At ~180 rows that's ~180 real-time blur
+        // passes composited every frame, which is what made scrolling stutter.
+        // `rowSurface` paints the same result (dark tint + cool top sheen + hairline
+        // rim) with one gradient and one stroke. The panel base behind it is still real
+        // vibrancy, and hover still lifts the fill and rim the way interactive glass did.
+        .rowSurface(9, hovering: hovering)
+        // Moment 5: subtle lift on hover — scale + a brighter rim so the row still feels
+        // like it catches light. The former drop shadow is gone: a shadow on a row is an
+        // offscreen pass, and SwiftUI keeps it allocated for every row in the list, not
+        // just the hovered one.
         .scaleEffect(hovering ? 1.008 : 1, anchor: .center)
-        .shadow(color: .black.opacity(hovering ? 0.18 : 0), radius: hovering ? 6 : 0, y: hovering ? 2 : 0)
         .animation(.easeOut(duration: 0.14), value: hovering)
         .onHover { hovering = $0 }
     }
@@ -529,6 +600,88 @@ private struct LoopRowView: View {
 // reliably in the responder chain; the monitor consumes only a clearly-horizontal swipe
 // while the pointer is over this row, and passes every vertical scroll straight through
 // so the list still scrolls normally. hitTest→nil keeps it transparent to clicks.
+//
+// Scroll cost — this was a large, *compounding* one. Each row used to install its OWN
+// `NSEvent.addLocalMonitorForEvents(matching: .scrollWheel)`. Every single scroll event
+// (and a trackpad emits them at display rate, in bursts, with momentum) then had to run
+// through one closure per live row, on the main thread, ahead of the scroll itself — and
+// because a LazyVStack keeps realised rows alive as you move through the list, the number
+// of monitors GREW the further you scrolled, which is exactly why the lag got worse the
+// longer you scrolled. Now there is exactly ONE process-wide monitor, shared by every
+// row: it hit-tests the pointer to find the at-most-one row underneath and dispatches
+// there. Behaviour is identical (only one row can be under the cursor anyway); the
+// per-event work goes from O(live rows) to O(1) plus a single dictionary lookup.
+private final class SwipeMonitorHub {
+    static let shared = SwipeMonitorHub()
+
+    private var monitor: Any?
+    private var views: [ObjectIdentifier: WeakBox] = [:]
+    private var accum: CGFloat = 0
+    private var decided = false                 // axis chosen for the current gesture
+    private weak var active: TrackpadSwipe.V?   // the row that owns a horizontal gesture
+
+    private final class WeakBox { weak var v: TrackpadSwipe.V?; init(_ v: TrackpadSwipe.V) { self.v = v } }
+
+    /// Rows register as they come on screen. The first registration starts the one
+    /// shared monitor; the last deregistration tears it down, so a closed panel costs
+    /// nothing.
+    func register(_ v: TrackpadSwipe.V) {
+        views[ObjectIdentifier(v)] = WeakBox(v)
+        guard monitor == nil else { return }
+        monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] e in
+            self?.handle(e) ?? e
+        }
+    }
+
+    func deregister(_ v: TrackpadSwipe.V) {
+        views.removeValue(forKey: ObjectIdentifier(v))
+        if active === v { active = nil; decided = false; accum = 0 }
+        views = views.filter { $0.value.v != nil }
+        guard views.isEmpty, let m = monitor else { return }
+        NSEvent.removeMonitor(m); monitor = nil
+    }
+
+    /// The one row (if any) under the pointer for this event.
+    private func rowUnder(_ e: NSEvent) -> TrackpadSwipe.V? {
+        for (_, box) in views {
+            guard let v = box.v, let win = v.window, e.window === win, v.superview != nil else { continue }
+            if v.bounds.contains(v.convert(e.locationInWindow, from: nil)) { return v }
+        }
+        return nil
+    }
+
+    private func handle(_ e: NSEvent) -> NSEvent? {
+        guard e.hasPreciseScrollingDeltas else { return e }   // mouse wheel → ignore
+        switch e.phase {
+        case .began:
+            decided = false; active = nil; accum = 0
+            return e
+        case .changed:
+            if !decided {
+                // Vertical scrolls resolve here and are never touched again for the rest
+                // of the gesture — the common case costs one comparison.
+                guard abs(e.scrollingDeltaX) > abs(e.scrollingDeltaY), let v = rowUnder(e) else {
+                    decided = true
+                    return e
+                }
+                active = v
+                decided = true
+            }
+            guard let v = active else { return e }   // vertical → let the list scroll
+            accum += e.scrollingDeltaX
+            v.onChange(accum)
+            return nil                               // consume the horizontal swipe
+        case .ended, .cancelled:
+            defer { active = nil; decided = false; accum = 0 }
+            guard let v = active else { return e }
+            v.onCommit(accum)
+            return nil
+        default:
+            return active != nil ? nil : e           // swallow momentum during a swipe
+        }
+    }
+}
+
 private struct TrackpadSwipe: NSViewRepresentable {
     var onChange: (CGFloat) -> Void
     var onCommit: (CGFloat) -> Void
@@ -540,10 +693,6 @@ private struct TrackpadSwipe: NSViewRepresentable {
     final class V: NSView {
         var onChange: (CGFloat) -> Void
         var onCommit: (CGFloat) -> Void
-        private var monitor: Any?
-        private var accum: CGFloat = 0
-        private var active = false      // gesture resolved to horizontal
-        private var decided = false     // axis chosen for this gesture
         init(onChange: @escaping (CGFloat) -> Void, onCommit: @escaping (CGFloat) -> Void) {
             self.onChange = onChange; self.onCommit = onCommit
             super.init(frame: .zero)
@@ -552,43 +701,10 @@ private struct TrackpadSwipe: NSViewRepresentable {
         override func hitTest(_ point: NSPoint) -> NSView? { nil }   // clicks pass through
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
-            if window == nil { teardown(); return }
-            guard monitor == nil else { return }
-            monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] e in
-                self?.handle(e) ?? e
-            }
+            if window == nil { SwipeMonitorHub.shared.deregister(self) }
+            else { SwipeMonitorHub.shared.register(self) }
         }
-        deinit { teardown() }
-        private func teardown() { if let m = monitor { NSEvent.removeMonitor(m); monitor = nil } }
-        private func pointerInside(_ e: NSEvent) -> Bool {
-            guard let win = window, e.window === win else { return false }
-            return bounds.contains(convert(e.locationInWindow, from: nil))
-        }
-        private func handle(_ e: NSEvent) -> NSEvent? {
-            guard e.hasPreciseScrollingDeltas else { return e }   // mouse wheel → ignore
-            switch e.phase {
-            case .began:
-                decided = false; active = false; accum = 0
-                return e
-            case .changed:
-                if !decided {
-                    guard pointerInside(e) else { return e }
-                    active = abs(e.scrollingDeltaX) > abs(e.scrollingDeltaY)
-                    decided = true
-                }
-                guard active else { return e }   // vertical → let the list scroll
-                accum += e.scrollingDeltaX
-                onChange(accum)
-                return nil                       // consume the horizontal swipe
-            case .ended, .cancelled:
-                defer { active = false; decided = false; accum = 0 }
-                guard active else { return e }
-                onCommit(accum)
-                return nil
-            default:
-                return active ? nil : e          // swallow momentum during a swipe
-            }
-        }
+        deinit { SwipeMonitorHub.shared.deregister(self) }
     }
 }
 
@@ -712,7 +828,20 @@ private struct RowAction: View {
             Image(systemName: symbol).font(.system(size: 13, weight: .medium))
                 .foregroundStyle(over ? Paper.accentSoft : Paper.ink3)
                 .frame(width: 28, height: 28)
-                .glassSurface(7, interactive: over)
+                // Scroll cost: this was `.glassSurface(7, interactive: over)`, and there
+                // are THREE of these per list row — 540 more live glass passes on top of
+                // the 180 row cards, the single largest block of render work in the list.
+                // A chip this small can't show real refraction anyway, so it uses the
+                // same cheap surface as the row and only paints at all on hover, exactly
+                // like the interactive glass appeared to.
+                .background {
+                    if over {
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .fill(Color.white.opacity(0.10))
+                            .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                .strokeBorder(Paper.hairline.opacity(0.28), lineWidth: 0.75))
+                    }
+                }
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain).help(help).accessibilityLabel(help).onHover { over = $0 }
@@ -974,6 +1103,7 @@ private struct PolicyView: View {
                 KeepPolicySection()
                 CategoriesSection()
                 DailyRoutineSection()
+                SortingEngineSection()
                 IntelligenceSection()
                 DraftingSection()
                 LearnedSection()
@@ -1371,13 +1501,96 @@ private struct SettingsToggleRow: View {
 // MARK: Intelligence
 
 // Shows which AI providers are detected and lets the user pick the active one.
+// The sorting engine's setup. Jev decides what stays in your inbox, and its API key
+// IS the setup — there's no CLI to detect on PATH like the drafting providers, so
+// without this section a fresh install has no way to make zero work at all.
+private struct SortingEngineSection: View {
+    @EnvironmentObject var m: KeeperModel
+    @State private var draft: String = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SettingsHeader("Sorting engine",
+                           "zero reads each thread with TypeSafe's Jev model and decides what still needs you. Paste your API key to switch it on.")
+
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(m.jevKeyConfigured ? Paper.clear : Paper.danger)
+                    .frame(width: 7, height: 7)
+                Text(m.jevKeyConfigured ? "API key configured" : "No API key — mail can't be sorted yet")
+                    .font(.system(size: 12))
+                    .foregroundStyle(m.jevKeyConfigured ? Paper.ink2 : Paper.danger)
+                Spacer(minLength: 6)
+                Link("Get a key", destination: URL(string: "https://console.typesafe.ai/keys")!)
+                    .font(.system(size: 11.5, weight: .medium))
+                    .foregroundStyle(Paper.accentSoft)
+            }
+
+            HStack(spacing: 7) {
+                // SecureField: the key is a credential, so it is never shown in the clear
+                // and never rendered back from the server.
+                SecureField(m.jevKeyConfigured ? "Replace key…" : "Paste your Jev API key",
+                            text: $draft)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 12, design: .monospaced))
+                    .focused($focused)
+                    .padding(.horizontal, 9).padding(.vertical, 7)
+                    .background(RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(Color.black.opacity(0.22)))
+                    .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .strokeBorder(Paper.hairline.opacity(focused ? 0.35 : 0.18), lineWidth: 0.75))
+                    .onSubmit(save)
+
+                Button(action: save) {
+                    Text(m.jevKeySaving ? "Checking…" : "Save")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(canSave ? Paper.accentSoft : Paper.ink4)
+                        .padding(.horizontal, 12).padding(.vertical, 7)
+                        .glassSurface(7, interactive: canSave)
+                }
+                .buttonStyle(.plain)
+                .disabled(!canSave)
+                .help("Save the key and check it against Jev")
+            }
+
+            if m.jevKeyConfigured {
+                Button {
+                    draft = ""
+                    m.saveJevKey("")          // empty key removes it, server-side
+                } label: {
+                    Text("Remove key")
+                        .font(.system(size: 11)).foregroundStyle(Paper.ink4)
+                }
+                .buttonStyle(.plain)
+                .help("Forget the stored key. Sorting will stop working until a new one is set.")
+            }
+        }
+        .padding(12)
+        .glassSurface(12)
+        .task { await m.fetchJevKeyStatus() }
+    }
+
+    private var canSave: Bool {
+        !m.jevKeySaving && !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private func save() {
+        guard canSave else { return }
+        let key = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        draft = ""                      // don't leave the credential sitting in the field
+        focused = false
+        m.saveJevKey(key)
+    }
+}
+
 private struct IntelligenceSection: View {
     @EnvironmentObject var m: KeeperModel
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                SettingsHeader("Intelligence",
-                               "The AI engine zero uses to read and sort your mail. Only installed providers are selectable.")
+                SettingsHeader("Reply drafting",
+                               "Which AI writes your reply drafts. Sorting is handled by Jev above; this engine only writes prose. Only installed providers are selectable.")
                 Spacer(minLength: 6)
                 Button {
                     Task { await m.fetchProviderStatus() }
