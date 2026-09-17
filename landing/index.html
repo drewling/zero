@@ -406,7 +406,11 @@ section > .container { position: relative; z-index: 1; }
 .install-sub a { color: var(--text-2); text-decoration: none; border-bottom: 1px solid var(--hairline-2); }
 .install-sub a:hover { color: var(--text); border-bottom-color: var(--accent-2); }
 @media (max-width: 560px) {
-  .install-cmd { font-size: 0.75rem; gap: 0.6rem; padding: 0.75rem 0.8rem; }
+  /* On a phone the command is wider than the screen. Clipping it would hide
+     part of the thing we're asking people to run, so wrap it instead and let
+     the box grow. Still one tap to copy. */
+  .install-cmd { font-size: 0.75rem; gap: 0.6rem; padding: 0.8rem; align-items: flex-start; }
+  .install-cmd code { white-space: pre-wrap; overflow-wrap: anywhere; }
   .copy-hint { display: none; }
 }
 .hero-req {
