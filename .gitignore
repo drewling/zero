@@ -59,3 +59,6 @@ scratchpad/
 
 # Local secrets (JEV / TypeSafe API key)
 .env
+# The Jev API key as saved by the app (Settings / onboarding). Same secret as the
+# JEV entry in .env, just the path the packaged app can actually write to.
+app/jev_key

@@ -86,6 +86,8 @@ LEAKS="$(find "$PAYLOAD" \
   \( -name 'accounts.json' \
      -o -name 'drewl.md' \
      -o -name 'config.env' \
+     -o -name 'jev_key' \
+     -o -name '.env' \
      -o -name '*.pyc' \
      -o -name '.DS_Store' \
   \) 2>/dev/null)"

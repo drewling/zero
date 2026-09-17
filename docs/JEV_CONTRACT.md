@@ -11,6 +11,14 @@ class JevError(Exception): ...
 def available() -> bool:
     """True if a JEV API key is configured (env JEV, or .env at repo root)."""
 
+def set_key(key: str) -> bool:
+    """Persist the API key to app/jev_key (0600); blank removes it. Returns
+    whether a key is now configured. Raises on write failure."""
+
+def verify_key(timeout: float = 15.0) -> tuple[bool, str]:
+    """Check the stored key against the live service. Returns (ok, detail).
+    Never raises and never logs the key."""
+
 def ask(state, questions: dict, timeout: float = 30.0, retries: int = 3) -> dict:
     """One /v1/systemone call. Returns the `answers` map keyed by question id.
     Retries 429/529/5xx with exponential backoff. Raises JevError on failure."""
@@ -33,6 +41,24 @@ body `{"state":..., "model":"jev-latest", "questions":{...}}`.
 `app/settings.json` key `"provider"` already exists (default `"claude"`).
 Jev classification is ON when `provider == "jev"`. Anything else keeps today's behavior
 byte-for-byte. Default MUST remain `claude` until the agreement check passes.
+
+## Key storage (added 2026-09-17)
+
+Key lookup order is **env `JEV` → `app/jev_key` → `.env` at the repo root**.
+
+`app/jev_key` exists because the packaged app ships no `.env` (`macapp/build.sh`
+deliberately excludes it), so without it Jev could not be configured at all outside a
+source checkout. `ROOT` is the repo in a checkout and
+`~/Library/Application Support/zero` in the installed app, so the one path serves both.
+`app/` is never in `seedFromBundle`'s overwrite list, so a saved key survives updates,
+exactly like `settings.json`.
+
+The key is gitignored and included in `macapp/build.sh`'s payload leak guard.
+
+HTTP surface on the local server:
+- `GET  /api/jev-key-status` → `{"configured": bool}` — never returns the key.
+- `POST /api/set-jev-key` `{"key": "..."}` → saves, then verifies against the live
+  service and reports `verified` plus a human-readable `message`. An empty key removes it.
 
 ## Hard rules for every worker
 

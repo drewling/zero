@@ -1515,6 +1515,53 @@ def _set_client_credentials(payload):
     return result
 
 
+def _set_jev_key(payload):
+    """Save the user's TypeSafe Jev API key (POST /api/set-jev-key).
+
+    Jev is an HTTP service, not a CLI, so unlike the other providers there is
+    nothing to detect on PATH — the key IS the setup. Without this endpoint the
+    packaged app has no way to configure Jev at all: lib/jev.py otherwise reads
+    only $JEV or a .env that build.sh deliberately never ships.
+
+    Sending an empty key removes it. The key is never echoed back."""
+    sys.path.insert(0, HERE)
+    import jev as _jev  # noqa: E402
+
+    key = payload.get("key")
+    if key is not None and not isinstance(key, str):
+        raise RuntimeError("key must be a string")
+    key = (key or "").strip()
+
+    if not key:
+        _jev.set_key("")
+        return {"ok": True, "configured": False, "message": "Jev key removed"}
+
+    # Cheap shape check before spending a network round-trip on an obvious typo
+    # (e.g. a pasted URL, or a whole JSON blob from the console).
+    if len(key) < 8 or any(c.isspace() for c in key):
+        raise RuntimeError("That doesn't look like an API key. Copy it from "
+                           "console.typesafe.ai/keys — it should be a single "
+                           "line with no spaces.")
+
+    configured = _jev.set_key(key)
+    if not configured:
+        raise RuntimeError("Couldn't save the key. Check the app's folder is writable.")
+
+    # Verify against the real service, so the user finds out now rather than at
+    # 7am tomorrow when the scheduled run silently falls back.
+    try:
+        ok, detail = _jev.verify_key()
+    except Exception as exc:                       # never let a check crash the save
+        return {"ok": True, "configured": True, "verified": False,
+                "message": f"Key saved, but it couldn't be checked right now ({exc})."}
+    if not ok:
+        return {"ok": True, "configured": True, "verified": False,
+                "warning": detail,
+                "message": f"Key saved, but Jev rejected it: {detail}"}
+    return {"ok": True, "configured": True, "verified": True,
+            "message": "Key saved and verified with Jev"}
+
+
 sys.path.insert(0, HERE)
 from dashboard_state import _DEFAULT_CATEGORIES, _DEFAULT_POLICY  # noqa: E402
 
@@ -1896,6 +1943,11 @@ class Handler(BaseHTTPRequestHandler):
             providers = _llm.detect_providers()
             active = next((pr["name"] for pr in providers if pr["active"]), "claude")
             return self._send(200, {"providers": providers, "active": active})
+        if p == "/api/jev-key-status":
+            # Whether a Jev key is configured. NEVER returns the key itself.
+            sys.path.insert(0, HERE)
+            import jev as _jev  # noqa: E402
+            return self._send(200, {"configured": _jev.available()})
         if p == "/api/pending-notification":
             return self._send(200, {"notification": _pop_pending_notification()})
         return self._send(404, {"error": "not found"})
@@ -1974,7 +2026,8 @@ class Handler(BaseHTTPRequestHandler):
                  "/api/undo/threads": _undo_threads,
                  "/api/undo/thread": _undo_thread,
                  "/api/thread/preview": _thread_preview,
-                 "/api/set-credentials": _set_client_credentials}
+                 "/api/set-credentials": _set_client_credentials,
+                 "/api/set-jev-key": _set_jev_key}
         if p in _sync:
             try:
                 return self._send(200, _sync[p](payload))

@@ -120,6 +120,36 @@ def available():
     return _get_key() is not None
 
 
+def verify_key(timeout=15.0):
+    """Check the stored key against the real service. Returns (ok, detail).
+
+    Sends the smallest possible real question rather than trusting the key's
+    shape, so a typo or an unentitled key is caught while the user is still on
+    the setup screen instead of at 7am tomorrow. Never raises and never logs the
+    key: transport problems come back as ok=False with a reason, so the caller
+    can tell "wrong key" apart from "no internet"."""
+    key = _get_key()
+    if not key:
+        return False, "No API key configured"
+    body = {
+        "state": {"probe": "connectivity check"},
+        "model": MODEL,
+        "questions": {"ok": {"type": "noul", "instructions": "Answer yes."}},
+    }
+    try:
+        status, parsed, raw = _post(body, key, timeout)
+    except Exception as exc:
+        return False, f"couldn't reach Jev ({exc.__class__.__name__})"
+    if status == 200:
+        return True, "ok"
+    if status in (401, 403):
+        return False, "the key was rejected — check you copied it correctly"
+    if status == 429:
+        # Valid key, just rate limited at this moment.
+        return True, "ok (rate limited during the check, but the key is valid)"
+    return False, str(_detail(parsed, raw) or f"HTTP {status}")
+
+
 def _post(body, key, timeout):
     """Perform the raw HTTP POST. Returns (status_code, parsed_json_or_None, raw_text).
 
