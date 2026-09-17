@@ -4,7 +4,7 @@
 Thread-level. The core signal for "already dealt with" is who sent the LAST message:
 - last message is from the owner -> they already responded; ball is in their court -> ARCHIVE.
 - Owner never engaged + sender is cold/no-history -> not a real loop -> ARCHIVE.
-- last message is from a real person the owner has corresponded with, with an open ask -> Haiku decides.
+- last message is from a real person the owner has corresponded with, with an open ask -> Jev decides.
 
 Always KEPT regardless: live payment problems, legal/disputes, explicit deadlines.
 Reversible (dated recovery label). Dry-run by default.
@@ -19,11 +19,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import inbox_zero as iz       # noqa: E402
-import thin_protected as tp   # noqa: E402
 import draftutil as du        # noqa: E402
 import learning               # noqa: E402
-
-import llm as _llm  # noqa: E402
 
 _CATEGORIES_PATH = os.path.join(ROOT, "categories.json")
 _LABEL_HISTORY_PATH = os.path.join(ROOT, "app", "category_label_history.json")
@@ -139,8 +136,8 @@ def _category_label_name(cat):
     return f"{cat['emoji']} {cat['name']}"
 
 # Candidate set: inbox minus starred/Action and (optionally) recent mail. Unlike the
-# blunt inbox_zero sweep, we do NOT pattern-exclude high-stakes mail here — the LLM
-# reviewer reads each thread and keeps genuine sign/pay/legal/deadline items itself,
+# blunt inbox_zero sweep, we do NOT pattern-exclude high-stakes mail here — the
+# classifier reads each thread and keeps genuine sign/pay/legal/deadline items itself,
 # so excluding them would only leave settled (already-signed/paid) mail stuck in inbox.
 def _candidate_q(grace_days):
     keep = '-is:starred -label:"⚡ Action"'
@@ -174,23 +171,6 @@ def _policy_text():
         pass
     return DEFAULT_POLICY
 
-
-# {policy} is filled from keep-policy.md at call time.
-# {categories_section} is filled from categories.json at call time.
-PROMPT_HEAD = (
-    "You are tidying the user's inbox. For EACH numbered thread decide \"keep\" or \"archive\". "
-    "Keep only what genuinely needs the user to act now; bias hard toward archive (everything archived "
-    "is reversible, so when in doubt about noise, archive it). Each line gives: last_sender, "
-    "last_from_owner (did the USER send the most recent message), replied_before (has the user ever "
-    "written to this sender), subject, snippet.\n\n"
-    "THE USER'S KEEP POLICY (authoritative -- follow it exactly):\n{policy}\n\n"
-    "Hard rules regardless of the above: if last_from_owner=YES the user already replied, so archive "
-    "(nothing left to do). Personal, family, legal, and live-payment-problem mail are kept even if "
-    "unsure.\n\n"
-    "{categories_section}"
-    'Output ONLY a JSON object mapping each number to an object {{"decision":"keep"|"archive","category":<name>|null}}. '
-    "category must be one of the category names above (for kept threads) or null. No prose.\n\nTHREADS:\n"
-)
 
 _REPLIED = {}
 _REPLIED_LOCK = threading.Lock()
@@ -328,71 +308,11 @@ def _read_infos_parallel(cfg, tids, me, max_workers=DEFAULT_READ_WORKERS):
     return [info for info in ordered if info]
 
 
-def _learned_preface():
-    """Preferences distilled from the user's past actions (lib/learn.py)."""
-    try:
-        txt = learning.learned_text().strip()
-    except Exception:
-        txt = ""
-    if not txt:
-        return ""
-    return ("PREFERENCES LEARNED FROM THE USER'S PAST ACTIONS (apply these when deciding; "
-            "they refine but never override keeping genuine personal/legal/payment loops):\n"
-            + txt + "\n\n")
-
-
-def _classify(chunk):
-    cats = _categories()
-    cat_names = {c["name"] for c in cats}
-    cat_lines = "\n".join(f'  - {c["name"]}: {c["description"]}' for c in cats)
-    categories_section = (
-        "CATEGORIES — for each KEPT thread, also pick the best-fit category name from this list:\n"
-        + cat_lines + "\n\n"
-    )
-
-    lines = []
-    for i, c in enumerate(chunk):
-        lines.append(
-            f'{i}. last_sender: {c["last_from"]} | last_from_owner: {"YES" if c["last_from_owner"] else "NO"}'
-            f' | replied_before: {"YES" if c["replied_before"] else "NO"} | subject: {c["subject"]}'
-            f' | snippet: {c["snippet"]}')
-    prompt = (_learned_preface()
-              + PROMPT_HEAD.format(policy=_policy_text(), categories_section=categories_section)
-              + "\n".join(lines))
-    txt, ok = _llm.run_prompt(prompt, model="haiku", timeout=150)
-    if not ok:
-        return {}
-    s, e = txt.find("{"), txt.rfind("}")
-    if s < 0 or e < 0:
-        return {}
-    try:
-        raw = json.loads(txt[s:e + 1])
-    except Exception:
-        return {}
-
-    # Normalize: accept both old bare-string form {"0":"keep"} and new object form
-    # {"0":{"decision":"keep","category":"Needs reply"}}.
-    normalized = {}
-    for k, v in raw.items():
-        if isinstance(v, str):
-            # Old format: bare "keep"/"archive" string.
-            normalized[k] = {"decision": v, "category": None}
-        elif isinstance(v, dict):
-            decision = v.get("decision", "keep")
-            cat = v.get("category")
-            if cat not in cat_names:
-                cat = None
-            normalized[k] = {"decision": decision, "category": cat}
-        else:
-            normalized[k] = {"decision": "keep", "category": None}
-    return normalized
-
-
-# --- Jev classification ------------------------------------------------------
-# Same job as _classify, same signature, same return shape — but instead of one
-# prompt asking a text model to emit JSON for a batch of 100 threads, each thread
-# becomes its own small set of TYPED questions answered in ONE parallel call, and
-# the keep/archive rule is Python (see the JEV_* constants at the top of this file).
+# --- Classification ----------------------------------------------------------
+# There is ONE classification path: Jev. Instead of one prompt asking a text model
+# to emit JSON for a batch of 100 threads, each thread becomes its own small set of
+# TYPED questions answered in ONE parallel call, and the keep/archive rule is
+# Python (see the JEV_* constants at the top of this file).
 #
 # Why decomposed questions rather than one "should I keep this?" noul:
 #   - TypeSafe's System One models answer snap judgments well and compound
@@ -409,8 +329,7 @@ def _classify(chunk):
 def _learned_rules():
     """The raw learned-preference text (lib/learn.py), or "" — no prompt framing.
 
-    _learned_preface() wraps the same text for the text-prompt path; Jev takes it
-    as a named field of the state instead."""
+    Jev takes it as a named field of the state rather than as prose."""
     try:
         return learning.learned_text().strip()
     except Exception:
@@ -590,8 +509,8 @@ def _jev_decide(answers):
     return "keep"                            # uncertain -> keep, never lose mail
 
 
-def _classify_jev(chunk):
-    """Classify threads with Jev. Same contract as _classify:
+def _classify(chunk):
+    """Classify threads with Jev. Returns
     {str(index): {"decision": "keep"|"archive", "category": <name>|None}}.
 
     One Jev call per thread, all issued concurrently via jev.ask_many, so a
@@ -600,7 +519,7 @@ def _classify_jev(chunk):
     if not chunk:
         return {}
     try:
-        import jev  # local import: keeps jev optional for the non-Jev path
+        import jev  # local import: keeps the module load cheap and failure-tolerant
     except Exception:
         # Can't even load the client -> keep everything. Never archive on error.
         return {str(i): {"decision": "keep", "category": None}
@@ -617,8 +536,7 @@ def _classify_jev(chunk):
     for i, c in enumerate(chunk):
         # Deterministic, no API call needed: the owner sent the last message, so
         # the ball is in the other party's court. main() already pre-filters these
-        # out; repeated here because _classify_jev can be handed unfiltered rows
-        # (lib/tests/agreement_check.py does exactly that).
+        # out; repeated here because _classify can be handed unfiltered rows.
         if c.get("last_from_owner"):
             out[str(i)] = {"decision": "archive", "category": None}
             continue
@@ -649,20 +567,6 @@ def _classify_jev(chunk):
         print(f"jev: {failures}/{len(items)} thread(s) failed to classify, kept",
               file=sys.stderr)
     return out
-
-
-def _classify_active(chunk):
-    """Dispatch to the classifier for the active provider.
-
-    Jev only when the user has explicitly selected provider="jev" in settings
-    (lib/llm.py owns reading that setting). Default stays claude, byte-for-byte."""
-    try:
-        provider = _llm._active_provider_name()
-    except Exception:
-        provider = "claude"
-    if provider == "jev":
-        return _classify_jev(chunk)
-    return _classify(chunk)
 
 
 def apply_category(cfg, thread_id, category_name, _labels_cache=None):
@@ -776,7 +680,7 @@ def _backfill_partition(infos, cat_label_names, id_to_name):
 def _run_label_only(cfg, me, window_days, chunk, archive_days=0):
     """Label-only backfill: classify recent inbox mail and apply category labels to
     keepers. Never archives. Light: bounded window, skips already-labeled and
-    owner-handled threads (no Haiku call for those), batched classification.
+    owner-handled threads (no classifier call for those), batched classification.
 
     If archive_days > 0, also labels recently-archived mail (non-inbox) so the
     label taxonomy stays populated across the full mailbox view.
@@ -818,7 +722,7 @@ def _run_label_only(cfg, me, window_days, chunk, archive_days=0):
         batch = to_judge[i:i + chunk]
         _emit_progress(65 + int(30 * i / n_judge),
                        f"Sorting {len(to_judge)} thread{'' if len(to_judge) == 1 else 's'} with AI")
-        verdict = _classify_active(batch)
+        verdict = _classify(batch)
         for j, c in enumerate(batch):
             v = verdict.get(str(j), {})
             if isinstance(v, dict) and v.get("decision") == "keep" and v.get("category"):
@@ -881,7 +785,7 @@ def main():
     archive_msg_ids, kept, keep_s = [], 0, []
     label_ok = label_failed = 0
     # Deterministic fast-path: last message from the owner -> dealt with -> archive.
-    # Guard runs FIRST so restored threads skip both this path and the LLM batch.
+    # Guard runs FIRST so restored threads skip both this path and the classifier batch.
     to_judge = []
     for c in infos:
         if c["id"] in keep_set:
@@ -897,7 +801,7 @@ def main():
         chunk = to_judge[i:i + a.chunk]
         _emit_progress(65 + int(30 * i / n_judge),
                        f"Sorting {len(to_judge)} thread{'' if len(to_judge) == 1 else 's'} with AI")
-        verdict = _classify_active(chunk)
+        verdict = _classify(chunk)
         for j, c in enumerate(chunk):
             # Classifiers always return normalized dicts; fall back to keep on missing key.
             v = verdict.get(str(j), {"decision": "keep", "category": None})

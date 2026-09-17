@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Runnable checks for review_open_loops._classify_jev — the Jev keep/archive path.
+"""Runnable checks for review_open_loops._classify — the ONE keep/archive path (Jev).
 
 Covers the threshold boundaries, uncertain->keep, failure(None)->keep, the
 category coming from categories.json (not hardcoded), the deterministic
-owner-last rule, and the return shape matching _classify.
+owner-last rule, and the return shape.
 No network: jev.ask_many is stubbed.
-Run: python3 lib/tests/test_classify_jev.py"""
+Run: python3 lib/tests/test_classify.py"""
 import json, os, sys
 
 LIB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
@@ -52,10 +52,10 @@ def _stub(answers_list):
 _orig_ask_many = jev.ask_many
 
 # ---------------------------------------------------------------------------
-# 1. Return shape matches _classify: {str(i): {"decision":..., "category":...}}
+# 1. Return shape: {str(i): {"decision":..., "category":...}}
 # ---------------------------------------------------------------------------
 jev.ask_many = _stub([_ans(awaiting=0.9, category="Needs reply")])
-out = R._classify_jev([_row()])
+out = R._classify([_row()])
 assert set(out.keys()) == {"0"}, out
 assert isinstance(out["0"], dict)
 assert set(out["0"].keys()) == {"decision", "category"}, out["0"]
@@ -63,8 +63,8 @@ assert out["0"]["decision"] in ("keep", "archive")
 assert out["0"]["decision"] == "keep"
 assert out["0"]["category"] == "Needs reply"
 
-# Empty input mirrors _classify's empty-dict shape.
-assert R._classify_jev([]) == {}
+# Empty input yields an empty dict.
+assert R._classify([]) == {}
 
 # ---------------------------------------------------------------------------
 # 2. Threshold boundaries (exact constants, so tuning them is a visible change)
@@ -117,7 +117,7 @@ assert R._jev_decide(_ans(awaiting=0.01, cold=0.0, automated=0.0)) == "keep"
 # 4. Failure paths ALWAYS keep. Never archive on an error.
 # ---------------------------------------------------------------------------
 jev.ask_many = _stub([None, None])
-out = R._classify_jev([_row("a"), _row("b")])
+out = R._classify([_row("a"), _row("b")])
 assert out["0"] == {"decision": "keep", "category": None}, out
 assert out["1"] == {"decision": "keep", "category": None}, out
 
@@ -137,12 +137,12 @@ assert R._jev_decide(bad) == "keep"
 def _boom(items, max_workers=12, timeout=30.0):
     raise RuntimeError("simulated total failure")
 jev.ask_many = _boom
-out = R._classify_jev([_row("a"), _row("b")])
+out = R._classify([_row("a"), _row("b")])
 assert [out[k]["decision"] for k in ("0", "1")] == ["keep", "keep"], out
 
 # A short results list (fewer answers than items) must not IndexError or archive.
 jev.ask_many = lambda items, max_workers=12, timeout=30.0: []
-out = R._classify_jev([_row("a"), _row("b")])
+out = R._classify([_row("a"), _row("b")])
 assert [out[k]["decision"] for k in ("0", "1")] == ["keep", "keep"], out
 
 # ---------------------------------------------------------------------------
@@ -164,7 +164,7 @@ assert "Zebra" in qs2["category"]["criteria"]
 assert "Needs reply" not in qs2["category"]["criteria"], \
     "category options must come from categories.json, not be hardcoded"
 jev.ask_many = _stub([_ans(awaiting=0.99, category="Zebra")])
-out = R._classify_jev([_row()])
+out = R._classify([_row()])
 assert out["0"] == {"decision": "keep", "category": "Zebra"}, out
 R._categories = _orig_categories
 
@@ -180,14 +180,14 @@ assert R._jev_category(_ans(category=cat_names[0],
                        set(cat_names)) == cat_names[0]
 # Archived threads never carry a category.
 jev.ask_many = _stub([_ans(awaiting=0.0, automated=1.0, category=cat_names[0])])
-out = R._classify_jev([_row()])
+out = R._classify([_row()])
 assert out["0"] == {"decision": "archive", "category": None}, out
 
 # ---------------------------------------------------------------------------
 # 6. Deterministic owner-last rule: archived without spending an API call
 # ---------------------------------------------------------------------------
 jev.ask_many = _stub([_ans(awaiting=0.99, category="Needs reply")])  # only 1 item
-out = R._classify_jev([_row("owner", last_from_owner=True), _row("other")])
+out = R._classify([_row("owner", last_from_owner=True), _row("other")])
 assert out["0"] == {"decision": "archive", "category": None}, out
 assert out["1"]["decision"] == "keep", out
 assert len(out) == 2
@@ -210,7 +210,7 @@ def _capture(items, max_workers=12, timeout=30.0):
     captured["items"] = items
     return [_ans(awaiting=0.9, category="Needs reply") for _ in items]
 jev.ask_many = _capture
-R._classify_jev([_row()])
+R._classify([_row()])
 state, questions = captured["items"][0]
 assert state["keep_policy"] == R._policy_text(), "keep-policy.md must reach the model"
 assert set(questions) == {"awaiting_user", "is_cold_outreach", "is_automated",
@@ -221,43 +221,16 @@ assert questions["urgency"]["criteria"] == R.JEV_URGENCY_LEVELS
 assert len(R.JEV_URGENCY_LEVELS) >= 3
 
 # ---------------------------------------------------------------------------
-# 8. Provider dispatch: default (claude) must NOT route to Jev
+# 8. There is exactly ONE classification path, with no provider toggle.
 # ---------------------------------------------------------------------------
-_orig_provider = R._llm._active_provider_name
-_orig_classify = R._classify
-called = {"classify": 0, "jev": 0}
-R._classify = lambda chunk: (called.__setitem__("classify", called["classify"] + 1)
-                             or {"0": {"decision": "keep", "category": None}})
-jev.ask_many = lambda items, max_workers=12, timeout=30.0: (
-    called.__setitem__("jev", called["jev"] + 1)
-    or [_ans(awaiting=0.9) for _ in items])
-
-R._llm._active_provider_name = lambda: "claude"
-R._classify_active([_row()])
-assert called == {"classify": 1, "jev": 0}, called
-
-R._llm._active_provider_name = lambda: "jev"
-R._classify_active([_row()])
-assert called == {"classify": 1, "jev": 1}, called
-
-# Unknown provider / unreadable settings both fall back to the existing path.
-R._llm._active_provider_name = lambda: "codex"
-R._classify_active([_row()])
-assert called == {"classify": 2, "jev": 1}, called
-
-def _raise():
-    raise RuntimeError("settings unreadable")
-R._llm._active_provider_name = _raise
-R._classify_active([_row()])
-assert called == {"classify": 3, "jev": 1}, called
-
-R._llm._active_provider_name = _orig_provider
-R._classify = _orig_classify
 jev.ask_many = _orig_ask_many
+assert not hasattr(R, "_classify_active"), "the provider dispatcher must be gone"
+assert not hasattr(R, "_classify_jev"), "the jev-variant name must be gone"
+assert not hasattr(R, "PROMPT_HEAD"), "the legacy classification prompt must be gone"
+assert not hasattr(R, "_learned_preface"), "the legacy prompt preface must be gone"
+# Classification must not consult the text-provider setting at all.
+src = open(os.path.join(LIB, "review_open_loops.py")).read()
+assert "_active_provider_name" not in src, \
+    "classification must not read the text-provider setting"
 
-# The shipped default must still be claude (settings absent == claude).
-assert R._llm._active_provider_name() != "jev" or \
-    os.environ.get("ZERO_ALLOW_JEV_DEFAULT"), \
-    "default provider must remain claude until the agreement check passes"
-
-print("classify_jev OK")
+print("classify OK")

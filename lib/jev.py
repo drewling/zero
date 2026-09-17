@@ -3,8 +3,7 @@
 
 Jev answers typed questions (noul / choice / score) against a state, with
 calibrated probabilities. It does not generate prose — drafting stays on an
-LLM provider (see lib/llm.py). See docs/JEV_CONTRACT.md for the interface
-this module must implement.
+LLM provider (see lib/llm.py).
 
 Endpoint: POST https://api.typesafe.ai/v1/systemone
 Auth, in order: env JEV, then app/jev_key (written by onboarding/Settings),

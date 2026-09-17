@@ -5,7 +5,7 @@ Scans the inbox over a lookback window for threads where:
   - the last message is from someone else (not the account owner), and
   - the owner never replied (no message from the owner after theirs), and
   - it isn't obvious noise (cold sales, automated, newsletters).
-Then asks Haiku to keep only genuinely important, still-actionable items and say why.
+Then asks Jev to keep only genuinely important, still-actionable items and say why.
 
 Outputs JSON: {"missed": [{"from","subject","date","thread_id","why","age_days"}]}
 
@@ -13,14 +13,13 @@ Usage: catchup.py <config_dir> [account_label] [lookback_days]
 """
 import json, os, sys
 from datetime import datetime, timezone
-from email.utils import parsedate_to_datetime, parseaddr
+from email.utils import parsedate_to_datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import draftutil as du  # noqa: E402
 import context as ctx  # noqa: E402
 
-import llm as _llm  # noqa: E402
 import jev as _jev  # noqa: E402
 
 
@@ -124,61 +123,18 @@ def candidates(config_dir, profile_email, lookback_days):
 
 
 def filter_important(cands, profile):
-    """Ask Haiku to keep only genuinely important, still-worth-surfacing items.
+    """Use Jev's typed judgments to select important catch-up items.
 
-    Returns a list of important candidates, or None if the claude call failed
-    (timeout, non-zero exit, or unparseable output).  Callers should treat None
-    as "could not evaluate" rather than "nothing important".
+    Returns a list of important candidates, or None if the judgment could not be
+    made (transport failure, missing or malformed answers).  Callers must treat
+    None as "could not evaluate" rather than "nothing important", instead of
+    guessing which messages are safe to omit.
+
+    Jev cannot produce prose, so the selected choice supplies a fixed,
+    user-readable `why`.
     """
     if not cands:
         return []
-    if _llm._active_provider_name() == "jev":
-        return _filter_important_jev(cands, profile)
-    listing = "\n".join(
-        f'{i}. from={c["from"]} | subject={c["subject"]} | {c["age_days"]}d ago | {c["snippet"]}'
-        for i, c in enumerate(cands)
-    )
-    prompt = f"""From this list of un-replied inbox emails the user may have missed, return ONLY the ones that are genuinely important and still worth their attention. EXCLUDE: cold sales/outbound pitches, financing offers, vendor/webinar invites, recruiters, newsletters, marketing, receipts, social notifications, and calendar "Accepted:"/"Declined:"/"Invitation:" auto-confirmations (these need no action), subscription alerts (property/job/price alerts). KEEP things that need action or a human response: payment/billing failures, real two-way threads awaiting the user, time-sensitive deadlines, client/partner asks, account/security problems, tax/legal compliance.
-
-{profile}
-
-EMAILS:
-{listing}
-
-Output ONLY a JSON array of objects for the important ones:
-[{{"index": <number>, "why": "<short reason it matters>"}}]
-If none are important, output []."""
-    txt_raw, ok = _llm.run_prompt(prompt, model="haiku", timeout=120)
-    if not ok:
-        return None  # classification timed out or failed
-    txt = txt_raw.strip()
-    start, end = txt.find("["), txt.rfind("]")
-    if start < 0 or end < 0:
-        return None  # unparseable output
-    try:
-        keep = json.loads(txt[start:end + 1])
-    except Exception:
-        return None
-    result = []
-    for k in keep:
-        idx = k.get("index")
-        if isinstance(idx, int) and 0 <= idx < len(cands):
-            c = dict(cands[idx])
-            c["why"] = k.get("why", "")
-            c.pop("snippet", None)
-            result.append(c)
-    return result
-
-
-def _filter_important_jev(cands, profile):
-    """Use Jev's typed judgments to select important catch-up items.
-
-    Unlike the text-model path, Jev cannot produce a prose explanation.  The
-    selected choice supplies a fixed, user-readable reason while preserving the
-    existing output shape.  An incomplete or failed batch is reported as None,
-    exactly like an unparseable legacy classification, rather than guessing
-    which messages are safe to omit.
-    """
     items = []
     for c in cands:
         state = {

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Offline checks for catchup's optional Jev typed-classification path.
+"""Offline checks for catchup's typed Jev classification — the only path.
 
-Run: python3 lib/tests/test_catchup_jev.py
+Run: python3 lib/tests/test_catchup.py
 """
 import os
 import sys
@@ -19,15 +19,12 @@ CANDIDATES = [
      "snippet": "Book a demo today."},
 ]
 
-orig_active = catchup._llm._active_provider_name
-orig_prompt = catchup._llm.run_prompt
 orig_ask_many = catchup._jev.ask_many
 
 try:
-    # Jev uses one independently typed request per candidate and retains the
-    # legacy public item shape, including a user-readable `why` and no snippet.
+    # One independently typed request per candidate; the public item shape keeps
+    # a user-readable `why` and drops the raw snippet.
     captured = {}
-    catchup._llm._active_provider_name = lambda: "jev"
 
     def _answers(items):
         captured["items"] = items
@@ -54,11 +51,13 @@ try:
         "thread_id": "important", "from": "Client <client@example.com>",
         "subject": "Contract signature", "date": "Mon", "age_days": 3,
         "why": "Time-sensitive action may be needed",
-    }], "Jev result must match the existing missed-item shape"
+    }], "Jev result must match the missed-item shape"
 
-    # A failed, missing, or malformed Jev answer follows the old failed-parser
-    # behavior: return None so the caller emits an evaluation error, not a claim
-    # that no important mail exists.
+    # Nothing to judge is an empty digest, not an evaluation failure.
+    assert catchup.filter_important([], "profile") == []
+
+    # A failed, missing, or malformed Jev answer returns None so the caller emits
+    # an evaluation error, not a claim that no important mail exists.
     catchup._jev.ask_many = lambda items: [None] * len(items)
     assert catchup.filter_important(CANDIDATES, "") is None
 
@@ -68,26 +67,21 @@ try:
     }] * len(items)
     assert catchup.filter_important(CANDIDATES, "") is None
 
-    # Providers other than Jev retain the pre-existing prompt/JSON behavior.
-    calls = {"n": 0}
-    catchup._llm._active_provider_name = lambda: "claude"
+    # A raising transport is reported as "could not evaluate" too.
+    def _boom(items):
+        raise RuntimeError("simulated transport failure")
+    catchup._jev.ask_many = _boom
+    assert catchup.filter_important(CANDIDATES, "") is None
 
-    def _legacy(prompt, model, timeout):
-        calls["n"] += 1
-        assert model == "haiku" and timeout == 120
-        return '[{"index": 1, "why": "legacy reason"}]', True
-
-    catchup._llm.run_prompt = _legacy
-    legacy = catchup.filter_important(CANDIDATES, "profile")
-    assert calls["n"] == 1
-    assert legacy == [{
-        "thread_id": "noise", "from": "Vendor <sales@example.com>",
-        "subject": "Special offer", "date": "Tue", "age_days": 4,
-        "why": "legacy reason",
-    }]
+    # There is no provider toggle and no legacy prompt path left.
+    assert not hasattr(catchup, "_filter_important_jev"), \
+        "the jev-variant name must be gone"
+    assert not hasattr(catchup, "_llm"), \
+        "catchup must not import the text-provider abstraction"
+    src = open(os.path.join(os.path.dirname(__file__), "..", "catchup.py")).read()
+    assert "_active_provider_name" not in src and "run_prompt" not in src, \
+        "catchup classification must not consult a text provider"
 finally:
-    catchup._llm._active_provider_name = orig_active
-    catchup._llm.run_prompt = orig_prompt
     catchup._jev.ask_many = orig_ask_many
 
-print("catchup_jev OK")
+print("catchup OK")

@@ -115,8 +115,8 @@ def _readd_loop(slug, tid, sender="", sender_email="", subject="", snippet="", e
 
 def _bg_gmail_write(write_fn, on_failure=None):
     """Fire a Gmail write in a background thread so a per-item click (dismiss, undo)
-    returns to the panel immediately instead of blocking on a ~0.6s round-trip — see
-    docs/JEV_MIGRATION_PLAN.md section 2c. `write_fn` performs the actual Gmail call
+    returns to the panel immediately instead of blocking on a ~0.6s round-trip.
+    `write_fn` performs the actual Gmail call
     AND any follow-up that must only happen once the write is confirmed (e.g. a
     learning.record signal, so it's recorded exactly once and never on a failed
     write). On failure, `on_failure(exc)` must roll back the optimistic state change
@@ -315,8 +315,25 @@ def _run_child(cmd, base, span, timeout, prefix=""):
     return (p.returncode, "".join(out), p.stderr.read())
 
 
+def _require_jev_key():
+    """Raise a clear, actionable error if no Jev API key is configured.
+
+    Classification is the app's core loop now (Jev decides keep/archive), so a
+    missing key is the one failure a real user will actually hit. Without this
+    check the sweep runs anyway: review_open_loops._classify() catches the
+    resulting JevError internally and silently keeps every thread, so the run
+    "succeeds" with zero archived and no indication why. Call this before
+    starting a sweep so the failure is loud and tells the user what to do,
+    instead of a quiet no-op."""
+    sys.path.insert(0, HERE)
+    import jev as _jev  # noqa: E402
+    if not _jev.available():
+        raise RuntimeError("Add your TypeSafe API key in Settings to sort mail.")
+
+
 def _run_keeper(payload):
     """Run the open-loop sweep across all accounts at the daily grace, then rebuild."""
+    _require_jev_key()
     # Grace = protect mail newer than N days. The user's persisted setting is the
     # source of truth (default 0 = review the whole inbox and trust the keep-bar);
     # a payload value overrides it. Everything is reversible via Undo.
@@ -377,6 +394,7 @@ def _run_populate(payload):
     """Label-only backfill: sort the last N days of inbox mail into category labels.
     One account (slug) or all. Never archives — purely additive labeling.
     Also labels recently-archived mail if label_archived_days > 0."""
+    _require_jev_key()
     settings = _read_settings()
     window = max(1, min(int(payload.get("window_days", 30)), 365))
     archive_days = int(payload.get("archive_days", settings.get("label_archived_days", 30)))
@@ -770,10 +788,9 @@ def _dismiss(payload):
     cached state is updated and the response sent immediately; the actual Gmail
     write (~0.4-0.8s round-trip) happens in a background thread. If it fails, the
     optimistic change is rolled back and the user is told via the existing
-    pending-notification/toast channel — see docs/JEV_MIGRATION_PLAN.md section 2c
-    and docs/JEV_CONTRACT.md rule 3 (never silently pretend mail moved when it
-    didn't). The JSON response shape is unchanged so the Swift panel needs no
-    changes: {"ok": True, "label": ..., "thread_id": ...} or
+    pending-notification/toast channel, so the app never silently pretends mail
+    moved when it didn't. The JSON response shape is unchanged so the Swift panel
+    needs no changes: {"ok": True, "label": ..., "thread_id": ...} or
     {"ok": True, "restored": ...}."""
     sys.path.insert(0, HERE)
     import draftutil as du       # noqa: E402
@@ -1598,10 +1615,10 @@ def _set_client_credentials(payload):
 def _set_jev_key(payload):
     """Save the user's TypeSafe Jev API key (POST /api/set-jev-key).
 
-    Jev is an HTTP service, not a CLI, so unlike the other providers there is
-    nothing to detect on PATH — the key IS the setup. Without this endpoint the
-    packaged app has no way to configure Jev at all: lib/jev.py otherwise reads
-    only $JEV or a .env that build.sh deliberately never ships.
+    Jev is an HTTP service, not a CLI, so it has nothing to detect on PATH like
+    the drafting providers in lib/llm.py — the key IS the setup. Without this
+    endpoint the packaged app has no way to configure Jev at all: lib/jev.py
+    otherwise reads only $JEV or a .env that build.sh deliberately never ships.
 
     Sending an empty key removes it. The key is never echoed back."""
     sys.path.insert(0, HERE)
@@ -1671,7 +1688,9 @@ _DEFAULT_SETTINGS = {
     "auto_draft": False,
     # Labeling window for archived (non-inbox) mail; 0 = off.
     "label_archived_days": 30,
-    # LLM provider (see lib/llm.py)
+    # TEXT provider for drafting replies (see lib/llm.py). NOT classification —
+    # sorting mail always uses Jev (lib/jev.py, configured via its own API key,
+    # see /api/set-jev-key), which cannot generate prose.
     "provider": "claude",
     # Drafting preferences (used by the reply drafter, _gen_draft)
     "draft_name": "",        # how to sign drafts; blank = derive from the account
@@ -2036,7 +2055,9 @@ class Handler(BaseHTTPRequestHandler):
             active = next((pr["name"] for pr in providers if pr["active"]), "claude")
             return self._send(200, {"providers": providers, "active": active})
         if p == "/api/jev-key-status":
-            # Whether a Jev key is configured. NEVER returns the key itself.
+            # Whether the user's TypeSafe Jev API key is configured. Classification
+            # (sorting mail) requires this key; it is separate from the drafting
+            # `provider` setting below. NEVER returns the key itself.
             sys.path.insert(0, HERE)
             import jev as _jev  # noqa: E402
             return self._send(200, {"configured": _jev.available()})
@@ -2237,7 +2258,10 @@ class Handler(BaseHTTPRequestHandler):
                     errors.append("label_archived_days must be an int 0–365")
                 else:
                     validated["label_archived_days"] = lad
-            # provider: must be a known provider name AND currently available
+            # provider: the TEXT provider used for drafting (see lib/llm.py). Must
+            # be a known provider name AND currently available. Not related to
+            # Jev, which handles classification and is configured separately
+            # via /api/set-jev-key.
             prov = payload.get("provider")
             if prov is not None:
                 sys.path.insert(0, HERE)

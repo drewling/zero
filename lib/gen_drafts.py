@@ -144,8 +144,8 @@ addressee.
 
 Output ONLY a JSON object, nothing else:
 {{"needs_reply": true|false, "reason": "<one short phrase>", "reply": "<reply text, or empty string if needs_reply is false>"}}"""
-    # Route through llm._run_cmd so the draft call gets the same hardening as the
-    # classifier: isolated CLAUDE_CONFIG_DIR (no ~/Documents project walk → no macOS TCC
+    # Route through llm._run_cmd so every claude call is hardened the same way:
+    # isolated CLAUDE_CONFIG_DIR (no ~/Documents project walk → no macOS TCC
     # prompt that would block the run), MCP off, no session writes, stdin closed.
     import llm
     cmd = [CLAUDE, "-p", prompt, "--model", "haiku",

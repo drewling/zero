@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""LLM provider abstraction for zero.
+"""Text-generation provider abstraction for zero.
+
+This is the TEXT path only: drafting replies (lib/gen_drafts.py) and distilling
+the user's voice (lib/learn.py). Classification does NOT come through here — it
+is always Jev (lib/jev.py, used directly by lib/review_open_loops.py and
+lib/catchup.py), which answers typed questions and cannot generate prose.
 
 Provider dispatch is DATA-DRIVEN: each KNOWN_PROVIDERS entry carries an argv
 template list. Tokens {prompt} and {model} are substituted at call time.
@@ -62,26 +67,6 @@ KNOWN_PROVIDERS = [
             "opus": "hermes-3-llama-3.1-70b",
         },
     },
-    {
-        "name": "jev",
-        "label": "Jev (TypeSafe AI)",
-        # Jev is NOT a CLI: it's lib/jev.py, an HTTP client for typed
-        # classification (noul/choice/score). It cannot generate free-form
-        # text, so it is never used for run_prompt()'s text-in/text-out
-        # contract — run_prompt() falls back to claude immediately whenever
-        # the active provider is jev. It's listed here purely so the
-        # provider picker can show/select it (see detect_providers()).
-        "bin": None,
-        "bin_env": "JEV_BIN",  # unused; kept for shape consistency, never resolved
-        "wired": True,
-        "is_http_client": True,
-        "argv_template": [],
-        "model_map": {
-            "haiku": "jev-latest",
-            "sonnet": "jev-latest",
-            "opus": "jev-latest",
-        },
-    },
 ]
 
 # Index by name for O(1) lookup.
@@ -89,7 +74,10 @@ _BY_NAME = {p["name"]: p for p in KNOWN_PROVIDERS}
 
 
 def _active_provider_name():
-    """Read the active provider from settings (default 'claude'). Never throws."""
+    """Read the active TEXT provider from settings (default 'claude').
+
+    Only drafting/voice generation reads this; classification is always Jev.
+    Never throws."""
     try:
         if os.path.isfile(SETTINGS_PATH):
             with open(SETTINGS_PATH) as f:
@@ -100,12 +88,7 @@ def _active_provider_name():
 
 
 def _bin_for(provider):
-    """Resolve the binary path for a provider entry, honoring env override.
-
-    jev has no binary (it's an HTTP client, see lib/jev.py) — bin_env is
-    unused for it and this is never called on its behalf in practice."""
-    if provider.get("bin") is None:
-        return None
+    """Resolve the binary path for a provider entry, honoring env override."""
     return os.environ.get(provider["bin_env"], provider["bin"])
 
 
@@ -120,30 +103,14 @@ def _version(binary):
 
 
 def detect_providers():
-    """Return a list of provider status dicts.
+    """Return a list of text-provider status dicts.
 
     Shape: [{name, label, available: bool, version: str|None, active: bool}]
     A provider is available only if it is wired AND its binary is on PATH.
-    jev is the exception: it's an HTTP client, not a binary, so its
-    availability is whether an API key is configured (see lib/jev.py).
     """
     active = _active_provider_name()
     result = []
     for p in KNOWN_PROVIDERS:
-        if p.get("is_http_client"):
-            try:
-                import jev as _jev  # local import: keep jev.py optional/isolated
-                available = bool(p.get("wired")) and _jev.available()
-            except Exception:
-                available = False
-            result.append({
-                "name": p["name"],
-                "label": p["label"],
-                "available": available,
-                "version": "jev-latest" if available else None,
-                "active": p["name"] == active,
-            })
-            continue
         binary = _bin_for(p)
         available = bool(p.get("wired")) and shutil.which(binary) is not None
         result.append({
@@ -237,20 +204,13 @@ def _run_cmd(cmd, provider_name, timeout):
 
 
 def run_prompt(prompt, model="haiku", timeout=120):
-    """Run a prompt through the active provider's CLI.
+    """Run a text-generation prompt through the active provider's CLI.
 
     Returns (stdout_text: str, ok: bool).
     Falls back to claude if the active provider is unavailable or fails.
     """
     active_name = _active_provider_name()
     provider = _BY_NAME.get(active_name) or _BY_NAME["claude"]
-    # Jev cannot generate free-form text (it's a typed-classification HTTP
-    # client, not a CLI) — drafting/prompting always falls back to claude
-    # when jev is the active provider. Say so, same as any other fallback.
-    if provider.get("is_http_client"):
-        print(f"llm: {provider['name']} cannot serve text-generation prompts, "
-              f"using claude", file=sys.stderr)
-        provider = _BY_NAME["claude"]
     # If the active provider binary isn't on PATH, fall back to claude — but say so,
     # otherwise a user who selected Codex/Hermes is silently running on claude.
     binary = _bin_for(provider)
