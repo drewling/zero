@@ -21,6 +21,48 @@ import draftutil as du  # noqa: E402
 import context as ctx  # noqa: E402
 
 import llm as _llm  # noqa: E402
+import jev as _jev  # noqa: E402
+
+
+_JEV_IMPORTANCE_QUESTIONS = {
+    "importance": {
+        "type": "score",
+        "instructions": (
+            "How important and still actionable is this unreplied inbox thread for "
+            "the account owner? Ignore cold sales, marketing, newsletters, receipts, "
+            "social notifications, calendar auto-confirmations, and subscription alerts."
+        ),
+        "criteria": [
+            "Noise or no action needed",
+            "Potentially useful but not clearly actionable",
+            "Genuinely important and needs attention",
+        ],
+    },
+    "needs_attention": {
+        "type": "noul",
+        "instructions": (
+            "Is a real person, deadline, payment, security issue, legal or tax matter, "
+            "or account problem awaiting attention from the account owner?"
+        ),
+    },
+    "reason": {
+        "type": "choice",
+        "instructions": "Select the most useful concise reason to surface this thread.",
+        "criteria": {
+            "human_request": "A real person is awaiting a response or decision",
+            "deadline": "A deadline, appointment, or time-sensitive action is involved",
+            "money": "Payment, billing, tax, legal, or compliance needs action",
+            "account_security": "An account, access, or security issue needs attention",
+        },
+    },
+}
+
+_JEV_REASONS = {
+    "human_request": "A person may be awaiting your response",
+    "deadline": "Time-sensitive action may be needed",
+    "money": "Payment, compliance, or account action may be needed",
+    "account_security": "An account or security issue may need attention",
+}
 
 
 def _hdr(msg, name):
@@ -90,6 +132,8 @@ def filter_important(cands, profile):
     """
     if not cands:
         return []
+    if _llm._active_provider_name() == "jev":
+        return _filter_important_jev(cands, profile)
     listing = "\n".join(
         f'{i}. from={c["from"]} | subject={c["subject"]} | {c["age_days"]}d ago | {c["snippet"]}'
         for i, c in enumerate(cands)
@@ -123,6 +167,56 @@ If none are important, output []."""
             c["why"] = k.get("why", "")
             c.pop("snippet", None)
             result.append(c)
+    return result
+
+
+def _filter_important_jev(cands, profile):
+    """Use Jev's typed judgments to select important catch-up items.
+
+    Unlike the text-model path, Jev cannot produce a prose explanation.  The
+    selected choice supplies a fixed, user-readable reason while preserving the
+    existing output shape.  An incomplete or failed batch is reported as None,
+    exactly like an unparseable legacy classification, rather than guessing
+    which messages are safe to omit.
+    """
+    items = []
+    for c in cands:
+        state = {
+            "from": c.get("from", ""),
+            "subject": c.get("subject", ""),
+            "age_days": c.get("age_days"),
+            "snippet": c.get("snippet", ""),
+            "user_profile": profile or "",
+        }
+        items.append((state, _JEV_IMPORTANCE_QUESTIONS))
+    try:
+        answers_list = _jev.ask_many(items)
+    except Exception:
+        return None
+    if not isinstance(answers_list, list) or len(answers_list) != len(cands):
+        return None
+
+    result = []
+    for c, answers in zip(cands, answers_list):
+        if not isinstance(answers, dict):
+            return None
+        importance = answers.get("importance")
+        needs_attention = answers.get("needs_attention")
+        reason = answers.get("reason")
+        if (not isinstance(importance, dict) or importance.get("type") != "score"
+                or not isinstance(importance.get("score"), (int, float))
+                or not isinstance(needs_attention, dict) or needs_attention.get("type") != "noul"
+                or not isinstance(needs_attention.get("noul"), (int, float))
+                or not isinstance(reason, dict) or reason.get("type") != "choice"
+                or reason.get("choice") not in _JEV_REASONS):
+            return None
+        # Both independent signals must be strong.  Ambiguity stays out of the
+        # digest rather than becoming an asserted "important" item.
+        if importance["score"] >= 1.5 and needs_attention["noul"] >= 0.75:
+            kept = dict(c)
+            kept["why"] = _JEV_REASONS[reason["choice"]]
+            kept.pop("snippet", None)
+            result.append(kept)
     return result
 
 
