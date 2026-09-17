@@ -645,20 +645,60 @@ def _b64(data):
 
 
 def _strip_html(s):
-    """Crude HTML -> readable text for previews (drop tags, unescape entities)."""
+    """Crude HTML -> readable text for previews (drop tags, unescape entities).
+    Conservative: never drops real words, only structural noise real senders don't
+    intend the reader to see (tracking pixels, hidden preheader padding, invisible
+    marker characters, HTML-entity whitespace)."""
     import html as _html  # noqa: E402
+    # Marketing mail commonly hides a "preheader" blurb (the text that used to only
+    # show up in the inbox snippet) behind display:none/max-height:0/visibility:hidden.
+    # It's real copy, but the sender explicitly marked it invisible to a human reading
+    # the rendered email — showing it in our preview is noise, not content.
+    s = re.sub(r'(?is)<(div|span|td)\b[^>]*style="[^"]*(?:display\s*:\s*none|'
+               r'max-height\s*:\s*0|visibility\s*:\s*hidden)[^"]*"[^>]*>.*?</\1>', " ", s)
     s = re.sub(r"(?is)<(script|style|head)\b.*?</\1>", " ", s)
+    # Bullet markers: keep the fact that this was a list item, since stripping the
+    # tag alone silently fuses every bullet into one run-on line downstream.
+    s = re.sub(r"(?i)<li\b[^>]*>", "\n\u2022 ", s)
     s = re.sub(r"(?i)<br\s*/?>", "\n", s)
-    s = re.sub(r"(?i)</(p|div|tr|li|h[1-6])>", "\n", s)
+    s = re.sub(r"(?i)</(p|div|tr|li|h[1-6])>", "\n\n", s)
+    # A heading's closing tag is handled above; also force a break *before* a heading
+    # opens so "...lead-in text<h1>Heading</h1>" doesn't fuse into one sentence.
+    s = re.sub(r"(?i)<h[1-6]\b[^>]*>", "\n\n", s)
     s = re.sub(r"(?s)<[^>]+>", " ", s)
     s = _html.unescape(s)
+    # &nbsp; decodes to U+00A0, not a plain space; normalize so downstream whitespace
+    # collapsing (which only matches ASCII space/tab) actually catches it.
+    s = s.replace("\u00a0", " ")
+    # Zero-width / invisible characters marketing ESPs pad copy with (word joiners,
+    # ZWSP/ZWNJ, soft hyphen, BOM) — never visible, never meaningful, always noise.
+    s = re.sub(r"[\u200b\u200c\u200d\u2060\ufeff\u00ad]", "", s)
     s = re.sub(r"[ \t]+", " ", s)
     s = re.sub(r"\n[ \t]+", "\n", s)
+    s = re.sub(r"[ \t]+\n", "\n", s)
+    # An inline tag like <a>...</a> or <span>...</span> leaves a space where the tag
+    # used to be, right before whatever punctuation follows it in the source
+    # ("...here</a>." -> "...here .") — tidy that back to normal prose spacing.
+    s = re.sub(r"[ \t]+([.,!?;:])", r"\1", s)
     return re.sub(r"\n{3,}", "\n\n", s).strip()
 
 
 def _extract_body(payload):
-    """Walk a Gmail message payload, preferring text/plain, else stripped text/html."""
+    """Walk a Gmail message payload, preferring text/plain, else stripped text/html.
+
+    Evidence for keeping text/plain as the default preference: for personal mail
+    (the primary case zero exists for) the plaintext part is either hand-typed or a
+    faithful mirror of the HTML, and deriving from HTML instead risks mangling
+    signatures, manually-drawn ASCII tables, or ASCII-art dividers that _strip_html
+    has no way to distinguish from markup noise.
+
+    The one case where HTML clearly wins: some marketing ESPs (confirmed via the
+    Nosto/Marketo sample that reported this bug) ship a text/plain alternative that's
+    just a "view this email in your browser" stub plus a giant tracking link, with
+    the real copy living only in the HTML part. Preferring that stub would produce a
+    near-empty, unhelpful preview even though rich content exists. Detect that narrow
+    case — a plaintext part with almost no readable words — and fall back to the
+    (usually longer, more informative) HTML-derived text instead."""
     found = {}
 
     def walk(part):
@@ -670,31 +710,96 @@ def _extract_body(payload):
             walk(p)
 
     walk(payload)
-    if found.get("text/plain"):
-        return found["text/plain"].strip()
+    plain = found.get("text/plain", "").strip()
+    if plain and not _is_stub_plaintext(plain):
+        return plain
     if found.get("text/html"):
-        return _strip_html(found["text/html"])
-    return ""
+        html_text = _strip_html(found["text/html"])
+        if html_text:
+            return html_text
+    return plain   # even a stub is better than nothing if there's no HTML part at all
+
+
+def _is_stub_plaintext(text):
+    """True when a text/plain part is the near-empty "view this email in your
+    browser" placeholder some marketing ESPs ship alongside real content that only
+    exists in HTML — not a genuine short message. Deliberately narrow: requires both
+    (a) recognizable "view in browser" boilerplate phrasing and (b) almost no other
+    readable words, so a real short reply ("Thanks!", "OK", "Sounds good, thanks!")
+    is never mistaken for a stub — brevity alone never triggers this."""
+    if not _VIEW_IN_BROWSER.search(text):
+        return False
+    words = re.findall(r"[^\W\d_]{2,}", re.sub(r"https?://\S+", "", text))
+    return len(words) < 12
+
+
+# Boilerplate that only appears in the ESP's "can't see this email properly? view it
+# online" filler line, never in a genuine human message.
+_VIEW_IN_BROWSER = re.compile(
+    r"(?i)\b(view (this|it) (email|newsletter)\b|view in (your )?browser\b|"
+    r"trouble viewing this email\b|can.?t see this email\b)")
+
+
+# A plain-text or already-bulleted list item: "* ", "- ", "\u2022 " (the bullet
+# _strip_html inserts for <li>), or "1. "/"1) ".
+_LIST_ITEM = re.compile(r"^[ \t]*(?:[*\-\u2022]|\d+[.)])\s")
+
+
+def _shorten_long_url(match):
+    """Shorten one long bare URL match to its host, preserving any trailing
+    punctuation that belongs to the surrounding sentence rather than the URL
+    (closing bracket/paren/quote, trailing comma/period/etc) so we never emit an
+    unbalanced bracket or eat a character the sender's punctuation needed."""
+    url = match.group(0)
+    trail = ""
+    while url and url[-1] in ")]}>\"'.,;:!?":
+        trail = url[-1] + trail
+        url = url[:-1]
+    if len(url) < 40:   # peeling trailing punctuation dropped it below threshold
+        return match.group(0)
+    host = re.sub(r"^https?://(?:www\.)?([^/\s]+).*", r"\1", url)
+    return host + trail
 
 
 def _tidy_preview(text):
     """Light cleanup of a plaintext email body for the in-app preview. Conservative:
-    drops noise, never words. (1) Remove "( https://... )" link-reference parentheticals
-    (usually huge tracking URLs) and shorten any other very long bare URL to its host.
-    (2) Drop ASCII rule lines (****, ----, ====). (3) Un-wrap hard line breaks inside a
-    paragraph so it reads as flowing text, while keeping blank-line paragraph breaks and
-    sentence-ending line breaks."""
-    # 1. Tracking-URL noise.
+    drops noise, never words. (1) Collapse "Anchor text <https://url>" (how plaintext
+    email renders an HTML link) down to just the anchor text — the row already has an
+    "Open in Gmail" action for following it, and keeping the raw URL alongside its own
+    label is redundant. Remove "( https://... )" link-reference parentheticals (usually
+    huge tracking URLs) and shorten any other very long bare URL to its host, without
+    ever leaving an unbalanced bracket or truncated token. (2) Drop ASCII rule lines
+    (****, ----, ====). (3) Un-wrap hard line breaks inside a paragraph so it reads as
+    flowing text, while keeping blank-line paragraph breaks and sentence-ending line
+    breaks."""
+    # 1a. "Label <https://url>" -> "Label" (drop the redundant raw URL entirely).
+    text = re.sub(r"(?<=[^\s<])[ \t]+<(https?://[^<>\s]+)>", "", text)
+    # 1b. A bracketed URL with no adjacent label (starts a line, follows an opening
+    #     bracket, etc) — unwrap to bare so the general shortener below still gets a
+    #     chance to turn it into a readable host instead of leaving stray "<"/">".
+    text = re.sub(r"<(https?://[^<>\s]+)>", r"\1", text)
+    # 1c. Tracking-URL noise: a parenthetical that's *only* a link reference.
     text = re.sub(r"\(\s*https?://[^)]+\)", "", text)
-    text = re.sub(r"https?://\S{40,}",
-                  lambda m: re.sub(r"^https?://(?:www\.)?([^/\s]+).*", r"\1", m.group(0)),
-                  text)
+    # 1d. Any other very long bare URL -> host, punctuation-safe.
+    text = re.sub(r"https?://\S{40,}", _shorten_long_url, text)
     # 2. ASCII rule lines (a line that's only 3+ repeats of one punctuation char).
     text = "\n".join("" if re.fullmatch(r"\s*[\*\-=_~#]{3,}\s*", ln) else ln
                      for ln in text.split("\n"))
-    # 3. Un-wrap: a lone newline mid-paragraph -> space. Preserved: \n\n (paragraph
-    #    breaks) and newlines after sentence/clause punctuation.
-    text = re.sub(r"(?<=[^\n.!?:;)\]])\n(?=[^\n\s])", " ", text)
+    # 3. Un-wrap: a lone newline mid-paragraph -> space, so a hard-wrapped paragraph
+    #    reads as flowing text. Preserved: blank-line paragraph breaks, newlines after
+    #    sentence/clause punctuation, and list items (a "* "/"- "/"1. " line must stay
+    #    on its own line, both as the un-wrap source and target, or a bulleted list
+    #    collapses into one run-on sentence).
+    lines = text.split("\n")
+    out = []
+    for ln in lines:
+        if (out and out[-1] != "" and ln != ""
+                and not re.search(r"[.!?:;)\]]$", out[-1])
+                and not _LIST_ITEM.match(ln) and not _LIST_ITEM.match(out[-1])):
+            out[-1] = out[-1] + " " + ln
+        else:
+            out.append(ln)
+    text = "\n".join(out)
     # 4. Tidy whitespace.
     text = re.sub(r"[ \t]{2,}", " ", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
