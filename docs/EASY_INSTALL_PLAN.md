@@ -70,10 +70,18 @@ source-build path.
 
 Full detail with file:line in `docs/scratch/audit-install.md`.
 
-**1. The Google 100-user cap.** zero ships your OAuth client. Google caps unverified apps
-at 100 users, lifetime. Lifting it needs a ~$1,800/yr CASA audit you've declined. A good
-Show HN could hit 100 sign-ins in an afternoon, so **the best case is currently a failure
-mode.** Both other docs flag this too; everyone agrees it's the top issue.
+**1. The Google 100-user cap.** zero ships your OAuth client. Google's own wording
+(verified 2026-09-17 at
+[support.google.com/cloud/answer/7454865](https://support.google.com/cloud/answer/7454865))
+is: **"100 new users in total, after the app presents the unverified app screen."**
+A total, not a per-day quota. Lifting it needs a ~$1,800/yr CASA audit you've declined.
+A good Show HN could hit 100 sign-ins in an afternoon, so **the best case is currently a
+failure mode.** Both other docs flag this too; everyone agrees it's the top issue.
+
+Two details that page does *not* settle, so don't assume them: the exact error user 101
+sees, and whether already-connected users keep working once the cap is hit. Existing
+refresh tokens most likely keep working, but that is an assumption, not something Google
+states there.
 
 Ship both paths: bundled client stays the default (it's a great first run), and a
 "make your own Google client" walkthrough exists as the fallback. Count connected
@@ -266,6 +274,14 @@ Ranked list and a 30-day sequence in `docs/scratch/funnel.md` and `FUNNEL_PLAN.m
 - They find Undo without being told it exists.
 - The website says the same thing as the license, on every page.
 - The installer fails loudly on an Intel Mac instead of installing something broken.
+
+**A trap if you test the installer yourself.** Trimming `PATH` is not enough to simulate
+a machine without the prerequisites: `load_brew()` probes `/opt/homebrew/bin/brew` by
+absolute path and, if it finds it, puts Homebrew's bin dir back on `PATH` — so the real
+`npm` and `gws` reappear and every check passes. My first attempt at this test was
+invalid for exactly that reason and reported a false pass. To test it honestly, also
+point that probe at a path that doesn't exist. With that done, a genuinely bare machine
+correctly reports all four missing prerequisites and exits 1.
 
 ---
 

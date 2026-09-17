@@ -138,6 +138,13 @@ Verified 2026-09-17 on macOS 27.0 (26A5388g) — a release fetched with `curl` c
 quarantine attribute anywhere in the bundle and launches normally. So the one-line install
 needs no flag-stripping at all.
 
+To be precise about what that does and doesn't mean: `spctl -a -t execute` still reports
+`rejected`, and `syspolicy_check distribution` still reports a missing notarization
+ticket. Both are correct — the app genuinely isn't notarized, and it is not suitable for
+*browser* distribution. What was verified is narrower and is the thing that matters for a
+`curl` install: with no quarantine flag, launching the app through Finder/`open` is not
+blocked, and no Gatekeeper denial is logged.
+
 If you instead download the DMG **in a browser**, that copy *is* quarantined. The
 installer detects this and clears that single flag (it never blanket-clears attributes).
 Should macOS ever block it anyway, the supported route is
