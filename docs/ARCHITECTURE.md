@@ -16,8 +16,8 @@ Mac. Nothing is deleted, and no mail is sent without you.
    open/close) and re-attaches on next launch. It reads cached state, runs the
    keeper, generates drafts, and reads/writes settings.
 3. **The tools** — `gws` (the Google Workspace CLI) for all Gmail access, one
-   OAuth config dir per account; and an LLM provider (the `claude` CLI today)
-   for the judgement calls, behind `lib/llm.py`.
+   OAuth config dir per account; TypeSafe's Jev model for thread classification;
+   and a text LLM (Claude by default) for reply drafts.
 
 ```
 ┌──────────────────────────────┐     HTTP 127.0.0.1:8765
@@ -30,13 +30,12 @@ Mac. Nothing is deleted, and no mail is sent without you.
                                    │   /api/state /run /draft …    │
                                    └───────┬───────────────┬───────┘
                                            │               │
-                                  lib/llm.py          gws (per account)
-                                  run_prompt()        Gmail API, keyring
-                                  (claude CLI)        file backend
+                                  Jev + lib/llm.py    gws (per account)
+                                  classify + draft    Gmail API, keyring
                                            │               │
                                            ▼               ▼
-                                    keep / archive    list · modify ·
-                                    judgement         create draft · send
+                                    typed decision    list · modify ·
+                                    + probability     create draft · send
 ```
 
 ## Request flow
@@ -47,11 +46,12 @@ Mac. Nothing is deleted, and no mail is sent without you.
   sticks. `lib/dashboard_state.py` writes the cache.
 - **A run** — `POST /api/run` kicks a background job. For each enabled account
   it calls `lib/review_open_loops.py`, which reads each inbox thread and asks
-  the LLM (via `run_prompt`) to judge it against your Rules: keep only what
-  still needs you, archive the rest reversibly. `lib/learn.py` rolls your edits
-  into a voice profile. Progress is polled via `GET /api/job`.
+  TypeSafe's Jev model for a typed keep-or-archive decision and its probability.
+  It archives only the threads that do not need you, reversibly. `lib/learn.py`
+  rolls your edits into a voice profile. Progress is polled via `GET /api/job`.
 - **A reply** — `POST /api/draft` builds a draft in your voice. `lib/context.py`
-  gathers the thread and sender history; `run_prompt` writes the reply;
+  gathers the thread and sender history; a text LLM writes the reply (Claude by
+  default), because Jev returns decisions rather than prose;
   `lib/draftutil.py` builds the MIME message, appends your Gmail signature
   (`sendAs`), and creates the Gmail draft. `POST /api/draft/send` sends it.
   Nothing sends without you pressing send.
@@ -83,8 +83,8 @@ refreshes state and, if enabled, posts a macOS notification with the result.
 |------|---------|
 | `macapp/Sources/` | The SwiftUI app (panel, model, API client, styles, onboarding) |
 | `lib/keeper_server.py` | Local JSON API the app talks to |
-| `lib/llm.py` | Provider abstraction: `detect_providers()`, `run_prompt()` |
-| `lib/review_open_loops.py` | Core keep/archive classifier (one LLM judgement per thread) |
+| `lib/llm.py` | Text-model provider abstraction for reply drafting |
+| `lib/review_open_loops.py` | Core keep/archive classifier using Jev's typed decisions |
 | `lib/dashboard_state.py` | Builds `app/state.json` (the cached inbox view) |
 | `lib/draftutil.py` | MIME build, Gmail signature, draft create/send |
 | `lib/context.py` | Thread + sender history for drafting |
