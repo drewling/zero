@@ -103,6 +103,24 @@ a copy baked into the site image. So:
 Rebuild and smoke-test the site image with `landing/build.sh`, which boots the
 container and fails if `/install` stops redirecting to a parseable script.
 
+### Deploying the site
+
+`zero.headless.com` is nginx on a GCP VM (34.66.84.21). The `/install` route lives
+in `landing/nginx.conf`, so **it only exists once the site is redeployed** — until
+then that URL 404s and the homepage's main call to action is dead.
+
+```bash
+bash landing/build.sh                       # build + smoke-test locally
+ZERO_DEPLOY_TARGET=ssh \
+ZERO_DEPLOY_HOST=user@34.66.84.21 \
+  bash landing/deploy.sh                    # deploy, then verify the LIVE url
+```
+
+`deploy.sh` refuses to deploy if the smoke test fails, and afterwards checks
+`https://zero.headless.com/install` actually returns a parseable script rather than
+assuming success. Use `ZERO_DEPLOY_TARGET=docker` (with `ZERO_REGISTRY`) if the host
+runs the container instead of plain nginx.
+
 ---
 
 ## Known caveats
