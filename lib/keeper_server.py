@@ -97,6 +97,45 @@ def _drop_loop(slug, tid):
     _patch_state(_m)
 
 
+def _readd_loop(slug, tid, sender="", sender_email="", subject="", snippet="", epoch=0):
+    """Surgically re-add one loop to the cached state (undo of a dismiss/archive, or
+    the rollback of a failed optimistic write). Idempotent: a no-op if the loop is
+    already present, so a rollback can never duplicate a row."""
+    def _m(st):
+        for a in st.get("accounts", []):
+            if a.get("slug") == slug and not any(
+                    l.get("thread_id") == tid for l in a.get("loops", [])):
+                a.setdefault("loops", []).insert(0, {
+                    "thread_id": tid, "sender": sender, "sender_email": sender_email,
+                    "subject": subject, "snippet": snippet, "epoch": epoch,
+                    "account_slug": slug})
+                a["inbox_threads"] = a.get("inbox_threads", 0) + 1
+    _patch_state(_m)
+
+
+def _bg_gmail_write(write_fn, on_failure=None):
+    """Fire a Gmail write in a background thread so a per-item click (dismiss, undo)
+    returns to the panel immediately instead of blocking on a ~0.6s round-trip — see
+    docs/JEV_MIGRATION_PLAN.md section 2c. `write_fn` performs the actual Gmail call
+    AND any follow-up that must only happen once the write is confirmed (e.g. a
+    learning.record signal, so it's recorded exactly once and never on a failed
+    write). On failure, `on_failure(exc)` must roll back the optimistic state change
+    already applied and tell the user via the existing notification channel — it is
+    run defensively (a raise inside it is swallowed) so a bad rollback can never take
+    the server down. Never raises to the caller; the HTTP response has already been
+    sent by the time this runs."""
+    def _run():
+        try:
+            write_fn()
+        except Exception as exc:
+            if on_failure:
+                try:
+                    on_failure(exc)
+                except Exception:
+                    pass
+    threading.Thread(target=_run, daemon=True).start()
+
+
 def _find_label(cfg, name):
     """The Gmail label id for a name, or None."""
     import draftutil as du  # noqa: E402
@@ -530,7 +569,14 @@ def _undo_threads(payload):
 
 def _undo_thread(payload):
     """Restore a single message from a recovery label back to the inbox (per-email
-    undo). Fast + synchronous so the panel can drop the row immediately."""
+    undo). OPTIMISTIC: the cached state is updated and the response sent
+    immediately; the actual Gmail write happens in a background thread, with
+    rollback + a toast notification if it fails. The Swift side (KeeperModel.
+    restoreThread) already does its own optimistic row-drop and only rolls that
+    back if the HTTP call itself throws — since we now always return 200
+    immediately, a failed background write must roll back the *server* state and
+    tell the user, or the two sides would silently disagree about where the email
+    is. Response shape unchanged: {"ok": True}."""
     sys.path.insert(0, HERE)
     import draftutil as du  # noqa: E402
     import learning  # noqa: E402
@@ -540,33 +586,37 @@ def _undo_thread(payload):
     if not (slug and label_name and mid):
         raise ValueError("need slug, label, id")
     cfg = _acct(slug)["config_dir"]
-    lid = _find_label(cfg, label_name)
     tid = payload.get("thread_id", mid)
-    du._gws(cfg, ["gmail", "users", "messages", "modify",
-                  "--params", json.dumps({"userId": "me", "id": mid}),
-                  "--json", json.dumps({"addLabelIds": ["INBOX"],
-                                        "removeLabelIds": [lid] if lid else []})],
-            allow_empty=True)
-    learning.record({"type": "keep_override_undo", "account": slug, "thread_id": tid,
-                     "sender": payload.get("sender", ""),
-                     "sender_email": payload.get("sender_email", ""),
-                     "subject": payload.get("subject", "")})
+    sender = payload.get("sender", "")
+    sender_email = payload.get("sender_email", "")
+    subject = payload.get("subject", "")
+    snippet = payload.get("snippet", "")
+    epoch = payload.get("epoch", 0)
 
-    # Bring the thread back into Open loops + the inbox count so it persists across
-    # reloads (the app shows it instantly via its own optimistic re-add). The undo
-    # bucket count is tracked optimistically app-side, so we don't bump it here —
-    # bumping too would double-count it on the next reload.
-    def _readd(st):
-        for a in st.get("accounts", []):
-            if a.get("slug") == slug and not any(
-                    l.get("thread_id") == tid for l in a.get("loops", [])):
-                a.setdefault("loops", []).insert(0, {
-                    "thread_id": tid, "sender": payload.get("sender", ""),
-                    "subject": payload.get("subject", ""),
-                    "snippet": payload.get("snippet", ""),
-                    "epoch": payload.get("epoch", 0), "account_slug": slug})
-                a["inbox_threads"] = a.get("inbox_threads", 0) + 1
-    _patch_state(_readd)
+    # Optimistic: bring the thread back into Open loops + the inbox count now (the
+    # app shows it instantly via its own optimistic re-add too). The undo bucket
+    # count is tracked optimistically app-side, so we don't bump it here — bumping
+    # too would double-count it on the next reload.
+    _readd_loop(slug, tid, sender, sender_email, subject, snippet, epoch)
+
+    def _write():
+        lid = _find_label(cfg, label_name)
+        du._gws(cfg, ["gmail", "users", "messages", "modify",
+                      "--params", json.dumps({"userId": "me", "id": mid}),
+                      "--json", json.dumps({"addLabelIds": ["INBOX"],
+                                            "removeLabelIds": [lid] if lid else []})],
+                allow_empty=True)
+        # Recorded only once the write is confirmed.
+        learning.record({"type": "keep_override_undo", "account": slug, "thread_id": tid,
+                         "sender": sender, "sender_email": sender_email, "subject": subject})
+
+    def _on_failure(exc):
+        # The message never actually left the recovery label — undo the optimistic
+        # re-add so the cached state matches reality again, and tell the user.
+        _drop_loop(slug, tid)
+        _queue_notification(f"Couldn't restore \u201c{subject}\u201d — it's still set aside.")
+
+    _bg_gmail_write(_write, _on_failure)
     return {"ok": True}
 
 
@@ -716,8 +766,15 @@ def _thread_preview(payload):
 
 def _dismiss(payload):
     """Set one loop aside: archive its whole thread reversibly and record that the
-    user chose to archive rather than reply (a learning signal). Fast + synchronous
-    so the panel can remove the row immediately."""
+    user chose to archive rather than reply (a learning signal). OPTIMISTIC: the
+    cached state is updated and the response sent immediately; the actual Gmail
+    write (~0.4-0.8s round-trip) happens in a background thread. If it fails, the
+    optimistic change is rolled back and the user is told via the existing
+    pending-notification/toast channel — see docs/JEV_MIGRATION_PLAN.md section 2c
+    and docs/JEV_CONTRACT.md rule 3 (never silently pretend mail moved when it
+    didn't). The JSON response shape is unchanged so the Swift panel needs no
+    changes: {"ok": True, "label": ..., "thread_id": ...} or
+    {"ok": True, "restored": ...}."""
     sys.path.insert(0, HERE)
     import draftutil as du       # noqa: E402
     import inbox_zero as iz      # noqa: E402
@@ -727,6 +784,11 @@ def _dismiss(payload):
     if not slug or not tid:
         raise ValueError("dismiss requires slug and thread_id")
     cfg = _acct(slug)["config_dir"]
+    sender = payload.get("sender", "")
+    sender_email = payload.get("sender_email", "")
+    subject = payload.get("subject", "")
+    snippet = payload.get("snippet", "")
+    epoch = payload.get("epoch", 0)
 
     # Undo a just-dismissed thread: put it back in the inbox and net out the signal.
     if payload.get("undo"):
@@ -735,49 +797,67 @@ def _dismiss(payload):
         label = payload.get("label")
         if not label:
             raise ValueError("undo requires the recovery label from the dismiss")
-        lid = _find_label(cfg, label)
-        remove = [lid] if lid else []
-        du._gws(cfg, ["gmail", "users", "threads", "modify",
-                      "--params", json.dumps({"userId": "me", "id": tid}),
-                      "--json", json.dumps({"addLabelIds": ["INBOX"], "removeLabelIds": remove})],
-                allow_empty=True)
-        learning.record({"type": "keep_override_undo", "account": slug, "thread_id": tid,
-                         "sender": payload.get("sender", ""),
-                         "sender_email": payload.get("sender_email", ""),
-                         "subject": payload.get("subject", "")})
 
-        def _readd(st):
-            for a in st.get("accounts", []):
-                if a.get("slug") == slug and not any(
-                        l.get("thread_id") == tid for l in a.get("loops", [])):
-                    a.setdefault("loops", []).insert(0, {
-                        "thread_id": tid, "sender": payload.get("sender", ""),
-                        "sender_email": payload.get("sender_email", ""),
-                        "subject": payload.get("subject", ""),
-                        "snippet": payload.get("snippet", ""),
-                        "epoch": payload.get("epoch", 0), "account_slug": slug})
-                    a["inbox_threads"] = a.get("inbox_threads", 0) + 1
-        _patch_state(_readd)
+        # Optimistic: bring the row back and net the undo-bucket count out now.
+        _readd_loop(slug, tid, sender, sender_email, subject, snippet, epoch)
         _bump_undo_point(slug, label, -1)   # came back out of that day's bucket
+
+        def _write():
+            lid = _find_label(cfg, label)
+            remove = [lid] if lid else []
+            du._gws(cfg, ["gmail", "users", "threads", "modify",
+                          "--params", json.dumps({"userId": "me", "id": tid}),
+                          "--json", json.dumps({"addLabelIds": ["INBOX"],
+                                                "removeLabelIds": remove})],
+                    allow_empty=True)
+            # Recorded here, after the write is confirmed, so it fires exactly once
+            # and never on a write that didn't actually happen.
+            learning.record({"type": "keep_override_undo", "account": slug,
+                             "thread_id": tid, "sender": sender,
+                             "sender_email": sender_email, "subject": subject})
+
+        def _on_failure(exc):
+            # Roll back: the thread never actually left the recovery label, so
+            # undo it out of Open loops again and restore the bucket count.
+            _drop_loop(slug, tid)
+            _bump_undo_point(slug, label, +1)
+            _queue_notification(f"Couldn't restore \u201c{subject}\u201d — still set aside.")
+
+        _bg_gmail_write(_write, _on_failure)
         return {"ok": True, "restored": tid}
 
+    # Deterministic, no network — safe to compute before the HTTP response.
     label = iz._dated_label(iz._BASE_LABEL)
-    lid = iz._ensure_label(cfg, label)
-    du._gws(cfg, ["gmail", "users", "threads", "modify",
-                  "--params", json.dumps({"userId": "me", "id": tid}),
-                  "--json", json.dumps({"addLabelIds": [lid], "removeLabelIds": ["INBOX"]})],
-            allow_empty=True)
     # learn=True (default) = AI archive (teach from it); learn=False = archive just this one.
     learn = payload.get("learn", True)
-    learning.record({"type": "keep_override", "action": "archived_without_reply",
-                     "account": slug, "thread_id": tid,
-                     "sender": payload.get("sender", ""),
-                     "sender_email": payload.get("sender_email", ""),
-                     "subject": payload.get("subject", ""),
-                     "snippet": payload.get("snippet", ""),
-                     "learn": learn})
+
+    # Optimistic: drop the row and bump the Undo bucket now; the response goes out
+    # before any Gmail call is made.
     _drop_loop(slug, tid)
     _bump_undo_point(slug, label, +1)   # show it in today's Undo bucket right away
+
+    def _write():
+        lid = iz._ensure_label(cfg, label)
+        du._gws(cfg, ["gmail", "users", "threads", "modify",
+                      "--params", json.dumps({"userId": "me", "id": tid}),
+                      "--json", json.dumps({"addLabelIds": [lid], "removeLabelIds": ["INBOX"]})],
+                allow_empty=True)
+        # Recorded here, after the write is confirmed, so the signal fires exactly
+        # once and only for a dismiss that actually happened.
+        learning.record({"type": "keep_override", "action": "archived_without_reply",
+                         "account": slug, "thread_id": tid, "sender": sender,
+                         "sender_email": sender_email, "subject": subject,
+                         "snippet": snippet, "learn": learn})
+
+    def _on_failure(exc):
+        # The thread is still sitting in the inbox on Gmail's side — put it back
+        # in Open loops and undo the bucket bump so the app never claims mail was
+        # set aside when it wasn't (reversibility is the product; see PRODUCT.md).
+        _readd_loop(slug, tid, sender, sender_email, subject, snippet, epoch)
+        _bump_undo_point(slug, label, -1)
+        _queue_notification(f"Couldn't set aside \u201c{subject}\u201d — it's still in your inbox.")
+
+    _bg_gmail_write(_write, _on_failure)
     return {"ok": True, "label": label, "thread_id": tid}
 
 
@@ -1679,17 +1759,29 @@ def _read_settings():
     return s
 
 
+def _queue_notification(body, title="zero"):
+    """Drop a one-shot notification for the app to post natively (the existing
+    /api/pending-notification channel — see _pop_pending_notification). Single-slot:
+    a second call before the first drains overwrites it, same limitation the run-
+    complete notifier already has. Used by _queue_run_notification, and by any
+    background Gmail write that fails after its optimistic HTTP response already
+    went out, so the user is told a rolled-back operation didn't actually happen."""
+    try:
+        os.makedirs(os.path.dirname(PENDING_NOTIFICATION_PATH), exist_ok=True)
+        with _notif_lock:
+            with open(PENDING_NOTIFICATION_PATH, "w") as f:
+                json.dump({"title": title, "body": body, "ts": int(time.time())}, f)
+    except Exception:
+        pass
+
+
 def _queue_run_notification(set_aside, kept):
     """Drop a one-shot 'run complete' notification for the app to post natively.
     Gated by notify_on_run (default True), so the gate lives in exactly one place."""
     try:
         if not _read_settings().get("notify_on_run", True):
             return
-        body = f"Set aside {set_aside}, {kept} still need you"
-        os.makedirs(os.path.dirname(PENDING_NOTIFICATION_PATH), exist_ok=True)
-        with _notif_lock:
-            with open(PENDING_NOTIFICATION_PATH, "w") as f:
-                json.dump({"title": "zero", "body": body, "ts": int(time.time())}, f)
+        _queue_notification(f"Set aside {set_aside}, {kept} still need you")
     except Exception:
         pass
 
