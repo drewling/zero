@@ -105,21 +105,61 @@ container and fails if `/install` stops redirecting to a parseable script.
 
 ### Deploying the site
 
-`zero.headless.com` is nginx on a GCP VM (34.66.84.21). The `/install` route lives
-in `landing/nginx.conf`, so **it only exists once the site is redeployed** — until
-then that URL 404s and the homepage's main call to action is dead.
+`zero.headless.com` runs on **`production-server`** (GCP `drewl-366215`,
+`us-central1-a`, 34.66.84.21). That box is a **Dokploy** host running ~30 unrelated
+production containers behind Traefik, so never restart the host, Traefik, or anything
+you did not build.
+
+The site is a Dokploy **compose** app (`composeId u2SP2b5035tm1yaHVNcH8`, project
+`zero-zerolanding-m7cxtx`) with `sourceType: raw`: the compose file is stored in
+Dokploy's Postgres, and it runs a prebuilt image. It does **not** auto-deploy from
+git, despite what an old CHANGELOG entry claims. Traefik routes
+`Host('zero.headless.com')` to the container's port 80 and terminates TLS.
+
+Deploying is: build the image on the server, point that one compose service at the
+new tag, recreate just that service.
 
 ```bash
-bash landing/build.sh                       # build + smoke-test locally
-ZERO_DEPLOY_TARGET=ssh \
-ZERO_DEPLOY_HOST=user@34.66.84.21 \
-  bash landing/deploy.sh                    # deploy, then verify the LIVE url
+# 1. Ship the landing files (Docker needs them inside the build context)
+SHA=$(git rev-parse --short HEAD)
+tar czf /tmp/zero-landing.tgz -C landing \
+  index.html privacy.html terms.html og.png robots.txt sitemap.xml llms.txt \
+  nginx.conf Dockerfile
+gcloud compute scp /tmp/zero-landing.tgz production-server:/tmp/ \
+  --zone=us-central1-a --project=drewl-366215 --tunnel-through-iap
+
+# 2. On the server: build, smoke-test, then swap the image tag
+gcloud compute ssh production-server --zone=us-central1-a --project=drewl-366215 \
+  --tunnel-through-iap --command="
+    B=/tmp/zero-landing-build; rm -rf \$B; mkdir -p \$B
+    tar xzf /tmp/zero-landing.tgz -C \$B
+    sudo docker build -t zero-landing:$SHA \$B
+    D=/etc/dokploy/compose/zero-zerolanding-m7cxtx/code
+    sudo cp \$D/docker-compose.yml /root/zero-compose-backup.yml
+    sudo sed -i 's|image: .*|image: zero-landing:$SHA|' \$D/docker-compose.yml
+    cd \$D && sudo docker compose up -d
+  "
+
+# 3. Verify the LIVE url, not the local one
+curl -fsSL https://zero.headless.com/install | head -5
 ```
 
-`deploy.sh` refuses to deploy if the smoke test fails, and afterwards checks
-`https://zero.headless.com/install` actually returns a parseable script rather than
-assuming success. Use `ZERO_DEPLOY_TARGET=docker` (with `ZERO_REGISTRY`) if the host
-runs the container instead of plain nginx.
+Also update the stored compose in Dokploy's DB, or its UI will still show the old
+image and a redeploy from the UI would revert you:
+
+```sql
+update compose set "composeFile" =
+  'services: {zero-landing: {image: ''zero-landing:<SHA>'', restart: unless-stopped,
+   environment: {HOST: ''0.0.0.0'', PORT: ''80''}}}'
+where "composeId" = 'u2SP2b5035tm1yaHVNcH8';
+```
+
+**Rollback:** the previous image stays on the server. Restore
+`/root/zero-compose-backup.yml` over the compose file and `docker compose up -d`.
+
+`landing/build.sh` smoke-tests the image locally first and `landing/deploy.sh` wraps
+the generic ssh/registry flow; both refuse to proceed if `/install` stops returning a
+parseable script.
 
 ---
 
