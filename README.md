@@ -184,9 +184,24 @@ through connecting Google and your AI, both in your browser, and **nothing leave
    one Gmail permission and your basic identity — [nothing else](#privacy-and-trust). For
    now this uses *your own* Google OAuth client (a one-time setup — see **Bring your own
    Google Cloud project** below); built-in one-click sign-in is in Google verification.
-2. **Connect your AI.** zero uses the `claude` CLI you logged into above to read and judge
-   threads. Prefer a different engine? Pick Codex, a local model, or another agent CLI
-   under **Settings → AI engine**.
+2. **Connect your AI.** zero uses whichever agent CLI you're already signed into —
+   `claude`, `codex`, or `opencode` — to read and judge threads. Pick one under
+   **Settings → AI engine**.
+
+   Prefer **Jev** (TypeSafe AI)? It's an HTTP service rather than a CLI, so instead of
+   signing in you give it an API key from
+   [console.typesafe.ai/keys](https://console.typesafe.ai/keys):
+
+   ```bash
+   zero key            # prompts for the key, hidden input, then verifies it
+   zero key status     # check it still works
+   zero key remove     # delete it
+   ```
+
+   The key is stored on your Mac only, readable by you alone (`0600`), and survives app
+   updates. `zero key` tells you immediately whether it actually works, so a typo can't
+   quietly break tomorrow morning's run. Jev makes the keep/archive judgments; reply
+   drafting still uses an agent CLI, because Jev doesn't write prose.
 3. **Run it.** Hit **Run zero now** for the first sweep. To run it automatically each
    morning, set a time under **Settings → Daily schedule** (or `./bin/zero schedule`).
 

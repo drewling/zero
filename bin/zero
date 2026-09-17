@@ -97,6 +97,75 @@ print(int(d.get("to_archive_threads", 0) or 0), int(d.get("to_keep_threads", 0) 
     fi
     ;;
 
+  key)
+    # Set / check / remove the Jev API key. Jev is an HTTP service rather than a
+    # CLI, so the key IS the setup — and the packaged app ships no .env, making
+    # this the supported way to configure BYOK without a source checkout.
+    # The key is read from a prompt or stdin, never from argv, so it can't land
+    # in shell history or be visible in `ps`.
+    ACTION="${2:-set}"
+    case "$ACTION" in
+      status)
+        "$MAIL_TRIAGE_PYTHON" - <<'PY'
+import sys, os
+sys.path.insert(0, os.environ["MAIL_TRIAGE_LIB"])
+import jev
+if jev.available():
+    ok, detail = jev.verify_key()
+    print("Jev key: configured and working" if ok
+          else f"Jev key: configured, but it didn't work — {detail}")
+    sys.exit(0 if ok else 1)
+print("Jev key: not configured. Run `zero key` to add one.")
+sys.exit(1)
+PY
+        ;;
+      remove)
+        "$MAIL_TRIAGE_PYTHON" - <<'PY'
+import sys, os
+sys.path.insert(0, os.environ["MAIL_TRIAGE_LIB"])
+import jev
+jev.set_key("")
+print("Jev key removed.")
+PY
+        ;;
+      set)
+        if [ -t 0 ]; then
+          echo "Paste your Jev API key from https://console.typesafe.ai/keys"
+          printf "Key (input hidden): "
+          read -rs ZERO_JEV_KEY_INPUT
+          echo ""
+        else
+          read -r ZERO_JEV_KEY_INPUT   # allows: echo "$KEY" | zero key
+        fi
+        export ZERO_JEV_KEY_INPUT
+        "$MAIL_TRIAGE_PYTHON" - <<'PY'
+import sys, os
+sys.path.insert(0, os.environ["MAIL_TRIAGE_LIB"])
+import jev
+key = (os.environ.get("ZERO_JEV_KEY_INPUT") or "").strip()
+if not key:
+    print("No key entered. Nothing changed.")
+    sys.exit(1)
+jev.set_key(key)
+ok, detail = jev.verify_key()
+if ok:
+    print("Key saved and verified with Jev.")
+    print("Switch to it with: Settings > AI engine > Jev (or set provider to 'jev').")
+    sys.exit(0)
+# Keep the key so a network blip doesn't force a re-paste, but be clear it failed.
+print(f"Key saved, but it didn't work: {detail}")
+print("Run `zero key status` to re-check, or `zero key` to paste a different one.")
+sys.exit(1)
+PY
+        unset ZERO_JEV_KEY_INPUT
+        ;;
+      *)
+        echo "Usage: zero key [set|status|remove]" >&2
+        exit 2
+        ;;
+    esac
+    ;;
+
   schedule)
     # Install a LaunchAgent. Reads schedule settings from app/settings.json if present.
     # Hour can be overridden as arg 2 (default 7) for quick CLI install.
@@ -177,6 +246,7 @@ Usage:
   zero app           Build (if needed) and open the native menu-bar app
   zero run           Run the keeper across all accounts, then refresh state
   zero state         Refresh the app's cached state without opening anything
+  zero key           Set your Jev API key (also: key status, key remove)
   zero schedule [H]  Run the keeper automatically every morning (hour H, default 7)
   zero unschedule    Remove the daily schedule
   zero stop          Stop the local API server
