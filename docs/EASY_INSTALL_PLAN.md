@@ -271,6 +271,17 @@ Ranked list and a 30-day sequence in `docs/scratch/funnel.md` and `FUNNEL_PLAN.m
 8. Make license wording identical across index/privacy/terms.
 9. Add the "not notarized" and "where your mail goes" notes.
 
+> **Deploy gate, do not skip.** The homepage now advertises
+> `curl -fsSL https://zero.headless.com/install | bash`. At the time of writing that URL
+> returns **404** — the live site was built from an image that had no `/install` route.
+> `landing/build.sh` stages `macapp/install-zero.sh` into the image and `landing/nginx.conf`
+> serves it as plain text, but **the site must actually be rebuilt and redeployed with
+> those files** or the headline call to action is a dead command. After deploying, verify:
+>
+> ```bash
+> curl -fsSL https://zero.headless.com/install | head -5   # expect the script, not 404
+> ```
+
 **Then:**
 
 10. Build the BYO Google client walkthrough for user 101.
