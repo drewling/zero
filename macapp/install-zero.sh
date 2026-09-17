@@ -32,6 +32,11 @@
 set -uo pipefail
 
 DMG_URL="https://github.com/drewling/zero/releases/latest/download/zero.dmg"
+# Optional integrity pin. When ZERO_DMG_SHA256 is set (or a published checksum is
+# baked in here at release time), the download must match it or the install stops.
+# `latest` is a moving target and GitHub serves it over TLS but publishes no
+# checksum alongside it, so without this the installer trusts whatever it gets.
+DMG_SHA256="${ZERO_DMG_SHA256:-}"
 APP_NAME="zero.app"
 SRC="${1:-}"        # optional local .dmg or .app path
 # DEST is resolved after the permission check below (/Applications may not be
@@ -169,6 +174,19 @@ else
     curl -fL --progress-bar "$DMG_URL" -o "$DMG" || die "download failed ($DMG_URL)"
   fi
   [ -f "$DMG" ] || die "no such file: $DMG"
+  # Verify the download before mounting it, when a checksum is available.
+  if [ -n "$DMG_SHA256" ]; then
+    got="$(shasum -a 256 "$DMG" | awk '{print $1}')"
+    if [ "$got" != "$DMG_SHA256" ]; then
+      die "the download doesn't match the expected checksum.
+       expected: $DMG_SHA256
+       got:      $got
+       Not installing it. This could be a corrupted download."
+    fi
+    ok "checksum verified"
+  else
+    ok "no checksum pinned (set ZERO_DMG_SHA256 to require one)"
+  fi
   step "Mounting $DMG"
   MNT="$(hdiutil attach "$DMG" -nobrowse -readonly -mountrandom /tmp | grep -Eo '/tmp/[^[:space:]]+' | tail -1)"
   { [ -n "$MNT" ] && [ -d "$MNT/$APP_NAME" ]; } || die "couldn't find $APP_NAME inside the DMG"

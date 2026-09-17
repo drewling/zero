@@ -85,6 +85,22 @@
       "mainEntity": [
         {
           "@type": "Question",
+          "name": "What does the install command actually do to my Mac?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It installs what's missing (Homebrew, Python, Node, the gws CLI, and an agent CLI if you have none), then puts zero.app in /Applications and launches it. Homebrew's first-run setup may ask for your password for Xcode command-line tools; nothing else uses sudo. It stops rather than continuing if your Mac is Intel or below macOS 26, if the app fails signature verification, or if a prerequisite fails. Uninstalling is `zero unschedule`, then deleting /Applications/zero.app and ~/Library/Application Support/zero. It only runs at login if you ask it to schedule a daily run."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What permissions does it get on my Gmail, and how do I revoke them?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "One Gmail scope (gmail.modify, to read threads and move labels) plus your basic identity. Not Drive, not Calendar, not Contacts, and no permission to delete anything. Tokens are stored by Google's own gws CLI on your Mac. Revoke any time at myaccount.google.com/permissions and zero immediately stops having access."
+          }
+        },
+        {
+          "@type": "Question",
           "name": "Why an install command instead of a download?",
           "acceptedAnswer": {
             "@type": "Answer",
@@ -825,7 +841,7 @@ footer { border-top: 1px solid var(--hairline); background: oklch(8% 0.006 255);
           <a href="#trust">How it stays safe</a>
         </p>
       </div>
-      <p class="hero-req reveal" style="transition-delay:.2s"><span>macOS 26+</span><span>Apple Silicon</span><span>Open source (AGPL)</span><span>Your own Jev key</span><span>Free</span></p>
+      <p class="hero-req reveal" style="transition-delay:.2s"><span>macOS 26+</span><span>Apple Silicon</span><span>Free, open source</span><span>+ your own Jev key</span></p>
     </div>
 
     <div class="panel-stage reveal" style="transition-delay:.25s">
@@ -1099,6 +1115,18 @@ footer { border-top: 1px solid var(--hairline); background: oklch(8% 0.006 255);
       <h2>What people ask before trusting it.</h2>
     </div>
     <div class="faq-list reveal" style="transition-delay:.05s">
+      <details class="faq-item">
+        <summary class="faq-q">What does the install command actually do to my Mac?
+          <svg class="chev" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </summary>
+        <div class="faq-a">It installs what's missing (Homebrew, Python, Node, the <code>gws</code> CLI, and an agent CLI if you have none), then puts zero.app in /Applications and launches it. Homebrew's first-run setup may ask for your password for Xcode command-line tools; nothing else uses sudo. It stops rather than continuing if your Mac is Intel or below macOS 26, if the app fails signature verification, or if a prerequisite fails. Uninstalling is <code>zero unschedule</code>, then deleting /Applications/zero.app and ~/Library/Application Support/zero. It only runs at login if you ask it to schedule a daily run.</div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q">What permissions does it get on my Gmail, and how do I revoke them?
+          <svg class="chev" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </summary>
+        <div class="faq-a">One Gmail scope (<code>gmail.modify</code>, to read threads and move labels) plus your basic identity. Not Drive, not Calendar, not Contacts, and no permission to delete anything. Tokens are stored by Google's own <code>gws</code> CLI on your Mac. Revoke any time at <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a> and zero immediately stops having access.</div>
+      </details>
       <details class="faq-item">
         <summary class="faq-q">Why an install command instead of a download?
           <svg class="chev" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
