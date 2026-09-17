@@ -33,11 +33,11 @@ Three properties, in priority order. The first is non-negotiable.
    The win condition is that you forget it's running and just notice your inbox
    stopped being a swamp.
 
-3. **The judgment is an agent, not a rule list.** What counts as "needs you" is
-   described in plain language and enforced by a model that reads each thread —
-   not a brittle stack of filters. Cold outreach using a real human's name gets
-   archived; a real person actually awaiting your reply gets kept. A filter rule
-   can't tell those apart. This is the part nobody copies by adding a setting.
+3. **The judgment is a model, not a rule list.** What counts as "needs you" is
+   described in plain language and enforced by TypeSafe's Jev model, which reads
+   each thread and returns a typed keep-or-archive decision with a probability.
+   Cold outreach using a real human's name gets archived; a real person actually
+   awaiting your reply gets kept.
 
 ## What "needs you" means (the keep-bar)
 
@@ -100,9 +100,10 @@ baked into prompts, a specific Slack workspace, scripts wired by `run.sh`. To
 become the open-source thing, three things move from hardcoded to configured:
 
 1. **Accounts** — mostly there already via `accounts.json`.
-2. **The keep-bar** — from regex + inline prompt into one editable
-   natural-language policy file (see `lib/review_open_loops.py` `PROMPT_HEAD` and
-   `inbox_zero.py` `PROTECT_PATTERNS` — these are the things to externalize).
+2. **The keep-bar** — from regex into one editable natural-language policy file.
+   `keep-policy.md` now travels in the Jev state for every thread
+   (`lib/review_open_loops.py` `_jev_state`); `inbox_zero.py` `PROTECT_PATTERNS`
+   is the remaining hardcoded piece to externalize.
 3. **Onboarding** — from "set up gws + edit configs" to one command + OAuth.
 
 Until those land, this stays a personal tool that happens to be open source —
@@ -111,7 +112,7 @@ sentence at the top and nothing else.
 
 ## Tech, briefly
 
-Multi-account Gmail via the `gws` CLI; per-thread judgment via the Claude Agent
-SDK (Haiku for volume classification, escalating only where judgment is costly);
-reversible archive via Gmail `batchModify` + dated recovery labels. The agent is
-the product's brain; the scripts are just plumbing around it.
+Multi-account Gmail via the `gws` CLI. TypeSafe's Jev model classifies each thread
+and returns a typed decision with a probability. Claude drafts replies by default
+because Jev does not generate prose. Gmail `batchModify` applies reversible archive
+labels. The models do the judgment and drafting; the scripts are plumbing around them.
