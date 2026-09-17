@@ -67,12 +67,41 @@ In order:
    - Verifies `CHANGELOG.md` has a `## [X.Y.Z]` section.
    - Builds `zero.app` via `macapp/build.sh`.
    - Packages `zero.dmg` via `macapp/make-dmg.sh`.
+   - Computes `zero.dmg.sha256`.
    - Creates and pushes the git tag `vX.Y.Z`.
    - Publishes a GitHub release (`gh release create`) with the changelog notes and
-     the `.dmg` attached.
+     the `.dmg` **and its `.sha256`** attached.
    - Installs `zero.app` to `/Applications/zero.app` and relaunches it.
 
    Requirements: Xcode CLT, `gh` CLI authenticated, macOS 26 Apple Silicon.
+
+   > **Why the checksum matters.** `macapp/install-zero.sh` downloads
+   > `releases/latest/download/zero.dmg`, which is a moving target, then fetches
+   > `zero.dmg.sha256` from the same release and refuses to install a DMG that
+   > doesn't match. That is what makes "the install command always gets the latest
+   > build" safe rather than trusting whatever bytes arrive. If a release ships
+   > without the `.sha256`, the installer says so out loud and continues on the
+   > app-signature check alone — it does not pretend to have verified anything.
+
+## The install URL
+
+`https://zero.headless.com/install` is the command on the homepage. It is a **302
+redirect** to `macapp/install-zero.sh` on `master` (see `landing/nginx.conf`), not
+a copy baked into the site image. So:
+
+- An installer fix reaches users as soon as it lands on `master`. No site redeploy.
+- `macapp/install-zero.sh` stays the single source of truth.
+- **But**: anything unpushed is invisible to users. After changing the installer,
+  `git push origin master`, then confirm what people actually get:
+
+  ```bash
+  curl -fsSL https://zero.headless.com/install | head -20   # expect your change
+  ```
+
+`/install.sh` redirects to the GitHub blob view, for reading it in a browser first.
+
+Rebuild and smoke-test the site image with `landing/build.sh`, which boots the
+container and fails if `/install` stops redirecting to a parseable script.
 
 ---
 

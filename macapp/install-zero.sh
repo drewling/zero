@@ -32,10 +32,13 @@
 set -uo pipefail
 
 DMG_URL="https://github.com/drewling/zero/releases/latest/download/zero.dmg"
-# Optional integrity pin. When ZERO_DMG_SHA256 is set (or a published checksum is
-# baked in here at release time), the download must match it or the install stops.
-# `latest` is a moving target and GitHub serves it over TLS but publishes no
-# checksum alongside it, so without this the installer trusts whatever it gets.
+# Every release publishes zero.dmg.sha256 next to the DMG (see bin/release). The
+# installer fetches it and refuses to install a DMG that doesn't match, so
+# "always install the latest" never means "install whatever bytes arrive".
+# `latest` is a moving target, so a pin can't be hardcoded here; it's fetched
+# per-run from the same release.
+SHA_URL="https://github.com/drewling/zero/releases/latest/download/zero.dmg.sha256"
+# Override to pin an exact artifact (e.g. in CI, or to install a known build).
 DMG_SHA256="${ZERO_DMG_SHA256:-}"
 APP_NAME="zero.app"
 SRC="${1:-}"        # optional local .dmg or .app path
@@ -168,24 +171,35 @@ if [ -n "$SRC" ] && [ -d "$SRC" ] && [[ "$SRC" == *.app ]]; then
   APP_SRC="$SRC"
 else
   DMG="$SRC"
+  FROM_RELEASE=0
   if [ -z "$DMG" ]; then
     TMP="$(mktemp -d)"; DMG="$TMP/zero.dmg"
+    FROM_RELEASE=1
     step "Downloading the latest zero"
     curl -fL --progress-bar "$DMG_URL" -o "$DMG" || die "download failed ($DMG_URL)"
   fi
   [ -f "$DMG" ] || die "no such file: $DMG"
-  # Verify the download before mounting it, when a checksum is available.
+  # Verify BEFORE mounting: a disk image is parsed by the kernel, so checking
+  # first keeps a corrupted or truncated download away from it.
+  if [ -z "$DMG_SHA256" ] && [ "$FROM_RELEASE" = "1" ]; then
+    # Published checksum for the exact release `latest` just resolved to.
+    DMG_SHA256="$(curl -fsSL "$SHA_URL" 2>/dev/null | awk '{print $1}' | head -1 || true)"
+  fi
   if [ -n "$DMG_SHA256" ]; then
     got="$(shasum -a 256 "$DMG" | awk '{print $1}')"
     if [ "$got" != "$DMG_SHA256" ]; then
-      die "the download doesn't match the expected checksum.
+      die "the download doesn't match its published checksum.
        expected: $DMG_SHA256
        got:      $got
-       Not installing it. This could be a corrupted download."
+       Not installing it. Re-run to try a fresh download; if it keeps failing,
+       report it at https://github.com/drewling/zero/issues"
     fi
-    ok "checksum verified"
-  else
-    ok "no checksum pinned (set ZERO_DMG_SHA256 to require one)"
+    ok "checksum verified against the published release"
+  elif [ "$FROM_RELEASE" = "1" ]; then
+    # Older releases predate the published checksum. Say so plainly rather than
+    # printing a reassuring "ok" for a check that did not happen.
+    warn "this release publishes no checksum, so the download could not be verified.
+        The app's signature is still checked before it is installed."
   fi
   step "Mounting $DMG"
   MNT="$(hdiutil attach "$DMG" -nobrowse -readonly -mountrandom /tmp | grep -Eo '/tmp/[^[:space:]]+' | tail -1)"

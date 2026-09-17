@@ -51,6 +51,15 @@ if [[ ! -f "$DMG" ]]; then
   exit 1
 fi
 
+# Publish a checksum next to the DMG. macapp/install-zero.sh fetches this from
+# the release and refuses to install a DMG that doesn't match, which is what
+# makes "curl | bash installs the latest build" safe rather than blind trust.
+# Written in `shasum -a 256` format so `shasum -a 256 -c zero.dmg.sha256` works.
+echo "==> Computing checksum..."
+( cd "$(dirname "$DMG")" && shasum -a 256 "$(basename "$DMG")" > "$(basename "$DMG").sha256" )
+DMG_SHA="$REPO_ROOT/macapp/build/zero.dmg.sha256"
+cat "$DMG_SHA"
+
 # ── 5. Extract release notes for this version ───────────────────────────────
 echo "==> Extracting release notes for ${VERSION}..."
 NOTES_FILE="$(mktemp /tmp/zero-release-notes.XXXXXX.md)"
@@ -109,7 +118,7 @@ git -C "$REPO_ROOT" push origin "$TAG"
 
 # ── 7. Create GitHub release ─────────────────────────────────────────────────
 echo "==> Creating GitHub release ${TAG}..."
-RELEASE_URL="$(gh release create "$TAG" "$DMG" \
+RELEASE_URL="$(gh release create "$TAG" "$DMG" "$DMG_SHA" \
   --title "zero ${VERSION}" \
   --notes-file "$NOTES_FILE" \
   --repo drewling/zero)"

@@ -271,16 +271,33 @@ Ranked list and a 30-day sequence in `docs/scratch/funnel.md` and `FUNNEL_PLAN.m
 8. Make license wording identical across index/privacy/terms.
 9. Add the "not notarized" and "where your mail goes" notes.
 
-> **Deploy gate, do not skip.** The homepage now advertises
-> `curl -fsSL https://zero.headless.com/install | bash`. At the time of writing that URL
-> returns **404** — the live site was built from an image that had no `/install` route.
-> `landing/build.sh` stages `macapp/install-zero.sh` into the image and `landing/nginx.conf`
-> serves it as plain text, but **the site must actually be rebuilt and redeployed with
-> those files** or the headline call to action is a dead command. After deploying, verify:
+> **Deploy gate, do not skip.** The homepage advertises
+> `curl -fsSL https://zero.headless.com/install | bash`, and that URL currently returns
+> **404**: the live site was built from an image with no `/install` route.
+>
+> `landing/nginx.conf` adds it as a **302 redirect** to `macapp/install-zero.sh` on
+> `master`, which is how rustup and bun do it. The branded URL is then permanent but
+> never stale: an installer fix ships as soon as it lands on master, with no site
+> redeploy, and the script stays the single source of truth instead of being duplicated
+> into the site image.
+>
+> Two things have to happen, in order:
 >
 > ```bash
-> curl -fsSL https://zero.headless.com/install | head -5   # expect the script, not 404
+> git push origin master          # 1. the installer users get is whatever master has
+> bash landing/build.sh           # 2. rebuild + smoke-test the site image, then deploy
 > ```
+>
+> Then confirm what a real user gets:
+>
+> ```bash
+> curl -fsSL https://zero.headless.com/install | head -20   # expect the script, not 404
+> ```
+>
+> Integrity doesn't depend on that redirect: each release publishes `zero.dmg.sha256`
+> and the installer refuses a DMG that doesn't match it, so "always the latest build"
+> isn't "whatever bytes arrive". Releases made before this change have no checksum, and
+> the installer says so rather than pretending it verified something.
 
 **Then:**
 
