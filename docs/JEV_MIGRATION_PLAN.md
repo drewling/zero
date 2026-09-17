@@ -204,3 +204,51 @@ judgment and concurrency for I/O, takes a run from minutes to seconds and makes 
 feel instant. Rust is a reasonable later step for a smaller remaining slice, and the plan
 defers it until there are measurements to justify it rather than spending your time on a
 rewrite that wouldn't touch the real bottleneck.
+
+---
+
+# Implementation record (2026-09-17)
+
+All steps are implemented and committed. Measured results, not estimates.
+
+| Plan step | State | Evidence |
+| --- | --- | --- |
+| 1. Jev provider | done | `lib/jev.py`; live call 0.65s; 401 raises in 1.16s with no retry storm |
+| 2. Classification on Jev | done | `_classify_jev`; agreement 10/10, zero mail-losing diffs |
+| 3. Side-by-side check | harness done | `lib/tests/agreement_check.py`; `--account` arm still needs your real inbox |
+| 4. Parallel read phase | done | 201.51s -> 13.10s at 200 threads (**15.39x**) |
+| 5. Optimistic dismiss | done | 610ms -> **0.5ms** with a stubbed 600ms write |
+| 6. catchup on Jev | done | `test_catchup_jev` passes |
+| 6b. learn.py | deliberately NOT ported | its output is prose consumed by drafting; Jev cannot generate text |
+| 7. Persistent HTTP client | not done | deferred: see below |
+| 8. Rust decision | deferred on evidence | the I/O fix removed the bottleneck Rust would have targeted |
+
+## What "self-verified" actually covers
+
+- 9 test files pass, all runnable offline (`python3 lib/tests/<file>.py`).
+- Safety was tested adversarially, not assumed: `None`, `{}`, garbage types,
+  missing keys, wrong answer shapes and out-of-range values **all return keep**,
+  while genuine noise still archives. There is exactly one archive path.
+- `macapp/Sources/**` is byte-for-byte untouched. The UI is intact as required.
+- Default provider is still `claude`. Jev is opt-in.
+- With Jev selected, drafting still routes to Claude (verified: *"jev cannot serve
+  text-generation prompts, using claude"*).
+
+## What is NOT yet proven
+
+- **The live-mail arm has not run.** This checkout has no `accounts.json`, so
+  `agreement_check.py --account <slug> --limit 100` could not execute. Ten fixtures
+  are a regression guard, not proof. **Run that before setting provider=jev.**
+- The 15.39x speedup is measured against a stubbed 0.5s latency that matches the
+  real measured Gmail latency. Real-world gain will vary with rate limiting.
+- Step 7 (persistent HTTP client) was skipped: with reads now parallel, per-call
+  subprocess startup is ~50ms against a ~550ms network wait, so it is no longer
+  worth the risk. Revisit only if measurements say otherwise.
+
+## Two things a human should look at
+
+1. The payment-problem and legal-deadline cases are kept **only** by `is_protected`
+   and `urgency`. Raising `JEV_KEEP_PROTECTED` or `JEV_KEEP_URGENCY` would start
+   archiving failed payments. Tune those two with care.
+2. `is_cold_outreach` reads 0.58 on a newsletter, which is leaky. Do not reuse that
+   signal alone; it is currently corroborated by `is_automated`.
