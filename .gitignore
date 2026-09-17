@@ -56,3 +56,6 @@ learning/
 
 # Session scratch (landing drafts, screenshots)
 scratchpad/
+
+# Local secrets (JEV / TypeSafe API key)
+.env
