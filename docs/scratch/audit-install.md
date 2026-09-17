@@ -2,7 +2,7 @@
 
 **Scope:** read-only audit of the requested installer, build, runtime, onboarding, provider, and identifier paths for a new user on a non-author Mac. No app/source files were changed. Findings below are based on code and docs inspected in the checkout. Where the published release artifact could not be inspected, that is called out explicitly.
 
-## Prioritized blockers
+## Prioritized issues
 
 ### 1. The one-line installer can fail for ordinary users installing to `/Applications`
 
@@ -38,7 +38,7 @@
 ### 6. Onboarding presents Claude as mandatory even when another provider is intended
 
 - **Evidence:** `macapp/Sources/KeeperModel.swift:66-70` defines `allGood` as Python + `gws` + Claude; `:158-175` preflights all three. `macapp/Sources/OnboardingView.swift:53-60` tells the user to install Claude when missing.
-- **User impact:** A user intending to use Jev, Codex, or Hermes is still blocked by a Claude prerequisite warning. The account connect button itself only requires `gws` (`OnboardingView.swift:75-86`), so the requirements are inconsistent.
+- **User impact:** A user intending to use Jev, Codex, or Hermes still sees a Claude prerequisite warning. The account connect button itself only requires `gws` (`OnboardingView.swift:75-86`), so the requirements are inconsistent.
 - **Smallest fix:** Require Python and `gws` for Google onboarding, then validate the selected AI provider separately.
 
 ### 7. Source/CLI installation is manual and assumes account configuration
@@ -56,7 +56,7 @@
 ### 9. Launchd identifiers and docs remain Drewl-specific
 
 - **Evidence:** `bin/zero:104-105,133,165-166` uses `com.drewl.zero.daily`; `lib/keeper_server.py:1555-1556,1596` uses the same label and path; `docs/SETUP.md:224-229` tells users to run `launchctl list | grep drewl`.
-- **User impact:** This is not necessarily a first-run blocker, but it is confusing for non-author users and can collide with an older Drewl installation.
+- **User impact:** This is not necessarily a first-run failure, but it is confusing for non-author users and can collide with an older Drewl installation.
 - **Smallest fix:** Use one neutral reverse-DNS label and update all docs and migration logic.
 
 ## Runtime packaging verification
@@ -70,7 +70,7 @@ User data is intentionally not bundled: `accounts.json` is not copied, and `main
 - **No accounts yet:** handled. `keeper_server.py:226-233` returns an empty list; `:1875-1877` returns a `needs_build`/empty-state sentinel; `KeeperModel.swift:148-155` shows onboarding only after the server is ready and accounts are empty.
 - **OAuth failure:** handled with cancellation and a 180-second timeout at `keeper_server.py:1298-1325`, plus a generic retry message at `:1364-1368`.
 - **Gmail API disabled:** handled with a recovery message and enable URL at `:1381-1390`.
-- **Consent screen blocked:** handled with an External/In production/test-user explanation at `:1391-1400`.
+- **Consent screen unavailable:** handled with an External/In production/test-user explanation at `:1391-1400`.
 - **No AI provider:** detected in `/api/provider-status` at `keeper_server.py:1891-1898`, but not made a hard onboarding gate. `llm.py:254-283` ultimately falls back to Claude and can return failure.
 
 ## Personal identifiers and external assumptions
@@ -84,7 +84,7 @@ Whole-repo search found owner-specific references including:
 - Legacy Drewl launchd template: `deploy/com.drewl.mailtriage.plist.template:6`.
 - Generic but misleading absolute examples: `accounts.json.example:2-4`.
 
-These are mostly branding or documentation issues rather than confirmed runtime blockers, but they should be generalized for a genuinely independent open-source distribution.
+These are mostly branding or documentation issues rather than confirmed runtime failures, but they should be generalized for a genuinely independent open-source distribution.
 
 ## External dependencies the installer does or does not handle
 

@@ -16,7 +16,7 @@ There is no free notarization route for a normal independent developer. Apple sa
 
 ## 2. Google OAuth
 
-The bundled production-unverified restricted-scope client is a hard product cap. Google says an unverified app is **limited to 100 new users until verified**, and describes this as a total limit rather than a daily quota: [Google Cloud, Unverified apps](https://support.google.com/cloud/answer/7454865) (accessed 2026-09-17). The official page does **not** specify the literal user-101 error or UI. Treat user 101 as unable to complete new authorization until verification, rather than promising a particular error string. Existing-user continuity at that threshold is also not explicitly guaranteed on that page.
+The bundled production-unverified restricted-scope client is a hard product cap. Google says an unverified app is **limited to 100 new users until verified**, and describes this as a total limit rather than a daily quota: [Google Cloud, Unverified apps](https://support.google.com/cloud/answer/7454865) (accessed 2026-09-17). The official page does **not** specify the literal user-101 error or UI. Treat user 101 as unable to complete new authorization until verification, rather than promising a particular error string. Existing-user continuity at that point is also not explicitly guaranteed on that page.
 
 For an OSS Gmail client, the realistic choices are:
 

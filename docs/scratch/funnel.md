@@ -102,4 +102,4 @@ No fake close date. No vote requests. Track clean installs, first sweeps, succes
 
 README and LICENSE still say **PolyForm Noncommercial**. That conflicts with the new open-source promise and the business-user avatar. Pick a true open-source license before using that claim. README also describes bring-your-own Google OAuth setup. Verify the real new-user path before a broad launch.
 
-Grounding: README.md, PRODUCT.md, docs/JEV_MIGRATION_PLAN.md, and tag-stripped landing/index.html. External checks on September 17, 2026: [Show HN rules](https://news.ycombinator.com/showhn.html), [Open Source Definition](https://opensource.org/osd), [MPU ponds](https://talk.macpowerusers.com), [Changelog](https://changelog.com/news), [Console](https://console.dev).
+Grounding: README.md, PRODUCT.md, and tag-stripped landing/index.html. External checks on September 17, 2026: [Show HN rules](https://news.ycombinator.com/showhn.html), [Open Source Definition](https://opensource.org/osd), [MPU ponds](https://talk.macpowerusers.com), [Changelog](https://changelog.com/news), [Console](https://console.dev).

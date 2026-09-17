@@ -150,7 +150,7 @@ jev.set_key(key)
 ok, detail = jev.verify_key()
 if ok:
     print("Key saved and verified with Jev.")
-    print("Switch to it with: Settings > AI engine > Jev (or set provider to 'jev').")
+    print("Classification uses it from now on; nothing else to switch on.")
     sys.exit(0)
 # Keep the key so a network blip doesn't force a re-paste, but be clear it failed.
 print(f"Key saved, but it didn't work: {detail}")

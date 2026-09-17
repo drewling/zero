@@ -62,7 +62,7 @@ standard path for small/indie Gmail apps and it's already in effect:
   prerequisite for the CASA path we're declining. No user-facing benefit, so skipped.
 
 **Revisit CASA only if** zero approaches the 100-user cap or the unverified warning
-becomes a real adoption blocker. Until then, this costs $0 and works.
+becomes a real adoption obstacle. Until then, this costs $0 and works.
 
 ## Demo video / branding fixes — only needed if CASA is ever pursued
 

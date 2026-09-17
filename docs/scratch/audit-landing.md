@@ -98,7 +98,7 @@ This styling pattern (monospace, inline code chip with a dimmed comment) should 
   1. The JSON-LD block (**L34–133**) duplicates several claims that also appear as visible HTML further down the page (notably the FAQ section, **L1048+**, and the `SoftwareApplication` description/featureList). Any copy change (credentials, pricing, OS requirement, download flow) must be made in **both** places to avoid the page contradicting its own structured data.
   2. `landing/privacy.html` and `landing/terms.html` are separate files with their own overlapping claims (see Section 2) and must be updated in sync with `index.html`.
 - **Responsive**: yes — 6 `@media` query blocks are present in the stylesheet, so the layout does adapt at breakpoints. Visual quality of the responsive behavior was not verified in-browser as part of this audit (investigate-only, no rendering check performed).
-- **JS dependencies**: none. No external libraries or CDNs. The only network call the page makes client-side is a `fetch('https://api.github.com/repos/drewling/zero', ...)` for the live GitHub star count (L1183–1194), which fails silently and gracefully if rate-limited or blocked.
+- **JS dependencies**: none. No external libraries or CDNs. The only network call the page makes client-side is a `fetch('https://api.github.com/repos/drewling/zero', ...)` for the live GitHub star count (L1183–1194), which fails silently and gracefully if rate-limited or unavailable.
 
 ---
 

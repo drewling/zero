@@ -5,7 +5,7 @@
 > tier). Strategy only. No code in this doc; nothing here edits the app.
 >
 > Written 2026-09-17. Sources: `PRODUCT.md`, `README.md`, `keep-policy.md`,
-> `landing/index.html`, `landing/llms.txt`, `docs/JEV_MIGRATION_PLAN.md`,
+> `landing/index.html`, `landing/llms.txt`,
 > `docs/GOOGLE_VERIFICATION.md`.
 
 ---
@@ -312,8 +312,7 @@ thirty good mornings. The site seeds it; the app converts it.
 
 **1. It is below the cost floor you already documented.** Ungated Gmail access
 needs CASA at ~$1,800/yr (`GOOGLE_VERIFICATION.md`). Add hosting, add Jev, add
-an LLM for drafting (drafting stays a text model per `JEV_MIGRATION_PLAN.md`,
-and that is the expensive call, not the classification). Then add the thing
+a text model for drafting. Then add the thing
 nobody budgets: **support for a product that touches people's email.** One
 "where did my mail go" ticket eats a year of one subscriber's revenue. Payment
 processing alone takes about 9% of a $4.99 charge before anything else.
@@ -569,13 +568,13 @@ whoever does.
 | 3 | Hero panel mock | "3 kept / 24 set aside" | Unchanged. It is the best asset on the page | Shows the outcome in under a second |
 | 4 | Trust strip | Nothing deleted / your keys / source-available | Keep, but change cell 2 from "Runs on your keys. No server." to **"No server. That's why you bring the key."** | One-line version of the §5 argument, at the top of the page, costing nothing |
 | 5 | `#problem` | "You don't have an email problem. You have a 'did I miss something' problem." | Keep the H2. Rewrite the body in first person as the story beat from §4 (four accounts, could not tell, built it, nothing deleted) | The section is currently written *about* the reader. Told as the founder's own story it does the belief-shift work instead of asserting it |
-| 6 | `#howitworks` | Three questions + before/after inbox visual | Keep entirely. Add one line under question 3: "When it is not sure, it keeps the thread." | Strongest section on the page. The uncertainty line is a direct answer to the false belief and is now literally true given calibrated thresholds |
+| 6 | `#howitworks` | Three questions + before/after inbox visual | Keep entirely. Add one line under question 3: "When it is not sure, it keeps the thread." | Strongest section on the page. The uncertainty line directly answers the false belief. |
 | 7 | `#trust` | 5 bento cells: reversible / your keys your machine / ambient / plain language / source-available | Keep 4. Replace "Your keys. Your machine." with **"No account. No server. No upload."** and move the key requirement into the new honest block. Add a 6th cell: **"You can see why"** — the agent's reason for each thread | Splits the benefit (no server) from the cost (you bring a key) and gives each the right place. "You can see why" is a real differentiator against every hosted competitor |
 | 8 | **NEW — honest block** | *does not exist* | Directly above the install section. **"Before you install, three honest things."** (1) macOS will warn you — no paid Apple account, installer handles it. (2) Google will say the app isn't verified — verification needs a $1,800/yr audit we didn't buy, click Advanced. (3) You bring an API key and an agent CLI — about a quarter of a cent per run, paid to them, not us. Then: **"Don't want to deal with any of that? The hosted version won't have any of it →"** | **The most important new section on the page.** Full argument in §5. It also carries the waitlist CTA at the exact moment of maximum motivation |
 | 9 | **NEW — install** | *does not exist* (the page only links to Releases) | The `curl` one-liner in a copy-block, the three things it does, "re-running is safe," and a link to the manual steps | The README has a good install story the site never tells. A visible command is more credible than a download button for this audience |
 | 10 | `#reply` | "Drafts in your voice. On demand. Never on its own." | Keep the copy. Add one line: "Drafting uses your own agent CLI, on your Mac." | The never-sends promise is a genuine differentiator; just make the new architecture honest |
 | 11 | `#multiaccount` | "Every account. One calm." | Change H2 to **"Four inboxes. Three things that need you."** (headline option C, reused here) and keep the body | The most specific, most self-selecting line available, placed where specificity helps rather than narrows |
-| 12 | `#aiengine` | "Works with your AI engine" — Claude default, Codex, Hermes chips | Retitle **"Two engines, both yours."** Explain the split plainly: a small judgment model decides keep-or-archive for about a quarter of a cent a run; your own agent CLI writes the drafts. Chips: Claude · Codex · opencode | Reflects the actual architecture in `JEV_MIGRATION_PLAN.md`. The two-engine split is also a *reason to believe* the cost claim |
+| 12 | `#aiengine` | "Works with your AI engine" — Claude default, Codex, Hermes chips | Retitle **"Two engines, both yours."** Explain the split plainly: a small judgment model decides keep-or-archive for about a quarter of a cent a run; your own agent CLI writes the drafts. Chips: Claude · Codex · opencode | The two-engine split is also a *reason to believe* the cost claim |
 | 13 | **NEW — hosted waitlist** | *does not exist* | Between AI engine and FAQ. Eyebrow "Coming later." H2 **"Or let us run it."** Four bullets (no keys, no CLI, no warnings, every Mac). One line: "Around $12/month. First 100 on the list get $7/month for as long as they stay." Then: "It is not built yet and we are not taking money. Leave an email and one line about what you pay for email tools today." Email field + one text field | The entire second rung. The price question doubles as free pricing research (§3) |
 | 14 | `#faq` | 6 questions; the cost and requirements answers are now wrong | Fix "What does it cost" (quarter of a cent per run, your key). Fix "What do I need" (macOS 26, Gmail, an API key, an agent CLI). **Add four:** "Why does macOS warn me?" · "Why does Google say it isn't verified?" (name the $1,800 CASA figure and the 100-user cap) · "What if it archives something I needed?" · "When is the hosted version?" (answer: no date, here's the list) | The FAQ is where honest detail belongs once the top of the page has already been honest. A dollar figure and a real cap are the most trust-building sentences available |
 | 15 | `#cta` | "Let your inbox keep itself." Download + GitHub | Keep the H2. CTAs become **Copy install command** / **Get the hosted version**. Req line drops "+ Claude" | Both rungs offered at the end; whichever the reader is, there is a yes available |
