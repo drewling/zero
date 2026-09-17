@@ -703,18 +703,15 @@ def _run_label_only(cfg, me, window_days, chunk, archive_days=0):
 
     _emit_progress(2, "Finding recent mail")
     all_tids = list(inbox_tids | archived_tids)
-    n_tids = max(len(all_tids), 1)
-    infos = []
-    for idx, tid in enumerate(all_tids, 1):
-        info = _thread_info(cfg, tid, me)
-        if info:
-            infos.append(info)
-        _emit_progress(2 + int(63 * idx / n_tids), f"Reading mail ({idx} of {len(all_tids)})")
+    # Same parallel read the main path uses. This loop used to be sequential, which
+    # at a few thousand threads meant hours of one-at-a-time network round-trips
+    # with the progress bar apparently frozen.
+    infos = _read_infos_parallel(cfg, all_tids, me)
     to_judge, skipped_labeled, skipped_handled = _backfill_partition(
         infos, cat_label_names, id_to_name)
 
-    for c in to_judge:
-        c["replied_before"] = _replied_before(cfg, c["last_email"])
+    # _read_infos_parallel already resolved replied_before for every thread it read,
+    # concurrently and memoised per sender, so there is nothing left to look up here.
 
     labeled = label_failed = 0
     n_judge = max(len(to_judge), 1)

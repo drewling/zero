@@ -808,15 +808,30 @@ private struct MessageBlock: View {
 }
 
 // Bare URLs in plain body text → tappable links (SwiftUI opens them via openURL).
+// NSDataDetector is expensive to construct — one shared instance, built once, rather
+// than a fresh one on every call. The scan result itself is also cached per exact
+// body string, since bodyText(_:) is invoked from a SwiftUI view `body` and can
+// re-run many times per second (scrolling, hover, unrelated state changes) with the
+// same unchanged text each time. Preview bodies are stable strings from the server,
+// so caching by full string content is safe and bounded by NSCache's own eviction.
+private let linkDetector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+
+private final class LinkifiedBox { let value: AttributedString; init(_ v: AttributedString) { value = v } }
+private let linkifiedCache = NSCache<NSString, LinkifiedBox>()
+
 func linkified(_ text: String) -> AttributedString {
+    let key = text as NSString
+    if let cached = linkifiedCache.object(forKey: key) { return cached.value }
     var attr = AttributedString(text)
-    guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else { return attr }
-    let ns = text as NSString
-    for match in detector.matches(in: text, range: NSRange(location: 0, length: ns.length)) {
-        guard let url = match.url, let r = Range(match.range, in: attr) else { continue }
-        attr[r].link = url
-        attr[r].underlineStyle = .single
+    if let detector = linkDetector {
+        let ns = text as NSString
+        for match in detector.matches(in: text, range: NSRange(location: 0, length: ns.length)) {
+            guard let url = match.url, let r = Range(match.range, in: attr) else { continue }
+            attr[r].link = url
+            attr[r].underlineStyle = .single
+        }
     }
+    linkifiedCache.setObject(LinkifiedBox(attr), forKey: key, cost: text.utf16.count)
     return attr
 }
 
