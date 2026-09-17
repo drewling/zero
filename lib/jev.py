@@ -7,7 +7,8 @@ LLM provider (see lib/llm.py). See docs/JEV_CONTRACT.md for the interface
 this module must implement.
 
 Endpoint: POST https://api.typesafe.ai/v1/systemone
-Auth: env JEV, else KEY=VALUE parsed from a .env file at the repo root.
+Auth, in order: env JEV, then app/jev_key (written by onboarding/Settings),
+then a .env at the repo root (source checkouts only).
 Never logs or prints the key.
 """
 import json
@@ -20,6 +21,11 @@ import urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 ENV_PATH = os.path.join(ROOT, ".env")
+# Where the app stores a pasted key. ROOT is the repo in a source checkout and
+# ~/Library/Application Support/zero in the installed app (main.swift copies the
+# payload there and runs from it), so this one path serves both. The packaged app
+# never ships .env, so without this there is no way to configure Jev at all.
+KEY_PATH = os.path.join(ROOT, "app", "jev_key")
 ENDPOINT = "https://api.typesafe.ai/v1/systemone"
 MODEL = "jev-latest"
 
@@ -55,10 +61,20 @@ def _parse_env_file(path):
 
 
 def _get_key():
-    """Resolve the JEV API key: env var JEV first, else .env at repo root. Cached."""
+    """Resolve the JEV API key. Cached.
+
+    Order: env JEV (lets a one-off run override), then app/jev_key (what the UI
+    writes, and the only route that works in the installed app), then .env at the
+    repo root (developer convenience in a source checkout)."""
     if _key_cache["loaded"]:
         return _key_cache["value"]
     key = os.environ.get("JEV")
+    if not key:
+        try:
+            with open(KEY_PATH) as f:
+                key = f.read().strip()
+        except Exception:
+            key = None
     if not key:
         key = _parse_env_file(ENV_PATH).get("JEV")
     _key_cache["loaded"] = True
@@ -66,8 +82,41 @@ def _get_key():
     return _key_cache["value"]
 
 
+def set_key(key):
+    """Persist the API key to app/jev_key (0600) and refresh the cache.
+
+    Passing a blank key removes the stored key. Returns True if a key is now
+    configured. Raises on write failure so the caller can report it rather than
+    silently appearing to save."""
+    key = (key or "").strip()
+    os.makedirs(os.path.dirname(KEY_PATH), exist_ok=True)
+    if not key:
+        try:
+            os.remove(KEY_PATH)
+        except FileNotFoundError:
+            pass
+    else:
+        # Write via a temp file in the same dir, then replace, so an interrupted
+        # write can't leave a truncated key behind.
+        tmp = KEY_PATH + ".tmp"
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        try:
+            with os.fdopen(fd, "w") as f:
+                f.write(key)
+            os.replace(tmp, KEY_PATH)
+        except Exception:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            raise
+    _key_cache["loaded"] = False
+    _key_cache["value"] = None
+    return _get_key() is not None
+
+
 def available():
-    """True if a JEV API key is configured (env JEV, or .env at repo root)."""
+    """True if a JEV API key is configured (env JEV, app/jev_key, or .env)."""
     return _get_key() is not None
 
 
