@@ -8,7 +8,6 @@ do next. Three other docs go deeper; this one says what to actually do and why.
 | **this file** | The decisions, in plain English, and one new measured fact |
 | `docs/DISTRIBUTION_PLAN.md` | Detailed installer spec (written by a parallel session) |
 | `docs/FUNNEL_PLAN.md` | Detailed positioning, pricing, landing-page rewrite (same) |
-| `docs/JEV_MIGRATION_PLAN.md` | Speed and the Jev engine swap |
 
 Written 2026-09-17.
 
@@ -88,15 +87,19 @@ Ship both paths: bundled client stays the default (it's a great first run), and 
 accounts, and flip the default when it's near 100. For desktop apps Google's own docs
 say the client secret isn't really a secret, so the walkthrough can be blunt.
 
-**2. "Open source" isn't currently true.** `LICENSE` is PolyForm Noncommercial, which is
-*source-available*. `privacy.html` already says "open source", `index.html` says
-"source-available". Those contradict each other; one is wrong today.
+**2. "Open source" wasn't true. ~~Fixed~~ — relicensed 2026-09-17.** `LICENSE` was
+PolyForm Noncommercial, which is *source-available*, not open source, because it barred
+commercial use. `privacy.html` claimed "open source" while `index.html` said
+"source-available", so the site contradicted itself.
 
-`FUNNEL_PLAN.md` recommends AGPL-3.0, which is a good call: it makes "open source" true
-while still blocking a competitor from running a closed SaaS clone, and it keeps your
-hosted tier perfectly legal. The alternative is keeping PolyForm-NC and saying "free and
-source-available" everywhere with zero drift. **Either is fine. Saying both is not.**
-This is a ten-minute decision that blocks all the website copy.
+**Now GNU AGPL-3.0-or-later**, as `FUNNEL_PLAN.md` recommended. It makes "open source"
+accurate under the OSD, lets people use zero at work (which the old licence forbade, and
+the target audience is people with work inboxes), and still stops a competitor running a
+closed SaaS clone, because section 13 makes a network service publish its source too.
+Your own hosted tier stays perfectly legal: you hold the copyright.
+
+Relicensing was clean because every line to date is yours. `COPYRIGHT.md` explains the
+reasoning in plain English, and all 14 references across the repo and site now agree.
 
 **3. The installer can fail and still say "Done."** `macapp/install-zero.sh` runs without
 `set -e` and only *warns* when Homebrew, Python, node, `gws` or Claude fail to install
@@ -196,20 +199,30 @@ that's the entire product. Lead with the promise, keep the old line as a brand l
 
 ---
 
-## On the $4.99 price
+## Pricing: settled 2026-09-17
 
-You said $4.99/mo for the future hosted tier. `FUNNEL_PLAN.md` §3 argues hard against it
-and I think it's right:
+**Hosted tier lists at $12/month or $99/year. The first 100 people on the waitlist get
+$7/month for as long as they stay subscribed.** Not $4.99. This is now reflected on the
+site and in `llms.txt`.
 
-- Payment processing alone eats ~9% of a $4.99 charge.
-- It's a one-way door. Going $4.99 → $12 later means angering early users or running two
-  price tiers forever.
+The reasoning, from `FUNNEL_PLAN.md` §3:
+
+- Payment processing alone eats ~9% of a $4.99 charge before any AI or hosting cost.
+- It's a one-way door. Going $4.99 → $12 later means either angering early users or
+  running two price tiers forever.
 - Against Superhuman at $30/mo and SaneBox at ~$7-36/mo, $4.99 for something with full
-  mailbox access reads as unserious rather than cheap.
+  mailbox access reads as unserious rather than cheap. Price is a quality signal.
+- $99/year is the better default: it prices at 8.25/mo, beats monthly churn, and gives
+  you the cash up front to cover a year of AI costs you're fronting anyway.
 
-Its suggestion: list at **$12/mo or $99/yr**, and put the $4.99 instinct where it belongs,
-as a **founding rate for the first 100 people on the waitlist**. That's honest scarcity
-you can actually honour, and it leaves list price intact.
+The $4.99 instinct was right about one thing, that early supporters should get something
+real. That belongs in the **founding rate**, which is honest scarcity you can actually
+honour, rather than in list price.
+
+**Still to verify before charging anyone:** per-user AI cost at real inbox volume,
+hosting, Google CASA verification (~$1,800/yr, now genuinely required for a hosted
+service), and support load. $12 is the right *list* price; whether the margin works is a
+spreadsheet question, not a positioning one.
 
 Also worth internalising: **most free users will never pay, and that's fine.** They have
 the skills and already have AI access. Don't cripple the free version to push them up;
@@ -247,7 +260,7 @@ Ranked list and a 30-day sequence in `docs/scratch/funnel.md` and `FUNNEL_PLAN.m
 4. **Add the AI-engine onboarding step** with a Jev key field. Without it, a Jev-only
    user cannot configure the app at all.
 5. **Test on a Mac that isn't yours.** A fresh user account is enough. This is the only
-   way to find blocker #5, which certainly exists, and which nobody has found because
+   way to find the next installation issue, which may otherwise go unnoticed because
    every test so far ran on the machine that built it.
 
 **Then the website:**
@@ -287,7 +300,7 @@ correctly reports all four missing prerequisites and exits 1.
 
 ## Background research
 
-- `docs/scratch/audit-install.md` — install/first-run blockers, with file:line
+- `docs/scratch/audit-install.md` — install/first-run issues, with file:line
 - `docs/scratch/audit-landing.md` — website audit and license analysis
 - `docs/scratch/research-distribution.md` — Gatekeeper, OAuth caps, Jev pricing, agent
   CLI invocation, with sources and dates

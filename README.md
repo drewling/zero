@@ -11,7 +11,7 @@ isn't waiting on you, and keeps the rest one tap away. Nothing is ever deleted.
 
 [![Website](https://img.shields.io/badge/website-zero.headless.com-1A73E8)](https://zero.headless.com)
 [![Platform: macOS](https://img.shields.io/badge/platform-macOS%2026%2B-black?logo=apple)](https://github.com/drewling/zero/releases)
-[![License: PolyForm-NC](https://img.shields.io/badge/license-PolyForm--NC-blue)](LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 
 </div>
 
@@ -57,7 +57,7 @@ menu-bar app (SwiftUI)  -->  local server (keeper_server.py, 127.0.0.1)
                              app/state.json  <--  dashboard_state.py
                                  ^                (per-account status, open loops, undo points)
                                  |  Run / Undo
-                             review_open_loops.py  (Claude Haiku + keep-policy.md)
+                             review_open_loops.py  (TypeSafe Jev + keep-policy.md)
                                  |
                              gws CLI  -->  Gmail (reversible label swaps only)
 ```
@@ -77,11 +77,11 @@ Three properties, in priority order:
    Nothing is ever deleted.
 2. **Ambient.** No new app to live in. Your Gmail and Apple Mail stay exactly as
    they are. zero works quietly behind them, once a morning.
-3. **The judgment is an agent, not a rule list.** What counts as "needs you" is
+3. **The judgment is a model, not a rule list.** What counts as "needs you" is
    written in plain English (see [keep-policy.md](keep-policy.md)) and enforced by
-   Claude Haiku reading each thread in full. Cold outreach with a real person's
-   name gets archived; a real person actually awaiting your reply is kept. A filter
-   rule cannot tell those two apart.
+   TypeSafe's Jev model reading each thread. Jev returns a typed keep-or-archive
+   decision with a probability. Cold outreach with a real person's name gets
+   archived; a real person actually awaiting your reply is kept.
 
 ## How "needs you" is decided
 
@@ -143,7 +143,7 @@ To be precise about what that does and doesn't mean: `spctl -a -t execute` still
 ticket. Both are correct — the app genuinely isn't notarized, and it is not suitable for
 *browser* distribution. What was verified is narrower and is the thing that matters for a
 `curl` install: with no quarantine flag, launching the app through Finder/`open` is not
-blocked, and no Gatekeeper denial is logged.
+stopped, and no Gatekeeper denial is logged.
 
 If you instead download the DMG **in a browser**, that copy *is* quarantined. The
 installer detects this and clears that single flag (it never blanket-clears attributes).
@@ -191,12 +191,12 @@ through connecting Google and your AI, both in your browser, and **nothing leave
    one Gmail permission and your basic identity — [nothing else](#privacy-and-trust). For
    now this uses *your own* Google OAuth client (a one-time setup — see **Bring your own
    Google Cloud project** below); built-in one-click sign-in is in Google verification.
-2. **Connect your AI.** zero uses whichever agent CLI you're already signed into —
-   `claude`, `codex`, or `opencode` — to read and judge threads. Pick one under
-   **Settings → AI engine**.
+2. **Connect your AI.** TypeSafe's Jev classifies threads as keep or archive and
+   returns a typed decision with a probability. An agent CLI such as `claude`,
+   `codex`, or `opencode` is used only to draft replies. Claude is the default
+   drafting model. Pick a drafting model under **Settings → AI engine**.
 
-   Prefer **Jev** (TypeSafe AI)? It's an HTTP service rather than a CLI, so instead of
-   signing in you give it an API key from
+   **Jev needs an API key.** It is an HTTP service rather than a CLI, so you get a key from
    [console.typesafe.ai/keys](https://console.typesafe.ai/keys):
 
    ```bash
@@ -207,8 +207,8 @@ through connecting Google and your AI, both in your browser, and **nothing leave
 
    The key is stored on your Mac only, readable by you alone (`0600`), and survives app
    updates. `zero key` tells you immediately whether it actually works, so a typo can't
-   quietly break tomorrow morning's run. Jev makes the keep/archive judgments; reply
-   drafting still uses an agent CLI, because Jev doesn't write prose.
+   quietly break tomorrow morning's run. Jev makes the keep/archive decisions; a text
+   LLM writes reply drafts because Jev does not generate prose.
 3. **Run it.** Hit **Run zero now** for the first sweep. To run it automatically each
    morning, set a time under **Settings → Daily schedule** (or `./bin/zero schedule`).
 
@@ -250,9 +250,9 @@ cd zero/macapp
 section under the **Settings** tab in the panel. Write it in plain English. No syntax to learn.
 
 Everything else is optional and lives under **Settings**: your **categories**, the
-**daily schedule** (what time, which days, whether macOS notifies you), how far back
-to label archived mail, and which **AI engine** to use (Claude by default; Codex,
-Hermes, or another agent CLI if you have one installed).
+  **daily schedule** (what time, which days, whether macOS notifies you), how far back
+  to label archived mail, and which text model to use for reply drafts (Claude by
+  default, with other supported agent CLIs available).
 
 **Optional voice grounding.** Copy `knowledge/profile.example.md` to
 `knowledge/profile.md` and fill it in. The drafter uses it as background when
@@ -265,10 +265,9 @@ There is nothing else to configure.
 
 ## Privacy and trust
 
-- **No project-operated backend.** Everything runs on your Mac. The only data that
-  leaves your machine is per-thread text sent to the Claude API through your own
-  `claude` CLI (for the keep/archive judgment and draft generation). See
-  [SECURITY.md](SECURITY.md).
+- **No project-operated backend.** Everything runs on your Mac. Thread text is sent to
+  TypeSafe's Jev service for keep/archive decisions, and reply text is sent to your
+  selected drafting model, Claude by default. See [SECURITY.md](SECURITY.md).
 - **The local server binds to `127.0.0.1` only.** Nothing is reachable from the
   network.
 - **Nothing is ever deleted.** Archiving is a reversible label change. Mail stays
@@ -287,5 +286,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-[PolyForm Noncommercial 1.0.0](LICENSE). Free to use, fork, modify, and share for
-noncommercial purposes. Commercial use and reselling are not permitted.
+[GNU AGPL-3.0-or-later](LICENSE). Free and open source: use it for anything,
+including at work, read it, change it, share it. If you distribute a modified
+version, or run one as a network service, your changes are AGPL too and your
+users get the source.
+
+Why AGPL for an email tool, and what it means in practice:
+[COPYRIGHT.md](COPYRIGHT.md).

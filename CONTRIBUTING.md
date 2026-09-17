@@ -8,11 +8,14 @@ contributions stay true to that one job.
 
 ## License note
 
-zero is published under the [PolyForm Noncommercial 1.0.0](LICENSE)
-license. By contributing, you agree that your changes will be distributed under
-the same terms. This means the project -- and your contribution -- may not be used
-commercially or resold. If that is a concern, please raise it before putting in
-the work.
+zero is published under the [GNU AGPL-3.0-or-later](LICENSE) licence. By
+contributing, you agree your changes are distributed under the same terms.
+
+In practice that means anyone can use zero for anything, including at work, and
+anyone who ships a modified version (including as a hosted service) has to make
+their source available too. See [COPYRIGHT.md](COPYRIGHT.md) for the reasoning.
+
+No CLA. You keep the copyright on what you write.
 
 ## How to build
 

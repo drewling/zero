@@ -69,7 +69,7 @@
     <ul>
       <li>zero runs entirely on your Mac, signed in with <strong>your own</strong> Google account and AI provider.</li>
       <li>There is no zero server, no zero account, and no analytics. We never receive your email — there is nowhere for it to go.</li>
-      <li>Your mail is read and sorted on your machine. To judge a thread, its text is sent to the AI assistant you choose (Claude by default), under that provider's terms — the same as if you'd pasted it in yourself.</li>
+      <li>Your mail is read and sorted on your machine. To judge a thread, its text is sent to TypeSafe's Jev service under your own API key and TypeSafe's terms — the same as if you'd pasted it in yourself.</li>
       <li>zero only ever asks Google for Gmail access and your basic identity. Nothing else.</li>
       <li>Nothing is sold, shared for ads, or used to train anything.</li>
     </ul>
@@ -78,7 +78,7 @@
   <p>zero is a macOS menu-bar app that reads your Gmail each day, keeps the threads that still need a reply, and archives the rest — reversibly, never deleting. This page explains exactly what it touches and where that data goes. It's short because zero's design is simple: everything happens on your computer.</p>
 
   <h2>Who runs zero</h2>
-  <p>zero is made by Tayo Onabule (Drewl). It is a downloadable desktop app, not a hosted service. When we say "we," we mean the people who write the code — not an operator sitting between you and your mail, because there isn't one.</p>
+  <p>zero is made by Tayo Onabule (Drewl). It is an open-source app you install and run on your own Mac, not a hosted service. When we say "we," we mean the people who write the code — not an operator sitting between you and your mail, because there isn't one.</p>
 
   <h2>What zero connects to</h2>
   <p>When you add an account, zero signs you in through Google's standard OAuth screen and requests only these permissions:</p>
@@ -92,7 +92,7 @@
   <p>Your email data travels along exactly two paths, both of which you already use and control:</p>
   <ul>
     <li><strong>To and from Google</strong> — zero reads your mailbox through Google's Gmail API, directly from your Mac, using your sign-in. This is your own data moving between you and Google.</li>
-    <li><strong>To the AI assistant you choose</strong> — to decide whether a thread still needs you (and to draft a reply when you ask), zero sends the relevant message text to the AI provider configured on your machine. By default that's Anthropic's Claude, through the Claude command-line tool you've signed into; you can point zero at another provider or a local model instead. That text is handled under <em>your</em> agreement with that provider. zero adds nothing on top and keeps no copy.</li>
+    <li><strong>To the AI assistant you choose</strong> — to decide whether a thread still needs you (and to draft a reply when you ask), zero sends the relevant message text to the AI provider configured on your machine. Keep-or-archive decisions go to TypeSafe's Jev under your own API key. Reply drafts, only when you ask for one, go to the agent CLI you have signed into (Claude Code, Codex, or opencode). That text is handled under <em>your</em> agreement with that provider. zero adds nothing on top and keeps no copy.</li>
   </ul>
   <p>That's it. The data does not pass through any server we operate, because we don't operate one.</p>
 
