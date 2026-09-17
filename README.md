@@ -115,18 +115,33 @@ When unsure, the policy keeps the thread. Everything archived is one tap away.
 curl -fsSL https://raw.githubusercontent.com/drewling/zero/master/macapp/install-zero.sh | bash
 ```
 
-This installs any missing prerequisites (Homebrew → Python 3 / Node → the `gws` and
-`claude` CLIs), copies `zero.app` to `/Applications`, clears the macOS quarantine flag,
+This installs any missing prerequisites (Homebrew → Python 3 / Node → the `gws` CLI, plus
+an agent CLI only if you don't already have one), copies `zero.app` into `/Applications`,
 and launches it. Re-running is safe. When it opens, skip to **[First run](#first-run)**.
 
-<details>
-<summary><b>Why the quarantine step?</b></summary>
+It stops with a clear message rather than installing something broken: it refuses to run
+on Intel or macOS below 26, refuses an app that fails signature verification, falls back
+to `~/Applications` when `/Applications` isn't writable, and if a prerequisite fails it
+says *"Installed, but not ready yet"* and names what's missing instead of claiming success.
 
-zero is signed ad-hoc, not notarized (there's no paid Apple Developer account behind a
-free app). macOS quarantines *downloaded* un-notarized apps, and Gatekeeper then refuses
-to launch them — so a hand-dragged DMG silently does nothing, and because zero is a
-menu-bar app with no window, the block is invisible. Clearing the flag is the standard
-install path for un-notarized open-source Mac apps; the script does it for you.
+<details>
+<summary><b>Is this safe? It's not notarized.</b></summary>
+
+zero is signed ad-hoc, not notarized — there's no paid Apple Developer account behind a
+free app. It is **not** on the App Store. You can read
+[the install script](macapp/install-zero.sh) before running it, which is a good habit for
+any `curl | bash`.
+
+Useful detail: macOS only applies the `com.apple.quarantine` flag that Gatekeeper blocks
+on when the *downloading application* sets it. Browsers do; command-line tools don't.
+Verified 2026-09-17 on macOS 27.0 (26A5388g) — a release fetched with `curl` carries no
+quarantine attribute anywhere in the bundle and launches normally. So the one-line install
+needs no flag-stripping at all.
+
+If you instead download the DMG **in a browser**, that copy *is* quarantined. The
+installer detects this and clears that single flag (it never blanket-clears attributes).
+Should macOS ever block it anyway, the supported route is
+**System Settings → Privacy & Security → Open Anyway**.
 </details>
 
 <details>
@@ -135,17 +150,29 @@ install path for un-notarized open-source Mac apps; the script does it for you.
 ```bash
 # 1. Prerequisites
 brew install node python3
-npm install -g @googleworkspace/cli @anthropic-ai/claude-code
-claude            # finish Claude login on first run
+npm install -g @googleworkspace/cli
 
-# 2. Download zero from the Releases page, then clear the quarantine flag.
-#    Use the FULL path — a Homebrew/Python `xattr` earlier in PATH may silently no-op.
-/usr/bin/xattr -cr /Applications/zero.app
+# 2. An AI engine. Skip if you already have claude, codex, or opencode.
+npm install -g @anthropic-ai/claude-code
+claude            # finish login on first run
+
+# 3. Get the app WITHOUT a browser, so it's never quarantined:
+curl -fL https://github.com/drewling/zero/releases/latest/download/zero.dmg -o /tmp/zero.dmg
+hdiutil attach /tmp/zero.dmg -nobrowse -readonly -mountpoint /tmp/zero-dmg
+cp -R /tmp/zero-dmg/zero.app /Applications/
+hdiutil detach /tmp/zero-dmg
 ```
 
-Grab the app from the [Releases page](https://github.com/drewling/zero/releases) and drag
-it to `/Applications` before running the `xattr` line. Then open it and follow
-**[First run](#first-run)** below.
+If you'd rather download the DMG from the
+[Releases page](https://github.com/drewling/zero/releases) in a browser, that copy will be
+quarantined, so clear that one flag after dragging it across (use the full path — a
+Homebrew/Python `xattr` earlier in `PATH` may silently no-op):
+
+```bash
+/usr/bin/xattr -dr com.apple.quarantine /Applications/zero.app
+```
+
+Then open it and follow **[First run](#first-run)** below.
 </details>
 
 ### First run
