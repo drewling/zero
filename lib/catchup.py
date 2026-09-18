@@ -13,7 +13,7 @@ Usage: catchup.py <config_dir> [account_label] [lookback_days]
 """
 import json, os, sys
 from datetime import datetime, timezone
-from email.utils import parsedate_to_datetime
+from email.utils import parsedate_to_datetime, parseaddr
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -81,6 +81,25 @@ def _age_days(date_str):
         return None
 
 
+def _is_owner(profile_email, from_header):
+    """True when `from_header`'s address IS the owner's.
+
+    Same reasoning as review_open_loops._is_owner_sender: a substring test treats
+    "reuben@gmail.com" as "ben@gmail.com". Here the consequence is milder than an
+    archive (the thread is dropped from the catch-up digest rather than moved),
+    but it still means a genuinely missed email from a real correspondent never
+    gets surfaced. Falls back to the substring behaviour when `profile_email` is
+    the account LABEL rather than an address (main() does that when the profile
+    lookup fails)."""
+    profile_email = (profile_email or "").strip().lower()
+    from_header = (from_header or "").strip()
+    if not profile_email or not from_header:
+        return False
+    if "@" in profile_email:
+        return (parseaddr(from_header)[1] or "").strip().lower() == profile_email
+    return profile_email in from_header.lower()
+
+
 def candidates(config_dir, profile_email, lookback_days):
     """Inbox threads older than 1d but within lookback, last msg not from the owner, no owner reply."""
     q = f"in:inbox -in:chats newer_than:{lookback_days}d older_than:1d -label:\"⚡ Action\""
@@ -103,12 +122,12 @@ def candidates(config_dir, profile_email, lookback_days):
         if not msgs:
             continue
         # Owner replied if any message is from the account owner.
-        owner_replied = any(profile_email and profile_email.lower() in _hdr(x, "from").lower() for x in msgs)
+        owner_replied = any(_is_owner(profile_email, _hdr(x, "from")) for x in msgs)
         if owner_replied:
             continue
         last = msgs[-1]
         frm = _hdr(last, "from")
-        if profile_email and profile_email.lower() in frm.lower():
+        if _is_owner(profile_email, frm):
             continue
         date = _hdr(last, "date")
         out.append({

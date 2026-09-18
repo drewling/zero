@@ -113,17 +113,28 @@ def _readd_loop(slug, tid, sender="", sender_email="", subject="", snippet="", e
     _patch_state(_m)
 
 
-def _bg_gmail_write(write_fn, on_failure=None):
+def _bg_gmail_write(write_fn, on_failure=None, after_fn=None):
     """Fire a Gmail write in a background thread so a per-item click (dismiss, undo)
     returns to the panel immediately instead of blocking on a ~0.6s round-trip.
-    `write_fn` performs the actual Gmail call
-    AND any follow-up that must only happen once the write is confirmed (e.g. a
-    learning.record signal, so it's recorded exactly once and never on a failed
-    write). On failure, `on_failure(exc)` must roll back the optimistic state change
-    already applied and tell the user via the existing notification channel — it is
-    run defensively (a raise inside it is swallowed) so a bad rollback can never take
-    the server down. Never raises to the caller; the HTTP response has already been
-    sent by the time this runs."""
+
+    `write_fn` performs ONLY the Gmail call. Whether it raised is the single fact
+    that decides whether the optimistic state change stands or is rolled back.
+
+    `after_fn` is the follow-up that must happen exactly once, and only once the
+    write is confirmed (e.g. a learning.record signal). It runs AFTER write_fn
+    succeeded, and its own failure is swallowed rather than triggering rollback:
+    by then the mail has really moved, so rolling back would make the app assert
+    the opposite of reality — re-adding a row for mail that is no longer in the
+    inbox, removing the Undo entry that is the user's route back to it, and
+    toasting "couldn't set aside" for something that was. A lost learning signal
+    is a lost preference hint; a bogus rollback is a lie about where the user's
+    mail is, so the two failures are deliberately not treated the same.
+
+    On failure of `write_fn`, `on_failure(exc)` must roll back the optimistic
+    state change already applied and tell the user via the existing notification
+    channel — it is run defensively (a raise inside it is swallowed) so a bad
+    rollback can never take the server down. Never raises to the caller; the HTTP
+    response has already been sent by the time this runs."""
     def _run():
         try:
             write_fn()
@@ -133,6 +144,15 @@ def _bg_gmail_write(write_fn, on_failure=None):
                     on_failure(exc)
                 except Exception:
                     pass
+            return
+        if after_fn:
+            try:
+                after_fn()
+            except Exception as exc:
+                # The Gmail write succeeded; only the bookkeeping failed. Say so
+                # rather than pretending the write didn't happen.
+                print(f"post-write bookkeeping failed (mail DID move): {exc}",
+                      file=sys.stderr)
     threading.Thread(target=_run, daemon=True).start()
 
 
@@ -624,7 +644,10 @@ def _undo_thread(payload):
                       "--json", json.dumps({"addLabelIds": ["INBOX"],
                                             "removeLabelIds": [lid] if lid else []})],
                 allow_empty=True)
-        # Recorded only once the write is confirmed.
+
+    def _after():
+        # Recorded only once the write is confirmed. Kept out of _write so a
+        # failure to append the signal can't be mistaken for a failed restore.
         learning.record({"type": "keep_override_undo", "account": slug, "thread_id": tid,
                          "sender": sender, "sender_email": sender_email, "subject": subject})
 
@@ -634,7 +657,7 @@ def _undo_thread(payload):
         _drop_loop(slug, tid)
         _queue_notification(f"Couldn't restore \u201c{subject}\u201d — it's still set aside.")
 
-    _bg_gmail_write(_write, _on_failure)
+    _bg_gmail_write(_write, _on_failure, after_fn=_after)
     return {"ok": True}
 
 
@@ -773,13 +796,23 @@ def _tidy_preview(text):
     flowing text, while keeping blank-line paragraph breaks and sentence-ending line
     breaks."""
     # 1a. "Label <https://url>" -> "Label" (drop the redundant raw URL entirely).
+    #     Only when the label is NOT itself a URL: "https://real.com <https://other>"
+    #     would otherwise leave text asserting one destination while the actual link
+    #     pointed somewhere else, which is exactly the shape of a phishing render.
+    #     In that case keep the bracketed target (1b unwraps it) and drop the
+    #     redundant label instead.
+    text = re.sub(r"(?<![^\s])https?://\S+[ \t]+<(https?://[^<>\s]+)>", r"<\1>", text)
     text = re.sub(r"(?<=[^\s<])[ \t]+<(https?://[^<>\s]+)>", "", text)
     # 1b. A bracketed URL with no adjacent label (starts a line, follows an opening
     #     bracket, etc) — unwrap to bare so the general shortener below still gets a
     #     chance to turn it into a readable host instead of leaving stray "<"/">".
     text = re.sub(r"<(https?://[^<>\s]+)>", r"\1", text)
     # 1c. Tracking-URL noise: a parenthetical that's *only* a link reference.
-    text = re.sub(r"\(\s*https?://[^)]+\)", "", text)
+    #     "[^)]+" would run past the URL to the first ")" ANYWHERE after it, so
+    #     "(https://a.co and reply by Friday)" silently lost "and reply by Friday".
+    #     Match only a URL (plus optional whitespace) up to the close paren, so a
+    #     parenthetical that also contains the sender's words is left alone.
+    text = re.sub(r"\(\s*https?://[^\s)]+\s*\)", "", text)
     # 1d. Any other very long bare URL -> host, punctuation-safe.
     text = re.sub(r"https?://\S{40,}", _shorten_long_url, text)
     # 2. ASCII rule lines (a line that's only 3+ repeats of one punctuation char).
@@ -932,8 +965,12 @@ def _dismiss(payload):
                           "--json", json.dumps({"addLabelIds": ["INBOX"],
                                                 "removeLabelIds": remove})],
                     allow_empty=True)
-            # Recorded here, after the write is confirmed, so it fires exactly once
-            # and never on a write that didn't actually happen.
+
+        def _after():
+            # Recorded after the write is confirmed, so it fires exactly once and
+            # never on a write that didn't actually happen. Separate from _write so
+            # a signal-append failure can't trigger a rollback of a restore that
+            # really did succeed.
             learning.record({"type": "keep_override_undo", "account": slug,
                              "thread_id": tid, "sender": sender,
                              "sender_email": sender_email, "subject": subject})
@@ -945,7 +982,7 @@ def _dismiss(payload):
             _bump_undo_point(slug, label, +1)
             _queue_notification(f"Couldn't restore \u201c{subject}\u201d — still set aside.")
 
-        _bg_gmail_write(_write, _on_failure)
+        _bg_gmail_write(_write, _on_failure, after_fn=_after)
         return {"ok": True, "restored": tid}
 
     # Deterministic, no network — safe to compute before the HTTP response.
@@ -964,8 +1001,12 @@ def _dismiss(payload):
                       "--params", json.dumps({"userId": "me", "id": tid}),
                       "--json", json.dumps({"addLabelIds": [lid], "removeLabelIds": ["INBOX"]})],
                 allow_empty=True)
-        # Recorded here, after the write is confirmed, so the signal fires exactly
-        # once and only for a dismiss that actually happened.
+
+    def _after():
+        # Recorded after the write is confirmed, so the signal fires exactly once
+        # and only for a dismiss that actually happened. Separate from _write: if
+        # appending the signal fails the mail HAS already been set aside, and
+        # rolling back would tell the user the opposite of the truth.
         learning.record({"type": "keep_override", "action": "archived_without_reply",
                          "account": slug, "thread_id": tid, "sender": sender,
                          "sender_email": sender_email, "subject": subject,
@@ -979,7 +1020,7 @@ def _dismiss(payload):
         _bump_undo_point(slug, label, -1)
         _queue_notification(f"Couldn't set aside \u201c{subject}\u201d — it's still in your inbox.")
 
-    _bg_gmail_write(_write, _on_failure)
+    _bg_gmail_write(_write, _on_failure, after_fn=_after)
     return {"ok": True, "label": label, "thread_id": tid}
 
 

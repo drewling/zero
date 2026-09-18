@@ -194,7 +194,19 @@ DEFAULT_READ_WORKERS = 16
 
 # Process-wide unit budget, shared by every worker so the limit is enforced for
 # the run as a whole rather than per thread.
-_LIMITER = gq.UnitLimiter()
+#
+# DEFERENCE TO THE TRANSPORT LAYER: lib/draftutil._gws also grew a units/minute
+# governor (_await_quota), and it sits UNDERNEATH this one — every read here goes
+# through it. Two ledgers counting the same call would each believe it spent the
+# units, so both would throttle on half-true books and both would report inflated
+# totals. Since draftutil's governor covers every caller in the codebase (the
+# panel, catchup, drafts), it is the right place to enforce the budget, so when
+# it is present we step aside and keep only what it does not do: cost-aware
+# accounting for the report, and quota-aware retry/backoff around READS
+# specifically. Delete this shim if that governor is ever removed.
+_TRANSPORT_GOVERNS = hasattr(du, "_await_quota")
+_LIMITER = gq.UnitLimiter(
+    units_per_minute=10 ** 9 if _TRANSPORT_GOVERNS else None)
 
 # How many addresses to test per grouped replied_before probe. Gmail accepts
 # `from:me to:(a OR b OR ...)`, so one 5-unit call can clear many senders at once
@@ -394,6 +406,32 @@ def _thread_ids(cfg, grace_days):
     return _thread_ids_q(cfg, _candidate_q(grace_days))
 
 
+def _is_owner_sender(me, from_header):
+    """True when `from_header`'s address IS the owner's address.
+
+    A substring test ("me.lower() in from_header.lower()") is not safe here, and
+    this is the highest-consequence boolean in the module: last_from_owner=True
+    is a DETERMINISTIC archive that never consults Jev at all. The owner's
+    address is routinely a substring of a different real person's address
+    ("ben@gmail.com" inside "reuben@gmail.com"), and it also appears inside
+    display names on mailing-list mail ('"ben@gmail.com via List" <list@...>'),
+    so a substring match archives a live conversation with a real correspondent.
+
+    Compare the parsed address instead. `me` is normally the profile email, but
+    main() falls back to the account LABEL when the profile lookup fails; when
+    `me` isn't an address at all there is nothing to parse, so the old substring
+    behaviour is kept for that case rather than silently never matching."""
+    me = (me or "").strip().lower()
+    from_header = (from_header or "").strip()
+    if not me or not from_header:
+        return False
+    sender = (parseaddr(from_header)[1] or "").strip().lower()
+    if "@" in me:
+        return bool(sender) and sender == me
+    # `me` is a bare label, not an address: fall back to the historical behaviour.
+    return me in from_header.lower()
+
+
 def _thread_info_via_get(cfg, tid, me):
     """Authoritative fallback: one threads.get (40 units) for a single thread.
 
@@ -412,7 +450,7 @@ def _thread_info_via_get(cfg, tid, me):
     subject = h.get("subject", "(no subject)")
     snippet = (last.get("snippet", "") or "")[:160]
     last_email = (parseaddr(last_from)[1] or "").lower()
-    last_from_owner = bool(me and me.lower() in last_from.lower())
+    last_from_owner = _is_owner_sender(me, last_from)
     label_ids = set()
     for m in msgs:
         label_ids.update(m.get("labelIds") or [])
@@ -448,7 +486,14 @@ def _thread_info_via_index(cfg, tid, me, index):
     # signal alone is enough to treat the thread as owner-handled; requiring both
     # would silently keep mail the old code archived.
     last_from_owner = bool(index.last_from_owner(tid)
-                           or (me and last_from and me.lower() in last_from.lower()))
+                           or _is_owner_sender(me, last_from))
+    # NOTE ON ORDER: these ids are newest-first, whereas threads.get returns
+    # oldest-first. Verified on live threads: the SETS are identical, the order is
+    # exactly reversed. That is safe because `ids` is only ever accumulated into
+    # archive_msg_ids and handed to messages.batchModify, which applies the same
+    # label change to every id regardless of order. Do not start depending on the
+    # order here without reconciling the two paths first.
+    #
     # label_ids is consumed only as a set-membership test for category labels
     # (_backfill_partition), and the newest message carries the thread's current
     # labels. The threads.list snippet is preferred since it is already paid for.
@@ -671,25 +716,53 @@ def _jev_state(c, policy, learned):
     return state
 
 
+def _sane(v, lo, hi, default):
+    """`v` as a float if it is finite and inside [lo, hi], else `default`.
+
+    NaN is the dangerous case and the reason this exists: every comparison
+    against NaN is False, so a NaN answer slips past the keep guards in
+    _jev_decide ("protected > 0.5" is False) while still satisfying the archive
+    guards ("awaiting < 0.25" is evaluated on a different, valid field). That
+    turns one malformed number into an archive of protected mail. NaN is
+    reachable without malice: json.loads() accepts a bare NaN literal, and
+    float() accepts "nan"/"inf"/"1e999" from a string-typed answer. Out-of-range
+    values are malformed too, so they also fall back rather than being trusted."""
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return default
+    if f != f or f in (float("inf"), float("-inf")):   # NaN / +-inf
+        return default
+    if f < lo or f > hi:
+        return default
+    return f
+
+
 def _noul(answers, key, default=None):
     """Read a noul probability, or `default` when the answer is missing/malformed.
 
     Defaults are chosen by the CALLER so a missing answer can never be the thing
-    that causes an archive."""
+    that causes an archive. A probability outside [0, 1] (or NaN/inf) is not a
+    probability, so it is treated as missing."""
     try:
         a = answers.get(key) or {}
         v = a.get("noul")
-        return float(v) if v is not None else default
+        return _sane(v, 0.0, 1.0, default) if v is not None else default
     except Exception:
         return default
 
 
 def _score(answers, key, default=None):
-    """Read a score value, or `default` when the answer is missing/malformed."""
+    """Read a score value, or `default` when the answer is missing/malformed.
+
+    Valid scores are positions on the urgency spectrum, i.e. within
+    [0, len(JEV_URGENCY_LEVELS) - 1]; anything else is treated as missing."""
     try:
         a = answers.get(key) or {}
         v = a.get("score")
-        return float(v) if v is not None else default
+        if v is None:
+            return default
+        return _sane(v, 0.0, float(len(JEV_URGENCY_LEVELS) - 1), default)
     except Exception:
         return default
 
@@ -1011,6 +1084,7 @@ def main():
     a = ap.parse_args()
 
     if a.units_per_minute and a.units_per_minute > 0:
+        # Explicit override always wins, even over transport-layer deference.
         globals()["_LIMITER"] = gq.UnitLimiter(units_per_minute=a.units_per_minute)
 
     try:
@@ -1142,7 +1216,8 @@ def main():
     result["sync_mode"] = sync_mode
     result["candidates"] = len(all_candidates)
     result["skipped_unchanged"] = skipped_unchanged
-    result["quota"] = _LIMITER.stats()
+    result["quota"] = dict(_LIMITER.stats(),
+                           governed_by="draftutil" if _TRANSPORT_GOVERNS else "reader")
     if index is not None:
         result["bulk_index"] = index.stats()
 
