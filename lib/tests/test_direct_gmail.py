@@ -328,5 +328,112 @@ class ReadPathEquivalenceTests(unittest.TestCase):
         self.assertIsNone(mailbox_sync._message_info("t1", message, ["m"], "me@x.test"))
 
 
+
+
+class PanelIntegrationTests(unittest.TestCase):
+    """The panel must prefer the mirror, but never show stale mail."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.store = mailbox_store.MailboxStore(
+            "acct", path=os.path.join(self.tmp.name, "s.sqlite3"))
+        self.store.upsert_many([{
+            "id": "t1", "history_id": "10", "ids": ["m1"],
+            "last_from": "Ada <ada@x.test>", "last_email": "ada@x.test",
+            "last_from_owner": False, "subject": "Hello", "snippet": "hi there",
+            "label_ids": {"INBOX", "L1"}, "internal_ts": 1700000000}])
+
+    def test_validated_hit_avoids_any_gmail_call(self):
+        import dashboard_state
+        calls = []
+        with patch.object(dashboard_state.metadata_cache, "get",
+                          lambda *a, **k: calls.append(a) or {}):
+            row = dashboard_state._thread_row(
+                "cfg", "t1", "slug", {"_id_to_name": {}}, "10", self.store)
+        self.assertEqual(calls, [], "a validated mirror hit still called Gmail")
+        self.assertEqual(row["sender"], "Ada")
+        self.assertEqual(row["subject"], "Hello")
+        self.assertEqual(row["epoch"], 1700000000)
+
+    def test_moved_thread_falls_through_to_the_live_read(self):
+        import dashboard_state
+        called = []
+
+        def live(_cfg, tid, _hid, _fetch):
+            called.append(tid)
+            return {"messages": [{"id": "m2", "internalDate": "1700000999000",
+                                  "labelIds": ["INBOX"], "snippet": "newer",
+                                  "payload": {"headers": [
+                                      {"name": "From", "value": "Bob <bob@x.test>"},
+                                      {"name": "Subject", "value": "Newer"}]}}]}
+
+        with patch.object(dashboard_state.metadata_cache, "get", live):
+            row = dashboard_state._thread_row(
+                "cfg", "t1", "slug", {"_id_to_name": {}}, "11", self.store)
+        self.assertEqual(called, ["t1"], "a moved thread was served from the mirror")
+        self.assertEqual(row["subject"], "Newer")
+
+    def test_category_is_resolved_from_mirror_labels(self):
+        import dashboard_state
+        cat_map = {"_id_to_name": {"L1": "✉️ Needs reply"}, "✉️ Needs reply": "Needs reply"}
+        with patch.object(dashboard_state.metadata_cache, "get",
+                          lambda *a, **k: self.fail("should not read Gmail")):
+            row = dashboard_state._thread_row("cfg", "t1", "slug", cat_map, "10",
+                                              self.store)
+        self.assertEqual(row["category"], "Needs reply")
+
+
+class KeeperIntegrationTests(unittest.TestCase):
+    """The keeper's tier-0 read must be validated the same way as every tier."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.store = mailbox_store.MailboxStore(
+            "acct", path=os.path.join(self.tmp.name, "s.sqlite3"))
+        self.store.upsert_many([{
+            "id": "t1", "history_id": "10", "ids": ["m1"],
+            "last_from": "Ada <ada@x.test>", "last_email": "ada@x.test",
+            "last_from_owner": False, "subject": "Hello", "snippet": "stored",
+            "label_ids": {"INBOX"}, "internal_ts": 1700000000}])
+
+    def test_store_hit_skips_the_network_and_matches_the_expected_shape(self):
+        import review_open_loops as rol
+        with patch.object(rol, "_STORE", self.store), \
+             patch.dict(rol._HISTORY_IDS, {"t1": "10"}, clear=True), \
+             patch.object(rol, "_thread_info_via_get",
+                          lambda *a, **k: self.fail("read Gmail on a valid hit")):
+            info = rol._thread_info("cfg", "t1", "me@x.test")
+        # Must be exactly what the classifier consumes, with no extra keys.
+        self.assertEqual(set(info), {"id", "ids", "last_from", "last_email",
+                                     "last_from_owner", "subject", "snippet",
+                                     "label_ids"})
+        self.assertIsInstance(info["label_ids"], set)
+
+    def test_moved_thread_is_re_read_not_served(self):
+        import review_open_loops as rol
+        sentinel = {"id": "t1", "ids": ["m9"], "last_from": "Bob <bob@x.test>",
+                    "last_email": "bob@x.test", "last_from_owner": False,
+                    "subject": "Fresh", "snippet": "fresh", "label_ids": {"INBOX"}}
+        with patch.object(rol, "_STORE", self.store), \
+             patch.object(rol, "_CACHE", None), \
+             patch.dict(rol._HISTORY_IDS, {"t1": "99"}, clear=True), \
+             patch.object(rol, "_thread_info_via_get", lambda *a, **k: sentinel):
+            info = rol._thread_info("cfg", "t1", "me@x.test")
+        self.assertEqual(info["subject"], "Fresh", "stale row served for a moved thread")
+
+    def test_owner_identity_is_recomputed_not_trusted(self):
+        # last_from_owner=True is a deterministic archive with no Jev call, so it
+        # is always recomputed against the CURRENT owner address rather than
+        # trusted from whatever the mirror happened to store.
+        import review_open_loops as rol
+        with patch.object(rol, "_STORE", self.store), \
+             patch.dict(rol._HISTORY_IDS, {"t1": "10"}, clear=True):
+            info = rol._thread_info("cfg", "t1", "ada@x.test")
+        self.assertTrue(info["last_from_owner"],
+                        "owner identity was not recomputed for the current account")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

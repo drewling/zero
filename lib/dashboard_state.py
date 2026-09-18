@@ -40,6 +40,10 @@ import draftutil as du        # noqa: E402
 import inbox_zero as iz       # noqa: E402
 import learning               # noqa: E402
 import metadata_cache
+try:
+    import mailbox_store            # local mailbox mirror (optional fast path)
+except Exception:                   # pragma: no cover - degrade to live reads
+    mailbox_store = None
 
 # Path to the categories config file (root of the repo).
 _CATEGORIES_PATH = os.path.join(ROOT, "categories.json")
@@ -178,7 +182,49 @@ def _inbox_thread_ids(cfg, limit, histories=None):
     return [t["id"] for t in d.get("threads", []) or []][:limit]
 
 
-def _thread_row(cfg, tid, slug, category_label_map=None, history_id=None):
+def _row_from_store(row, tid, slug, category_label_map):
+    """Build a panel row from a local mirror row, with no Gmail call at all.
+
+    The mirror stores exactly what this needs: sender, subject, snippet, the
+    label set and the newest message's timestamp. It is only ever consulted
+    after being validated against the thread's current historyId, so a thread
+    that moved falls through to the live read below.
+    """
+    name, addr = parseaddr(row.get("last_from", ""))
+    category = None
+    if category_label_map and row.get("label_ids"):
+        id_to_name = category_label_map.get("_id_to_name") or {}
+        for lid in row["label_ids"]:
+            lname = id_to_name.get(lid, "")
+            if lname in category_label_map:
+                category = category_label_map[lname]
+                break
+    return {
+        "thread_id": tid,
+        "sender": (name or addr or "Unknown").strip(),
+        "sender_email": (addr or "").strip(),
+        "subject": (row.get("subject") or "(no subject)").strip(),
+        "snippet": (row.get("snippet") or "")[:140],
+        "epoch": int(row.get("internal_ts") or 0),
+        "account_slug": slug,
+        "category": category,
+    }
+
+
+def _thread_row(cfg, tid, slug, category_label_map=None, history_id=None,
+                store=None):
+    # The local mirror first: the background sync has usually already read this
+    # thread, and a validated hit turns a 40-unit network round trip into a
+    # local lookup. A miss, a moved thread or a missing mirror all fall through
+    # to the live read, so the panel can never show stale mail.
+    if store is not None and history_id:
+        try:
+            row = store.get(tid, history_id)
+        except Exception:
+            row = None
+        if row and row.get("internal_ts"):
+            return _row_from_store(row, tid, slug, category_label_map)
+
     t = metadata_cache.get(cfg, tid, history_id, du._gws)
     msgs = t.get("messages", []) or []
     if not msgs:
@@ -305,9 +351,14 @@ def _account_state(acct, max_loops, categories):
             id_to_name = {}
         cat_label_map["_id_to_name"] = id_to_name  # piggyback; key never conflicts
 
+        # The background sync usually has these threads already. Opened once
+        # per account and only read, so a missing or stale mirror just means
+        # every row takes the live path it took before.
+        store = mailbox_store.load(slug) if mailbox_store is not None else None
         rows, failed = [], 0
         with ThreadPoolExecutor(max_workers=8) as ex:
-            futs = {ex.submit(_thread_row, cfg, tid, slug, cat_label_map, histories.get(tid)): tid for tid in ids}
+            futs = {ex.submit(_thread_row, cfg, tid, slug, cat_label_map,
+                              histories.get(tid), store): tid for tid in ids}
             for f in as_completed(futs):
                 try:
                     r = f.result()
@@ -315,6 +366,8 @@ def _account_state(acct, max_loops, categories):
                         rows.append(r)
                 except Exception:
                     failed += 1
+        if store is not None:
+            store.close()
         rows.sort(key=lambda r: r["epoch"], reverse=True)
         state["loops"] = rows
         state["partial"] = failed  # rows we couldn't load; UI warns if non-zero
