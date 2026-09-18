@@ -11,7 +11,7 @@ Subject and body are passed base64 (utf-8) to avoid shell-escaping problems.
 All gws calls run against the account whose config dir is given, using the
 file keyring backend so they work headlessly.
 """
-import argparse, base64, html as _html, json, os, subprocess, sys, time
+import argparse, base64, html as _html, json, os, random, subprocess, sys, time, threading
 from email.message import EmailMessage
 from email.utils import formataddr, parseaddr
 
@@ -30,6 +30,67 @@ _RETRYABLE = ("429", "500", "502", "503", "504", "rate limit", "timeout",
 # a retryable keyword. Checked first so auth/permission always wins over a coincidence.
 _FATAL = ("401", "403", "404", "unauthorized", "forbidden", "permission",
           "insufficient", "invalid_grant", "not found", "invalid credentials")
+
+# ...except Gmail reports QUOTA exhaustion as a 403 with reason "rateLimitExceeded"
+# or "Quota exceeded", not a 429. Those ARE transient (the limit is per minute), so
+# they must be recognised before the _FATAL check or every read in a large run fails
+# instantly, retries at the wrong layer, and the run appears frozen while burning
+# more quota. See https://developers.google.com/workspace/gmail/api/reference/quota
+_QUOTA = ("ratelimitexceeded", "quota exceeded", "userratelimitexceeded")
+
+# --- Gmail quota governor -----------------------------------------------------
+# Gmail bills per "quota unit", not per request, and allows 6,000 units per minute
+# per user. Methods cost very different amounts, so a worker count is the wrong
+# knob: 16 workers doing threads.get (40 units) is ~78,000 units/min, 13x over,
+# which is why large runs stalled at a fixed thread count while hammering 403s.
+# Staying under the limit BY DESIGN is far faster than exceeding it and retrying.
+_UNIT_COST = {
+    "threads.get": 40, "threads.list": 10, "threads.modify": 10,
+    "messages.get": 20, "messages.list": 5, "messages.modify": 5,
+    "messages.batchModify": 50, "labels.list": 1, "labels.create": 5,
+    "history.list": 2, "getProfile": 1, "drafts.create": 10, "drafts.send": 100,
+}
+_UNIT_BUDGET = 5200          # of 6000/min, leaving headroom for other callers
+_quota_lock = threading.Lock()
+_quota_spent = []            # (timestamp, units) within the trailing minute
+
+
+def _method_of(args):
+    """Best-effort 'resource.method' name for an argv, for quota accounting."""
+    parts = [a for a in args if not a.startswith("-")]
+    # e.g. ['gmail','users','threads','get', ...] -> 'threads.get'
+    for i in range(len(parts) - 1, 0, -1):
+        if parts[i] in ("get", "list", "modify", "create", "send", "batchModify",
+                        "delete", "trash", "untrash"):
+            return f"{parts[i-1]}.{parts[i]}"
+    return "getProfile" if "getProfile" in parts else "messages.list"
+
+
+def _await_quota(args):
+    """Block until this call fits inside the trailing-minute unit budget.
+
+    A sliding window rather than a token bucket: a bucket pre-filled to capacity
+    lets a full burst through and then refills, so a 60s window straddling the
+    burst can see ~2x the budget — exactly the pattern Gmail rejects.
+
+    Each admitted call reserves its units for a full 60 seconds. Expiring an entry
+    the instant it turns 60s old would let the next call in immediately, so any
+    given 60s window could observe slightly MORE than the budget; holding the
+    reservation for the whole window is what makes the bound actually hold.
+    """
+    cost = _UNIT_COST.get(_method_of(args), 20)
+    while True:
+        with _quota_lock:
+            now = time.time()
+            _quota_spent[:] = [(t, u) for (t, u) in _quota_spent if now - t < 60.0]
+            used = sum(u for _, u in _quota_spent)
+            if used + cost <= _UNIT_BUDGET:
+                _quota_spent.append((now, cost))
+                return
+            oldest = min(t for t, _ in _quota_spent)
+            wait = max(0.05, 60.0 - (now - oldest))
+        time.sleep(min(wait, 5.0))
+
 
 
 def _fetch_signature(config_dir):
@@ -69,6 +130,7 @@ def _gws(config_dir, args, allow_empty=False, _retries=3):
     """
     last_exc = None
     for attempt in range(_retries):
+        _await_quota(args)     # stay inside Gmail's units/minute rather than 403-ing
         r = subprocess.run([GWS] + args, capture_output=True, text=True, env=_env(config_dir))
         # Check returncode first — a non-zero exit always means failure.
         if r.returncode != 0:
@@ -77,6 +139,16 @@ def _gws(config_dir, args, allow_empty=False, _retries=3):
                 err = "\n".join(l for l in r.stdout.splitlines() if "keyring" not in l).strip()
             msg = err or f"gws exited with code {r.returncode}"
             msg_lc = msg.lower()
+            # Quota exhaustion first: it arrives as a 403 (which _FATAL would otherwise
+            # swallow) but clears within the minute, so it deserves a real wait rather
+            # than an instant failure. Longer, jittered backoff per Google's guidance —
+            # retrying fast here is what turns a busy run into a 403 storm.
+            if any(p in msg_lc for p in _QUOTA):
+                if attempt < _retries - 1:
+                    last_exc = RuntimeError(msg)
+                    time.sleep(min(8 * (2 ** attempt), 60) + random.uniform(0, 1.0))
+                    continue
+                raise RuntimeError(msg)
             # Fatal-first: auth/permission/not-found never retry, even if the message
             # also contains a retryable keyword (e.g. a 403 body mentioning "connection").
             if any(p in msg_lc for p in _FATAL):

@@ -21,6 +21,9 @@ sys.path.insert(0, HERE)
 import inbox_zero as iz       # noqa: E402
 import draftutil as du        # noqa: E402
 import learning               # noqa: E402
+import gmail_quota as gq      # noqa: E402
+import mailbox_index as mbi   # noqa: E402
+import sync_state             # noqa: E402
 
 _CATEGORIES_PATH = os.path.join(ROOT, "categories.json")
 _LABEL_HISTORY_PATH = os.path.join(ROOT, "app", "category_label_history.json")
@@ -176,32 +179,52 @@ _REPLIED = {}
 _REPLIED_LOCK = threading.Lock()
 _REPLIED_IN_FLIGHT = {}
 
-# Gmail reads are network-bound.  Keep this deliberately bounded so one account cannot
-# stampede the API; callers can tune it for accounts with lower rate-limit headroom.
+# Snippets harvested free from threads.list (10 units per 100 threads), populated
+# by _thread_ids_q and consumed by the fast read path, so a snippet never costs
+# its own call.
+_SNIPPETS = {}
+
+# Gmail reads are network-bound, so concurrency still buys LATENCY. But the real
+# ceiling is Gmail's 6,000 quota-units-per-minute-per-user budget, not a thread
+# count: 16 workers x (threads.get 40u + messages.list 5u) was ~78,000 units/min,
+# 13x over, which is exactly why the run died mid-way. Concurrency is now bounded
+# by the shared UnitLimiter below, so workers can stay plentiful while the spend
+# stays legal.
 DEFAULT_READ_WORKERS = 16
-_GMAIL_READ_RETRIES = 3
-_GMAIL_BACKOFF_SECONDS = 0.25
+
+# Process-wide unit budget, shared by every worker so the limit is enforced for
+# the run as a whole rather than per thread.
+_LIMITER = gq.UnitLimiter()
+
+# How many addresses to test per grouped replied_before probe. Gmail accepts
+# `from:me to:(a OR b OR ...)`, so one 5-unit call can clear many senders at once
+# instead of costing 5 units each.
+_REPLIED_GROUP_SIZE = 25
+
+
+def _quota_log(attempt, delay, exc):
+    """Surface throttling instead of hiding it; a silent stall is exactly what
+    made the progress bar look frozen."""
+    print(f"gmail: quota/rate limited, backing off {delay:.1f}s "
+          f"(retry {attempt + 1}): {str(exc)[:120]}", file=sys.stderr)
 
 
 def _is_rate_limited(exc):
-    """Whether a gws failure is Gmail's retryable rate-limit response."""
-    text = str(exc).lower()
-    return ("ratelimitexceeded" in text or "userratelimitexceeded" in text
-            or "429" in text
-            or ("403" in text and "rate" in text))
+    """Whether a gws failure is a retryable rate-limit/quota response."""
+    return gq.is_quota_error(exc)
 
 
-def _gws_read(cfg, args):
-    """Run a read with bounded backoff for Gmail rate limits, then preserve its error."""
-    for attempt in range(_GMAIL_READ_RETRIES + 1):
-        try:
-            # iz.gws delegates to draftutil's subprocess.run wrapper.  Each invocation
-            # owns its subprocess and input data, so independent reads are thread-safe.
-            return iz.gws(cfg, args)
-        except Exception as exc:
-            if not _is_rate_limited(exc) or attempt == _GMAIL_READ_RETRIES:
-                raise
-            time.sleep(_GMAIL_BACKOFF_SECONDS * (2 ** attempt))
+def _gws_read(cfg, args, method=None):
+    """Run a Gmail read under the shared unit budget, with Google's documented
+    truncated exponential backoff on quota errors.
+
+    The cost is derived from the call itself, so a caller cannot accidentally
+    under-declare an expensive method. iz.gws delegates to draftutil's
+    subprocess.run wrapper; each invocation owns its subprocess and input data,
+    so independent reads stay thread-safe."""
+    m = method or gq.method_from_args(args) or "threads.get"
+    return gq.call_with_quota(lambda: iz.gws(cfg, args), m,
+                              limiter=_LIMITER, on_retry=_quota_log)
 
 
 def _replied_before(cfg, email):
@@ -226,7 +249,8 @@ def _replied_before(cfg, email):
             return _REPLIED[email]
     try:
         d = _gws_read(cfg, ["gmail", "users", "messages", "list", "--params",
-                            json.dumps({"userId": "me", "q": f"from:me to:{email}", "maxResults": 1})])
+                            json.dumps({"userId": "me", "q": f"from:me to:{email}",
+                                        "maxResults": 1})], method="messages.list")
         v = bool(d.get("messages"))
     except Exception as e:
         # Lookup failed (transient gws/network blip). Bias conservatively toward "keep"
@@ -240,15 +264,126 @@ def _replied_before(cfg, email):
     return v
 
 
+def _group_probe(cfg, group):
+    """True/False = the owner HAS / HAS NOT written to anyone in `group`.
+
+    One messages.list (5 units) covering up to _REPLIED_GROUP_SIZE addresses."""
+    q = "from:me to:(" + " OR ".join(group) + ")"
+    d = _gws_read(cfg, ["gmail", "users", "messages", "list", "--params",
+                        json.dumps({"userId": "me", "q": q, "maxResults": 1})],
+                  method="messages.list")
+    return bool(d.get("messages"))
+
+
+def _grouping_works(cfg):
+    """Positive control: prove the grouped query syntax actually discriminates.
+
+    WHY THIS GUARD EXISTS
+    ---------------------
+    The failure mode of grouping is asymmetric and dangerous. If
+    `from:me to:(a OR b)` is not understood as intended — unsupported syntax, an
+    over-long query, an address form Gmail's parser rejects — it returns NO
+    results. We would read that as "the owner has never replied to any of these",
+    i.e. replied_before=False for everyone, which feeds the cold-outreach signal
+    and biases the whole run toward ARCHIVING. That is exactly the direction
+    PRODUCT.md forbids guessing in, and a negative result alone cannot distinguish
+    "genuinely no history" from "the query silently did nothing".
+
+    So before trusting ANY negative, we check the syntax against an address the
+    owner demonstrably HAS written to (a real recipient taken from Sent mail). If
+    that known-positive comes back negative through the grouped form, grouping is
+    broken and we refuse to use it for the rest of the run.
+
+    Costs ~25 units once. Returns False on any error, which simply means the run
+    uses the per-sender path (correct, just slower)."""
+    try:
+        d = _gws_read(cfg, ["gmail", "users", "messages", "list", "--params",
+                            json.dumps({"userId": "me", "q": "in:sent",
+                                        "maxResults": 1})],
+                      method="messages.list")
+        msgs = d.get("messages") or []
+        if not msgs:
+            return False                 # no sent mail: nothing to validate with
+        m = _gws_read(cfg, ["gmail", "users", "messages", "get", "--params",
+                            json.dumps({"userId": "me", "id": msgs[0]["id"],
+                                        "format": "metadata",
+                                        "metadataHeaders": ["To"]})],
+                      method="messages.get")
+        h = {x["name"].lower(): x["value"]
+             for x in (m.get("payload", {}) or {}).get("headers", []) or []}
+        addr = (parseaddr(h.get("to", ""))[1] or "").lower()
+        if not addr:
+            return False
+        # The control must pass through the SAME grouped form we intend to trust.
+        return _group_probe(cfg, [addr])
+    except Exception:
+        # Unprovable -> unused. The per-sender path is correct, just pricier, so
+        # this is a silent, safe degradation rather than a run-level problem.
+        return False
+
+
+def _prefetch_replied(cfg, emails, group_size=_REPLIED_GROUP_SIZE):
+    """Bulk-resolve replied_before for many senders using grouped queries.
+
+    A NEGATIVE group answer proves the owner has never written to ANY address in
+    it, clearing all of them for one 5-unit call. A POSITIVE answer only proves
+    *someone* matched, so that group is left for individual resolution — no
+    address is ever marked "replied" on group evidence alone.
+
+    Only runs at all once _grouping_works() has confirmed the query form
+    discriminates (see that function for why a bare negative is untrustworthy).
+
+    Measured on the live account: 13/15 sampled senders had no reply history, and
+    a group of 13 known-negatives correctly returned no hit.
+
+    Every error path is keep-safe: the address is left unresolved for the normal
+    per-sender path, which assumes "replied" (keep-biased) on failure.
+    Returns the number of addresses resolved."""
+    todo = []
+    with _REPLIED_LOCK:
+        for e in emails:
+            e = (e or "").lower()
+            if e and e not in _REPLIED and e not in todo:
+                todo.append(e)
+    if not todo or not _grouping_works(cfg):
+        return 0
+
+    resolved = 0
+    for i in range(0, len(todo), group_size):
+        group = todo[i:i + group_size]
+        try:
+            hit = _group_probe(cfg, group)
+        except Exception as exc:
+            print(f"replied_before group probe failed ({len(group)} senders): {exc}",
+                  file=sys.stderr)
+            continue                     # leave for the per-sender path
+        if hit:
+            continue                     # ambiguous: resolve individually later
+        with _REPLIED_LOCK:
+            for e in group:
+                if e not in _REPLIED:
+                    _REPLIED[e] = False
+                    resolved += 1
+    return resolved
+
+
 def _thread_ids_q(cfg, q):
-    """All thread ids matching a Gmail query, paged."""
+    """All thread ids matching a Gmail query, paged.
+
+    Also harvests the `snippet` that threads.list already returns, into
+    _SNIPPETS. The snippet is one of the classifier's inputs, so collecting it
+    here means the per-thread read never has to pay for it separately."""
     ids, tok = [], None
     while True:
         p = {"userId": "me", "q": q, "maxResults": 500}
         if tok:
             p["pageToken"] = tok
-        d = iz.gws(cfg, ["gmail", "users", "threads", "list", "--params", json.dumps(p)])
-        ids += [t["id"] for t in d.get("threads", []) or []]
+        d = _gws_read(cfg, ["gmail", "users", "threads", "list",
+                            "--params", json.dumps(p)], method="threads.list")
+        for t in d.get("threads", []) or []:
+            ids.append(t["id"])
+            if t.get("snippet"):
+                _SNIPPETS[t["id"]] = t["snippet"][:160]
         tok = d.get("nextPageToken")
         if not tok:
             break
@@ -259,10 +394,15 @@ def _thread_ids(cfg, grace_days):
     return _thread_ids_q(cfg, _candidate_q(grace_days))
 
 
-def _thread_info(cfg, tid, me):
+def _thread_info_via_get(cfg, tid, me):
+    """Authoritative fallback: one threads.get (40 units) for a single thread.
+
+    Used whenever the bulk index does not cover a thread, so correctness never
+    depends on the optimisation being available."""
     t = _gws_read(cfg, ["gmail", "users", "threads", "get", "--params",
                         json.dumps({"userId": "me", "id": tid, "format": "metadata",
-                                    "metadataHeaders": ["From", "Subject"]})])
+                                    "metadataHeaders": ["From", "Subject"]})],
+                  method="threads.get")
     msgs = t.get("messages", []) or []
     if not msgs:
         return None
@@ -281,31 +421,126 @@ def _thread_info(cfg, tid, me):
             "subject": subject, "snippet": snippet, "label_ids": label_ids}
 
 
-def _read_one_thread(cfg, tid, me):
+def _thread_info_via_index(cfg, tid, me, index):
+    """Fast path: one messages.get (20 units) on just the thread's NEWEST message.
+
+    The bulk index already knows every message id in the thread and which one is
+    newest, so the only thing left to buy is the From/Subject header pair — half
+    the price of threads.get for identical classifier inputs.
+
+    Returns None if anything is missing, so the caller falls back rather than
+    classifying on partial data."""
+    ids = index.message_ids(tid)
+    newest = index.newest(tid)
+    if not ids or not newest:
+        return None
+    m = _gws_read(cfg, ["gmail", "users", "messages", "get", "--params",
+                        json.dumps({"userId": "me", "id": newest,
+                                    "format": "metadata",
+                                    "metadataHeaders": ["From", "Subject"]})],
+                  method="messages.get")
+    h = {x["name"].lower(): x["value"]
+         for x in (m.get("payload", {}) or {}).get("headers", []) or []}
+    last_from = h.get("from", "")
+    last_email = (parseaddr(last_from)[1] or "").lower()
+    # SENT-label membership from the index, corroborated by the From header.
+    # Verified 100/100 against threads.get on live candidate threads. Either
+    # signal alone is enough to treat the thread as owner-handled; requiring both
+    # would silently keep mail the old code archived.
+    last_from_owner = bool(index.last_from_owner(tid)
+                           or (me and last_from and me.lower() in last_from.lower()))
+    # label_ids is consumed only as a set-membership test for category labels
+    # (_backfill_partition), and the newest message carries the thread's current
+    # labels. The threads.list snippet is preferred since it is already paid for.
+    label_ids = set(m.get("labelIds") or [])
+    snippet = _SNIPPETS.get(tid) or (m.get("snippet", "") or "")[:160]
+    return {"id": tid, "ids": ids, "last_from": last_from,
+            "last_email": last_email, "last_from_owner": last_from_owner,
+            "subject": h.get("subject", "(no subject)"), "snippet": snippet,
+            "label_ids": label_ids}
+
+
+def _thread_info(cfg, tid, me, index=None):
+    """Classifier inputs for one thread, cheapest correct route first.
+
+    The returned shape is identical on both paths and is exactly what
+    _classify/_jev_state consume: id, ids, last_from, last_email,
+    last_from_owner, subject, snippet, label_ids (replied_before is attached by
+    the caller)."""
+    if index is not None and index.covers(tid):
+        try:
+            info = _thread_info_via_index(cfg, tid, me, index)
+            if info:
+                return info
+        except Exception as exc:
+            # Fall through to the authoritative path rather than dropping a thread.
+            print(f"bulk read failed for {tid}, falling back: {exc}", file=sys.stderr)
+    return _thread_info_via_get(cfg, tid, me)
+
+
+def _read_one_thread(cfg, tid, me, index=None):
     """Fetch all classifier inputs for one thread; a None metadata result stays skipped."""
-    info = _thread_info(cfg, tid, me)
+    info = _thread_info(cfg, tid, me, index=index)
     if info:
         info["replied_before"] = _replied_before(cfg, info["last_email"])
     return info
 
 
-def _read_infos_parallel(cfg, tids, me, max_workers=DEFAULT_READ_WORKERS):
-    """Read threads concurrently while returning the sequential loop's ordered result."""
+def _read_infos_parallel(cfg, tids, me, max_workers=DEFAULT_READ_WORKERS, index=None):
+    """Read threads concurrently while returning the sequential loop's ordered result.
+
+    Concurrency is for latency only; the shared UnitLimiter inside _gws_read is
+    what keeps the run inside Gmail's 6,000 units/min budget, so workers wait
+    their turn instead of stampeding into a quota error.
+
+    A read that raises is recorded as None and SKIPPED, never archived: an
+    unreadable thread keeps whatever state it already has (PRODUCT.md:
+    reversible by construction, a failed read must never lose mail)."""
     total = len(tids)
     if not total:
         return []
     ordered = [None] * total
-    completed = 0
+    completed = failed = 0
     workers = max(1, int(max_workers))
+    # Phase 1: headers, labels and message ids for every thread, concurrently.
+    # replied_before is deliberately NOT resolved here, so phase 2 can batch it.
     with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="gmail-read") as pool:
-        futures = {pool.submit(_read_one_thread, cfg, tid, me): idx
+        futures = {pool.submit(_thread_info, cfg, tid, me, index): idx
                    for idx, tid in enumerate(tids)}
         for future in as_completed(futures):
-            ordered[futures[future]] = future.result()
+            try:
+                ordered[futures[future]] = future.result()
+            except Exception as exc:
+                failed += 1
+                if failed <= 3:
+                    print(f"thread read failed, skipping (kept): {exc}", file=sys.stderr)
             completed += 1
             _emit_progress(2 + int(63 * completed / total),
                            f"Reading mail ({completed} of {total})")
-    return [info for info in ordered if info]
+    if failed:
+        print(f"gmail: {failed}/{total} thread reads failed; those threads were "
+              f"left untouched (not archived)", file=sys.stderr)
+
+    infos = [info for info in ordered if info]
+
+    # Phase 2: settle reply history for all distinct senders at once. A validated
+    # grouped probe clears up to _REPLIED_GROUP_SIZE addresses per 5-unit call;
+    # anything it cannot settle falls through to the memoised per-sender path.
+    try:
+        _prefetch_replied(cfg, [i["last_email"] for i in infos])
+    except Exception as exc:
+        print(f"replied_before prefetch skipped: {exc}", file=sys.stderr)
+
+    # Phase 3: attach. Mostly cache hits after the prefetch; the rest resolve
+    # individually (memoised) and stay keep-biased on failure.
+    #
+    # No progress markers here: the parent maps one marker per thread onto the
+    # run bar and expects the read phase to end at 65 (see
+    # lib/tests/test_parallel_reads.py). Phases 2 and 3 are a handful of grouped
+    # calls plus cache hits, so the bar stays honest without extra markers.
+    for info in infos:
+        info["replied_before"] = _replied_before(cfg, info["last_email"])
+    return infos
 
 
 # --- Classification ----------------------------------------------------------
@@ -693,13 +928,21 @@ def _run_label_only(cfg, me, window_days, chunk, archive_days=0):
     all_labels_list = label_data.get("labels") or []
     id_to_name = {l["id"]: l["name"] for l in all_labels_list}
 
+    # Skip threads that already carry one of our category labels — SERVER-SIDE.
+    # _backfill_partition drops these too, but only after each one has cost a
+    # 40-unit threads.get. Excluding them in the query means the run stops paying
+    # to re-read mail it labelled on a previous run, which is what made every run
+    # cost the same as the first one.
+    label_excl = " ".join(f'-label:"{n}"' for n in sorted(cat_label_names))
+    suffix = f" {label_excl}" if label_excl else ""
+
     # Inbox window.
-    inbox_tids = set(_thread_ids_q(cfg, f"in:inbox newer_than:{window_days}d"))
+    inbox_tids = set(_thread_ids_q(cfg, f"in:inbox newer_than:{window_days}d{suffix}"))
     # Archived window (non-inbox recent mail), unioned with inbox set.
     archived_tids = set()
     if archive_days and archive_days > 0:
         archived_tids = set(_thread_ids_q(
-            cfg, f"-in:inbox in:all newer_than:{archive_days}d")) - inbox_tids
+            cfg, f"-in:inbox in:all newer_than:{archive_days}d{suffix}")) - inbox_tids
 
     _emit_progress(2, "Finding recent mail")
     all_tids = list(inbox_tids | archived_tids)
@@ -756,7 +999,19 @@ def main():
                     help="label-only: only consider inbox mail newer than N days")
     ap.add_argument("--archive-days", type=int, default=0,
                     help="label-only: also label archived mail newer than N days (0=off)")
+    ap.add_argument("--no-bulk", action="store_true",
+                    help="disable the bulk mailbox index (per-thread reads only)")
+    ap.add_argument("--full", action="store_true",
+                    help="ignore the stored history cursor and read every candidate")
+    ap.add_argument("--units-per-minute", type=int, default=0,
+                    help="override the Gmail quota budget (default: 80%% of 6000)")
+    ap.add_argument("--limit", type=int, default=0,
+                    help="only read the first N candidate threads (bounded test run; "
+                         "never advances the history cursor)")
     a = ap.parse_args()
+
+    if a.units_per_minute and a.units_per_minute > 0:
+        globals()["_LIMITER"] = gq.UnitLimiter(units_per_minute=a.units_per_minute)
 
     try:
         me = du._profile_email(a.config_dir)
@@ -772,9 +1027,64 @@ def main():
 
     _emit_progress(2, "Finding recent mail")
     tids = _thread_ids(a.config_dir, a.grace_days)
-    # Reading per-thread metadata is the long silent phase (2 gws calls/thread),
-    # so fetch bounded-concurrently while emitting 2→65% as work completes.
-    infos = _read_infos_parallel(a.config_dir, tids, me, a.read_workers)
+
+    # --- Incremental sync ----------------------------------------------------
+    # Capture the cursor BEFORE reading, so anything landing mid-run is picked up
+    # next time rather than falling into the gap between reading and saving. The
+    # cursor is only persisted at the very END of a successful run.
+    next_cursor = None
+    try:
+        prof = _gws_read(a.config_dir, ["gmail", "users", "getProfile", "--params",
+                                        json.dumps({"userId": "me"})],
+                         method="getProfile")
+        next_cursor = prof.get("historyId")
+    except Exception as exc:
+        print(f"getProfile failed, incremental sync disabled this run: {exc}",
+              file=sys.stderr)
+
+    all_candidates = list(tids)
+    sync_mode, skipped_unchanged = "full", 0
+    cursor = None if a.full else sync_state.load(a.account_label)
+    if cursor:
+        def _hist(token):
+            p = {"userId": "me", "startHistoryId": str(cursor), "maxResults": 500}
+            if token:
+                p["pageToken"] = token
+            return _gws_read(a.config_dir, ["gmail", "users", "history", "list",
+                                            "--params", json.dumps(p)],
+                             method="history.list")
+        changed, status = sync_state.changed_threads(_hist, cursor)
+        if status == "ok" and changed is not None:
+            # Narrow to threads that are BOTH current candidates AND changed.
+            # Unchanged candidates keep their existing state untouched: they are
+            # not archived, merely not re-examined (PRODUCT.md: never lose mail).
+            narrowed = [t for t in tids if t in changed]
+            skipped_unchanged = len(tids) - len(narrowed)
+            tids, sync_mode = narrowed, "incremental"
+        else:
+            # Expired or errored cursor -> full read. Never a failure, never partial.
+            print(f"history cursor unusable ({status}); doing a full read",
+                  file=sys.stderr)
+            sync_state.clear(a.account_label)
+
+    # A bounded test run reads only the first N candidates. It deliberately does
+    # NOT advance the history cursor (see the save() call at the end).
+    if a.limit and a.limit > 0:
+        tids = tids[:a.limit]
+
+    # --- Bulk index ----------------------------------------------------------
+    # One paged messages.list sweep (5 units per 500 messages) yields every
+    # thread's message ids and which message is newest, so the per-thread read
+    # drops from threads.get (40u) to messages.get (20u) and never pays for
+    # message-id enumeration at all. Measured: 805 units for a 70k-message
+    # mailbox, versus 128,840 units to threads.get 3,221 threads.
+    index = None
+    if not a.no_bulk and tids:
+        _emit_progress(3, "Indexing mailbox")
+        index = mbi.build_index(a.config_dir, du._env, limiter=_LIMITER,
+                                log=lambda m: print(m, file=sys.stderr))
+
+    infos = _read_infos_parallel(a.config_dir, tids, me, a.read_workers, index=index)
 
     # Threads the user explicitly restored must never be re-archived.
     keep_set = learning.kept_thread_ids()
@@ -827,6 +1137,14 @@ def main():
               "to_archive_threads": len(infos) - kept, "to_keep_threads": kept,
               "mode": "execute" if a.execute else "dry-run", "keep_sample": keep_s,
               "label_ok": label_ok, "label_failed": label_failed}
+    # Make the cost visible: this is the number that regressed, and the number
+    # that has to stay low.
+    result["sync_mode"] = sync_mode
+    result["candidates"] = len(all_candidates)
+    result["skipped_unchanged"] = skipped_unchanged
+    result["quota"] = _LIMITER.stats()
+    if index is not None:
+        result["bulk_index"] = index.stats()
 
     if a.execute and archive_msg_ids:
         lab = iz._dated_label(iz._BASE_LABEL)
@@ -834,6 +1152,15 @@ def main():
         result["archived_messages"] = iz._batch_modify(a.config_dir, archive_msg_ids,
                                                         add_ids=[lid], remove_ids=["INBOX"])
         result["recovery_label"] = lab
+
+    # The run reached the end without raising, so the cursor may now advance.
+    # Deliberately LAST: any earlier failure leaves the old cursor in place and
+    # the next run re-reads that ground. Re-reading is cheap; skipping loses mail.
+    # A bounded (--limit) pass never advances it, since it did not look at
+    # everything and must not claim to have caught the mailbox up.
+    if next_cursor and not a.limit:
+        sync_state.save(a.account_label, next_cursor,
+                        meta={"mode": result["mode"], "threads": len(infos)})
 
     print(json.dumps(result, ensure_ascii=False))
 
