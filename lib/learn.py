@@ -18,7 +18,9 @@ can read and edit. With too few signals it writes nothing.
 
 Usage: learn.py [--min 2]
 """
-import argparse, os, re, sys
+import argparse, hashlib, json, os, re, sys
+import runtime_state as storage
+import run_metrics as metrics
 from collections import Counter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -163,9 +165,30 @@ def _build_archive_section(signals, min_recurrence=2, max_bullets=8):
     return "## Archive more like this\n" + "\n".join(bullets) + "\n\n"
 
 
-def build(min_signals):
-    import json as _json
-    signals = learning.recent(800)
+def _fingerprint(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+
+def _voice(prompt):
+    # Cache only successful voice generation, independently of deterministic rules.
+    provider = _llm._BY_NAME.get(_llm._active_provider_name(), {})
+    key = _fingerprint([prompt, "haiku", provider,
+                        os.environ.get(provider.get("bin_env", ""), "")])
+    path = os.path.join(learning.LEARN_DIR, "voice-cache.json")
+    with storage.locked(path):
+        prior = storage.read_json(path)
+        if prior.get("key") == key and isinstance(prior.get("text"), str) and prior["text"].strip():
+            metrics.record("learning.voice", hits=1)
+            return prior["text"], True
+        with metrics.measured("learning.voice", misses=1):
+            text, ok = _llm.run_prompt(prompt, model="haiku", timeout=150)
+        if ok and text.strip():
+            storage.atomic_text(path, json.dumps({"key": key, "text": text}))
+        return text, ok
+
+
+def build(min_signals, signals=None, rejected=None):
+    signals = learning.recent(800) if signals is None else signals
     edits = [s for s in signals if s.get("type") == "draft_edit"]
     restores = _active_restores(signals)
     # Eligible archive signals: learn not explicitly False, recurring (>=2) senders only.
@@ -185,7 +208,7 @@ def build(min_signals):
     if len(edits) + len(restores) + recurring_archive_senders < min_signals:
         return None, len(restores), len(edits)
 
-    rejected = _rejected_norms()
+    rejected = _rejected_norms() if rejected is None else rejected
     sections = []
 
     # Restore section: written from raw signals, no LLM needed.
@@ -210,8 +233,10 @@ def build(min_signals):
                 f"- DRAFT EDITED: orig=\"{(s.get('original_snippet') or '')[:160]}\" "
                 f"final=\"{(s.get('final') or '')[:200]}\""
             )
-        voice_raw, voice_ok = _llm.run_prompt(VOICE_PROMPT + "\n".join(lines),
-                                               model="haiku", timeout=150)
+        voice_raw, voice_ok = _voice(VOICE_PROMPT + "\n".join(lines))
+        if not voice_ok or not voice_raw.strip():
+            # Do not publish an incomplete rollup or mark failed inputs as learned.
+            return None, len(restores), len(edits)
         if voice_ok and voice_raw.strip():
             voice_text = _filter_rejected(voice_raw.strip(), rejected)
             if voice_text.strip():
@@ -228,17 +253,44 @@ def main():
     ap.add_argument("--min", type=int, default=2,
                     help="minimum high-signal events before writing a rollup")
     a = ap.parse_args()
-    text, n_restore, n_edit = build(a.min)
-    if text is None:
-        print(f"learn: not enough signals yet ({n_restore} restores, {n_edit} edits); "
-              f"need >= {a.min}. learned.md unchanged.")
-        return
-    os.makedirs(learning.LEARN_DIR, exist_ok=True)
-    tmp = learning.LEARNED + ".tmp"
-    with open(tmp, "w") as f:
-        f.write(text)
-    os.replace(tmp, learning.LEARNED)
-    print(f"learn: updated {learning.LEARNED} from {n_restore} restores + {n_edit} edits.")
+    path = os.path.join(learning.LEARN_DIR, "rollup-inputs.json")
+    with storage.locked(path):
+        signals, rejected = learning.recent(800), _rejected_norms()
+        # Include implementation bytes, provider routing, prompt, rejection edits and
+        # the full ordered signal snapshot. Equal counts are NOT equal inputs.
+        with open(__file__, "rb") as f:
+            implementation = hashlib.sha256(f.read()).hexdigest()
+        key = _fingerprint([signals, sorted(rejected), a.min, implementation,
+                            _llm._active_provider_name(), _llm.KNOWN_PROVIDERS,
+                            {p["bin_env"]: os.environ.get(p["bin_env"], "")
+                             for p in _llm.KNOWN_PROVIDERS}])
+        prior = storage.read_json(path)
+        if prior.get("key") == key and os.path.exists(learning.LEARNED):
+            metrics.record("learning.rollup", hits=1)
+            print("learn: exact inputs unchanged; preserving learned.md (including user edits).")
+            return
+        def current_text():
+            try:
+                with open(learning.LEARNED) as f:
+                    return f.read()
+            except FileNotFoundError:
+                return None
+        before = current_text()
+        text, n_restore, n_edit = build(a.min, signals, rejected)
+        metrics.record("learning.rollup", misses=1)
+        if text is None:
+            print("learn: insufficient signals or voice unavailable; learned.md unchanged.")
+            return
+        # A short shared publication lock also coordinates app rejections. Do
+        # not hold it across the LLM call, which would stall a user's correction.
+        with storage.locked(learning.LEARNED):
+            if current_text() != before or _rejected_norms() != rejected:
+                print("learn: preferences changed during generation; preserving the edit.")
+                return
+            if text != before:
+                storage.atomic_text(learning.LEARNED, text)
+            storage.atomic_text(path, json.dumps({"key": key}))
+        print(f"learn: rollup ready from {n_restore} restores + {n_edit} edits.")
 
 
 def _demo():

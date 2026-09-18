@@ -25,6 +25,8 @@ import gmail_quota as gq      # noqa: E402
 import mailbox_index as mbi   # noqa: E402
 import sync_state             # noqa: E402
 import thread_cache           # noqa: E402
+import runtime_state as storage
+import run_metrics as metrics
 
 _CATEGORIES_PATH = os.path.join(ROOT, "categories.json")
 _LABEL_HISTORY_PATH = os.path.join(ROOT, "app", "category_label_history.json")
@@ -103,12 +105,9 @@ def _load_label_history():
 def _add_to_label_history(names):
     """Union names into the persisted label history file. Non-fatal."""
     try:
-        existing = _load_label_history()
-        merged = existing | set(names)
-        tmp = _LABEL_HISTORY_PATH + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump({"labels": sorted(merged)}, f, ensure_ascii=False, indent=2)
-        os.replace(tmp, _LABEL_HISTORY_PATH)
+        def merge(data):
+            data["labels"] = sorted(set(data.get("labels", [])) | set(names))
+        storage.update_json(_LABEL_HISTORY_PATH, merge)
     except Exception:
         pass
 
@@ -536,7 +535,8 @@ def _thread_info_via_get(cfg, tid, me):
         label_ids.update(m.get("labelIds") or [])
     return {"id": tid, "ids": [m["id"] for m in msgs], "last_from": last_from,
             "last_email": last_email, "last_from_owner": last_from_owner,
-            "subject": subject, "snippet": snippet, "label_ids": label_ids}
+            "subject": subject, "snippet": snippet, "label_ids": label_ids,
+            "label_ids_all": set.intersection(*(set(m.get("labelIds") or []) for m in msgs))}
 
 
 def _thread_info_via_index(cfg, tid, me, index):
@@ -612,6 +612,7 @@ def _thread_info(cfg, tid, me, index=None):
             # somehow differs the fresh text wins and the verdict fingerprint
             # changes with it, which forces a re-decision. Freshness is the safe
             # direction here, so we take it.
+            cached["last_from_owner"] = _is_owner_sender(me, cached["last_from"])
             fresh = _SNIPPETS.get(tid)
             if fresh:
                 cached["snippet"] = fresh
@@ -951,7 +952,8 @@ def _threshold_signature():
         # what a score of 2 means, hence what the same thread deserves.
         "urgency_levels": JEV_URGENCY_LEVELS,
         # Bumping this is the manual "throw away all verdicts" lever.
-        "logic_version": 1,
+        "logic_version": 2,
+        "jev_model": __import__("jev").MODEL,
     }
 
 
@@ -1046,7 +1048,7 @@ def _classify(chunk):
     return out
 
 
-def apply_category(cfg, thread_id, category_name, _labels_cache=None):
+def apply_category(cfg, thread_id, category_name, _labels_cache=None, _validated_info=None):
     """Apply a category label to a kept thread: add '<emoji> <name>', remove any other
     category labels from our set (current OR historical). Never touches non-category
     labels. Non-fatal on error. Returns True on success, False on failure.
@@ -1072,6 +1074,21 @@ def apply_category(cfg, thread_id, category_name, _labels_cache=None):
         cat = next((c for c in cats if c["name"] == category_name), None)
         if cat:
             target_label = _category_label_name(cat)
+
+    # This can only skip a write. It never supplies stale labels to a mutation.
+    # The intersection must prove EVERY message already has the target, while
+    # the union proves NONE carry an obsolete category. A newest-message row or
+    # legacy union-only cache is insufficient and takes the authoritative path.
+    if _validated_info is not None and _labels_cache is not None:
+        id_to_name = {l["id"]: l["name"] for l in _labels_cache}
+        target_id = next((l["id"] for l in _labels_cache if l["name"] == target_label), None)
+        labels_all = _validated_info.get("label_ids_all")
+        union = _validated_info.get("label_ids", set())
+        if (target_id and labels_all is not None and target_id in labels_all
+                and not any(id_to_name.get(lid, "") in all_known_cat_labels
+                            and id_to_name.get(lid) != target_label for lid in union)):
+            metrics.record("category.noop", cfg, hits=1)
+            return True
 
     try:
         # Fetch current labels on this thread to find stale category labels to remove.
@@ -1101,8 +1118,18 @@ def apply_category(cfg, thread_id, category_name, _labels_cache=None):
             and id_to_name.get(lid, "") != target_label
         ]
 
-        if not target_label and not remove_ids:
-            return True  # nothing to do
+        messages = t.get("messages") or []
+        labels_all = (set.intersection(*(set(m.get("labelIds") or []) for m in messages))
+                      if messages else set())
+        # A full authoritative label read can enrich the classifier metadata for
+        # NEXT run, but only if its actual historyId equals the validated version.
+        if (_validated_info is not None and _CACHE is not None
+                and t.get("historyId") and str(t["historyId"]) == str(_HISTORY_IDS.get(thread_id))):
+            enriched = dict(_validated_info, label_ids=thread_label_ids, label_ids_all=labels_all)
+            _CACHE.put_thread(thread_id, t["historyId"], enriched)
+        if not remove_ids and (not target_label or name_to_id.get(target_label) in labels_all):
+            metrics.record("category.noop", cfg, hits=1)
+            return True  # already correct on every message, no mutation needed
 
         add_ids = []
         if target_label:
@@ -1114,6 +1141,8 @@ def apply_category(cfg, thread_id, category_name, _labels_cache=None):
                                                              "labelListVisibility": "labelShow",
                                                              "messageListVisibility": "show"})])
                 add_ids = [created["id"]]
+                if _labels_cache is not None:
+                    _labels_cache.append({"id": created["id"], "name": target_label})
             else:
                 add_ids = [name_to_id[target_label]]
 
@@ -1266,6 +1295,7 @@ def main():
     # raises and never returns None: a missing, corrupt or version-mismatched
     # file simply yields an empty cache that misses on everything, which is
     # byte-for-byte the behaviour this run had before the cache existed.
+    os.environ["ZERO_ACCOUNT"] = a.config_dir
     if a.clear_cache:
         thread_cache.clear(a.account_label)
     globals()["_CACHE"] = thread_cache.load(a.account_label,
@@ -1283,6 +1313,7 @@ def main():
         if _CACHE is not None:
             result["cache"] = _CACHE.stats()
             _CACHE.save()
+            _record_cache_metrics(a.config_dir)
         print(json.dumps(result, ensure_ascii=False))
         return
 
@@ -1319,9 +1350,10 @@ def main():
             # Narrow to threads that are BOTH current candidates AND changed.
             # Unchanged candidates keep their existing state untouched: they are
             # not archived, merely not re-examined (PRODUCT.md: never lose mail).
-            narrowed = [t for t in tids if t in changed]
-            skipped_unchanged = len(tids) - len(narrowed)
-            tids, sync_mode = narrowed, "incremental"
+            # Mailbox deltas alone cannot validate policy, learned text, sender
+            # replies in OTHER threads, model, or thresholds. Revisit candidates
+            # through the exact-input caches instead of bypassing those checks.
+            sync_mode = "validated-full"
         else:
             # Expired or errored cursor -> full read. Never a failure, never partial.
             print(f"history cursor unusable ({status}); doing a full read",
@@ -1388,6 +1420,14 @@ def main():
         else:
             to_judge.append(c)
 
+    all_labels_list = None
+    if a.execute and to_judge:
+        try:
+            all_labels_list = iz.gws(a.config_dir, ["gmail", "users", "labels", "list",
+                                    "--params", json.dumps({"userId": "me"})]).get("labels", [])
+        except Exception:
+            pass  # apply_category retains its authoritative fallback
+
     n_judge = max(len(to_judge), 1)
     for i in range(0, len(to_judge), a.chunk):
         chunk = to_judge[i:i + a.chunk]
@@ -1408,7 +1448,8 @@ def main():
                                    "category": category})
                 # Apply category label when executing; tally ok/failed (never fatal).
                 if a.execute and category:
-                    if apply_category(a.config_dir, c["id"], category):
+                    if apply_category(a.config_dir, c["id"], category,
+                                      _labels_cache=all_labels_list, _validated_info=c):
                         label_ok += 1
                     else:
                         label_failed += 1
@@ -1459,8 +1500,15 @@ def main():
     # partial run already paid for is free and correct.
     if _CACHE is not None:
         _CACHE.save()
+        _record_cache_metrics(a.config_dir)
 
     print(json.dumps(result, ensure_ascii=False))
+
+
+def _record_cache_metrics(cfg):
+    for kind in _CACHE.hits:
+        metrics.record("cache." + kind, cfg, hits=_CACHE.hits[kind],
+                       misses=_CACHE.misses[kind])
 
 
 def _demo():
@@ -1484,4 +1532,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 2 and sys.argv[1] == "--self-check":
         _demo()
     else:
-        main()
+        cfg = sys.argv[1] if len(sys.argv) > 1 else "default"
+        with storage.locked(os.path.join(os.path.dirname(HERE), "app", "locks",
+                                        "keeper-" + storage.account_id(cfg))):
+            main()

@@ -1,87 +1,23 @@
 #!/usr/bin/env python3
-"""Persistent per-account cache so a daily run stops re-discovering what it
-already knew. A cache that can only ever SKIP WORK, never cause an archive.
+"""Persistent classifier metadata, sender evidence and exact-input verdicts.
 
-WHY
----
-Measured on the live account, every run re-paid for facts that had not changed
-overnight:
+Thread entries require a nonempty, freshly observed matching historyId. Missing
+versions always miss. Verdict fingerprints cover state, questions, thresholds
+and model. Full-thread label intersections, when available, can prove that a
+category write is unnecessary. Newest-message metadata cannot prove that.
 
-    ~1,557 threads x threads.get/messages.get     = 31,140 units
-    ~800 replied_before sender probes x 5 units   =  4,000 units
-    ~1,557 Jev classifications                    = the same verdicts as yesterday
+Positive sender evidence remains keep-biased and TTL-bounded. Negative evidence
+is reused within one run only: load() discards persisted False values because a
+reply elsewhere in the mailbox need not change the candidate's historyId.
 
-Against Gmail's 6,000 units/min/user ceiling, that spend IS the runtime. And
-almost none of it was necessary: an inbox that did not move overnight has the
-same senders, the same subjects, and deserves the same decisions.
-
-THE CHANGE-DETECTOR IS FREE
----------------------------
-`threads.list` costs 10 units per 100 threads and the run ALREADY pays it to
-enumerate candidates. Verified on the live account, each entry it returns carries
-a per-thread `historyId`:
-
-    {'id': '1a0b28e0e2352dbc', 'historyId': '7148783'}
-
-Gmail bumps that value whenever anything about the thread changes (a new message,
-a label added or removed). So equality with the stored historyId is a sound
-"this thread has NOT changed" test that costs nothing extra, and it turns the
-20-40 unit per-thread read into a dictionary lookup.
-
-This is a different mechanism from lib/sync_state.py and they compose. sync_state
-asks Gmail "what changed since my cursor?" (2 units, but the cursor expires and a
-crashed run correctly refuses to advance it). This asks, per thread, "is what I
-stored still current?" — which stays true across cursor expiry, across full
-reads, and across a run that died halfway.
-
-THE SAFETY CONTRACT (this is someone's real mail)
--------------------------------------------------
-PRODUCT.md makes reversibility the product, and the one irrecoverable mistake is
-archiving something that needed the user. So the cache is built to be incapable
-of causing one:
-
-1. **A miss is always safe.** Every lookup returns None for anything not
-   positively verified: missing key, historyId mismatch, expired entry, wrong
-   schema version, corrupt or truncated JSON, unreadable file, wrong types. None
-   means "do the real read / the real classification", which is exactly the
-   behaviour of the code before this module existed.
-
-2. **Nothing is served for a thread that changed.** Thread info, and the Jev
-   verdict, are both keyed on the historyId they were derived from. A changed
-   thread cannot hit; it is re-read and re-decided.
-
-3. **The verdict key covers everything that can change the verdict.** Not just
-   the thread: the keep-policy text, the category list, the learned preferences,
-   the threshold constants and the question set all go into the fingerprint. If
-   the user edits keep-policy.md and the tool kept serving yesterday's verdicts,
-   their edit would silently do nothing — so any change to those inputs
-   invalidates every cached verdict at once.
-
-4. **`replied_before` is cached ASYMMETRICALLY**, because its two answers have
-   opposite risk. "The owner HAS written to this sender" is monotone — a sent
-   message never un-sends — and it biases toward KEEP, so it is cached for
-   REPLIED_TRUE_TTL (30 days). "The owner has NOT written to this sender" stops
-   being true the moment they reply, and it feeds the cold-outreach signal that
-   biases toward ARCHIVE, so it expires after REPLIED_FALSE_TTL (6 hours). A
-   stale False is the mail-loss direction; a stale True merely costs an
-   unnecessary keep.
-
-5. **Writes are atomic** (tmp + os.replace, fsync'd) so a crash mid-write cannot
-   leave a truncated file that a later run misparses. A half-written cache that
-   happened to read as valid JSON is the nightmare case: it would claim threads
-   are unchanged when we never verified them.
-
-6. **Bounded.** Entries older than MAX_ENTRY_AGE are dropped, and each section is
-   capped at MAX_ENTRIES (newest-first) so the file cannot grow forever on an
-   account that churns through thread ids.
-
-Nothing here raises. The cache is an optimisation; a broken cache must degrade
-into the slow-but-correct path, never into a failed run.
+Writes use unique atomic files and locked delta merging, so independent writers
+do not erase each other's unrelated entries. Cache failures degrade to misses.
 """
 import hashlib
 import json
 import os
 import time
+import runtime_state as storage
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -107,7 +43,7 @@ KEEP_VERDICT_TTL = MAX_ENTRY_AGE
 # THE ASYMMETRY. See point 4 in the module docstring: True is monotone and
 # keep-biased; False is falsified by a single reply and is archive-biased.
 REPLIED_TRUE_TTL = 30 * 24 * 3600       # 30 days
-REPLIED_FALSE_TTL = 6 * 3600            # 6 hours
+REPLIED_FALSE_TTL = 6 * 3600            # in-process maximum; never reused after load
 
 # Hard caps per section so one runaway account cannot grow the file without end.
 MAX_ENTRIES = 20000
@@ -121,6 +57,13 @@ _INFO_KEYS = ("id", "ids", "last_from", "last_email", "last_from_owner",
 
 def _now():
     return int(time.time())
+
+
+def _age(rec):
+    stamp = rec.get("t") if isinstance(rec, dict) else None
+    if not isinstance(stamp, (int, float)) or not 0 <= _now() - stamp:
+        return float("inf")
+    return _now() - stamp
 
 
 def _safe_name(account):
@@ -140,20 +83,9 @@ def _atomic_write_json(path, data):
     to the directory entry, but without flushing the temp file first a crash can
     publish a name that points at unwritten blocks."""
     try:
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        tmp = path + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False)
-            f.flush()
-            os.fsync(f.fileno())
-        os.replace(tmp, path)
+        storage.atomic_text(path, json.dumps(data, ensure_ascii=False))
         return True
     except Exception:
-        try:
-            if os.path.exists(path + ".tmp"):
-                os.remove(path + ".tmp")
-        except Exception:
-            pass
         return False
 
 
@@ -194,7 +126,7 @@ def _clean_info(raw):
     if not isinstance(ids, list) or not all(isinstance(i, str) for i in ids):
         return None
     labels = raw.get("label_ids")
-    if not isinstance(labels, (list, set)):
+    if not isinstance(labels, (list, set)) or not all(isinstance(x, str) for x in labels):
         return None
     info = {
         "id": raw["id"],
@@ -210,6 +142,10 @@ def _clean_info(raw):
         # _backfill_partition); JSON can only hold a list.
         "label_ids": set(labels),
     }
+    all_labels = raw.get("label_ids_all")
+    if (isinstance(all_labels, list) and all(isinstance(x, str) for x in all_labels)
+            and set(all_labels).issubset(info["label_ids"])):
+        info["label_ids_all"] = set(all_labels)
     for k in ("id", "last_from", "last_email", "subject", "snippet"):
         if not isinstance(info[k], str):
             return None
@@ -223,7 +159,7 @@ def _dump_info(info):
     if not isinstance(info, dict):
         return None
     try:
-        return {
+        row = {
             "id": info["id"],
             "ids": [str(i) for i in info["ids"]],
             "last_from": str(info.get("last_from", "")),
@@ -233,6 +169,9 @@ def _dump_info(info):
             "snippet": str(info.get("snippet", "")),
             "label_ids": sorted(str(x) for x in (info.get("label_ids") or [])),
         }
+        if isinstance(info.get("label_ids_all"), (set, list)):
+            row["label_ids_all"] = sorted(info["label_ids_all"])
+        return row
     except Exception:
         return None
 
@@ -314,6 +253,7 @@ class ThreadCache:
         self._senders = data.get("senders") or {}
         self._verdicts = data.get("verdicts") or {}
         self._dirty = False
+        self._changes = {"threads": set(), "senders": set(), "verdicts": set()}
         self.hits = {"thread": 0, "replied": 0, "verdict": 0}
         self.misses = {"thread": 0, "replied": 0, "verdict": 0}
 
@@ -332,7 +272,7 @@ class ThreadCache:
         if not isinstance(rec, dict) or str(rec.get("h") or "") != str(history_id):
             self.misses["thread"] += 1
             return None
-        if _now() - int(rec.get("t") or 0) > MAX_ENTRY_AGE:
+        if _age(rec) > MAX_ENTRY_AGE:
             self.misses["thread"] += 1
             return None
         info = _clean_info(rec.get("info"))
@@ -350,6 +290,7 @@ class ThreadCache:
         if row is None:
             return False
         self._threads[tid] = {"h": str(history_id), "t": _now(), "info": row}
+        self._changes["threads"].add(tid)
         self._dirty = True
         return True
 
@@ -357,10 +298,8 @@ class ThreadCache:
     def replied_before(self, email):
         """Cached reply-history for a sender, or None when it must be re-probed.
 
-        The TTL depends on the ANSWER, not on the entry: see REPLIED_TRUE_TTL /
-        REPLIED_FALSE_TTL and point 4 of the module docstring. A False that has
-        aged past its short window is treated as unknown, so the run re-probes
-        rather than assuming the owner still hasn't replied."""
+        Positive and same-run negative evidence have different TTLs. Persisted
+        negatives are discarded by load(), regardless of age."""
         if not self.enabled:
             return None
         email = (email or "").lower()
@@ -370,7 +309,7 @@ class ThreadCache:
         if not isinstance(rec, dict) or not isinstance(rec.get("v"), bool):
             self.misses["replied"] += 1
             return None
-        age = _now() - int(rec.get("t") or 0)
+        age = _age(rec)
         ttl = REPLIED_TRUE_TTL if rec["v"] else REPLIED_FALSE_TTL
         if age > ttl:
             self.misses["replied"] += 1
@@ -386,8 +325,9 @@ class ThreadCache:
             return False
         prev = self._senders.get(email)
         if isinstance(prev, dict) and prev.get("v") == value and \
-                _now() - int(prev.get("t") or 0) < 60:
+                _age(prev) < 60:
             return True                  # unchanged and fresh; skip the churn
+        self._changes["senders"].add(email)
         self._senders[email] = {"v": value, "t": _now()}
         self._dirty = True
         return True
@@ -415,7 +355,7 @@ class ThreadCache:
             self.misses["verdict"] += 1
             return None
         ttl = ARCHIVE_VERDICT_TTL if decision == "archive" else KEEP_VERDICT_TTL
-        if _now() - int(rec.get("t") or 0) > ttl:
+        if _age(rec) > ttl:
             self.misses["verdict"] += 1
             return None
         category = rec.get("c")
@@ -429,6 +369,7 @@ class ThreadCache:
             return False
         if decision not in ("keep", "archive"):
             return False
+        self._changes["verdicts"].add(tid)
         self._verdicts[tid] = {"h": str(history_id), "k": fingerprint,
                                "d": decision,
                                "c": category if isinstance(category, str) else None,
@@ -439,20 +380,19 @@ class ThreadCache:
     def forget_thread(self, tid):
         """Drop everything derived from one thread. Used when a read fails, so a
         later run can never reuse state we could not confirm."""
-        for section in (self._threads, self._verdicts):
-            if tid in section:
-                del section[tid]
-                self._dirty = True
+        for name, section in (("threads", self._threads), ("verdicts", self._verdicts)):
+            section.pop(tid, None)
+            self._changes[name].add(tid)
+            self._dirty = True
 
     # --- persistence -------------------------------------------------------
     def _prune(self):
         """Drop aged-out entries and cap each section. Newest entries win."""
-        now = _now()
         for name, section in (("threads", self._threads),
                               ("senders", self._senders),
                               ("verdicts", self._verdicts)):
             stale = [k for k, v in section.items()
-                     if not isinstance(v, dict) or now - int(v.get("t") or 0) > MAX_ENTRY_AGE]
+                     if not isinstance(v, dict) or _age(v) > MAX_ENTRY_AGE]
             for k in stale:
                 del section[k]
             if len(section) > MAX_ENTRIES:
@@ -467,16 +407,31 @@ class ThreadCache:
         if not self.enabled or (not self._dirty and not force):
             return False
         try:
-            self._prune()
-            body = {"version": SCHEMA_VERSION, "account": self.account,
-                    "updated_at": _now(), "threads": self._threads,
-                    "senders": self._senders, "verdicts": self._verdicts}
+            with storage.locked(self.path):
+                disk = _read_json(self.path)
+                for name, local in (("threads", self._threads), ("senders", self._senders),
+                                    ("verdicts", self._verdicts)):
+                    merged = disk.get(name, {}).copy()
+                    keys = set(local) if force else self._changes[name]
+                    for key in keys:
+                        if key in local:
+                            merged[key] = local[key]
+                        else:
+                            merged.pop(key, None)
+                    local.clear()
+                    local.update(merged)
+                self._prune()
+                body = {"version": SCHEMA_VERSION, "account": self.account,
+                        "updated_at": _now(), "threads": self._threads,
+                        "senders": self._senders, "verdicts": self._verdicts}
+                ok = _atomic_write_json(self.path, body)
+                if ok:
+                    self._dirty = False
+                    for keys in self._changes.values():
+                        keys.clear()
+                return ok
         except Exception:
             return False
-        ok = _atomic_write_json(self.path, body)
-        if ok:
-            self._dirty = False
-        return ok
 
     def stats(self):
         return {"enabled": self.enabled,
@@ -494,6 +449,8 @@ def load(account, enabled=True, path=None):
     try:
         p = path or path_for(account)
         data = _read_json(p) if enabled else {}
+        data["senders"] = {k: v for k, v in data.get("senders", {}).items()
+                           if isinstance(v, dict) and v.get("v") is True}
     except Exception:
         p, data = (path or path_for(account)), {}
     return ThreadCache(account, data=data, enabled=enabled, path=p)

@@ -24,7 +24,8 @@ def _fresh_jev(root):
     touch the real repo or the user's installed app data."""
     libdir = os.path.join(root, "lib")
     os.makedirs(libdir, exist_ok=True)
-    shutil.copy(os.path.join(LIB, "jev.py"), os.path.join(libdir, "jev.py"))
+    for name in ("jev.py", "run_metrics.py", "runtime_state.py"):
+        shutil.copy(os.path.join(LIB, name), os.path.join(libdir, name))
     sys.path.insert(0, libdir)
     if "jev" in sys.modules:
         del sys.modules["jev"]

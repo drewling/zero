@@ -11,6 +11,11 @@ then a .env at the repo root (source checkouts only).
 Never logs or prints the key.
 """
 import json
+import http.client
+import queue
+import threading
+from urllib.parse import urlsplit
+import run_metrics as metrics
 import os
 import random
 import time
@@ -149,7 +154,7 @@ def verify_key(timeout=15.0):
     return False, str(_detail(parsed, raw) or f"HTTP {status}")
 
 
-def _post(body, key, timeout):
+def _post_unpooled(body, key, timeout):
     """Perform the raw HTTP POST. Returns (status_code, parsed_json_or_None, raw_text).
 
     Never raises for HTTP error status codes — those are surfaced via status_code
@@ -180,6 +185,75 @@ def _post(body, key, timeout):
     return status, parsed, raw
 
 
+# A bounded pool, not one connection for every caller thread. Connections are
+# leased exclusively until the full response is consumed. Failed sockets never
+# return to the pool, and the existing ask() retry policy owns all retries.
+_POOL_SIZE = 12
+_pool = queue.LifoQueue(maxsize=_POOL_SIZE)
+_slots = threading.BoundedSemaphore(_POOL_SIZE)
+
+
+def _post(body, key, timeout):
+    account = os.environ.get("ZERO_ACCOUNT", "")
+    with metrics.measured("jev.systemone", account):
+        if not _slots.acquire(timeout=timeout):
+            raise TimeoutError("Jev connection pool busy")
+        try:
+            return _post_transport(body, key, timeout, account)
+        finally:
+            _slots.release()
+
+
+def _post_transport(body, key, timeout, account):
+    # urllib owns proxy negotiation; do not silently bypass enterprise proxies.
+    if urllib.request.getproxies().get("https") or os.environ.get("ZERO_JEV_POOL") == "0":
+        return _post_unpooled(body, key, timeout)
+    target = urlsplit(ENDPOINT)
+    if target.scheme != "https" or target.username or target.password:
+        raise JevError("Jev endpoint must be HTTPS without URL credentials")
+    origin = (target.hostname, target.port or 443)
+    path = target.path or "/"
+    if target.query:
+        path += "?" + target.query
+    conn = None
+    reusable = False
+    try:
+        try:
+            old_origin, conn = _pool.get_nowait()
+            if old_origin != origin:
+                conn.close()
+                conn = None
+        except queue.Empty:
+            pass
+        if conn is None:
+            conn = http.client.HTTPSConnection(*origin, timeout=timeout)
+            metrics.record("jev.transport", account, connections_created=1)
+        else:
+            conn.timeout = timeout
+            if conn.sock is not None:
+                conn.sock.settimeout(timeout)
+            metrics.record("jev.transport", account, connections_reused=1)
+        conn.request("POST", path, body=json.dumps(body).encode("utf-8"), headers={
+            "Authorization": "Bearer " + key, "Content-Type": "application/json"})
+        resp = conn.getresponse()
+        raw = resp.read().decode("utf-8", errors="replace")
+        status = resp.status
+        reusable = not resp.will_close
+        resp.close()
+        metrics.record("jev.transport", account, http_failures=int(status >= 400))
+        try:
+            parsed = json.loads(raw) if raw else None
+        except ValueError:
+            parsed = None
+        return status, parsed, raw
+    finally:
+        if conn is not None:
+            if reusable:
+                _pool.put_nowait((origin, conn))
+            else:
+                conn.close()
+
+
 def _detail(parsed, raw):
     """Best-effort extraction of an error detail message from a response body."""
     if isinstance(parsed, dict):
@@ -200,6 +274,7 @@ def ask(state, questions, timeout=30.0, retries=3):
         raise JevError("no JEV API key configured (set env JEV or .env)")
 
     body = {"state": state, "model": MODEL, "questions": questions}
+    retries = max(0, min(int(retries), 6))
     attempt = 0
     last_err = None
     while attempt <= retries:
@@ -239,6 +314,7 @@ def ask(state, questions, timeout=30.0, retries=3):
 def _sleep_backoff(attempt):
     """Exponential backoff with jitter: base 0.5s, doubling, plus up to 0.25s jitter."""
     delay = (0.5 * (2 ** attempt)) + random.uniform(0, 0.25)
+    metrics.record("jev.retry", os.environ.get("ZERO_ACCOUNT", ""), retries=1, backoff_seconds=delay)
     time.sleep(delay)
 
 
@@ -259,7 +335,7 @@ def ask_many(items, max_workers=12, timeout=30.0):
         except Exception:
             return idx, None
 
-    workers = max(1, min(max_workers, len(items)))
+    workers = max(1, min(max_workers, len(items), _POOL_SIZE))
     with ThreadPoolExecutor(max_workers=workers) as ex:
         futures = [ex.submit(_run, i, state, questions)
                    for i, (state, questions) in enumerate(items)]

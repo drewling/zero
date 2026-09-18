@@ -39,6 +39,7 @@ sys.path.insert(0, HERE)
 import draftutil as du        # noqa: E402
 import inbox_zero as iz       # noqa: E402
 import learning               # noqa: E402
+import metadata_cache
 
 # Path to the categories config file (root of the repo).
 _CATEGORIES_PATH = os.path.join(ROOT, "categories.json")
@@ -167,18 +168,18 @@ def _inbox_counts(cfg):
     return int(d.get("threadsTotal", 0) or 0), int(d.get("threadsUnread", 0) or 0)
 
 
-def _inbox_thread_ids(cfg, limit):
+def _inbox_thread_ids(cfg, limit, histories=None):
     d = du._gws(cfg, ["gmail", "users", "threads", "list",
                       "--params", json.dumps({"userId": "me", "q": "in:inbox",
                                               "maxResults": limit})])
+    if histories is not None:
+        histories.update({t["id"]: t["historyId"] for t in d.get("threads", []) or []
+                          if t.get("historyId")})
     return [t["id"] for t in d.get("threads", []) or []][:limit]
 
 
-def _thread_row(cfg, tid, slug, category_label_map=None):
-    t = du._gws(cfg, ["gmail", "users", "threads", "get",
-                      "--params", json.dumps({"userId": "me", "id": tid,
-                                              "format": "metadata",
-                                              "metadataHeaders": ["From", "Subject", "Date"]})])
+def _thread_row(cfg, tid, slug, category_label_map=None, history_id=None):
+    t = metadata_cache.get(cfg, tid, history_id, du._gws)
     msgs = t.get("messages", []) or []
     if not msgs:
         return None
@@ -290,7 +291,8 @@ def _account_state(acct, max_loops, categories):
         state["photo_url"] = _photo_url(cfg)
 
         state["inbox_threads"], state["unread"] = _inbox_counts(cfg)
-        ids = _inbox_thread_ids(cfg, max_loops)
+        histories = {}
+        ids = _inbox_thread_ids(cfg, max_loops, histories)
 
         # Build a label-id -> label-name map once per account so _thread_row can
         # resolve category labels cheaply without N extra API calls.
@@ -305,7 +307,7 @@ def _account_state(acct, max_loops, categories):
 
         rows, failed = [], 0
         with ThreadPoolExecutor(max_workers=8) as ex:
-            futs = {ex.submit(_thread_row, cfg, tid, slug, cat_label_map): tid for tid in ids}
+            futs = {ex.submit(_thread_row, cfg, tid, slug, cat_label_map, histories.get(tid)): tid for tid in ids}
             for f in as_completed(futs):
                 try:
                     r = f.result()

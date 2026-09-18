@@ -21,6 +21,7 @@ import draftutil as du  # noqa: E402
 import context as ctx  # noqa: E402
 
 import jev as _jev  # noqa: E402
+import metadata_cache
 
 
 _JEV_IMPORTANCE_QUESTIONS = {
@@ -105,6 +106,10 @@ def candidates(config_dir, profile_email, lookback_days):
     q = f"in:inbox -in:chats newer_than:{lookback_days}d older_than:1d -label:\"⚡ Action\""
     lst = du._gws(config_dir, ["gmail", "users", "messages", "list", "--params",
                                json.dumps({"userId": "me", "q": q, "maxResults": 60})])
+    # Keep the original messages.list candidate selection. A bounded thread page
+    # validates reusable snapshots only; it does not change which items are read.
+    histories = (metadata_cache.histories(config_dir, q, du._gws)
+                 if lst.get("messages") else {})
     out = []
     seen = set()
     for m in lst.get("messages", []) or []:
@@ -113,9 +118,7 @@ def candidates(config_dir, profile_email, lookback_days):
             continue
         seen.add(tid)
         try:
-            thread = du._gws(config_dir, ["gmail", "users", "threads", "get", "--params",
-                                          json.dumps({"userId": "me", "id": tid, "format": "metadata",
-                                                      "metadataHeaders": ["From", "Subject", "Date"]})])
+            thread = metadata_cache.get(config_dir, tid, histories.get(tid), du._gws)
         except Exception:
             continue
         msgs = thread.get("messages", []) or []
@@ -197,6 +200,7 @@ def filter_important(cands, profile):
 
 def main():
     config_dir = sys.argv[1]
+    os.environ["ZERO_ACCOUNT"] = config_dir
     account_label = sys.argv[2] if len(sys.argv) > 2 else config_dir
     lookback = sys.argv[3] if len(sys.argv) > 3 else "14"
     try:

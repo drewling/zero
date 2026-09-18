@@ -51,6 +51,7 @@ import json
 import subprocess
 
 import gmail_quota as gq
+import run_metrics as metrics
 
 # Gmail caps list pages at 500 ids. Each page is one messages.list call (5 units),
 # so 500 is both the fewest calls and the fewest units per message.
@@ -123,7 +124,10 @@ def _scan(cfg, query, env_fn, limiter=None, page_size=PAGE_SIZE, runner=None):
     if runner is not None:
         stdout = runner(args)
     else:
-        r = subprocess.run(args, capture_output=True, text=True, env=env_fn(cfg))
+        with metrics.measured("gmail.messages.list.bulk", cfg):
+            r = subprocess.run(args, capture_output=True, text=True, env=env_fn(cfg), timeout=180)
+        if r.returncode:
+            metrics.record("gmail.messages.list.bulk", cfg, command_failures=1)
         if r.returncode != 0:
             err = "\n".join(l for l in (r.stderr or "").splitlines()
                             if "keyring" not in l).strip()
@@ -131,6 +135,8 @@ def _scan(cfg, query, env_fn, limiter=None, page_size=PAGE_SIZE, runner=None):
                 f"bulk scan {query!r} failed: {err or 'gws non-zero exit'}")
         stdout = r.stdout
     pages = _pages_from_stdout(stdout)
+    metrics.record("gmail.messages.list.bulk", cfg, pages=len(pages),
+                   quota_units_estimated=len(pages) * gq.cost_of("messages.list"))
     msgs = []
     for p in pages:
         msgs += p.get("messages", []) or []

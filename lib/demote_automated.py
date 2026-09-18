@@ -19,6 +19,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE); sys.path.insert(0, ROOT)
 import gen_drafts as gd  # noqa: E402  (gws + label_id helpers)
 import draftutil as du   # noqa: E402  (_gws with allow_empty for batchModify)
+import runtime_state as storage
 
 # Sender patterns that can never warrant a personal reply. Matched
 # case-insensitively against the full From header (name + address).
@@ -94,4 +95,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    cfg = sys.argv[1] if len(sys.argv) > 1 else "default"
+    with storage.locked(os.path.join(ROOT, "app", "locks", "keeper-" + storage.account_id(cfg))):
+        main()

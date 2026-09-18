@@ -468,7 +468,8 @@ try:
 finally:
     rol.iz.gws = original_gws
 
-# Both read paths agree on shape, so downstream code cannot tell them apart.
+# Both paths provide classifier inputs. Only a full read can additionally
+# prove label membership on EVERY message, for safe category no-op detection.
 original_gws = rol.iz.gws
 try:
     def thread_gws(_cfg, _args):
@@ -482,7 +483,9 @@ try:
 
     rol.iz.gws = thread_gws
     slow = rol._thread_info_via_get("cfg", "t1", "me@x.com")
-    assert set(slow) == REQUIRED, set(slow) ^ REQUIRED
+    assert set(slow) == REQUIRED | {"label_ids_all"}, set(slow) ^ REQUIRED
+    assert slow["label_ids_all"] == {"INBOX"}
+    assert "label_ids_all" not in info, "newest-message metadata cannot prove full-thread labels"
 finally:
     rol.iz.gws = original_gws
 

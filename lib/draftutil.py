@@ -15,6 +15,9 @@ import argparse, base64, html as _html, json, os, random, subprocess, sys, time,
 from email.message import EmailMessage
 from email.utils import formataddr, parseaddr
 
+import gmail_quota as gq
+import run_metrics as metrics
+
 GWS = os.environ.get("GWS_BIN", "gws")
 
 _SIG_CACHE = {}  # ponytail: module-level cache, keyed by config_dir
@@ -44,52 +47,38 @@ _QUOTA = ("ratelimitexceeded", "quota exceeded", "userratelimitexceeded")
 # knob: 16 workers doing threads.get (40 units) is ~78,000 units/min, 13x over,
 # which is why large runs stalled at a fixed thread count while hammering 403s.
 # Staying under the limit BY DESIGN is far faster than exceeding it and retrying.
-_UNIT_COST = {
-    "threads.get": 40, "threads.list": 10, "threads.modify": 10,
-    "messages.get": 20, "messages.list": 5, "messages.modify": 5,
-    "messages.batchModify": 50, "labels.list": 1, "labels.create": 5,
-    "history.list": 2, "getProfile": 1, "drafts.create": 10, "drafts.send": 100,
-}
-_UNIT_BUDGET = 5200          # of 6000/min, leaving headroom for other callers
+_UNIT_COST = gq.UNIT_COSTS
+_UNIT_BUDGET = 4800  # conservative local policy, not a provider quota claim
 _quota_lock = threading.Lock()
-_quota_spent = []            # (timestamp, units) within the trailing minute
+_quota_spent = []  # compatibility ledger for standalone limiter checks
+_account_limiters = {}
 
 
 def _method_of(args):
-    """Best-effort 'resource.method' name for an argv, for quota accounting."""
-    parts = [a for a in args if not a.startswith("-")]
-    # e.g. ['gmail','users','threads','get', ...] -> 'threads.get'
-    for i in range(len(parts) - 1, 0, -1):
-        if parts[i] in ("get", "list", "modify", "create", "send", "batchModify",
-                        "delete", "trash", "untrash"):
-            return f"{parts[i-1]}.{parts[i]}"
-    return "getProfile" if "getProfile" in parts else "messages.list"
+    return gq.method_from_args(args) or "unknown"
 
 
-def _await_quota(args):
-    """Block until this call fits inside the trailing-minute unit budget.
-
-    A sliding window rather than a token bucket: a bucket pre-filled to capacity
-    lets a full burst through and then refills, so a 60s window straddling the
-    burst can see ~2x the budget — exactly the pattern Gmail rejects.
-
-    Each admitted call reserves its units for a full 60 seconds. Expiring an entry
-    the instant it turns 60s old would let the next call in immediately, so any
-    given 60s window could observe slightly MORE than the budget; holding the
-    reservation for the whole window is what makes the bound actually hold.
-    """
-    cost = _UNIT_COST.get(_method_of(args), 20)
+def _await_quota(args, config_dir=None):
+    if not args or args[0] != "gmail":
+        return 0.0
+    if config_dir is not None:
+        key = os.path.realpath(config_dir)
+        with _quota_lock:
+            limiter = _account_limiters.setdefault(key, gq.UnitLimiter(_UNIT_BUDGET))
+        return limiter.acquire(gq.cost_of(_method_of(args)))
+    # Compatibility for callers without an account. Production always supplies it.
+    cost = gq.cost_of(_method_of(args))
+    waited = 0.0
     while True:
         with _quota_lock:
             now = time.time()
-            _quota_spent[:] = [(t, u) for (t, u) in _quota_spent if now - t < 60.0]
-            used = sum(u for _, u in _quota_spent)
-            if used + cost <= _UNIT_BUDGET:
+            _quota_spent[:] = [(t, u) for t, u in _quota_spent if now - t < 60]
+            if sum(u for _, u in _quota_spent) + cost <= _UNIT_BUDGET:
                 _quota_spent.append((now, cost))
-                return
-            oldest = min(t for t, _ in _quota_spent)
-            wait = max(0.05, 60.0 - (now - oldest))
-        time.sleep(min(wait, 5.0))
+                return waited
+            delay = max(0.001, 60 - (now - _quota_spent[0][0]))
+        time.sleep(delay)
+        waited += delay
 
 
 
@@ -130,8 +119,16 @@ def _gws(config_dir, args, allow_empty=False, _retries=3):
     """
     last_exc = None
     for attempt in range(_retries):
-        _await_quota(args)     # stay inside Gmail's units/minute rather than 403-ing
-        r = subprocess.run([GWS] + args, capture_output=True, text=True, env=_env(config_dir))
+        waited = _await_quota(args, config_dir)
+        method = _method_of(args)
+        api = (args[0] if args else "unknown") + "." + method
+        units = gq.cost_of(method) if args and args[0] == "gmail" else 0
+        with metrics.measured(api, config_dir, quota_units_estimated=units,
+                              throttle_seconds=waited, retries=int(attempt > 0)):
+            r = subprocess.run([GWS] + args, capture_output=True, text=True,
+                               env=_env(config_dir), timeout=120)
+        if r.returncode:
+            metrics.record(api, config_dir, command_failures=1)
         # Check returncode first — a non-zero exit always means failure.
         if r.returncode != 0:
             err = "\n".join(l for l in r.stderr.splitlines() if "keyring" not in l).strip()

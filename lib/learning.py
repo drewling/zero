@@ -13,6 +13,7 @@ silently changes the user's policy: the rollup is visible and editable.
 """
 import json, os, re, time
 from contextlib import contextmanager
+import runtime_state as storage
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -137,20 +138,17 @@ def reject_learning(text):
     if not norm:
         return
     os.makedirs(LEARN_DIR, exist_ok=True)
-    # Append to reject store.
-    record = json.dumps({"ts": int(time.time()), "norm": norm, "original": text.strip()},
-                        ensure_ascii=False)
-    with _locked(REJECTED, "a") as f:
-        f.write(record + "\n")
-    # Remove matching bullets from learned.md immediately.
-    if not os.path.exists(LEARNED):
-        return
-    with open(LEARNED) as f:
-        lines = f.readlines()
-    kept = [l for l in lines if _norm(l) != norm]
-    if len(kept) == len(lines):
-        return  # nothing removed
-    tmp = LEARNED + ".tmp"
-    with open(tmp, "w") as f:
-        f.writelines(kept)
-    os.replace(tmp, LEARNED)
+    with storage.locked(LEARNED):
+        # Commit the rejection and visible removal under the same short lock
+        # learn.py uses for publication, never under its long generation lock.
+        record = json.dumps({"ts": int(time.time()), "norm": norm, "original": text.strip()},
+                            ensure_ascii=False)
+        with _locked(REJECTED, "a") as f:
+            f.write(record + "\n")
+        if not os.path.exists(LEARNED):
+            return
+        with open(LEARNED) as f:
+            lines = f.readlines()
+        kept = [line for line in lines if _norm(line) != norm]
+        if len(kept) != len(lines):
+            storage.atomic_text(LEARNED, "".join(kept))

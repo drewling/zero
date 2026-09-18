@@ -9,6 +9,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=config.sh
 source "$SCRIPT_DIR/config.sh"
 
+# Serialize complete scheduled runs. The keeper's per-account locks also guard
+# its individual mutation stages against app-initiated keeper subprocesses.
+if [[ "${ZERO_PIPELINE_LOCKED:-0}" != "1" ]]; then
+  export ZERO_PIPELINE_LOCKED=1
+  exec "$MAIL_TRIAGE_PYTHON" "$MAIL_TRIAGE_LIB/runtime_state.py" \
+    "$MAIL_TRIAGE_DIR/app/locks/scheduled-pipeline" /bin/bash "$SCRIPT_DIR/run.sh"
+fi
+export ZERO_METRICS="${ZERO_METRICS:-1}"
+
 # cron/launchd give a minimal PATH; set everything the pipeline needs.
 # Adjust this line if your tools live elsewhere (check `which gws`, `which claude`).
 export PATH="/opt/homebrew/bin:/opt/homebrew/anaconda3/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -32,32 +41,28 @@ cd "$MAIL_TRIAGE_DIR"
   # The LLM triage occasionally promotes Google security alerts, billing notices,
   # etc. to ⚡ Action. This pass moves them to 🔔 Services so the action count stays real.
   echo "--- demoting automated mail out of Action (all accounts) ---"
-  /opt/homebrew/bin/python3 -c "
-import json
-a = json.load(open('$MAIL_TRIAGE_ACCOUNTS'))
-accts = a if isinstance(a, list) else a.get('accounts', [])
-for acct in accts:
-    print(acct['config_dir'] + '\t' + acct.get('email', acct['config_dir']))
-" | while IFS=$'\t' read -r cfg email; do
+  accounts="$("$MAIL_TRIAGE_PYTHON" -c '
+import json, sys
+a = json.load(open(sys.argv[1]))
+for acct in (a if isinstance(a, list) else a.get("accounts", [])):
+    print(acct["config_dir"] + "\t" + acct.get("email", acct["config_dir"]))
+' "$MAIL_TRIAGE_ACCOUNTS")" || exit 1
+  while IFS=$'\t' read -r cfg email; do
+    [[ -n "$cfg" ]] || continue
     "$MAIL_TRIAGE_PYTHON" "$MAIL_TRIAGE_LIB/demote_automated.py" "$cfg" "$email" --execute \
       || { echo "demote_automated failed for $email"; rc=1; }
-  done
+  done <<< "$accounts"
   echo "=== demote done $(date +%H:%M:%S) ==="
 
   # --- Open-loop maintenance: archive threads already dealt with (reversible) ---
   # Keeps the inbox at "only what still needs you". grace 0 = review the whole
   # inbox and trust the keep-bar; genuine fresh mail is kept, noise is set aside.
   echo "--- open-loop sweep (all accounts, grace 0) ---"
-  /opt/homebrew/bin/python3 -c "
-import json
-a = json.load(open('$MAIL_TRIAGE_ACCOUNTS'))
-accts = a if isinstance(a, list) else a.get('accounts', [])
-for acct in accts:
-    print(acct['config_dir'] + '\t' + acct.get('email', acct['config_dir']))
-" | while IFS=$'\t' read -r cfg email; do
+  while IFS=$'\t' read -r cfg email; do
+    [[ -n "$cfg" ]] || continue
     "$MAIL_TRIAGE_PYTHON" "$MAIL_TRIAGE_LIB/review_open_loops.py" "$cfg" "$email" --grace-days 0 --execute \
       || { echo "open-loop sweep failed for $email"; rc=1; }
-  done
+  done <<< "$accounts"
   echo "=== open-loop done $(date +%H:%M:%S) ==="
 
   # --- Learn from the user's recent actions, then refresh the panel's state ---

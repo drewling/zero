@@ -299,40 +299,74 @@ def _run_child(cmd, base, span, timeout, prefix=""):
     Returns (returncode, stdout_text, stderr_text) — progress lines are stripped
     from stdout, so the caller's result-JSON parsing is unchanged.
 
-    ponytail: stderr is drained only after exit (the child emits a few short lines).
-    If a child ever streams large stderr, drain it in a thread to avoid a pipe-fill stall."""
+    Drain stderr concurrently and retain a bounded diagnostic tail: metrics and
+    warnings must never fill the pipe and deadlock stdout progress."""
     p = subprocess.Popen(cmd, env=_gws_env(), stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE, text=True)
+                         stderr=subprocess.PIPE, text=True, start_new_session=True)
+    from collections import deque
+    errors = deque(maxlen=256)  # at most 1 MiB, independent of child output volume
+    def drain_errors():
+        while True:
+            block = p.stderr.read(4096)
+            if not block:
+                break
+            errors.append(block)
+    reader = threading.Thread(target=drain_errors, daemon=True)
+    reader.start()
+    def finish(timed_out=False):
+        if timed_out:
+            try:
+                os.killpg(p.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        p.wait()
+        reader.join(timeout=2)
+        p.stdout.close()
+        if not reader.is_alive():
+            p.stderr.close()
+        return (1 if timed_out else p.returncode, "".join(out),
+                "timed out" if timed_out else "".join(errors))
     out, fd = [], p.stdout.fileno()
     deadline = time.monotonic() + timeout
+    import codecs
     import select
-    while True:
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            p.kill()
-            return (1, "".join(out), "timed out")
-        if not select.select([fd], [], [], min(remaining, 5.0))[0]:
-            continue  # no output yet; loop re-checks the deadline
-        line = p.stdout.readline()
-        if not line:
-            break  # EOF — child closed stdout
+    decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
+    pending = ""
+    def consume(line):
         if line.startswith("\x1fP\x1f"):
-            parts = line.rstrip("\n").split("\x1f")  # ['', 'P', pct, label]
+            parts = line.rstrip("\n").split("\x1f")
             try:
                 pct = int(parts[2])
             except (IndexError, ValueError):
-                continue
+                return
             label = parts[3] if len(parts) > 3 else ""
             _set_job_message(f"{prefix}{label}" if label else prefix,
                              base + int(span * pct / 100))
         else:
             out.append(line)
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return finish(timed_out=True)
+        if not select.select([fd], [], [], min(remaining, 5.0))[0]:
+            continue
+        # read() on a ready pipe consumes available bytes, unlike readline()
+        # which can wait past the deadline for a child that never sends '\n'.
+        block = os.read(fd, 65536)
+        if not block:
+            pending += decoder.decode(b"", final=True)
+            if pending:
+                consume(pending)
+            break
+        pending += decoder.decode(block)
+        while "\n" in pending:
+            line, pending = pending.split("\n", 1)
+            consume(line + "\n")
     try:
         p.wait(timeout=max(1.0, deadline - time.monotonic()))
     except subprocess.TimeoutExpired:
-        p.kill()
-        return (1, "".join(out), "timed out")
-    return (p.returncode, "".join(out), p.stderr.read())
+        return finish(timed_out=True)
+    return finish()
 
 
 def _require_jev_key():

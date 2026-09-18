@@ -14,6 +14,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 import config  # noqa: E402
+import draftutil as du
+import run_metrics as metrics
 
 PY = config.PYTHON_BIN
 ACCOUNTS = config.ACCOUNTS_FILE
@@ -34,11 +36,9 @@ def _env(config_dir):
 
 def authenticated(config_dir):
     try:
-        r = subprocess.run(["gws", "gmail", "users", "getProfile", "--params",
-                            json.dumps({"userId": "me"})],
-                           capture_output=True, text=True, env=_env(config_dir), timeout=30)
-        line = "\n".join(l for l in r.stdout.splitlines() if "keyring" not in l)
-        return bool(json.loads(line).get("emailAddress")) if line.strip() else False
+        profile = du._gws(config_dir, ["gmail", "users", "getProfile", "--params",
+                                       json.dumps({"userId": "me"})])
+        return bool(profile.get("emailAddress"))
     except Exception:
         return False
 
@@ -116,7 +116,8 @@ def main():
 
     digest_to, digest_config = _primary_account()
     subj = "⏰ You may have missed — catch-up sweep"
-    send_result = subprocess.run(
+    with metrics.measured("gmail.send_digest", digest_config):
+        send_result = subprocess.run(
         ["gws", "gmail", "+send", "--to", digest_to, "--subject", subj, "--body", body],
         env=_env(digest_config), capture_output=True, text=True, timeout=60,
     )

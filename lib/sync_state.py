@@ -1,43 +1,15 @@
 #!/usr/bin/env python3
-"""Incremental sync: read only what CHANGED since the last successful run.
+"""Fail-closed mailbox history cursors with locked per-account persistence.
 
-WHY
----
-Even after making the per-thread read cheap, a full pass still re-reads an inbox
-that mostly did not move overnight. `history.list` costs 2 units and returns
-exactly what changed since a stored `historyId`, so a second run costs seconds
-instead of minutes. This is the difference between "fast because we optimised the
-constant factor" and "fast because we stopped doing the work".
-
-THE CONTRACT (all four matter more than the speed)
---------------------------------------------------
-1. The cursor advances ONLY after a run completes successfully. `load()` reads a
-   cursor; `save()` is called at the very end of main(). A crashed or partial run
-   leaves the old cursor, so the next run re-reads that ground rather than
-   skipping it. Re-reading is cheap; skipping loses mail.
-
-2. Gmail expires old history (measured on the live account: `startHistoryId=1`
-   returns "Requested entity was not found."). `changed_threads` reports
-   "expired" and the caller does a FULL read. Never a failure, never a partial.
-
-3. Uncertainty resolves to a full read, not to an empty delta. Every error path
-   returns None for the changed-set, which callers must treat as "read
-   everything". An empty set means "genuinely nothing changed" and is only ever
-   returned when the API said so cleanly.
-
-4. Because PRODUCT.md makes reversibility the product: a thread skipped by the
-   delta is simply not looked at this run, so it keeps whatever state it already
-   has. A missed delta can therefore leave a thread in the inbox (safe — caught
-   next run); it can never cause an archive, because archiving only happens to
-   threads we affirmatively read and classified this run.
-
-The cursor is captured BEFORE the run's reads (from getProfile, 1 unit) and
-persisted after success, so changes landing mid-run are re-examined next time
-rather than falling into the gap between reading and saving.
+Expired, malformed or partially failed history scans return None, never an
+empty delta. Cursor expiry falls back to full reads. review_open_loops currently
+uses these for diagnostics, not to bypass exact decision-input validation:
+mailbox history alone cannot detect policy, model or learned-preference edits.
 """
 import json
 import os
 import time
+import runtime_state as storage
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -72,14 +44,15 @@ def load(account):
     Returns None (meaning "do a full read") for a missing, malformed, or stale
     cursor. The account key keeps multi-account runs independent, so one
     account's failure never disturbs another's cursor."""
-    rec = _read_state().get(account) or {}
-    hid = rec.get("history_id")
-    if not hid:
+    rec = _read_state().get(account)
+    if not isinstance(rec, dict):
         return None
-    ts = rec.get("updated_at") or 0
-    if ts and (time.time() - ts) > MAX_CURSOR_AGE_SECONDS:
-        return None                      # too old to trust; full read
-    return str(hid)
+    hid, ts = rec.get("history_id"), rec.get("updated_at")
+    if (not isinstance(hid, str) or not hid.isdigit()
+            or not isinstance(ts, (int, float))
+            or not 0 <= time.time() - ts <= MAX_CURSOR_AGE_SECONDS):
+        return None
+    return hid
 
 
 def save(account, history_id, meta=None):
@@ -90,16 +63,10 @@ def save(account, history_id, meta=None):
     if not history_id:
         return False
     try:
-        state = _read_state()
         rec = {"history_id": str(history_id), "updated_at": int(time.time())}
         if meta:
             rec.update(meta)
-        state[account] = rec
-        os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
-        tmp = STATE_PATH + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(state, f, ensure_ascii=False, indent=2)
-        os.replace(tmp, STATE_PATH)
+        storage.update_json(STATE_PATH, lambda state: state.update({account: rec}))
         return True
     except Exception:
         return False                     # cursor is an optimisation, never fatal
@@ -108,14 +75,7 @@ def save(account, history_id, meta=None):
 def clear(account):
     """Forget an account's cursor, forcing a full read next time."""
     try:
-        state = _read_state()
-        if account in state:
-            del state[account]
-            os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
-            tmp = STATE_PATH + ".tmp"
-            with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(state, f, ensure_ascii=False, indent=2)
-            os.replace(tmp, STATE_PATH)
+        storage.update_json(STATE_PATH, lambda state: state.pop(account, None))
     except Exception:
         pass
 
@@ -150,20 +110,32 @@ def changed_threads(list_history, start_history_id):
             page = list_history(token)
         except Exception as exc:
             return (None, "expired") if is_expired_error(exc) else (None, "error")
-        if not isinstance(page, dict):
+        if not isinstance(page, dict) or page.get("error"):
             return None, "error"
-        for rec in page.get("history", []) or []:
-            for key in _HISTORY_TYPES:
-                for item in rec.get(key, []) or []:
-                    msg = item.get("message") or item
-                    tid = msg.get("threadId")
-                    if tid:
-                        tids.add(tid)
-            # Some records carry a bare `messages` list alongside the typed keys.
-            for msg in rec.get("messages", []) or []:
-                if msg.get("threadId"):
-                    tids.add(msg["threadId"])
-        token = page.get("nextPageToken")
+        try:
+            records = page.get("history", [])
+            if not isinstance(records, list):
+                return None, "error"
+            for rec in records:
+                for key in _HISTORY_TYPES:
+                    for item in rec.get(key, []) or []:
+                        msg = item.get("message") or item
+                        tid = msg.get("threadId")
+                        if tid:
+                            if not isinstance(tid, str):
+                                return None, "error"
+                            tids.add(tid)
+                for msg in rec.get("messages", []) or []:
+                    if msg.get("threadId"):
+                        if not isinstance(msg["threadId"], str):
+                            return None, "error"
+                        tids.add(msg["threadId"])
+            next_token = page.get("nextPageToken")
+            if next_token and (not isinstance(next_token, str) or next_token == token):
+                return None, "error"
+            token = next_token
+        except (AttributeError, TypeError, ValueError):
+            return None, "error"
         pages += 1
         if not token:
             return tids, "ok"

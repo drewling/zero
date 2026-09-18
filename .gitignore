@@ -67,3 +67,8 @@ app/jev_key
 # It holds .credentials.json — real OAuth tokens seeded from the login Keychain —
 # so it must never be committed. Created automatically on first use; safe to delete.
 claude-home/
+
+# Private optimization state, not source artifacts
+app/thread_cache/
+app/metadata_cache/
+app/sync_state.json

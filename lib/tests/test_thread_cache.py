@@ -162,7 +162,7 @@ cap = tc.load("acct", path=cache_path())
 old_max, tc.MAX_ENTRIES = tc.MAX_ENTRIES, 5
 for i in range(20):
     cap.put_thread(f"t{i}", "100", info(f"t{i}"))
-    cap._threads[f"t{i}"]["t"] = tc._now() + i        # newest last
+    cap._threads[f"t{i}"]["t"] = tc._now() - 20 + i   # newest last, all timestamps in the past
 cap._prune()
 assert len(cap._threads) == 5, len(cap._threads)
 assert cap.thread_info("t19", "100") is not None      # newest survived
