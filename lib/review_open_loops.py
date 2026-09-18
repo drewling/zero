@@ -24,6 +24,7 @@ import learning               # noqa: E402
 import gmail_quota as gq      # noqa: E402
 import mailbox_index as mbi   # noqa: E402
 import sync_state             # noqa: E402
+import thread_cache           # noqa: E402
 
 _CATEGORIES_PATH = os.path.join(ROOT, "categories.json")
 _LABEL_HISTORY_PATH = os.path.join(ROOT, "app", "category_label_history.json")
@@ -184,6 +185,20 @@ _REPLIED_IN_FLIGHT = {}
 # its own call.
 _SNIPPETS = {}
 
+# Per-thread historyId, ALSO harvested free from the same threads.list pages.
+# Verified on the live account: every entry carries one, e.g.
+#   {'id': '1a0b28e0e2352dbc', 'historyId': '7148783'}
+# Gmail bumps it on any change to the thread, so equality with the cached value
+# is a zero-cost proof that a thread has not moved since we last read it. An id
+# MISSING from this map is never treated as unchanged — it just means no proof,
+# so the thread is read for real.
+_HISTORY_IDS = {}
+
+# The persistent cache for this run (lib/thread_cache.py). None until main()
+# opens it, and every call site must tolerate None, because a run with no cache
+# has to behave exactly like the code did before the cache existed.
+_CACHE = None
+
 # Gmail reads are network-bound, so concurrency still buys LATENCY. But the real
 # ceiling is Gmail's 6,000 quota-units-per-minute-per-user budget, not a thread
 # count: 16 workers x (threads.get 40u + messages.list 5u) was ~78,000 units/min,
@@ -259,17 +274,50 @@ def _replied_before(cfg, email):
         pending.wait()
         with _REPLIED_LOCK:
             return _REPLIED[email]
+
+    # DISK CACHE, with a deliberate asymmetry (lib/thread_cache.py):
+    #   True  ("the owner HAS written to this sender") is monotone — a sent
+    #         message never un-sends — and it biases toward KEEP, so it is
+    #         trusted for 30 days.
+    #   False ("has NOT written") stops being true the instant the owner replies,
+    #         and it is the input that makes a thread look like cold outreach,
+    #         i.e. the ARCHIVE direction. It is trusted for hours only, after
+    #         which this returns None and we re-probe for real.
+    # Getting that backwards is exactly how a cache would start losing mail.
+    cached = None
+    if _CACHE is not None:
+        try:
+            cached = _CACHE.replied_before(email)
+        except Exception:
+            cached = None
+    if cached is not None:
+        with _REPLIED_LOCK:
+            _REPLIED[email] = cached
+            ev = _REPLIED_IN_FLIGHT.pop(email, None)
+        if ev:
+            ev.set()
+        return cached
+
     try:
         d = _gws_read(cfg, ["gmail", "users", "messages", "list", "--params",
                             json.dumps({"userId": "me", "q": f"from:me to:{email}",
                                         "maxResults": 1})], method="messages.list")
         v = bool(d.get("messages"))
+        persist = True
     except Exception as e:
         # Lookup failed (transient gws/network blip). Bias conservatively toward "keep"
         # (assume replied-before) so we never wrongly archive, but log it: a spike of
         # these means classification is silently keep-biased, not that you reply to everyone.
         print(f"replied_before({email}) lookup failed, assuming replied: {e}", file=sys.stderr)
         v = True
+        # NEVER persist a guess. This True is a safety default, not an observation;
+        # writing it would turn one network blip into 30 days of fiction.
+        persist = False
+    if persist and _CACHE is not None:
+        try:
+            _CACHE.put_replied(email, v)
+        except Exception:
+            pass
     with _REPLIED_LOCK:
         _REPLIED[email] = v
         _REPLIED_IN_FLIGHT.pop(email).set()
@@ -357,6 +405,22 @@ def _prefetch_replied(cfg, emails, group_size=_REPLIED_GROUP_SIZE):
             e = (e or "").lower()
             if e and e not in _REPLIED and e not in todo:
                 todo.append(e)
+    # Senders the persistent cache can already answer cost nothing, so drop them
+    # before spending group probes on them. A None answer (unknown, or a False
+    # that aged past its short TTL) stays in `todo` and is probed for real.
+    if _CACHE is not None and todo:
+        remaining = []
+        for e in todo:
+            try:
+                known = _CACHE.replied_before(e)
+            except Exception:
+                known = None
+            if known is None:
+                remaining.append(e)
+            else:
+                with _REPLIED_LOCK:
+                    _REPLIED.setdefault(e, known)
+        todo = remaining
     if not todo or not _grouping_works(cfg):
         return 0
 
@@ -376,15 +440,29 @@ def _prefetch_replied(cfg, emails, group_size=_REPLIED_GROUP_SIZE):
                 if e not in _REPLIED:
                     _REPLIED[e] = False
                     resolved += 1
+        # A negative group answer is a real OBSERVATION (Gmail said the owner has
+        # written to none of these), so it is worth persisting — but only under
+        # the short False TTL, since any one of them may be replied to tomorrow.
+        if _CACHE is not None:
+            for e in group:
+                try:
+                    _CACHE.put_replied(e, False)
+                except Exception:
+                    pass
     return resolved
 
 
 def _thread_ids_q(cfg, q):
     """All thread ids matching a Gmail query, paged.
 
-    Also harvests the `snippet` that threads.list already returns, into
-    _SNIPPETS. The snippet is one of the classifier's inputs, so collecting it
-    here means the per-thread read never has to pay for it separately."""
+    Also harvests the two things threads.list already returns for free, into
+    module-level maps:
+      - `snippet`   -> _SNIPPETS, one of the classifier's inputs, so the
+                       per-thread read never pays for it separately.
+      - `historyId` -> _HISTORY_IDS, the change-detector. Verified live: each
+                       entry carries one. Comparing it to the cached value is how
+                       an unchanged thread avoids its 20-40 unit read entirely,
+                       at no extra call cost (see lib/thread_cache.py)."""
     ids, tok = [], None
     while True:
         p = {"userId": "me", "q": q, "maxResults": 500}
@@ -396,6 +474,8 @@ def _thread_ids_q(cfg, q):
             ids.append(t["id"])
             if t.get("snippet"):
                 _SNIPPETS[t["id"]] = t["snippet"][:160]
+            if t.get("historyId"):
+                _HISTORY_IDS[t["id"]] = str(t["historyId"])
         tok = d.get("nextPageToken")
         if not tok:
             break
@@ -508,19 +588,55 @@ def _thread_info_via_index(cfg, tid, me, index):
 def _thread_info(cfg, tid, me, index=None):
     """Classifier inputs for one thread, cheapest correct route first.
 
-    The returned shape is identical on both paths and is exactly what
+    Route order is cheapest-first, and each route is only taken when it is
+    provably correct:
+      1. the persistent cache, but ONLY when threads.list handed us a historyId
+         for this thread that is identical to the one the cached row was read at
+         (0 units),
+      2. the bulk index + one messages.get on the newest message (20 units),
+      3. threads.get, authoritative (40 units).
+
+    The returned shape is identical on all three paths and is exactly what
     _classify/_jev_state consume: id, ids, last_from, last_email,
     last_from_owner, subject, snippet, label_ids (replied_before is attached by
     the caller)."""
+    hid = _HISTORY_IDS.get(tid)
+    if _CACHE is not None and hid:
+        try:
+            cached = _CACHE.thread_info(tid, hid)
+        except Exception:
+            cached = None
+        if cached is not None:
+            # The snippet from THIS run's threads.list page is free and current,
+            # so prefer it. Normally identical (the historyId matched), but if it
+            # somehow differs the fresh text wins and the verdict fingerprint
+            # changes with it, which forces a re-decision. Freshness is the safe
+            # direction here, so we take it.
+            fresh = _SNIPPETS.get(tid)
+            if fresh:
+                cached["snippet"] = fresh
+            return cached
+
+    info = None
     if index is not None and index.covers(tid):
         try:
             info = _thread_info_via_index(cfg, tid, me, index)
-            if info:
-                return info
         except Exception as exc:
             # Fall through to the authoritative path rather than dropping a thread.
             print(f"bulk read failed for {tid}, falling back: {exc}", file=sys.stderr)
-    return _thread_info_via_get(cfg, tid, me)
+            info = None
+    if info is None:
+        info = _thread_info_via_get(cfg, tid, me)
+
+    # Store against the historyId this read was performed at. With no historyId
+    # there is nothing to validate a future hit against, so we store nothing:
+    # an unvalidatable entry is worse than no entry.
+    if info and _CACHE is not None and hid:
+        try:
+            _CACHE.put_thread(tid, hid, info)
+        except Exception:
+            pass
+    return info
 
 
 def _read_one_thread(cfg, tid, me, index=None):
@@ -817,13 +933,42 @@ def _jev_decide(answers):
     return "keep"                            # uncertain -> keep, never lose mail
 
 
+def _threshold_signature():
+    """Every constant that participates in the keep/archive rule.
+
+    This goes into the verdict cache key, so editing any threshold invalidates
+    every cached verdict. Without it, lowering JEV_ARCHIVE_AWAITING (or any other
+    knob) would appear to do nothing on an inbox that had already been decided —
+    the tuning would be silently inert, which is worse than slow."""
+    return {
+        "keep_awaiting": JEV_KEEP_AWAITING,
+        "archive_awaiting": JEV_ARCHIVE_AWAITING,
+        "keep_urgency": JEV_KEEP_URGENCY,
+        "noise_min": JEV_NOISE_MIN,
+        "keep_protected": JEV_KEEP_PROTECTED,
+        "min_category_conf": JEV_MIN_CATEGORY_CONF,
+        # The urgency ladder is part of the rule too: rewording a level changes
+        # what a score of 2 means, hence what the same thread deserves.
+        "urgency_levels": JEV_URGENCY_LEVELS,
+        # Bumping this is the manual "throw away all verdicts" lever.
+        "logic_version": 1,
+    }
+
+
 def _classify(chunk):
     """Classify threads with Jev. Returns
     {str(index): {"decision": "keep"|"archive", "category": <name>|None}}.
 
     One Jev call per thread, all issued concurrently via jev.ask_many, so a
     200-thread inbox classifies in parallel rather than serially. Any failed call
-    comes back as None from ask_many and is resolved to "keep"."""
+    comes back as None from ask_many and is resolved to "keep".
+
+    A thread whose verdict is already cached is not asked at all. The cache entry
+    only matches when the thread id, its current historyId, AND a fingerprint of
+    every other verdict-changing input (the exact Jev state — which carries the
+    keep-policy text, the learned preferences and replied_before — plus the
+    question set carrying the category list, plus the threshold constants) are
+    all unchanged. Anything else is a miss and gets a real classification."""
     if not chunk:
         return {}
     try:
@@ -838,9 +983,10 @@ def _classify(chunk):
     questions = _jev_questions(cats)
     policy = _policy_text()
     learned = _learned_rules()
+    thresholds = _threshold_signature()
 
     out = {}
-    items, order = [], []
+    items, order, fps = [], [], {}
     for i, c in enumerate(chunk):
         # Deterministic, no API call needed: the owner sent the last message, so
         # the ball is in the other party's court. main() already pre-filters these
@@ -848,7 +994,19 @@ def _classify(chunk):
         if c.get("last_from_owner"):
             out[str(i)] = {"decision": "archive", "category": None}
             continue
-        items.append((_jev_state(c, policy, learned), questions))
+        state = _jev_state(c, policy, learned)
+        tid, hid = c.get("id"), _HISTORY_IDS.get(c.get("id"))
+        if _CACHE is not None and tid and hid:
+            fp = thread_cache.verdict_fingerprint(state, questions, thresholds)
+            try:
+                hit = _CACHE.verdict(tid, hid, fp)
+            except Exception:
+                hit = None
+            if hit is not None:
+                out[str(i)] = hit
+                continue
+            fps[i] = fp
+        items.append((state, questions))
         order.append(i)
 
     try:
@@ -863,11 +1021,22 @@ def _classify(chunk):
         answers = results[pos] if pos < len(results) else None
         if not answers:
             failures += 1
+            # A FAILED classification is a keep-biased DEFAULT, not a judgment.
+            # Persisting it would freeze a network blip into tomorrow's answer,
+            # so this branch deliberately writes nothing.
             out[str(i)] = {"decision": "keep", "category": None}
             continue
         decision = _jev_decide(answers)
         category = _jev_category(answers, cat_names) if decision == "keep" else None
         out[str(i)] = {"decision": decision, "category": category}
+        fp = fps.get(i)
+        if _CACHE is not None and fp:
+            tid, hid = chunk[i].get("id"), _HISTORY_IDS.get(chunk[i].get("id"))
+            if tid and hid:
+                try:
+                    _CACHE.put_verdict(tid, hid, fp, decision, category)
+                except Exception:
+                    pass
 
     if failures:
         # A spike of these means the run is silently keep-biased, not that the
@@ -1078,6 +1247,11 @@ def main():
                     help="ignore the stored history cursor and read every candidate")
     ap.add_argument("--units-per-minute", type=int, default=0,
                     help="override the Gmail quota budget (default: 80%% of 6000)")
+    ap.add_argument("--no-cache", action="store_true",
+                    help="ignore the persistent thread cache (re-read and re-decide "
+                         "everything); use to prove a run from cold")
+    ap.add_argument("--clear-cache", action="store_true",
+                    help="delete this account's persistent cache before running")
     ap.add_argument("--limit", type=int, default=0,
                     help="only read the first N candidate threads (bounded test run; "
                          "never advances the history cursor)")
@@ -1086,6 +1260,16 @@ def main():
     if a.units_per_minute and a.units_per_minute > 0:
         # Explicit override always wins, even over transport-layer deference.
         globals()["_LIMITER"] = gq.UnitLimiter(units_per_minute=a.units_per_minute)
+
+    # --- Persistent cache ----------------------------------------------------
+    # Opened before any reads so every path below can consult it. load() never
+    # raises and never returns None: a missing, corrupt or version-mismatched
+    # file simply yields an empty cache that misses on everything, which is
+    # byte-for-byte the behaviour this run had before the cache existed.
+    if a.clear_cache:
+        thread_cache.clear(a.account_label)
+    globals()["_CACHE"] = thread_cache.load(a.account_label,
+                                            enabled=not a.no_cache)
 
     try:
         me = du._profile_email(a.config_dir)
@@ -1096,6 +1280,9 @@ def main():
         result = _run_label_only(a.config_dir, me, a.window_days, a.chunk,
                                  archive_days=a.archive_days)
         result["account"] = a.account_label
+        if _CACHE is not None:
+            result["cache"] = _CACHE.stats()
+            _CACHE.save()
         print(json.dumps(result, ensure_ascii=False))
         return
 
@@ -1152,8 +1339,27 @@ def main():
     # drops from threads.get (40u) to messages.get (20u) and never pays for
     # message-id enumeration at all. Measured: 805 units for a 70k-message
     # mailbox, versus 128,840 units to threads.get 3,221 threads.
+    #
+    # The index exists to make per-thread READS cheap, so it is only worth
+    # building when there are reads left to make. On a warm second run almost
+    # every candidate is a cache hit at a matching historyId, and building the
+    # index anyway would reintroduce a few hundred units (and tens of seconds)
+    # of sweep to speed up zero reads. `needs_read` is computed with the same
+    # predicate _thread_info uses, so the two can never disagree about whether a
+    # thread is going to be read.
+    needs_read = [t for t in tids
+                  if _CACHE is None
+                  or not _HISTORY_IDS.get(t)
+                  or _CACHE.thread_info(t, _HISTORY_IDS.get(t)) is None]
+    cached_reads = len(tids) - len(needs_read)
+    # Those probe lookups counted as hits/misses without doing real work; reset
+    # the counters so the reported numbers describe the run, not the probe.
+    if _CACHE is not None:
+        _CACHE.hits["thread"] = 0
+        _CACHE.misses["thread"] = 0
+
     index = None
-    if not a.no_bulk and tids:
+    if not a.no_bulk and needs_read:
         _emit_progress(3, "Indexing mailbox")
         # Bound the sweep to the window this run actually classifies. Scanning
         # the whole mailbox meant ~140 pages on a 70k-message account before any
@@ -1225,6 +1431,9 @@ def main():
                            governed_by="draftutil" if _TRANSPORT_GOVERNS else "reader")
     if index is not None:
         result["bulk_index"] = index.stats()
+    if _CACHE is not None:
+        result["cache"] = dict(_CACHE.stats(), reads_served=cached_reads,
+                               reads_performed=len(needs_read))
 
     if a.execute and archive_msg_ids:
         lab = iz._dated_label(iz._BASE_LABEL)
@@ -1241,6 +1450,15 @@ def main():
     if next_cursor and not a.limit:
         sync_state.save(a.account_label, next_cursor,
                         meta={"mode": result["mode"], "threads": len(infos)})
+
+    # Persist the cache last, and UNLIKE the history cursor a bounded or partial
+    # run may still save. The two are not comparable: the cursor is a claim about
+    # the whole mailbox ("everything up to here is caught up"), which a partial
+    # run cannot honestly make, whereas every cache entry is an independent,
+    # self-validating fact about one thread at one historyId. Keeping the work a
+    # partial run already paid for is free and correct.
+    if _CACHE is not None:
+        _CACHE.save()
 
     print(json.dumps(result, ensure_ascii=False))
 
