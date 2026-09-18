@@ -72,3 +72,4 @@ claude-home/
 app/thread_cache/
 app/metadata_cache/
 app/sync_state.json
+app/mailbox/

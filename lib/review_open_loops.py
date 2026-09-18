@@ -27,6 +27,10 @@ import sync_state             # noqa: E402
 import thread_cache           # noqa: E402
 import runtime_state as storage
 import run_metrics as metrics
+try:
+    import mailbox_store            # local mailbox mirror (optional, fast path)
+except Exception:                   # pragma: no cover - degrade to the old path
+    mailbox_store = None
 
 _CATEGORIES_PATH = os.path.join(ROOT, "categories.json")
 _LABEL_HISTORY_PATH = os.path.join(ROOT, "app", "category_label_history.json")
@@ -197,6 +201,13 @@ _HISTORY_IDS = {}
 # opens it, and every call site must tolerate None, because a run with no cache
 # has to behave exactly like the code did before the cache existed.
 _CACHE = None
+# The local mailbox mirror, when one exists for this account. None means every
+# read falls back to the cache/Gmail path, which is exactly the old behaviour.
+_STORE = None
+# Hit/miss counters for the local mirror, reported in the run result. An
+# optimisation nobody can see is how the previous round shipped a "20x speedup"
+# that never actually fired.
+_STORE_STATS = {"hits": 0, "misses": 0}
 
 # Gmail reads are network-bound, so concurrency still buys LATENCY. But the real
 # ceiling is Gmail's 6,000 quota-units-per-minute-per-user budget, not a thread
@@ -601,6 +612,26 @@ def _thread_info(cfg, tid, me, index=None):
     last_from_owner, subject, snippet, label_ids (replied_before is attached by
     the caller)."""
     hid = _HISTORY_IDS.get(tid)
+    # TIER 0: the local mailbox mirror (lib/mailbox_store.py), kept current by
+    # the background sync. Validated on the same historyId as every other tier,
+    # so a thread that moved can never be served from it. This is what makes a
+    # run instant: the rows are already on disk before the run starts.
+    if _STORE is not None and hid:
+        try:
+            row = _STORE.get(tid, hid)
+        except Exception:
+            row = None
+        if row is not None:
+            _STORE_STATS["hits"] += 1
+            row.pop("history_id", None)
+            row.pop("internal_ts", None)
+            row["last_from_owner"] = _is_owner_sender(me, row["last_from"])
+            fresh = _SNIPPETS.get(tid)
+            if fresh:
+                row["snippet"] = fresh
+            return row
+        _STORE_STATS["misses"] += 1
+
     if _CACHE is not None and hid:
         try:
             cached = _CACHE.thread_info(tid, hid)
@@ -1300,6 +1331,11 @@ def main():
         thread_cache.clear(a.account_label)
     globals()["_CACHE"] = thread_cache.load(a.account_label,
                                             enabled=not a.no_cache)
+    # The background sync keeps this current; the run only ever READS it. If it
+    # is missing, stale or unreadable every lookup simply misses and the run
+    # falls back to the cache and then to Gmail.
+    if mailbox_store is not None and not a.no_cache:
+        globals()["_STORE"] = mailbox_store.load(a.account_label)
 
     try:
         me = du._profile_email(a.config_dir)
@@ -1473,6 +1509,9 @@ def main():
     if index is not None:
         result["bulk_index"] = index.stats()
     if _CACHE is not None:
+        result["store"] = dict(_STORE_STATS,
+                               enabled=_STORE is not None,
+                               **({} if _STORE is None else _STORE.counts()))
         result["cache"] = dict(_CACHE.stats(), reads_served=cached_reads,
                                reads_performed=len(needs_read))
 

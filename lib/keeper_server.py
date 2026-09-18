@@ -2038,10 +2038,20 @@ def _write_settings(settings):
             fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
 
 
+# --- background mailbox sync -------------------------------------------------
+# How often to ask Gmail "what changed?". An incremental sync is one history.list
+# (2 quota units) plus the threads that actually moved, so this can be frequent
+# without being expensive.
+SYNC_INTERVAL_SECONDS = int(os.environ.get("ZERO_SYNC_INTERVAL", "120"))
+_sync_lock = threading.Lock()
+_sync_stop = threading.Event()
+_sync_state = {"last": [], "at": 0}
+
+
 _JOB_KINDS = {"refresh": lambda p: _build_state_blocking(),
               "run": _run_keeper, "undo": _run_undo, "add_account": _add_account,
               "populate": _run_populate, "archive_before": _run_archive_before,
-              "cleanup": _run_cleanup}
+              "cleanup": _run_cleanup, "sync": lambda p: _sync_accounts(p)}
 
 
 def _set_job_message(msg, progress=None):
@@ -2216,6 +2226,26 @@ class Handler(BaseHTTPRequestHandler):
         if p == "/api/job":
             with _job_lock:
                 return self._send(200, dict(_job))
+        if p == "/api/sync":
+            # Read-only view of the local mirrors: how much mail is already
+            # downloaded, and when each account last caught up.
+            with _sync_lock:
+                out = {"last": list(_sync_state["last"]), "at": _sync_state["at"],
+                       "interval_seconds": SYNC_INTERVAL_SECONDS}
+            try:
+                import mailbox_store
+                stores = []
+                for acct in _load_accounts():
+                    label = acct.get("slug") or acct.get("email") or acct["config_dir"]
+                    store = mailbox_store.load(label)
+                    if store is None:
+                        continue
+                    stores.append(dict(store.counts(), account=label))
+                    store.close()
+                out["stores"] = stores
+            except Exception as exc:
+                out["stores_error"] = str(exc)
+            return self._send(200, out)
         if p == "/api/policy":
             try:
                 text = open(POLICY_PATH).read() if os.path.isfile(POLICY_PATH) else ""
@@ -2326,7 +2356,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, _sync[p](payload))
             except Exception as exc:
                 return self._send(500, {"error": str(exc)})
-        kind = {"/api/refresh": "refresh", "/api/run": "run",
+        kind = {"/api/refresh": "refresh", "/api/run": "run", "/api/sync": "sync",
                 "/api/undo": "undo", "/api/add-account": "add_account"}.get(p)
         if not kind:
             return self._send(404, {"error": "not found"})
@@ -2506,6 +2536,76 @@ def _seed_bundled_client():
         print(f"warning: could not seed bundled OAuth client: {exc}", file=sys.stderr)
 
 
+def _sync_accounts(payload=None):
+    """Bring every enabled account's local mirror up to date.
+
+    This is the download the user should never have to wait for. The FIRST call
+    per account is the expensive one (quota-bound, minutes for a large mailbox);
+    every call after it is one history.list plus whatever actually changed.
+
+    Never raises: a sync failure means the mirror is stale, and a stale mirror
+    simply routes reads back to Gmail the way they went before it existed.
+    """
+    try:
+        import mailbox_sync
+        import gmail_api
+    except Exception as exc:
+        return {"status": "unavailable", "reason": str(exc)}
+    payload = payload or {}
+    results = []
+    for acct in _load_accounts():
+        if acct.get("enabled", True) is False:
+            continue
+        cfg = acct["config_dir"]
+        label = acct.get("slug") or acct.get("email") or cfg
+        email = acct.get("email", label)
+        if not gmail_api.available(cfg):
+            # No direct credentials: the keeper still works through gws.
+            results.append({"account": label, "status": "unavailable",
+                            "reason": "no direct Gmail credentials"})
+            continue
+
+        def progress(done, total, label=label):
+            _set_job_message(f"Downloading mail — {label} ({done} of {total})",
+                             min(99, int(100 * done / max(total, 1))))
+
+        out = mailbox_sync.sync(cfg, label, email, progress=progress,
+                                should_stop=lambda: _sync_stop.is_set())
+        out["account"] = label
+        results.append(out)
+    try:
+        gmail_api.close_all()
+    except Exception:
+        pass
+    with _sync_lock:
+        _sync_state["last"] = results
+        _sync_state["at"] = int(time.time())
+    return {"accounts": results}
+
+
+def _sync_loop():
+    """Keep every mirror current in the background, forever.
+
+    The point of the whole rearchitecture: mail arrives in the local store on
+    its own, so opening the panel or pressing Run reads something that is
+    already there. Runs on boot, then on an interval.
+    """
+    # Let the server finish booting and the state build settle first; the
+    # initial sync is quota-hungry and should not compete with the panel's
+    # first paint.
+    _sync_stop.wait(20)
+    while not _sync_stop.is_set():
+        try:
+            # Never fight a foreground job for the same account's quota.
+            with _job_lock:
+                busy = _job["state"] == "running"
+            if not busy:
+                _sync_accounts()
+        except Exception as exc:
+            print(f"background sync failed: {exc}", file=sys.stderr)
+        _sync_stop.wait(SYNC_INTERVAL_SECONDS)
+
+
 def main():
     global _building
     # gws needs the file keyring backend to work headlessly; ensure it's set even
@@ -2538,10 +2638,15 @@ def main():
         t = threading.Thread(target=_boot_rebuild, daemon=True, name="boot-rebuild")
         t.start()
 
+    if os.environ.get("ZERO_BACKGROUND_SYNC", "1") == "1":
+        threading.Thread(target=_sync_loop, daemon=True, name="mailbox-sync").start()
+
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
         pass
+    finally:
+        _sync_stop.set()
 
 
 if __name__ == "__main__":
