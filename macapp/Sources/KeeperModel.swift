@@ -101,6 +101,12 @@ final class KeeperModel: ObservableObject {
     // needs to show whether one is configured and let the user paste theirs in.
     @Published var jevKeyConfigured = false
     @Published var jevKeySaving = false
+    // nil = unknown/not checked this session (server's status endpoint can't tell
+    // us — it only knows a key file exists, not whether Jev accepts it). Set from
+    // the save response so a key that saved-but-was-rejected keeps showing a
+    // warning instead of silently reverting to the same green dot a working key
+    // gets, the moment the toast fades or the panel is reopened.
+    @Published var jevKeyVerified: Bool? = nil
     // Undo tab: emails under each recovery batch, loaded on demand. Keyed "slug|label".
     @Published var undoThreads: [String: [UndoThread]] = [:]
     @Published var undoLoading: Set<String> = []
@@ -352,6 +358,8 @@ final class KeeperModel: ObservableObject {
 
     /// Whether the Jev key is set. Sorting cannot run without it, so the Settings
     /// panel shows this plainly rather than letting a run fail later with no reason.
+    /// Only reports whether a key FILE exists — it doesn't re-verify against Jev,
+    /// so it never touches `jevKeyVerified`, which reflects the last save's result.
     func fetchJevKeyStatus() async {
         jevKeyConfigured = (try? await api.jevKeyStatus())?.configured ?? false
     }
@@ -365,6 +373,10 @@ final class KeeperModel: ObservableObject {
             do {
                 let r = try await api.setJevKey(key)
                 jevKeyConfigured = r.configured
+                // Empty key (removal) reports `configured: false` and a verification
+                // result of `false` from the server, which would otherwise render as
+                // a spurious rejection warning for an intentional removal.
+                jevKeyVerified = r.configured ? r.verified : nil
                 toast(r.message.isEmpty
                         ? (r.configured ? "Key saved" : "Key removed")
                         : r.message)

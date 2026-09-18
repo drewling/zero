@@ -1531,11 +1531,11 @@ private struct SortingEngineSection: View {
 
             HStack(spacing: 8) {
                 Circle()
-                    .fill(m.jevKeyConfigured ? Paper.clear : Paper.danger)
+                    .fill(dotColor)
                     .frame(width: 7, height: 7)
-                Text(m.jevKeyConfigured ? "API key configured" : "No API key — mail can't be sorted yet")
+                Text(statusLine)
                     .font(.system(size: 12))
-                    .foregroundStyle(m.jevKeyConfigured ? Paper.ink2 : Paper.danger)
+                    .foregroundStyle(m.jevKeyConfigured && m.jevKeyVerified != false ? Paper.ink2 : Paper.danger)
                 Spacer(minLength: 6)
                 Link("Get a key", destination: URL(string: "https://console.typesafe.ai/keys")!)
                     .font(.system(size: 11.5, weight: .medium))
@@ -1588,6 +1588,20 @@ private struct SortingEngineSection: View {
 
     private var canSave: Bool {
         !m.jevKeySaving && !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// `jevKeyVerified` is only known for this session's last save (the status
+    /// endpoint doesn't re-verify), so a rejected-but-saved key keeps warning until
+    /// a new save succeeds or the key is removed — it never quietly reads as "fine".
+    private var dotColor: Color {
+        if !m.jevKeyConfigured { return Paper.danger }
+        return m.jevKeyVerified == false ? Paper.danger : Paper.clear
+    }
+
+    private var statusLine: String {
+        if !m.jevKeyConfigured { return "No API key — mail can't be sorted yet" }
+        if m.jevKeyVerified == false { return "Key saved, but Jev rejected it — mail can't be sorted" }
+        return "API key configured"
     }
 
     private func save() {
