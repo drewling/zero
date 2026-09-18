@@ -1155,8 +1155,13 @@ def main():
     index = None
     if not a.no_bulk and tids:
         _emit_progress(3, "Indexing mailbox")
+        # Bound the sweep to the window this run actually classifies. Scanning
+        # the whole mailbox meant ~140 pages on a 70k-message account before any
+        # real work began, with the panel stuck on one message the whole time.
         index = mbi.build_index(a.config_dir, du._env, limiter=_LIMITER,
-                                log=lambda m: print(m, file=sys.stderr))
+                                log=lambda m: print(m, file=sys.stderr),
+                                window_days=getattr(a, "grace_days", 0) or 30,
+                                progress=lambda m: _emit_progress(3, m))
 
     infos = _read_infos_parallel(a.config_dir, tids, me, a.read_workers, index=index)
 

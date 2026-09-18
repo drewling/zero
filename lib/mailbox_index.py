@@ -57,9 +57,29 @@ import gmail_quota as gq
 PAGE_SIZE = 500
 
 # The scan must see a thread's true newest message or last_from_owner can be
-# wrong in the unsafe direction, so it covers everything Gmail will return.
+# wrong in the unsafe direction, so within its window it covers everything
+# Gmail will return.
+#
+# But "everything" used to mean the WHOLE mailbox: on a 69k-message account
+# that is ~140 pages per account before any real work starts, which is why the
+# panel sat on "Indexing mailbox" looking stuck. The run only ever classifies
+# threads inside a recent window, so the index only has to cover that window
+# plus a margin. Threads outside it simply miss the index and fall back to the
+# authoritative per-thread read, which is slower per thread but always correct.
 SCAN_QUERY = "in:anywhere"
 SENT_QUERY = "in:sent"
+
+# Days of margin either side of the run's own window. Generous on purpose: a
+# thread whose newest message is just outside the window must still resolve to
+# the right newest message, and being wrong here is the unsafe direction.
+SCAN_MARGIN_DAYS = 30
+
+
+def _windowed(query, window_days):
+    """Restrict a scan query to a recent window, or leave it unbounded."""
+    if not window_days or window_days <= 0:
+        return query
+    return f"{query} newer_than:{int(window_days) + SCAN_MARGIN_DAYS}d"
 
 
 def _pages_from_stdout(stdout):
@@ -158,15 +178,34 @@ class MailboxIndex:
                 "units": self.units, "sent_messages": len(self.sent_ids)}
 
 
-def build_index(cfg, env_fn, limiter=None, log=None, runner=None):
+def build_index(cfg, env_fn, limiter=None, log=None, runner=None,
+                window_days=None, progress=None):
     """Build a MailboxIndex, or return None if either scan fails.
+
+    `window_days` bounds the scan to the run's own window (plus a margin) so a
+    large mailbox doesn't pay to index years of mail it will never classify.
+    Pass None to scan everything.
+
+    `progress(label)` is called as each scan finishes, because this step used to
+    run for minutes with the panel frozen on a single message.
 
     Returning None (rather than raising) is deliberate: the index is a pure
     OPTIMISATION. If it can't be built, the caller must still be able to fall
     back to the per-thread path and produce a correct, keep-safe run."""
+    def _say(msg):
+        if progress:
+            try:
+                progress(msg)
+            except Exception:
+                pass          # progress is cosmetic; never break a run for it
     try:
-        msgs, pages = _scan(cfg, SCAN_QUERY, env_fn, limiter, runner=runner)
-        sent, sent_pages = _scan(cfg, SENT_QUERY, env_fn, limiter, runner=runner)
+        _say("Indexing mailbox")
+        msgs, pages = _scan(cfg, _windowed(SCAN_QUERY, window_days), env_fn,
+                            limiter, runner=runner)
+        _say(f"Indexing mailbox ({len(msgs)} messages)")
+        sent, sent_pages = _scan(cfg, _windowed(SENT_QUERY, window_days), env_fn,
+                                 limiter, runner=runner)
+        _say(f"Indexed {len(msgs)} messages")
     except Exception as exc:
         if log:
             log(f"bulk index unavailable, falling back to per-thread reads: {exc}")
