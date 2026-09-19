@@ -390,10 +390,15 @@ private struct StaggeredLoopList: View {
         // removes a `m.state` read from the row body, which is what tied every row's
         // identity to the whole model object.
         let cats = categoryMap
-        LazyVStack(spacing: 0) {
+        // Read ONCE here rather than in each row: the list is already rebuilding, so
+        // this costs nothing, and it keeps the expansion lookup out of the row bodies.
+        let open = m.expandedLoops
+        return LazyVStack(spacing: 0) {
             ForEach(Array(rows.enumerated()), id: \.element.id) { idx, row in
                 let revealed = idx < shown
-                LoopRowView(row: row, category: row.loop.category.flatMap { cats[$0.lowercased()] })
+                LoopRowView(model: m, row: row,
+                            category: row.loop.category.flatMap { cats[$0.lowercased()] },
+                            expanded: open.contains(row.loop.threadId))
                     .opacity(revealed ? 1 : 0)
                     .offset(y: revealed ? 0 : 8)
             }
@@ -459,14 +464,23 @@ private struct HeroCount: View {
 }
 
 private struct LoopRowView: View {
-    @EnvironmentObject var m: KeeperModel
+    // NOT @EnvironmentObject. That is a SUBSCRIPTION: with it, every realised row
+    // rebuilds whenever ANY @Published property on KeeperModel changes -- a job
+    // progress tick, a preview arriving, a toast, a settings field. In a LazyVStack
+    // that is ~180 live rows rebuilding for an unrelated edit, which is the lag.
+    // A plain reference still lets the action closures call the model; it just does
+    // not make this view depend on the model's every change.
+    let model: KeeperModel
     let row: LoopRow
-    /// Resolved by the list, not looked up here — see StaggeredLoopList.categoryMap.
+    /// Resolved by the list, not looked up here -- see StaggeredLoopList.categoryMap.
     let category: Category?
+    /// Passed in as a VALUE for the same reason: reading `m.expandedLoops` in the body
+    /// is what tied this row to the whole model.
+    let expanded: Bool
     @State private var hovering = false
     @State private var dragX: CGFloat = 0   // live horizontal swipe offset
-    private var expanded: Bool { m.expandedLoops.contains(row.loop.threadId) }
     private static let swipeTrigger: CGFloat = 64
+    private var m: KeeperModel { model }
 
     var body: some View {
         // Swipe right → reply, swipe left → AI archive. Hints sit behind the card and
@@ -636,8 +650,17 @@ private final class SwipeMonitorHub {
     func deregister(_ v: TrackpadSwipe.V) {
         views.removeValue(forKey: ObjectIdentifier(v))
         if active === v { active = nil; decided = false; accum = 0 }
-        views = views.filter { $0.value.v != nil }
-        guard views.isEmpty, let m = monitor else { return }
+        // No sweep here. This runs for EVERY row that scrolls out of view, and the
+        // filter rebuilt the whole dictionary each time: O(live rows) work per row,
+        // i.e. quadratic across a scroll, which is the same shape of bug the shared
+        // monitor was introduced to remove. Dead boxes are harmless (rowUnder skips
+        // them) and are cleared lazily below.
+        guard let m = monitor else { return }
+        // Only when nothing live remains does the monitor come down. Checking that
+        // is O(live rows) too, so do it cheaply: the common case is a non-empty
+        // dictionary, and `contains(where:)` exits on the first live entry.
+        guard !views.contains(where: { $0.value.v != nil }) else { return }
+        views.removeAll()
         NSEvent.removeMonitor(m); monitor = nil
     }
 
