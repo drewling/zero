@@ -149,10 +149,27 @@ class MailboxStore:
         return self._get_meta(self._conn(), "history_id")
 
     def set_cursor(self, history_id):
-        """Advance the cursor. Call ONLY after a sync fully succeeded."""
-        if history_id:
-            self._set_meta(self._conn(), "history_id", str(history_id))
-            self._set_meta(self._conn(), "synced_at", str(int(time.time())))
+        """Advance the cursor. Call ONLY after a sync fully succeeded.
+
+        ADVANCE, never rewind. Gmail history ids increase monotonically, and a
+        full sweep captures its cursor BEFORE it starts reading -- correct in
+        isolation, but if an incremental sync finished in the meantime, writing
+        that older id afterwards throws away the newer position. Observed live:
+        an incremental sync completed and set 7167910, then a full sweep wrote
+        back 7158487, so the next sync re-processed a 9,354-record window and
+        the mirror never caught up. Ignoring a backwards write can only cost a
+        re-read of a window we have already seen, which the sync handles; taking
+        it costs an endless loop."""
+        if not history_id:
+            return
+        current = self._get_meta(self._conn(), "history_id")
+        try:
+            if current is not None and int(history_id) < int(current):
+                return                  # stale writer: keep the newer position
+        except (TypeError, ValueError):
+            pass                        # non-numeric: fall through and store it
+        self._set_meta(self._conn(), "history_id", str(history_id))
+        self._set_meta(self._conn(), "synced_at", str(int(time.time())))
 
     def clear_cursor(self):
         self._conn().execute("DELETE FROM meta WHERE key='history_id'")

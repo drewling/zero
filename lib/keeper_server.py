@@ -2055,6 +2055,12 @@ RUN_TIMEOUT_SECONDS = int(os.environ.get("ZERO_RUN_TIMEOUT", "3600"))
 _sync_lock = threading.Lock()
 _sync_stop = threading.Event()
 _sync_state = {"last": [], "at": 0}
+# Held for the DURATION of a sync, unlike _sync_lock which only guards the
+# results dict. The background loop and a manual POST /api/sync could otherwise
+# run at once: both would sweep the same account, halve each other's quota and
+# restart each other's progress count, which looked like a download that kept
+# going back to the beginning and never finished.
+_sync_running = threading.Lock()
 
 
 _JOB_KINDS = {"refresh": lambda p: _build_state_blocking(),
@@ -2560,6 +2566,19 @@ def _sync_accounts(payload=None):
         import gmail_api
     except Exception as exc:
         return {"status": "unavailable", "reason": str(exc)}
+    # One sync at a time per process. A second caller is told so rather than
+    # queued: syncs are idempotent and run on an interval, so the work it wanted
+    # is already happening or will happen shortly.
+    if not _sync_running.acquire(blocking=False):
+        return {"status": "busy", "reason": "a sync is already running"}
+    try:
+        return _sync_accounts_locked(payload, mailbox_sync, gmail_api)
+    finally:
+        _sync_running.release()
+
+
+def _sync_accounts_locked(payload, mailbox_sync, gmail_api):
+    """The body of _sync_accounts, run with _sync_running held."""
     payload = payload or {}
     results = []
     for acct in _load_accounts():
