@@ -702,6 +702,9 @@ def _thread_info(cfg, tid, me, index=None):
             _STORE_STATS["hits"] += 1
             row.pop("history_id", None)
             row.pop("internal_ts", None)
+            # label_ids_all is KEPT: apply_category uses it to prove a category
+            # label is already correct on every message and skip the write, which
+            # is what stops an --execute run re-reading every kept thread.
             row["last_from_owner"] = _is_owner_sender(me, row["last_from"])
             fresh = _SNIPPETS.get(tid)
             if fresh:
@@ -772,21 +775,42 @@ def _read_infos_parallel(cfg, tids, me, max_workers=DEFAULT_READ_WORKERS, index=
     ordered = [None] * total
     completed = failed = 0
     workers = max(1, int(max_workers))
+    # Gmail's units/minute budget means a big run spends real time waiting, not
+    # working. Without this the bar sits on the same number for 20-30s and the
+    # app looks frozen, which is the single most common "it stalled" report.
+    # A heartbeat thread keeps the label honest about WHY nothing is moving.
+    stop_heartbeat = threading.Event()
+
+    def heartbeat():
+        while not stop_heartbeat.wait(3.0):
+            waiting = _LIMITER.stats().get("throttled_seconds", 0)
+            suffix = ""
+            if waiting and waiting > 1:
+                # Gmail limits reads per minute; say so rather than looking stuck.
+                suffix = " — waiting for Gmail's rate limit"
+            _emit_progress(2 + int(63 * completed / total),
+                           f"Reading mail ({completed} of {total}){suffix}")
+
+    beat = threading.Thread(target=heartbeat, daemon=True, name="progress-heartbeat")
+    beat.start()
     # Phase 1: headers, labels and message ids for every thread, concurrently.
     # replied_before is deliberately NOT resolved here, so phase 2 can batch it.
-    with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="gmail-read") as pool:
-        futures = {pool.submit(_thread_info, cfg, tid, me, index): idx
-                   for idx, tid in enumerate(tids)}
-        for future in as_completed(futures):
-            try:
-                ordered[futures[future]] = future.result()
-            except Exception as exc:
-                failed += 1
-                if failed <= 3:
-                    print(f"thread read failed, skipping (kept): {exc}", file=sys.stderr)
-            completed += 1
-            _emit_progress(2 + int(63 * completed / total),
-                           f"Reading mail ({completed} of {total})")
+    try:
+        with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="gmail-read") as pool:
+            futures = {pool.submit(_thread_info, cfg, tid, me, index): idx
+                       for idx, tid in enumerate(tids)}
+            for future in as_completed(futures):
+                try:
+                    ordered[futures[future]] = future.result()
+                except Exception as exc:
+                    failed += 1
+                    if failed <= 3:
+                        print(f"thread read failed, skipping (kept): {exc}", file=sys.stderr)
+                completed += 1
+                _emit_progress(2 + int(63 * completed / total),
+                               f"Reading mail ({completed} of {total})")
+    finally:
+        stop_heartbeat.set()
     if failed:
         print(f"gmail: {failed}/{total} thread reads failed; those threads were "
               f"left untouched (not archived)", file=sys.stderr)

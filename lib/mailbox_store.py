@@ -201,7 +201,15 @@ class MailboxStore:
                 "last_from": row["last_from"], "last_email": row["last_email"],
                 "last_from_owner": bool(row["last_owner"]),
                 "subject": row["subject"], "snippet": row["snippet"],
-                "label_ids": labels, "history_id": row["history_id"],
+                "label_ids": labels,
+                # Rows are built from the thread's NEWEST message, so its label
+                # set is simultaneously the union and the intersection we know
+                # about. apply_category needs the intersection to prove a label
+                # is already correct on every message; supplying it here is what
+                # lets a kept thread skip a 40-unit re-read just to confirm a
+                # label it already has. It can only ever SKIP a write.
+                "label_ids_all": set(labels),
+                "history_id": row["history_id"],
                 "internal_ts": row["internal_ts"]}
 
     # --- writes ------------------------------------------------------------

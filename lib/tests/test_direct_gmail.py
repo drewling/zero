@@ -427,11 +427,35 @@ class KeeperIntegrationTests(unittest.TestCase):
              patch.object(rol, "_thread_info_via_get",
                           lambda *a, **k: self.fail("read Gmail on a valid hit")):
             info = rol._thread_info("cfg", "t1", "me@x.test")
-        # Must be exactly what the classifier consumes, with no extra keys.
+        # Everything the classifier consumes, plus label_ids_all, which lets
+        # apply_category prove a category label is already correct and skip a
+        # 40-unit re-read. Nothing else: an unexpected key here means some
+        # storage detail is leaking into classifier inputs.
         self.assertEqual(set(info), {"id", "ids", "last_from", "last_email",
                                      "last_from_owner", "subject", "snippet",
-                                     "label_ids"})
+                                     "label_ids", "label_ids_all"})
         self.assertIsInstance(info["label_ids"], set)
+        self.assertIsInstance(info["label_ids_all"], set)
+
+    def test_kept_thread_skips_the_category_re_read(self):
+        # The point of label_ids_all: an --execute run must not spend 40 units
+        # re-reading a thread just to confirm a label it already has. This was
+        # the dominant cost of a real run (3,283 threads x ~51 units).
+        import review_open_loops as rol
+        labels = [{"id": "L1", "name": "✉️ Needs reply"}]
+        info = self.store.get("t1", "10")
+        info["label_ids"] = {"INBOX", "L1"}
+        info["label_ids_all"] = {"INBOX", "L1"}
+        with patch.object(rol, "_categories",
+                          lambda: [{"name": "Needs reply", "emoji": "✉️",
+                                    "description": "d"}]), \
+             patch.object(rol, "_load_label_history", lambda: set()), \
+             patch.object(rol, "_add_to_label_history", lambda _n: None), \
+             patch.object(rol.iz, "gws",
+                          lambda *a, **k: self.fail("re-read a correctly labelled thread")):
+            self.assertTrue(rol.apply_category("cfg", "t1", "Needs reply",
+                                               _labels_cache=labels,
+                                               _validated_info=info))
 
     def test_moved_thread_is_re_read_not_served(self):
         import review_open_loops as rol
