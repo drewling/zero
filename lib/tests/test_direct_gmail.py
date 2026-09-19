@@ -231,7 +231,7 @@ class SyncContractTests(unittest.TestCase):
         history = [{"messagesAdded": [{"message": {"threadId": "t1"}}]}]
         with patch.object(gmail_api, "history_since", return_value=history), \
              patch.object(gmail_api, "get_profile", return_value={"historyId": "200"}), \
-             patch.object(mailbox_sync, "_read_threads", return_value=([], ["t1"])):
+             patch.object(mailbox_sync, "_read_threads", return_value=([], ["t1"], [])):
             result = mailbox_sync.incremental("cfg", self.store, "me@x.test",
                                               self.limiter)
         self.assertEqual(result["status"], "partial")
@@ -247,11 +247,33 @@ class SyncContractTests(unittest.TestCase):
                 "label_ids": {"INBOX"}, "internal_ts": 1}
         with patch.object(gmail_api, "history_since", return_value=history), \
              patch.object(gmail_api, "get_profile", return_value={"historyId": "200"}), \
-             patch.object(mailbox_sync, "_read_threads", return_value=([info], [])):
+             patch.object(mailbox_sync, "_read_threads", return_value=([info], [], [])):
             result = mailbox_sync.incremental("cfg", self.store, "me@x.test",
                                               self.limiter)
         self.assertEqual(result["status"], "complete")
         self.assertEqual(self.store.cursor(), "200")
+
+    def test_deleted_threads_do_not_pin_the_cursor(self):
+        # REGRESSION, seen live: a history window routinely names threads that
+        # no longer exist. Counting those 404s as failures held the cursor back
+        # forever, so every sync re-read the same window and never advanced.
+        self.store.set_cursor("100")
+        self.store.upsert_many([{
+            "id": "dead", "history_id": "10", "ids": ["m"],
+            "last_from": "A <a@x.test>", "last_email": "a@x.test",
+            "last_from_owner": False, "subject": "s", "snippet": "n",
+            "label_ids": {"INBOX"}, "internal_ts": 1}])
+        history = [{"messagesDeleted": [{"message": {"threadId": "dead"}}]}]
+        with patch.object(gmail_api, "history_since", return_value=history), \
+             patch.object(gmail_api, "get_profile", return_value={"historyId": "200"}), \
+             patch.object(mailbox_sync, "_read_threads",
+                          return_value=([], [], ["dead"])):
+            result = mailbox_sync.incremental("cfg", self.store, "me@x.test",
+                                              self.limiter)
+        self.assertEqual(result["status"], "complete")
+        self.assertEqual(result["deleted"], 1)
+        self.assertEqual(self.store.cursor(), "200", "a deletion pinned the cursor")
+        self.assertIsNone(self.store.get("dead"), "deleted thread still in the store")
 
     def test_interrupted_initial_keeps_progress_and_no_cursor(self):
         stubs = [{"id": f"t{i}", "historyId": "10"} for i in range(10)]
@@ -262,7 +284,7 @@ class SyncContractTests(unittest.TestCase):
             return ([{"id": t, "history_id": "10", "ids": [t + "-m"],
                       "last_from": "A <a@x.test>", "last_email": "a@x.test",
                       "last_from_owner": False, "subject": "s", "snippet": "n",
-                      "label_ids": {"INBOX"}, "internal_ts": 1} for t in tids], [])
+                      "label_ids": {"INBOX"}, "internal_ts": 1} for t in tids], [], [])
 
         with patch.object(gmail_api, "get_profile", return_value={"historyId": "900"}), \
              patch.object(gmail_api, "list_threads", return_value=stubs), \
@@ -289,7 +311,7 @@ class SyncContractTests(unittest.TestCase):
             return ([{"id": t, "history_id": "10", "ids": [t + "-m"],
                       "last_from": "A <a@x.test>", "last_email": "a@x.test",
                       "last_from_owner": False, "subject": "s", "snippet": "n",
-                      "label_ids": {"INBOX"}, "internal_ts": 1} for t in tids], [])
+                      "label_ids": {"INBOX"}, "internal_ts": 1} for t in tids], [], [])
 
         with patch.object(gmail_api, "get_profile", return_value={"historyId": "900"}), \
              patch.object(gmail_api, "list_threads", return_value=stubs), \

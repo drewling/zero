@@ -150,12 +150,19 @@ def _index_messages(config_dir, query, limiter):
 
 
 def _read_threads(config_dir, tids, me, limiter, progress=None, index=None):
-    """Read metadata for these threads. Returns (infos, failed_ids).
+    """Read metadata for these threads. Returns (infos, failed_ids, gone_ids).
 
     Prefers the 20-unit messages.get path for threads the index covers, and
-    falls back to the 40-unit threads.get for anything it does not."""
+    falls back to the 40-unit threads.get for anything it does not.
+
+    `gone_ids` are threads Gmail answered 404 for: deleted, not failed. That
+    distinction matters because a failure must hold the sync cursor back while a
+    deletion must not. Verified on the live account: a history window routinely
+    names threads that no longer exist, and treating those as failures pinned
+    the cursor forever, so every sync re-read the same window and never
+    advanced."""
     if not tids:
-        return [], []
+        return [], [], []
     infos, failed = [], []
     cheap = {}
     if index:
@@ -176,19 +183,39 @@ def _read_threads(config_dir, tids, me, limiter, progress=None, index=None):
     else:
         remaining = list(tids)
 
+    gone = []
     if remaining:
         got = gmail_api.batch_get_all(
             config_dir, "threads", remaining,
             {"format": "metadata", "metadataHeaders": ["From", "Subject"]},
             limiter=limiter, workers=READ_WORKERS, progress=progress)
+        missing = []
         for tid in remaining:
             thread = got.get(tid)
             info = _thread_info(tid, thread, me) if thread else None
             if info and info.get("history_id"):
                 infos.append(info)
             else:
+                missing.append(tid)
+        # Separate "deleted" from "could not read". One 404 per id is cheap and
+        # only happens for the handful a batch could not return.
+        for tid in missing:
+            if _is_deleted(config_dir, tid, limiter):
+                gone.append(tid)
+            else:
                 failed.append(tid)
-    return infos, failed
+    return infos, failed, gone
+
+
+def _is_deleted(config_dir, tid, limiter=None):
+    """True when Gmail says this thread no longer exists (404)."""
+    try:
+        status, _raw, _ct = gmail_api._request(
+            config_dir, "GET",
+            f"{gmail_api.API}/users/me/threads/{tid}?format=minimal")
+        return status == 404
+    except gmail_api.GmailError:
+        return False          # unknown, so treat it as a failure, not a deletion
 
 
 def initial(config_dir, store, me, limiter=None, query="in:inbox",
@@ -226,9 +253,12 @@ def initial(config_dir, store, me, limiter=None, query="in:inbox",
             return {"status": "interrupted", "read": done, "total": total,
                     "cached": len(known), "seconds": round(time.time() - started, 1)}
         chunk = todo[start:start + COMMIT_EVERY]
-        infos, failed = _read_threads(config_dir, chunk, me, limiter, index=index)
+        infos, failed, gone = _read_threads(config_dir, chunk, me, limiter,
+                                            index=index)
         if infos:
             store.upsert_many(infos)
+        if gone:
+            store.forget(gone)
         failed_total += len(failed)
         done += len(infos)
         if progress:
@@ -286,7 +316,7 @@ def incremental(config_dir, store, me, limiter=None, progress=None):
     except gmail_api.GmailError:
         pass
 
-    infos, failed = [], []
+    infos, failed, gone = [], [], []
     if touched:
         # Only index when there is enough to read for the sweep to pay for
         # itself; a handful of changed threads is cheaper read directly.
@@ -296,12 +326,13 @@ def incremental(config_dir, store, me, limiter=None, progress=None):
                 index = _index_messages(config_dir, "in:inbox", limiter)
             except gmail_api.GmailError:
                 index = None
-        infos, failed = _read_threads(config_dir, sorted(touched), me, limiter,
-                                      progress, index=index)
+        infos, failed, gone = _read_threads(config_dir, sorted(touched), me,
+                                            limiter, progress, index=index)
     if infos:
         store.upsert_many(infos)
-    # A thread Gmail could not return at all (deleted) must not linger.
-    gone = [t for t in removed if t in set(failed)]
+    # Threads Gmail 404s are deleted, not unread-able. Drop their rows and do
+    # NOT let them hold the cursor: a permanently deleted thread never becomes
+    # readable, so waiting for it would pin the cursor forever.
     if gone:
         store.forget(gone)
 
@@ -310,10 +341,10 @@ def incremental(config_dir, store, me, limiter=None, progress=None):
     if not failed and new_cursor:
         store.set_cursor(new_cursor)
     metrics.record("sync.incremental", config_dir, changed=len(touched),
-                   applied=len(infos), failures=len(failed),
+                   applied=len(infos), failures=len(failed), deleted=len(gone),
                    seconds=time.time() - started)
     return {"status": "complete" if not failed else "partial",
-            "changed": len(touched), "applied": len(infos),
+            "changed": len(touched), "applied": len(infos), "deleted": len(gone),
             "failed": len(failed), "seconds": round(time.time() - started, 1)}
 
 
