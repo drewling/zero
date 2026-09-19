@@ -1446,7 +1446,11 @@ def main():
     # is missing, stale or unreadable every lookup simply misses and the run
     # falls back to the cache and then to Gmail.
     if mailbox_store is not None and not a.no_cache:
-        globals()["_STORE"] = mailbox_store.load(a.account_label)
+        # Keyed on the config-dir slug, the same name mailbox_sync writes under.
+        # Passing a.account_label (the email) opened a different, always-empty
+        # file and silently disabled the mirror for every run.
+        globals()["_STORE"] = mailbox_store.load(
+            mailbox_store.slug_for(a.account_label, a.config_dir))
     if gmail_api is not None:
         try:
             globals()["_DIRECT"] = gmail_api.available(a.config_dir)
@@ -1531,10 +1535,30 @@ def main():
     # of sweep to speed up zero reads. `needs_read` is computed with the same
     # predicate _thread_info uses, so the two can never disagree about whether a
     # thread is going to be read.
-    needs_read = [t for t in tids
-                  if _CACHE is None
-                  or not _HISTORY_IDS.get(t)
-                  or _CACHE.thread_info(t, _HISTORY_IDS.get(t)) is None]
+    # This MUST agree with _thread_info's tier order, including TIER 0. It used
+    # to consult only _CACHE, which meant a thread the mirror could serve was
+    # still counted as needing a read: measured on the live account, 2,839 of
+    # 3,027 inbox threads were already in the mirror at a matching historyId,
+    # so the run planned 60,540 units (11 minutes of budget) to do 3,760 units
+    # (40 seconds) of actual work. Every warm run paid for a cold one.
+    def _servable(tid):
+        hid = _HISTORY_IDS.get(tid)
+        if not hid:
+            return False
+        if _STORE is not None:
+            try:
+                if _STORE.get(tid, hid) is not None:
+                    return True
+            except Exception:
+                pass
+        if _CACHE is not None:
+            try:
+                return _CACHE.thread_info(tid, hid) is not None
+            except Exception:
+                return False
+        return False
+
+    needs_read = [t for t in tids if not _servable(t)]
     cached_reads = len(tids) - len(needs_read)
     # Those probe lookups counted as hits/misses without doing real work; reset
     # the counters so the reported numbers describe the run, not the probe.

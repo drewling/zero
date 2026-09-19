@@ -71,8 +71,22 @@ UNIT_COSTS = {
 # accounts and the panel makes its own reads — and (b) the fact that our
 # accounting is client-side and cannot see a retry Google counted but we didn't.
 GMAIL_UNITS_PER_MINUTE = 6000
-DEFAULT_BUDGET_FRACTION = 0.8          # 4,800 units/min of the 6,000 ceiling
+# The headroom used to be 20%, a blunt guard against bursts we could not see.
+# The per-second pacer below is the precise version of that guard, and the
+# cross-process ledger handles the sibling-process case, so the fraction now
+# only covers accounting drift (a retry Google counted and we did not).
+DEFAULT_BUDGET_FRACTION = 0.95         # 5,700 units/min of the 6,000 ceiling
 DEFAULT_WINDOW_SECONDS = 60.0
+
+# The limit that actually bites. Gmail publishes a 250 units/SECOND per-user
+# ceiling alongside the 6,000/minute one, and enforces it strictly: a burst
+# that respects the minute budget still gets 429s if it arrives all at once.
+# Measured on the live account, an unpaced batch sweep came back 19% 429 and
+# the retry storm made higher concurrency *slower* (8 workers took 76s to do
+# what 4 did in 22s). Pacing to this rate removes the retries entirely, so the
+# minute budget is spent on useful reads instead of being burned twice.
+GMAIL_UNITS_PER_SECOND = 250
+BURST_WINDOW_SECONDS = 1.0
 
 # Truncated exponential backoff, exactly as Google documents it:
 #   wait = min((2^n) + random_number_milliseconds, maximum_backoff)
@@ -153,7 +167,8 @@ class UnitLimiter:
     instantly and assert the invariant without real waiting."""
 
     def __init__(self, units_per_minute=None, window=DEFAULT_WINDOW_SECONDS,
-                 clock=time.monotonic, sleep=time.sleep, account=None):
+                 clock=time.monotonic, sleep=time.sleep, account=None,
+                 units_per_second=GMAIL_UNITS_PER_SECOND):
         if units_per_minute is None:
             units_per_minute = int(GMAIL_UNITS_PER_MINUTE * DEFAULT_BUDGET_FRACTION)
         self.budget = max(1, int(units_per_minute))
@@ -171,6 +186,17 @@ class UnitLimiter:
             except Exception:
                 self.shared = None      # degrade to in-process only
         self.window = float(window)
+        # Second tier: the per-second ceiling. Scaled with the minute budget so
+        # a caller asking for a small budget (tests, probes) is not silently
+        # allowed to burst at the full account rate.
+        if units_per_second is None:
+            self.burst_budget = None
+        else:
+            share = self.budget / float(GMAIL_UNITS_PER_MINUTE)
+            self.burst_budget = max(1, int(min(float(units_per_second),
+                                               units_per_second * share)))
+        self._burst = deque()       # (timestamp, cost) within BURST_WINDOW
+        self._burst_spent = 0
         self._clock = clock
         self._sleep = sleep
         self._events = deque()      # (timestamp, cost) granted within the window
@@ -185,6 +211,9 @@ class UnitLimiter:
         cutoff = now - self.window
         while self._events and self._events[0][0] <= cutoff:
             self._spent -= self._events.popleft()[1]
+        bcut = now - BURST_WINDOW_SECONDS
+        while self._burst and self._burst[0][0] <= bcut:
+            self._burst_spent -= self._burst.popleft()[1]
 
     def acquire(self, cost):
         """Block until `cost` units can be spent without breaching the window."""
@@ -199,9 +228,19 @@ class UnitLimiter:
                 # A single call pricier than the whole budget would deadlock; let
                 # it through alone once the window is clear, and let backoff
                 # handle the fallout. (No Gmail method we call is this big.)
-                if self._spent + cost <= self.budget or not self._events:
+                # Both ceilings must have room: the trailing minute AND the
+                # trailing second. Whichever is tighter decides when we go.
+                minute_ok = self._spent + cost <= self.budget or not self._events
+                if self.burst_budget is None:
+                    burst_ok = True
+                else:
+                    burst_ok = (self._burst_spent + cost <= self.burst_budget
+                                or not self._burst)
+                if minute_ok and burst_ok:
                     self._events.append((now, cost))
                     self._spent += cost
+                    self._burst.append((now, cost))
+                    self._burst_spent += cost
                     self.total_units += cost
                     self.total_calls += 1
                     self.total_wait += waited
@@ -222,9 +261,16 @@ class UnitLimiter:
                     waited += shared_wait
                 return waited
             with self._lock:
-                # Sleep exactly until the oldest entry leaves the window; that is
-                # the earliest instant the budget can free up.
-                delay = max(0.0, (self._events[0][0] + self.window) - now)
+                # Sleep exactly until the ceiling that blocked us frees up. If
+                # only the per-second tier is full that is a few milliseconds,
+                # not a minute, so pacing costs almost nothing in wall time.
+                delay = 0.0
+                if not minute_ok and self._events:
+                    delay = max(delay, (self._events[0][0] + self.window) - now)
+                if not burst_ok and self._burst:
+                    delay = max(delay,
+                                (self._burst[0][0] + BURST_WINDOW_SECONDS) - now)
+                delay = max(0.0, delay)
             delay = min(delay, self.window) + 0.001
             self._sleep(delay)
             waited += delay
@@ -244,6 +290,10 @@ class UnitLimiter:
             self._retire(now)
             self._events.append((now, int(units)))
             self._spent += int(units)
+            # Charge the burst tier too, otherwise the next instant after a
+            # throttle we would immediately fire another full-rate burst.
+            self._burst.append((now, int(units)))
+            self._burst_spent += int(units)
 
     def stats(self):
         return {"units": self.total_units, "calls": self.total_calls,

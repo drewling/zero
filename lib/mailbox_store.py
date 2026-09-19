@@ -72,6 +72,24 @@ def path_for(account):
     return os.path.join(STORE_DIR, (safe or "default")[:120] + ".sqlite3")
 
 
+def slug_for(account_label=None, config_dir=None):
+    """The one name a mailbox mirror is filed under.
+
+    Every writer (mailbox_sync, dashboard_state, keeper_server) keys the store
+    on the account SLUG -- the gws config directory name, e.g. "tayo". The
+    open-loop run keyed it on the account LABEL instead, which is the email
+    address, so it opened "tayo@drewl.com.sqlite3" while the sync filled
+    "tayo.sqlite3". Both files existed, so nothing errored; the run simply
+    missed on every lookup and re-read the whole inbox from Gmail every time.
+    Resolving the name here means a future caller cannot reintroduce the split.
+    """
+    if config_dir:
+        slug = os.path.basename(os.path.normpath(str(config_dir)))
+        if slug:
+            return slug
+    return str(account_label or "default")
+
+
 class MailboxStore:
     """One account's local mirror. Thread-safe: each thread gets its own
     connection, because a sqlite3 connection cannot be shared across threads."""
