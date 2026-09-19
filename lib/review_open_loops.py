@@ -31,6 +31,10 @@ try:
     import mailbox_store            # local mailbox mirror (optional, fast path)
 except Exception:                   # pragma: no cover - degrade to the old path
     mailbox_store = None
+try:
+    import gmail_api                # direct Gmail transport (optional, fast path)
+except Exception:                   # pragma: no cover - degrade to gws
+    gmail_api = None
 
 _CATEGORIES_PATH = os.path.join(ROOT, "categories.json")
 _LABEL_HISTORY_PATH = os.path.join(ROOT, "app", "category_label_history.json")
@@ -204,6 +208,9 @@ _CACHE = None
 # The local mailbox mirror, when one exists for this account. None means every
 # read falls back to the cache/Gmail path, which is exactly the old behaviour.
 _STORE = None
+# Whether this account can use the direct Gmail transport. Resolved once in
+# main(); False means every call takes the gws path it always took.
+_DIRECT = False
 # Hit/miss counters for the local mirror, reported in the run result. An
 # optimisation nobody can see is how the previous round shipped a "20x speedup"
 # that never actually fired.
@@ -260,8 +267,58 @@ def _gws_read(cfg, args, method=None):
     subprocess.run wrapper; each invocation owns its subprocess and input data,
     so independent reads stay thread-safe."""
     m = method or gq.method_from_args(args) or "threads.get"
+    # Prefer the direct transport: same request, same quota accounting, but one
+    # pooled HTTPS connection instead of a ~830ms Node process per call. Only
+    # the read shapes this module actually issues are routed; anything else
+    # falls through to gws unchanged.
+    if _DIRECT and gmail_api is not None:
+        try:
+            direct = _direct_read(cfg, args, m)
+            if direct is not None:
+                return direct
+        except gmail_api.GmailError as exc:
+            # A real API error (not a missing route). Let the existing
+            # quota-aware retry path handle it through gws rather than
+            # failing the read outright.
+            print(f"direct read failed ({m}), using gws: {exc}", file=sys.stderr)
     return gq.call_with_quota(lambda: iz.gws(cfg, args), m,
                               limiter=_LIMITER, on_retry=_quota_log)
+
+
+def _direct_read(cfg, args, method):
+    """Serve a gws-shaped read over direct HTTP, or None if not routable.
+
+    Returning None (rather than raising) is what keeps this optional: an
+    unrecognised call simply takes the gws path it always took."""
+    try:
+        params = json.loads(args[args.index("--params") + 1])
+    except (ValueError, IndexError):
+        return None
+    if method == "messages.list":
+        msgs = gmail_api.list_messages(cfg, params.get("q", ""), _LIMITER,
+                                       page_limit=1 if params.get("maxResults") == 1 else 100)
+        if params.get("maxResults") == 1:
+            msgs = msgs[:1]
+        return {"messages": msgs}
+    if method == "threads.list":
+        return {"threads": gmail_api.list_threads(cfg, params.get("q", ""), _LIMITER)}
+    if method == "messages.get":
+        got = gmail_api.batch_get(cfg, "messages", [params["id"]],
+                                  {k: v for k, v in params.items()
+                                   if k in ("format", "metadataHeaders")},
+                                  limiter=_LIMITER)
+        return got.get(params["id"])
+    if method == "threads.get":
+        got = gmail_api.batch_get(cfg, "threads", [params["id"]],
+                                  {k: v for k, v in params.items()
+                                   if k in ("format", "metadataHeaders")},
+                                  limiter=_LIMITER)
+        return got.get(params["id"])
+    if method == "getProfile":
+        return gmail_api.get_profile(cfg, _LIMITER)
+    if method == "labels.list":
+        return {"labels": gmail_api.list_labels(cfg, _LIMITER)}
+    return None
 
 
 def _replied_before(cfg, email):
@@ -474,6 +531,26 @@ def _thread_ids_q(cfg, q):
                        an unchanged thread avoids its 20-40 unit read entirely,
                        at no extra call cost (see lib/thread_cache.py)."""
     ids, tok = [], None
+    # Direct HTTP when the account has usable credentials: one pooled
+    # connection instead of a fresh Node process per page. Measured on the live
+    # account, enumeration alone was 8s of a 22s run through gws. The gws path
+    # below is kept verbatim as the fallback, so nothing changes for an account
+    # without direct access.
+    if _DIRECT:
+        try:
+            stubs = gmail_api.list_threads(cfg, q, _LIMITER)
+            for t in stubs:
+                if not t.get("id"):
+                    continue
+                ids.append(t["id"])
+                if t.get("snippet"):
+                    _SNIPPETS[t["id"]] = t["snippet"][:160]
+                if t.get("historyId"):
+                    _HISTORY_IDS[t["id"]] = str(t["historyId"])
+            return ids
+        except Exception as exc:
+            print(f"direct thread listing failed, using gws: {exc}", file=sys.stderr)
+            ids = []
     while True:
         p = {"userId": "me", "q": q, "maxResults": 500}
         if tok:
@@ -1336,6 +1413,11 @@ def main():
     # falls back to the cache and then to Gmail.
     if mailbox_store is not None and not a.no_cache:
         globals()["_STORE"] = mailbox_store.load(a.account_label)
+    if gmail_api is not None:
+        try:
+            globals()["_DIRECT"] = gmail_api.available(a.config_dir)
+        except Exception:
+            globals()["_DIRECT"] = False
 
     try:
         me = du._profile_email(a.config_dir)
@@ -1432,10 +1514,21 @@ def main():
         # Bound the sweep to the window this run actually classifies. Scanning
         # the whole mailbox meant ~140 pages on a 70k-message account before any
         # real work began, with the panel stuck on one message the whole time.
+        # The bulk index is one paged messages.list sweep. Through gws that is a
+        # single (slow) subprocess; via the direct transport it is a few pooled
+        # requests. `runner` is the module's own injection point for exactly
+        # this, so no behaviour changes, only the pipe it travels down.
+        runner = None
+        if _DIRECT and gmail_api is not None:
+            def runner(args, _cfg=a.config_dir):
+                params = json.loads(args[args.index("--params") + 1])
+                msgs = gmail_api.list_messages(_cfg, params.get("q", ""), _LIMITER)
+                return json.dumps({"messages": msgs})
         index = mbi.build_index(a.config_dir, du._env, limiter=_LIMITER,
                                 log=lambda m: print(m, file=sys.stderr),
                                 window_days=getattr(a, "grace_days", 0) or 30,
-                                progress=lambda m: _emit_progress(3, m))
+                                progress=lambda m: _emit_progress(3, m),
+                                runner=runner)
 
     infos = _read_infos_parallel(a.config_dir, tids, me, a.read_workers, index=index)
 
@@ -1541,6 +1634,11 @@ def main():
         _CACHE.save()
         _record_cache_metrics(a.config_dir)
 
+    if _DIRECT and gmail_api is not None:
+        try:
+            gmail_api.close_all()
+        except Exception:
+            pass
     print(json.dumps(result, ensure_ascii=False))
 
 
