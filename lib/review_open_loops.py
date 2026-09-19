@@ -1202,6 +1202,97 @@ def _classify(chunk):
     return out
 
 
+def _plan_category(cfg, info, category_name, labels_cache):
+    """Decide the label change for one KEPT thread without calling Gmail.
+
+    Returns (add_ids, remove_ids, message_ids), or None when the thread is
+    already correct and needs no write at all.
+
+    This is the decision half of apply_category, split out so that many threads
+    can be planned locally and then written in a handful of batchModify calls
+    instead of one threads.modify per thread. It relies only on `label_ids_all`
+    (the intersection across the thread's messages) and `label_ids` (the union),
+    which the mirror already carries, so planning costs zero units. When either
+    is missing the thread is not plannable and the caller falls back to the
+    authoritative per-thread path.
+    """
+    labels_all = info.get("label_ids_all")
+    if labels_all is None:
+        return "unplannable"
+    union = info.get("label_ids") or set()
+    known = _known_category_label_names()
+    id_to_name = {l["id"]: l["name"] for l in labels_cache}
+    name_to_id = {l["name"]: l["id"] for l in labels_cache}
+
+    target_label = None
+    if category_name:
+        cat = next((c for c in _categories() if c["name"] == category_name), None)
+        if cat:
+            target_label = _category_label_name(cat)
+    # An unknown category name, or a target label Gmail does not have yet, needs
+    # the authoritative path (which creates the label).
+    if target_label and target_label not in name_to_id:
+        return "unplannable"
+    target_id = name_to_id.get(target_label) if target_label else None
+
+    # Remove any category label of ours the thread still carries, except the
+    # target. Computed from the UNION so a label present on only some messages
+    # is still cleaned up.
+    remove_ids = [lid for lid in union
+                  if id_to_name.get(lid, "") in known
+                  and id_to_name.get(lid, "") != target_label]
+    # Add only when the target is not already on EVERY message.
+    add_ids = [target_id] if (target_id and target_id not in labels_all) else []
+    if not add_ids and not remove_ids:
+        return None                      # already correct, no write needed
+    ids = info.get("ids") or []
+    if not ids:
+        return "unplannable"
+    return (add_ids, remove_ids, list(ids))
+
+
+def _apply_categories_batched(cfg, pairs, labels_cache):
+    """Apply category labels to many kept threads using batchModify.
+
+    `pairs` is [(info, category_name), ...]. Threads whose label change is
+    identical share a call, so a run that used to issue one threads.get plus one
+    threads.modify per thread (measured: 361 threads, ~7 minutes through the
+    Node CLI) collapses to a few calls.
+
+    Returns (ok, failed, unplannable) where `unplannable` is the list of
+    (info, category) the caller must still apply the slow, authoritative way.
+    Never raises: labelling is additive and must never block the keeper run.
+    """
+    groups = {}
+    unplannable = []
+    ok = 0
+    for info, category in pairs:
+        plan = _plan_category(cfg, info, category, labels_cache)
+        if plan == "unplannable":
+            unplannable.append((info, category))
+        elif plan is None:
+            ok += 1                      # already correct; a real success
+            metrics.record("category.noop", cfg, hits=1)
+        else:
+            add_ids, remove_ids, msg_ids = plan
+            key = (tuple(sorted(add_ids)), tuple(sorted(remove_ids)))
+            groups.setdefault(key, []).append((info, msg_ids))
+
+    failed = 0
+    for (add_ids, remove_ids), members in groups.items():
+        msg_ids = [m for _, ids in members for m in ids]
+        try:
+            iz._batch_modify(cfg, msg_ids, list(add_ids), list(remove_ids))
+            ok += len(members)
+        except Exception as exc:
+            # One failed group must not cost the others. These threads keep
+            # whatever labels they already had, which is the safe direction.
+            print(f"category batch failed for {len(members)} threads: {exc}",
+                  file=sys.stderr)
+            failed += len(members)
+    return ok, failed, unplannable
+
+
 def apply_category(cfg, thread_id, category_name, _labels_cache=None, _validated_info=None):
     """Apply a category label to a kept thread: add '<emoji> <name>', remove any other
     category labels from our set (current OR historical). Never touches non-category
@@ -1626,6 +1717,9 @@ def main():
 
     archive_msg_ids, kept, keep_s = [], 0, []
     label_ok = label_failed = 0
+    # Kept threads awaiting a category label, drained once per chunk so the
+    # writes can be grouped into batchModify calls.
+    pending_labels = []
     # Deterministic fast-path: last message from the owner -> dealt with -> archive.
     # Guard runs FIRST so restored threads skip both this path and the classifier batch.
     to_judge = []
@@ -1693,13 +1787,32 @@ def main():
                 if len(keep_s) < 25:
                     keep_s.append({"from": c["last_from"], "subject": c["subject"],
                                    "category": category})
-                # Apply category label when executing; tally ok/failed (never fatal).
+                # Collected and applied in one batched pass after the chunk,
+                # instead of a threads.get + threads.modify per thread.
                 if a.execute and category:
-                    if apply_category(a.config_dir, c["id"], category,
-                                      _labels_cache=all_labels_list, _validated_info=c):
-                        label_ok += 1
-                    else:
-                        label_failed += 1
+                    pending_labels.append((c, category))
+        # Apply this chunk's category labels in as few calls as possible, then
+        # fall back to the authoritative per-thread path for anything the local
+        # plan could not decide (missing label intersection, or a label Gmail
+        # does not have yet and must create). Never fatal: labelling is
+        # additive and must not block archiving.
+        if pending_labels:
+            try:
+                ok, bad, leftover = _apply_categories_batched(
+                    a.config_dir, pending_labels, all_labels_list)
+                label_ok += ok
+                label_failed += bad
+            except Exception as exc:
+                print(f"category batch pass failed: {exc}", file=sys.stderr)
+                leftover = pending_labels
+            for info, category in leftover:
+                if apply_category(a.config_dir, info["id"], category,
+                                  _labels_cache=all_labels_list,
+                                  _validated_info=info):
+                    label_ok += 1
+                else:
+                    label_failed += 1
+            pending_labels = []
         # Commit this chunk's archives before moving on, so the work survives
         # a timeout, a crash or a quit.
         if archive_msg_ids:
