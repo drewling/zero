@@ -342,14 +342,29 @@ def incremental(config_dir, store, me, limiter=None, progress=None):
         # The inbox index (already built above, and unwindowed) tells us exactly
         # which touched threads are still in the inbox. The rest are dropped
         # from the mirror, which is the correct end state for a mirror whose job
-        # is to answer "what is in the inbox". Only done when we HAVE the index;
-        # without it we cannot prove absence and must still read.
+        # is to answer "what is in the inbox".
         to_read = sorted(touched)
         if index:
             # _index_messages is keyed BY thread id over an "in:inbox" sweep, so
             # membership is exactly "is this thread still in the inbox".
             departed = [t for t in to_read if t not in index]
             to_read = [t for t in to_read if t in index]
+        else:
+            # No index: it failed, or there was too little to justify building
+            # one. The expensive thing is not the index, it is READING threads
+            # we do not need (3,166 touched x 20 units). Thread-level membership
+            # alone is enough to skip them, and costs one paged threads.list
+            # over an inbox that is by definition the small thing we are
+            # emptying. Without this, one quota blip while building the index
+            # turned a 289-thread sync into a 3,166-thread one, which is exactly
+            # the "downloading forever" this whole change set is about.
+            try:
+                stubs = gmail_api.list_threads(config_dir, "in:inbox", limiter)
+                in_inbox = {s["id"] for s in stubs if s.get("id")}
+                departed = [t for t in to_read if t not in in_inbox]
+                to_read = [t for t in to_read if t in in_inbox]
+            except gmail_api.GmailError:
+                pass      # cannot prove absence: read everything, as before
         infos, failed, gone = _read_threads(config_dir, to_read, me,
                                             limiter, progress, index=index)
         if departed:

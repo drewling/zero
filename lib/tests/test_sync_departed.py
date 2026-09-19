@@ -41,7 +41,10 @@ class FakeStore:
         self.forgotten.extend(ids)
 
 
-def run_sync(history_tids, index, read_calls):
+BOOM = object()          # sentinel: make list_threads raise
+
+
+def run_sync(history_tids, index, read_calls, list_threads=None):
     """Drive incremental() with a fake Gmail and capture what it reads."""
     store = FakeStore()
 
@@ -58,6 +61,14 @@ def run_sync(history_tids, index, read_calls):
         @staticmethod
         def get_profile(cfg, limiter):
             return {"historyId": "200"}
+
+        @staticmethod
+        def list_threads(cfg, query, limiter=None):
+            if list_threads is BOOM:
+                raise mailbox_sync.gmail_api.GmailError("list unavailable")
+            if list_threads is None:
+                raise mailbox_sync.gmail_api.GmailError("not stubbed")
+            return list_threads
 
     real_api = mailbox_sync.gmail_api
     real_index = mailbox_sync._index_messages
@@ -93,12 +104,28 @@ def test_departed_threads_are_not_re_read():
     assert result["left_inbox"] == 28
 
 
-def test_no_index_means_everything_is_still_read():
-    """Without an index we cannot prove absence, so we must not assume it."""
+def test_no_index_still_skips_departed_via_thread_list():
+    """A failed index must not cost 3,166 thread reads.
+
+    The index is an optimisation for READING. Deciding what to skip only needs
+    thread-level membership, which one threads.list answers cheaply. A quota
+    blip while building the index used to turn a 289-thread sync into a
+    3,166-thread one."""
     touched = [f"t{i}" for i in range(30)]
     reads = []
-    store, _ = run_sync(touched, None, reads)
-    assert len(reads) == 30, "absence may only be concluded from a real index"
+    store, result = run_sync(touched, None, reads,
+                             list_threads=[{"id": "t0"}, {"id": "t1"}])
+    assert sorted(reads) == ["t0", "t1"], \
+        f"membership alone should have skipped the rest, got {sorted(reads)}"
+    assert result["left_inbox"] == 28
+
+
+def test_no_index_and_no_list_reads_everything():
+    """Both cheap routes unavailable: we cannot prove absence, so we must read."""
+    touched = [f"t{i}" for i in range(30)]
+    reads = []
+    store, _ = run_sync(touched, None, reads, list_threads=BOOM)
+    assert len(reads) == 30, "absence may only be concluded from real evidence"
     assert store.forgotten == [], "nothing may be dropped on a guess"
 
 
