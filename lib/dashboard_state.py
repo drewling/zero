@@ -44,6 +44,10 @@ try:
     import mailbox_store            # local mailbox mirror (optional fast path)
 except Exception:                   # pragma: no cover - degrade to live reads
     mailbox_store = None
+try:
+    import gmail_api                # direct Gmail transport (optional fast path)
+except Exception:                   # pragma: no cover - degrade to gws
+    gmail_api = None
 
 # Path to the categories config file (root of the repo).
 _CATEGORIES_PATH = os.path.join(ROOT, "categories.json")
@@ -149,6 +153,23 @@ def _photo_url(cfg):
     Logs the first failure per process to stderr with a diagnostic hint.
     """
     global _photo_failure_logged
+    # A profile photo changes approximately never, but this ran on every state
+    # build and cost ~1.3s per account through gws (measured: 3.1s of a 6.6s
+    # build for two accounts). Cache it on disk for a day. A cache miss or any
+    # failure just means no photo, which is already a supported outcome.
+    cache_path = os.path.join(ROOT, "app", "photo_cache.json")
+    key = os.path.realpath(cfg)
+    try:
+        with open(cache_path) as f:
+            cached = json.load(f)
+        entry = cached.get(key)
+        # A successful photo is good for a day; a failure is re-checked hourly
+        # so enabling the API (or granting the scope) takes effect on its own.
+        ttl = 3600 if (entry or {}).get("failed") else 86400
+        if entry and 0 <= time.time() - entry.get("at", 0) < ttl:
+            return entry.get("url")
+    except (OSError, ValueError):
+        cached = {}
     try:
         d = du._gws(cfg, ["people", "people", "get",
                           "--params", json.dumps({"resourceName": "people/me",
@@ -157,12 +178,39 @@ def _photo_url(cfg):
         # Prefer the primary photo; fall back to first.
         primary = next((p for p in photos if p.get("metadata", {}).get("primary")), None)
         chosen = primary or (photos[0] if photos else None)
-        return chosen["url"] if chosen else None
+        url = chosen["url"] if chosen else None
+        try:
+            if not isinstance(cached, dict):
+                cached = {}
+            cached[key] = {"url": url, "at": int(time.time())}
+            os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+            tmp = cache_path + ".tmp"
+            with open(tmp, "w") as f:
+                json.dump(cached, f)
+            os.replace(tmp, cache_path)
+        except OSError:
+            pass          # a cosmetic cache must never break the build
+        return url
     except Exception as exc:
         if not _photo_failure_logged:
             _photo_failure_logged = True
             print(f"[zero] profile photo unavailable (People API scope?): {exc}",
                   file=sys.stderr)
+        # Cache the FAILURE too, for a shorter time. On this account the People
+        # API is disabled for the project, and each attempt burned ~4s in gws
+        # retries on every state build. A missing photo is cosmetic; spending
+        # seconds rediscovering that it is still missing is not.
+        try:
+            if not isinstance(cached, dict):
+                cached = {}
+            cached[key] = {"url": None, "at": int(time.time()), "failed": True}
+            os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+            tmp = cache_path + ".tmp"
+            with open(tmp, "w") as f:
+                json.dump(cached, f)
+            os.replace(tmp, cache_path)
+        except OSError:
+            pass
         return None
 
 
@@ -173,9 +221,22 @@ def _inbox_counts(cfg):
 
 
 def _inbox_thread_ids(cfg, limit, histories=None):
-    d = du._gws(cfg, ["gmail", "users", "threads", "list",
-                      "--params", json.dumps({"userId": "me", "q": "in:inbox",
-                                              "maxResults": limit})])
+    # Direct HTTP where available (one pooled connection, ~0.2s) instead of a
+    # fresh Node process (~1s). gws stays the fallback.
+    d = None
+    if gmail_api is not None:
+        try:
+            status, raw, _ = gmail_api._request(
+                cfg, "GET",
+                f"{gmail_api.API}/users/me/threads?q=in%3Ainbox&maxResults={int(limit)}")
+            if status == 200:
+                d = json.loads(raw)
+        except Exception:
+            d = None
+    if d is None:
+        d = du._gws(cfg, ["gmail", "users", "threads", "list",
+                          "--params", json.dumps({"userId": "me", "q": "in:inbox",
+                                                  "maxResults": limit})])
     if histories is not None:
         histories.update({t["id"]: t["historyId"] for t in d.get("threads", []) or []
                           if t.get("historyId")})
@@ -286,15 +347,38 @@ def _undo_points(cfg):
     Deduped: multiple labels sharing the same date are merged into one point
     (counts summed). Labels with no parseable date are merged under 'earlier'.
     """
-    data = du._gws(cfg, ["gmail", "users", "labels", "list",
-                         "--params", json.dumps({"userId": "me"})])
+    data = None
+    if gmail_api is not None:
+        try:
+            data = {"labels": gmail_api.list_labels(cfg)}
+        except Exception:
+            data = None
+    if data is None:
+        data = du._gws(cfg, ["gmail", "users", "labels", "list",
+                             "--params", json.dumps({"userId": "me"})])
     recovery = [lab for lab in (data.get("labels", []) or [])
                 if lab.get("name", "").startswith(iz._BASE_LABEL)]
 
-    # One gws subprocess per recovery label to read its thread count. These dated
-    # labels accumulate ~1/day/account forever, so a serial loop grows unbounded;
-    # fan them out (same pattern as the per-account/per-label pools elsewhere here).
+    # One label read per recovery label. These dated labels accumulate ~1/day
+    # /account forever, and through gws each one is a fresh Node process (~1s
+    # measured), so 36 of them were 9 of this builder's 12 seconds. Direct HTTP
+    # keeps one connection and turns the whole scan into a fraction of a second.
+    # gws remains the fallback, so an account without direct credentials behaves
+    # exactly as before.
+    direct = None
+    if gmail_api is not None:
+        try:
+            direct = gmail_api.available(cfg)
+        except Exception:
+            direct = False
+
     def _count(lab):
+        if direct:
+            try:
+                detail = gmail_api.get_label(cfg, lab["id"])
+                return lab.get("name", ""), int(detail.get("threadsTotal", 0) or 0)
+            except Exception:
+                pass          # fall through to gws for this one label
         detail = du._gws(cfg, ["gmail", "users", "labels", "get",
                                "--params", json.dumps({"userId": "me", "id": lab["id"]})])
         return lab.get("name", ""), int(detail.get("threadsTotal", 0) or 0)
@@ -344,9 +428,13 @@ def _account_state(acct, max_loops, categories):
         # resolve category labels cheaply without N extra API calls.
         cat_label_map = _build_category_label_map(categories)
         try:
-            label_data = du._gws(cfg, ["gmail", "users", "labels", "list",
-                                       "--params", json.dumps({"userId": "me"})])
-            id_to_name = {l["id"]: l["name"] for l in label_data.get("labels", []) or []}
+            if gmail_api is not None:
+                labels = gmail_api.list_labels(cfg)
+            else:
+                labels = du._gws(cfg, ["gmail", "users", "labels", "list",
+                                       "--params", json.dumps({"userId": "me"})]
+                                 ).get("labels", []) or []
+            id_to_name = {l["id"]: l["name"] for l in labels}
         except Exception:
             id_to_name = {}
         cat_label_map["_id_to_name"] = id_to_name  # piggyback; key never conflicts

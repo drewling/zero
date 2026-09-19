@@ -558,6 +558,15 @@ def modify_messages(config_dir, message_ids, add_labels=None, remove_labels=None
     return total
 
 
+def get_label(config_dir, label_id, limiter=None):
+    """One label's detail, including threadsTotal. 1 quota unit."""
+    _spend(config_dir, "labels.get", 1, limiter)
+    status, raw, _ = _request(
+        config_dir, "GET",
+        f"{API}/users/me/labels/{urllib.parse.quote(str(label_id))}")
+    return _check(status, raw, "labels.get")
+
+
 def list_labels(config_dir, limiter=None):
     _spend(config_dir, "labels.list", 1, limiter)
     status, raw, _ = _request(config_dir, "GET", f"{API}/users/me/labels")
