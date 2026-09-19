@@ -252,6 +252,9 @@ class ThreadCache:
         self._threads = data.get("threads") or {}
         self._senders = data.get("senders") or {}
         self._verdicts = data.get("verdicts") or {}
+        # The Sent-mail id the cached negatives were established against. Saved
+        # with them so a later load can tell whether they are still provable.
+        self.sent_watermark = data.get("sent_watermark")
         self._dirty = False
         self._changes = {"threads": set(), "senders": set(), "verdicts": set()}
         self.hits = {"thread": 0, "replied": 0, "verdict": 0}
@@ -409,9 +412,17 @@ class ThreadCache:
         try:
             with storage.locked(self.path):
                 disk = _read_json(self.path)
+                # The merge below re-imports whatever is on disk, which would
+                # resurrect negatives that load() deliberately dropped. If the
+                # owner has sent mail since those negatives were recorded, they
+                # are no longer provable, so they must not come back.
+                stale_negatives = disk.get("sent_watermark") != self.sent_watermark
                 for name, local in (("threads", self._threads), ("senders", self._senders),
                                     ("verdicts", self._verdicts)):
                     merged = disk.get(name, {}).copy()
+                    if name == "senders" and stale_negatives:
+                        merged = {k: v for k, v in merged.items()
+                                  if not (isinstance(v, dict) and v.get("v") is False)}
                     keys = set(local) if force else self._changes[name]
                     for key in keys:
                         if key in local:
@@ -423,7 +434,8 @@ class ThreadCache:
                 self._prune()
                 body = {"version": SCHEMA_VERSION, "account": self.account,
                         "updated_at": _now(), "threads": self._threads,
-                        "senders": self._senders, "verdicts": self._verdicts}
+                        "senders": self._senders, "verdicts": self._verdicts,
+                        "sent_watermark": self.sent_watermark}
                 ok = _atomic_write_json(self.path, body)
                 if ok:
                     self._dirty = False
@@ -440,17 +452,36 @@ class ThreadCache:
                 "hits": dict(self.hits), "misses": dict(self.misses)}
 
 
-def load(account, enabled=True, path=None):
+def load(account, enabled=True, path=None, sent_watermark=None):
     """Open an account's cache. NEVER raises, NEVER returns None.
 
     A missing, corrupt, truncated or version-mismatched file yields an empty
     cache, which simply misses on everything and makes the run behave exactly as
-    it did before this module existed."""
+    it did before this module existed.
+
+    `sent_watermark` is the id of the newest message in Sent. A cached negative
+    ("the owner has never written to this address") can only be falsified by the
+    owner SENDING something, so when the watermark matches the one stored
+    alongside the negatives they are all still true and can be reused across
+    runs. Without it, negatives are discarded on load as before. This is the
+    precise version of that blanket rule: measured on the live account the
+    discard cost 1,302 sender probes -- most of a warm run's remaining quota --
+    to re-derive facts that one 5-unit call proves are unchanged."""
     try:
         p = path or path_for(account)
         data = _read_json(p) if enabled else {}
-        data["senders"] = {k: v for k, v in data.get("senders", {}).items()
-                           if isinstance(v, dict) and v.get("v") is True}
+        # Reuse negatives only on an exact, non-empty watermark match. Any
+        # doubt (no watermark supplied, none stored, or a differing one) falls
+        # back to discarding them, which is the keep-biased direction.
+        stored = data.get("sent_watermark")
+        keep_negatives = bool(sent_watermark) and stored == sent_watermark
+        data["senders"] = {
+            k: v for k, v in data.get("senders", {}).items()
+            if isinstance(v, dict)
+            and (v.get("v") is True or (keep_negatives and v.get("v") is False))
+        }
+        if sent_watermark:
+            data["sent_watermark"] = sent_watermark
     except Exception:
         p, data = (path or path_for(account)), {}
     return ThreadCache(account, data=data, enabled=enabled, path=p)

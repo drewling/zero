@@ -449,6 +449,28 @@ def _grouping_works(cfg):
         return False
 
 
+def _sent_watermark(cfg):
+    """Id of the newest message in Sent, or None if it cannot be established.
+
+    This is the invalidation key for cached "has never replied" facts. Those
+    can only stop being true when the owner sends something, so an unchanged
+    Sent head proves every one of them still holds. Costs 5 units.
+
+    Returns None on ANY failure, and None means the negatives are discarded,
+    so a broken probe can only make the run slower, never wrong."""
+    try:
+        d = _gws_read(cfg, ["gmail", "users", "messages", "list", "--params",
+                            json.dumps({"userId": "me", "q": "in:sent",
+                                        "maxResults": 1})],
+                      method="messages.list")
+        msgs = d.get("messages") or []
+        return str(msgs[0]["id"]) if msgs else "empty-sent"
+    except Exception as exc:
+        print(f"sent watermark unavailable, re-probing senders: {exc}",
+              file=sys.stderr)
+        return None
+
+
 def _prefetch_replied(cfg, emails, group_size=_REPLIED_GROUP_SIZE):
     """Bulk-resolve replied_before for many senders using grouped queries.
 
@@ -1440,8 +1462,6 @@ def main():
     os.environ["ZERO_ACCOUNT"] = a.config_dir
     if a.clear_cache:
         thread_cache.clear(a.account_label)
-    globals()["_CACHE"] = thread_cache.load(a.account_label,
-                                            enabled=not a.no_cache)
     # The background sync keeps this current; the run only ever READS it. If it
     # is missing, stale or unreadable every lookup simply misses and the run
     # falls back to the cache and then to Gmail.
@@ -1456,6 +1476,17 @@ def main():
             globals()["_DIRECT"] = gmail_api.available(a.config_dir)
         except Exception:
             globals()["_DIRECT"] = False
+
+    # AFTER _DIRECT is resolved, so this goes down the pooled transport rather
+    # than paying ~830ms to spawn the Node CLI. One 5-unit call that decides
+    # whether ~1,300 sender probes are needed: a cached "never wrote to this
+    # address" can only be falsified by the owner SENDING something, so an
+    # unchanged Sent head proves every negative still holds. Any failure yields
+    # None, which discards negatives exactly as before, so the cheap path is
+    # never the trusted-by-default one.
+    globals()["_CACHE"] = thread_cache.load(
+        a.account_label, enabled=not a.no_cache,
+        sent_watermark=_sent_watermark(a.config_dir))
 
     try:
         me = du._profile_email(a.config_dir)
