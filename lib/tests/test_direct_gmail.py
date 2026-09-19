@@ -481,5 +481,62 @@ class KeeperIntegrationTests(unittest.TestCase):
                         "owner identity was not recomputed for the current account")
 
 
+
+
+class SharedQuotaTests(unittest.TestCase):
+    """Gmail's budget belongs to the account, not to one process.
+
+    The keeper run, the background sync and the state builder all touch the
+    same account. While each had its own in-memory limiter they each believed
+    they owned the whole budget, so together they blew past it, Gmail returned
+    403, and the UI sat still. These pin the shared behaviour.
+    """
+
+    def setUp(self):
+        import quota_ledger
+        self.quota_ledger = quota_ledger
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        p = patch.object(quota_ledger, "LEDGER_DIR", self.tmp.name)
+        p.start()
+        self.addCleanup(p.stop)
+
+    def test_two_limiters_on_one_account_share_the_budget(self):
+        a = gq.UnitLimiter(units_per_minute=100, account="acct")
+        b = gq.UnitLimiter(units_per_minute=100, account="acct")
+        self.assertEqual(a.acquire(60), 0.0)
+        # b's OWN window is empty, so without the shared ledger it would grant
+        # this immediately and the account would be at 160% of budget.
+        granted, wait = b.shared.try_acquire(60)
+        self.assertFalse(granted, "second process ignored the shared budget")
+        self.assertGreater(wait, 0)
+
+    def test_different_accounts_do_not_share(self):
+        a = gq.UnitLimiter(units_per_minute=100, account="one")
+        b = gq.UnitLimiter(units_per_minute=100, account="two")
+        a.acquire(100)
+        self.assertTrue(b.shared.try_acquire(100)[0],
+                        "separate accounts must have separate budgets")
+
+    def test_no_account_keeps_the_old_in_process_behaviour(self):
+        limiter = gq.UnitLimiter(units_per_minute=100)
+        self.assertIsNone(limiter.shared)
+        self.assertEqual(limiter.acquire(100), 0.0)
+
+    def test_unusable_ledger_never_blocks_mail_work(self):
+        with patch.object(self.quota_ledger, "LEDGER_DIR", "/proc/nope/nowhere"):
+            limiter = gq.UnitLimiter(units_per_minute=10, account="acct")
+            # Must not raise and must not hang: degrading to in-process only is
+            # acceptable, refusing to read mail because of a lock file is not.
+            self.assertEqual(limiter.acquire(5), 0.0)
+
+    def test_waiting_is_reported_once_not_twice(self):
+        # total_wait feeds the number the run reports; double counting it would
+        # make "throttled_seconds" meaningless.
+        limiter = gq.UnitLimiter(units_per_minute=100, account="acct")
+        limiter.acquire(50)
+        self.assertEqual(limiter.stats()["throttled_seconds"], 0.0)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

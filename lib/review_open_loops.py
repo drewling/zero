@@ -1420,7 +1420,17 @@ def main():
 
     if a.units_per_minute and a.units_per_minute > 0:
         # Explicit override always wins, even over transport-layer deference.
-        globals()["_LIMITER"] = gq.UnitLimiter(units_per_minute=a.units_per_minute)
+        globals()["_LIMITER"] = gq.UnitLimiter(units_per_minute=a.units_per_minute,
+                                               account=os.path.realpath(a.config_dir))
+    elif _TRANSPORT_GOVERNS:
+        # Normally this reader defers to draftutil's governor and runs with an
+        # effectively unlimited budget of its own. That was correct while EVERY
+        # read went through draftutil. The direct transport does not, so without
+        # this the fast path would be ungoverned: it would spend the account's
+        # whole minute and collide with the background sync, which is exactly
+        # the 403-and-stall the user reported. Give it a real, SHARED budget.
+        globals()["_LIMITER"] = gq.UnitLimiter(
+            account=os.path.realpath(a.config_dir))
 
     # --- Persistent cache ----------------------------------------------------
     # Opened before any reads so every path below can consult it. load() never

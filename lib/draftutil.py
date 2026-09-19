@@ -64,7 +64,8 @@ def _await_quota(args, config_dir=None):
     if config_dir is not None:
         key = os.path.realpath(config_dir)
         with _quota_lock:
-            limiter = _account_limiters.setdefault(key, gq.UnitLimiter(_UNIT_BUDGET))
+            limiter = _account_limiters.setdefault(
+                key, gq.UnitLimiter(_UNIT_BUDGET, account=key))
         return limiter.acquire(gq.cost_of(_method_of(args)))
     # Compatibility for callers without an account. Production always supplies it.
     cost = gq.cost_of(_method_of(args))

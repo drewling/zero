@@ -232,7 +232,7 @@ def initial(config_dir, store, me, limiter=None, query="in:inbox",
     partial store with a current cursor would never fill its gaps.
     """
     started = time.time()
-    limiter = limiter or gq.UnitLimiter()
+    limiter = limiter or gq.UnitLimiter(account=os.path.realpath(config_dir))
     # Capture the cursor BEFORE reading, so anything that lands mid-sweep is
     # picked up by the next incremental sync instead of falling in the gap.
     try:
@@ -292,7 +292,7 @@ def incremental(config_dir, store, me, limiter=None, progress=None):
     if not cursor:
         return None
     started = time.time()
-    limiter = limiter or gq.UnitLimiter()
+    limiter = limiter or gq.UnitLimiter(account=os.path.realpath(config_dir))
     try:
         records = gmail_api.history_since(config_dir, cursor, limiter)
     except gmail_api.GmailError:
@@ -363,7 +363,7 @@ def sync(config_dir, account_label, me, limiter=None, progress=None,
     store = mailbox_store.load(account_label)
     if store is None:
         return {"status": "unavailable", "reason": "local store could not be opened"}
-    limiter = limiter or gq.UnitLimiter()
+    limiter = limiter or gq.UnitLimiter(account=os.path.realpath(config_dir))
     try:
         result = incremental(config_dir, store, me, limiter, progress)
         if result is not None:

@@ -153,10 +153,23 @@ class UnitLimiter:
     instantly and assert the invariant without real waiting."""
 
     def __init__(self, units_per_minute=None, window=DEFAULT_WINDOW_SECONDS,
-                 clock=time.monotonic, sleep=time.sleep):
+                 clock=time.monotonic, sleep=time.sleep, account=None):
         if units_per_minute is None:
             units_per_minute = int(GMAIL_UNITS_PER_MINUTE * DEFAULT_BUDGET_FRACTION)
         self.budget = max(1, int(units_per_minute))
+        # Gmail's budget belongs to the ACCOUNT, not to this process. With an
+        # account id we also book every grant in a cross-process ledger, so the
+        # keeper run, the background sync and the state builder share one
+        # budget instead of each believing it owns the whole thing (which is
+        # what produced live 403s and a stalled-looking progress bar).
+        self.shared = None
+        if account:
+            try:
+                import quota_ledger
+                self.shared = quota_ledger.SharedLedger(account, self.budget,
+                                                        window=float(window))
+            except Exception:
+                self.shared = None      # degrade to in-process only
         self.window = float(window)
         self._clock = clock
         self._sleep = sleep
@@ -192,7 +205,23 @@ class UnitLimiter:
                     self.total_units += cost
                     self.total_calls += 1
                     self.total_wait += waited
-                    return waited
+                    grant = True
+                else:
+                    grant = False
+            if grant:
+                # This process has room. Now check whether the ACCOUNT does:
+                # another process may already have spent the window. Done
+                # outside the in-process lock so siblings are not blocked while
+                # we wait on the shared ledger.
+                if self.shared is not None:
+                    shared_wait = self.shared.acquire(cost, sleep=self._sleep)
+                    # Only the NEW wait is added: `waited` was already folded
+                    # into total_wait above, and counting it twice would make
+                    # the throttle figure the run reports meaningless.
+                    self.total_wait += shared_wait
+                    waited += shared_wait
+                return waited
+            with self._lock:
                 # Sleep exactly until the oldest entry leaves the window; that is
                 # the earliest instant the budget can free up.
                 delay = max(0.0, (self._events[0][0] + self.window) - now)

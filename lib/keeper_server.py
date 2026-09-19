@@ -2596,7 +2596,10 @@ def _sync_loop():
     _sync_stop.wait(20)
     while not _sync_stop.is_set():
         try:
-            # Never fight a foreground job for the same account's quota.
+            # Never fight a foreground job for the same account's quota. The
+            # shared ledger now makes collisions safe rather than fatal, but a
+            # user-visible run should still get the whole budget: splitting it
+            # just makes the thing they are watching take twice as long.
             with _job_lock:
                 busy = _job["state"] == "running"
             if not busy:
