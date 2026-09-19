@@ -197,13 +197,18 @@ def _read_threads(config_dir, tids, me, limiter, progress=None, index=None):
                 infos.append(info)
             else:
                 missing.append(tid)
-        # Separate "deleted" from "could not read". One 404 per id is cheap and
-        # only happens for the handful a batch could not return.
-        for tid in missing:
-            if _is_deleted(config_dir, tid, limiter):
-                gone.append(tid)
-            else:
-                failed.append(tid)
+        # Separate "deleted" from "could not read". A 404 means the thread is
+        # gone for good; anything else must hold the cursor back. The probes run
+        # concurrently because a history window can name dozens of deleted
+        # threads at once (measured: 27 of them, 74s serially).
+        if missing:
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=min(8, len(missing)),
+                                    thread_name_prefix="gmail-404") as pool:
+                verdicts = list(pool.map(
+                    lambda t: (t, _is_deleted(config_dir, t, limiter)), missing))
+            for tid, deleted in verdicts:
+                (gone if deleted else failed).append(tid)
     return infos, failed, gone
 
 
