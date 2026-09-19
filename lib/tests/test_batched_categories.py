@@ -152,6 +152,54 @@ def test_unplannable_is_handed_back_not_dropped():
         "a thread we cannot plan must be returned for the slow path, never lost"
 
 
+def test_only_written_threads_are_evicted_from_the_mirror():
+    """A write moves the historyId, so its mirror row must be dropped. A no-op
+    changed nothing, so its row is still valid and must be KEPT -- evicting it
+    would throw away a good row and force a needless re-read next run."""
+    setup_module()
+    forgotten = []
+
+    class FakeStore:
+        def forget(self, ids):
+            forgotten.extend(ids)
+
+    rol.iz._batch_modify = lambda cfg, ids, add, rem: None
+    old = rol._STORE
+    rol._STORE = FakeStore()
+    try:
+        pairs = [(info("written", {"INBOX"}), "Needs reply"),
+                 (info("noop", {"L_reply", "INBOX"}), "Needs reply")]
+        ok, failed, _ = rol._apply_categories_batched("cfg", pairs, LABELS)
+        assert ok == 2 and failed == 0
+        assert forgotten == ["written"], \
+            f"only the written thread may be evicted, got {forgotten}"
+    finally:
+        rol._STORE = old
+
+
+def test_failed_group_is_not_evicted():
+    """If the write failed the thread is unchanged, so its row is still good."""
+    setup_module()
+    forgotten = []
+
+    class FakeStore:
+        def forget(self, ids):
+            forgotten.extend(ids)
+
+    def boom(cfg, ids, add, rem):
+        raise RuntimeError("nope")
+
+    rol.iz._batch_modify = boom
+    old = rol._STORE
+    rol._STORE = FakeStore()
+    try:
+        rol._apply_categories_batched(
+            "cfg", [(info("t", {"INBOX"}), "Needs reply")], LABELS)
+        assert forgotten == [], "a thread we failed to change must keep its row"
+    finally:
+        rol._STORE = old
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

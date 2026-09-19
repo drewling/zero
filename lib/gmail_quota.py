@@ -205,6 +205,29 @@ class UnitLimiter:
         self.total_units = 0        # lifetime units, for reporting
         self.total_calls = 0
         self.total_wait = 0.0       # seconds spent throttled, for reporting
+        # total_wait sums across WORKERS, so with 16 threads it can exceed the
+        # run's wall time and reads as nonsense ("2,916s throttled" on an 8
+        # minute run). This tracks the union of real time during which at least
+        # one worker was blocked, which is the figure a human means by "how
+        # long were we waiting".
+        self._wait_depth = 0
+        self._wait_since = None
+        self.wall_wait = 0.0
+
+    def _enter_wait(self, now):
+        """Called when a worker starts waiting. Caller holds lock."""
+        if self._wait_depth == 0:
+            self._wait_since = now
+        self._wait_depth += 1
+
+    def _exit_wait(self, now):
+        """Called when a worker stops waiting. Caller holds lock."""
+        if self._wait_depth == 0:
+            return
+        self._wait_depth -= 1
+        if self._wait_depth == 0 and self._wait_since is not None:
+            self.wall_wait += max(0.0, now - self._wait_since)
+            self._wait_since = None
 
     def _retire(self, now):
         """Drop ledger entries that have aged out of the window. Caller holds lock."""
@@ -221,6 +244,7 @@ class UnitLimiter:
         if cost == 0:
             return 0.0
         waited = 0.0
+        waiting = False              # whether this worker is counted as blocked
         while True:
             with self._lock:
                 now = self._clock()
@@ -244,16 +268,26 @@ class UnitLimiter:
                     self.total_units += cost
                     self.total_calls += 1
                     self.total_wait += waited
+                    if waiting:
+                        self._exit_wait(now)
+                        waiting = False
                     grant = True
                 else:
                     grant = False
+                    if not waiting:
+                        self._enter_wait(now)
+                        waiting = True
             if grant:
                 # This process has room. Now check whether the ACCOUNT does:
                 # another process may already have spent the window. Done
                 # outside the in-process lock so siblings are not blocked while
                 # we wait on the shared ledger.
                 if self.shared is not None:
+                    with self._lock:
+                        self._enter_wait(self._clock())
                     shared_wait = self.shared.acquire(cost, sleep=self._sleep)
+                    with self._lock:
+                        self._exit_wait(self._clock())
                     # Only the NEW wait is added: `waited` was already folded
                     # into total_wait above, and counting it twice would make
                     # the throttle figure the run reports meaningless.
@@ -296,8 +330,15 @@ class UnitLimiter:
             self._burst_spent += int(units)
 
     def stats(self):
+        # Report both: wall time is what a person experiences, and the summed
+        # figure still shows how much total worker time went into waiting.
+        with self._lock:
+            wall = self.wall_wait
+            if self._wait_depth and self._wait_since is not None:
+                wall += max(0.0, self._clock() - self._wait_since)
         return {"units": self.total_units, "calls": self.total_calls,
-                "throttled_seconds": round(self.total_wait, 2),
+                "throttled_seconds": round(wall, 2),
+                "throttled_worker_seconds": round(self.total_wait, 2),
                 "budget_per_minute": self.budget}
 
 

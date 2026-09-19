@@ -1279,17 +1279,27 @@ def _apply_categories_batched(cfg, pairs, labels_cache):
             groups.setdefault(key, []).append((info, msg_ids))
 
     failed = 0
+    written = []
     for (add_ids, remove_ids), members in groups.items():
         msg_ids = [m for _, ids in members for m in ids]
         try:
             iz._batch_modify(cfg, msg_ids, list(add_ids), list(remove_ids))
             ok += len(members)
+            written.extend(info["id"] for info, _ in members)
         except Exception as exc:
             # One failed group must not cost the others. These threads keep
             # whatever labels they already had, which is the safe direction.
             print(f"category batch failed for {len(members)} threads: {exc}",
                   file=sys.stderr)
             failed += len(members)
+    # A label write moves the thread's historyId, so the mirror row we planned
+    # from is now stale by our own hand. Evict only the rows we actually wrote;
+    # no-ops changed nothing and stay valid.
+    if written and _STORE is not None:
+        try:
+            _STORE.forget(written)
+        except Exception as exc:
+            print(f"mirror eviction skipped: {exc}", file=sys.stderr)
     return ok, failed, unplannable
 
 
@@ -1716,6 +1726,9 @@ def main():
     keep_set = learning.kept_thread_ids()
 
     archive_msg_ids, kept, keep_s = [], 0, []
+    # Thread ids behind archive_msg_ids, so a flush can evict exactly the rows
+    # it just invalidated from the mirror.
+    archive_tids = []
     label_ok = label_failed = 0
     # Kept threads awaiting a category label, drained once per chunk so the
     # writes can be grouped into batchModify calls.
@@ -1729,6 +1742,7 @@ def main():
             continue
         if c["last_from_owner"]:
             archive_msg_ids += c["ids"]
+            archive_tids.append(c["id"])
         else:
             to_judge.append(c)
 
@@ -1757,7 +1771,7 @@ def main():
     # is safe; losing the work is what was not.
     archive_label = archive_label_id = None
 
-    def _flush_archive(ids):
+    def _flush_archive(ids, thread_ids=()):
         nonlocal archive_label, archive_label_id, archived_total
         if not (a.execute and ids):
             return 0
@@ -1767,6 +1781,19 @@ def main():
         n = iz._batch_modify(a.config_dir, ids, add_ids=[archive_label_id],
                              remove_ids=["INBOX"])
         archived_total += n or 0
+        # WE just changed these threads, so the mirror rows we were serving from
+        # are now stale -- and stale by our own hand. Dropping them keeps the
+        # mirror honest: the next run treats them as unknown rather than trusting
+        # a row whose historyId Gmail has already moved past. Without this, the
+        # run immediately after an archive re-read everything it had touched
+        # (measured: 6,955 units and 2,916s throttled on a 480-thread inbox).
+        # Archived threads have left the inbox, so forgetting them is also the
+        # semantically correct end state, not just a cache trick.
+        if thread_ids and _STORE is not None:
+            try:
+                _STORE.forget(list(thread_ids))
+            except Exception as exc:
+                print(f"mirror eviction skipped: {exc}", file=sys.stderr)
         return n or 0
 
     archived_total = 0
@@ -1782,6 +1809,7 @@ def main():
             category = v.get("category") if isinstance(v, dict) else None
             if decision == "archive":
                 archive_msg_ids += c["ids"]
+                archive_tids.append(c["id"])
             else:
                 kept += 1
                 if len(keep_s) < 25:
@@ -1817,8 +1845,9 @@ def main():
         # a timeout, a crash or a quit.
         if archive_msg_ids:
             try:
-                _flush_archive(archive_msg_ids)
+                _flush_archive(archive_msg_ids, archive_tids)
                 archive_msg_ids = []
+                archive_tids = []
             except Exception as exc:
                 # A failed flush keeps the ids for the final attempt rather than
                 # dropping them: an un-archived thread is merely still in the
@@ -1853,7 +1882,7 @@ def main():
     # Anything a per-chunk flush could not commit (plus the owner-handled
     # threads decided before the loop) goes now.
     if a.execute and archive_msg_ids:
-        _flush_archive(archive_msg_ids)
+        _flush_archive(archive_msg_ids, archive_tids)
     if a.execute:
         result["archived_messages"] = archived_total
         if archive_label:
