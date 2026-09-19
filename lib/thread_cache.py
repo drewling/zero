@@ -26,7 +26,13 @@ CACHE_DIR = os.path.join(ROOT, "app", "thread_cache")
 # Bump when the stored shape changes. A mismatch DISCARDS the cache rather than
 # trying to interpret an older layout, because misreading a field here means
 # claiming a thread is unchanged when it is not.
-SCHEMA_VERSION = 1
+# v2: rows written before this bump could carry a TRUNCATED `ids` list, because
+# the bulk index was built from a windowed scan and _thread_info_via_index
+# stored whatever it saw. Archiving those rows removes INBOX from only some of
+# the thread's messages, so the thread never leaves the inbox. The id lists are
+# indistinguishable from correct ones once stored, so the only safe move is to
+# discard every pre-v2 row and let them be re-read.
+SCHEMA_VERSION = 2
 
 # --- Time-to-live, per kind of fact -----------------------------------------
 # Thread info and verdicts are validated by historyId, so age is only a bound on

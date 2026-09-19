@@ -70,6 +70,22 @@ PAGE_SIZE = 500
 SCAN_QUERY = "in:anywhere"
 SENT_QUERY = "in:sent"
 
+# Archiving is the one operation that CANNOT work from a partial view of a
+# thread. To take a thread out of the inbox, INBOX must be removed from every
+# message that carries it; miss one and the thread stays put while the run
+# reports success. The windowed scan above is allowed to be partial -- it only
+# feeds classification, where a missing old message changes nothing -- but a
+# thread's INBOX-bearing messages can be older than the window.
+#
+# Measured on the live account: a 9-message thread whose 6 in-window messages
+# were archived over and over, because the 2 messages still holding INBOX fell
+# outside the window. The run claimed 6 archives per run, forever, and the
+# inbox never moved.
+#
+# So this scan is deliberately NOT windowed. It is also naturally small (it is
+# the inbox, the thing we are trying to empty), so scanning it whole is cheap.
+INBOX_QUERY = "in:inbox"
+
 # Days of margin either side of the run's own window. Generous on purpose: a
 # thread whose newest message is just outside the window must still resolve to
 # the right newest message, and being wrong here is the unsafe direction.
@@ -153,11 +169,16 @@ class MailboxIndex:
     `covers(tid)` is the honesty check: it is only True when the index genuinely
     saw the thread, so callers can fall back per-thread instead of assuming."""
 
-    def __init__(self, order, sent_ids, pages):
+    def __init__(self, order, sent_ids, pages, inbox_order=None):
         self.order = order              # tid -> [msg ids], newest first
         self.sent_ids = sent_ids        # message ids carrying the SENT label
         self.pages = pages              # pages fetched, for unit accounting
         self.units = pages * gq.cost_of("messages.list")
+        # tid -> [msg ids that currently carry INBOX], from an UNWINDOWED scan.
+        # This is the complete set for any thread in the inbox, which is exactly
+        # what archiving needs. Empty dict means "not available", and callers
+        # must then treat the thread as unarchivable from the index.
+        self.inbox_order = inbox_order or {}
 
     def covers(self, tid):
         return tid in self.order
@@ -165,6 +186,17 @@ class MailboxIndex:
     def message_ids(self, tid):
         """All message ids in the thread (what batchModify archives)."""
         return list(self.order.get(tid, []))
+
+    def inbox_message_ids(self, tid):
+        """Every message in this thread that currently carries INBOX.
+
+        Complete, because the inbox scan is not windowed. Removing INBOX from
+        exactly these ids is necessary AND sufficient to archive the thread.
+        Returns None when the inbox scan is unavailable, so the caller falls
+        back rather than archiving a partial set and silently failing."""
+        if not self.inbox_order:
+            return None
+        return list(self.inbox_order.get(tid, []))
 
     def newest(self, tid):
         ids = self.order.get(tid)
@@ -212,6 +244,9 @@ def build_index(cfg, env_fn, limiter=None, log=None, runner=None,
         sent, sent_pages = _scan(cfg, _windowed(SENT_QUERY, window_days), env_fn,
                                  limiter, runner=runner)
         _say(f"Indexed {len(msgs)} messages")
+        # Unwindowed on purpose: see INBOX_QUERY.
+        inbox, inbox_pages = _scan(cfg, INBOX_QUERY, env_fn, limiter,
+                                   runner=runner)
     except Exception as exc:
         if log:
             log(f"bulk index unavailable, falling back to per-thread reads: {exc}")
@@ -222,7 +257,13 @@ def build_index(cfg, env_fn, limiter=None, log=None, runner=None,
         if tid:
             order.setdefault(tid, []).append(m["id"])
     sent_ids = {m["id"] for m in sent if m.get("id")}
-    return MailboxIndex(order, sent_ids, pages + sent_pages)
+    inbox_order = {}
+    for m in inbox:
+        tid = m.get("threadId")
+        if tid:
+            inbox_order.setdefault(tid, []).append(m["id"])
+    return MailboxIndex(order, sent_ids, pages + sent_pages + inbox_pages,
+                        inbox_order=inbox_order)
 
 
 if __name__ == "__main__":

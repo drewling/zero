@@ -689,7 +689,18 @@ def _thread_info_via_index(cfg, tid, me, index):
     # labels. The threads.list snippet is preferred since it is already paid for.
     label_ids = set(m.get("labelIds") or [])
     snippet = _SNIPPETS.get(tid) or (m.get("snippet", "") or "")[:160]
-    return {"id": tid, "ids": ids, "last_from": last_from,
+    # `ids` comes from the WINDOWED scan and can omit older messages in this
+    # thread. That is harmless for classification but fatal for archiving: the
+    # omitted messages are often precisely the ones still carrying INBOX, so
+    # removing INBOX from `ids` alone leaves the thread in the inbox while the
+    # run reports it archived. Union in the complete inbox-bearing set from the
+    # unwindowed inbox scan so archiving always acts on every message it must.
+    archive_ids = list(ids)
+    inbox_ids = index.inbox_message_ids(tid)
+    if inbox_ids:
+        seen = set(archive_ids)
+        archive_ids += [i for i in inbox_ids if i not in seen]
+    return {"id": tid, "ids": archive_ids, "last_from": last_from,
             "last_email": last_email, "last_from_owner": last_from_owner,
             "subject": h.get("subject", "(no subject)"), "snippet": snippet,
             "label_ids": label_ids}
