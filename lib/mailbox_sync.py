@@ -321,7 +321,7 @@ def incremental(config_dir, store, me, limiter=None, progress=None):
     except gmail_api.GmailError:
         pass
 
-    infos, failed, gone = [], [], []
+    infos, failed, gone, departed = [], [], [], []
     if touched:
         # Only index when there is enough to read for the sweep to pay for
         # itself; a handful of changed threads is cheaper read directly.
@@ -331,8 +331,29 @@ def incremental(config_dir, store, me, limiter=None, progress=None):
                 index = _index_messages(config_dir, "in:inbox", limiter)
             except gmail_api.GmailError:
                 index = None
-        infos, failed, gone = _read_threads(config_dir, sorted(touched), me,
+        # A thread that LEFT the inbox is the commonest kind of change here:
+        # the keeper run archives thousands at a time, and every one of them
+        # shows up as a labelsRemoved record. Re-reading them costs 20 units
+        # each to learn something we already know -- that they are gone from
+        # the inbox -- and after a big sweep that is the entire sync. Measured:
+        # 2,045 threads re-read after archiving 2,547, a ~13 minute download of
+        # mail the user just filed away.
+        #
+        # The inbox index (already built above, and unwindowed) tells us exactly
+        # which touched threads are still in the inbox. The rest are dropped
+        # from the mirror, which is the correct end state for a mirror whose job
+        # is to answer "what is in the inbox". Only done when we HAVE the index;
+        # without it we cannot prove absence and must still read.
+        to_read = sorted(touched)
+        if index:
+            # _index_messages is keyed BY thread id over an "in:inbox" sweep, so
+            # membership is exactly "is this thread still in the inbox".
+            departed = [t for t in to_read if t not in index]
+            to_read = [t for t in to_read if t in index]
+        infos, failed, gone = _read_threads(config_dir, to_read, me,
                                             limiter, progress, index=index)
+        if departed:
+            store.forget(departed)
     if infos:
         store.upsert_many(infos)
     # Threads Gmail 404s are deleted, not unread-able. Drop their rows and do
@@ -346,10 +367,13 @@ def incremental(config_dir, store, me, limiter=None, progress=None):
     if not failed and new_cursor:
         store.set_cursor(new_cursor)
     metrics.record("sync.incremental", config_dir, changed=len(touched),
-                   applied=len(infos), failures=len(failed), deleted=len(gone),
+                   applied=len(infos), failures=len(failed),
+                   deleted=len(gone) + len(departed),
+                   left_inbox=len(departed),
                    seconds=time.time() - started)
     return {"status": "complete" if not failed else "partial",
-            "changed": len(touched), "applied": len(infos), "deleted": len(gone),
+            "changed": len(touched), "applied": len(infos),
+            "deleted": len(gone) + len(departed), "left_inbox": len(departed),
             "failed": len(failed), "seconds": round(time.time() - started, 1)}
 
 
