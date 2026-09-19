@@ -408,7 +408,12 @@ def _run_keeper(payload):
         rc, stdout, stderr = _run_child(
             [PYTHON, os.path.join(HERE, "review_open_loops.py"),
              cfg, email, "--grace-days", str(grace), "--execute"],
-            base, span, timeout=600, prefix=f"{email} — ")
+            # 600s used to kill every run on a large mailbox BEFORE it reached
+            # the archive step, so the inbox never shrank and the next run had
+            # exactly as much to do. The child now archives incrementally, so a
+            # timeout no longer throws the work away, but the ceiling still has
+            # to be generous enough for a genuine first pass on a big backlog.
+            base, span, timeout=RUN_TIMEOUT_SECONDS, prefix=f"{email} — ")
         if rc != 0:
             failures.append(f"{email}: {(stderr or stdout or '').strip()[-200:]}")
         else:
@@ -2043,6 +2048,10 @@ def _write_settings(settings):
 # (2 quota units) plus the threads that actually moved, so this can be frequent
 # without being expensive.
 SYNC_INTERVAL_SECONDS = int(os.environ.get("ZERO_SYNC_INTERVAL", "120"))
+# Ceiling for one account's keeper pass. A first pass over a large backlog is
+# quota-bound and legitimately slow; the child commits archives as it goes, so
+# hitting this is no longer destructive, just an early stop.
+RUN_TIMEOUT_SECONDS = int(os.environ.get("ZERO_RUN_TIMEOUT", "3600"))
 _sync_lock = threading.Lock()
 _sync_stop = threading.Event()
 _sync_state = {"last": [], "at": 0}

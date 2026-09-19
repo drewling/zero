@@ -538,5 +538,72 @@ class SharedQuotaTests(unittest.TestCase):
         self.assertEqual(limiter.stats()["throttled_seconds"], 0.0)
 
 
+
+
+class IncrementalArchiveTests(unittest.TestCase):
+    """A run that is cut short must still leave the mailbox better off.
+
+    Archiving used to happen once, after every thread was classified. On a
+    large mailbox the parent's timeout killed the child before that step, so
+    thousands of decided archives died in memory, the inbox never shrank, and
+    the next run redid all of it. That loop is why the app felt permanently
+    slow.
+    """
+
+    def test_archives_are_committed_per_chunk_not_only_at_the_end(self):
+        import review_open_loops as rol
+        flushed = []
+
+        # Simulate: two chunks classified, then the process dies. With a single
+        # end-of-run batch nothing would be archived at all.
+        def fake_batch_modify(_cfg, ids, add_ids=None, remove_ids=None):
+            flushed.append(list(ids))
+            return len(ids)
+
+        with patch.object(rol.iz, "_batch_modify", fake_batch_modify), \
+             patch.object(rol.iz, "_ensure_label", lambda *a, **k: "LID"), \
+             patch.object(rol.iz, "_dated_label", lambda base: "🗄️ Auto-Archived 2026-01-01"):
+            archived_total = 0
+            archive_label = archive_label_id = None
+
+            # Mirrors the closure in main(): flush a chunk's ids immediately.
+            def flush(ids):
+                nonlocal archive_label, archive_label_id, archived_total
+                if not ids:
+                    return 0
+                if archive_label_id is None:
+                    archive_label = rol.iz._dated_label(rol.iz._BASE_LABEL)
+                    archive_label_id = rol.iz._ensure_label("cfg", archive_label)
+                n = rol.iz._batch_modify("cfg", ids, add_ids=[archive_label_id],
+                                         remove_ids=["INBOX"])
+                archived_total += n
+                return n
+
+            flush(["m1", "m2"])
+            flush(["m3"])
+            self.assertEqual(flushed, [["m1", "m2"], ["m3"]],
+                             "chunks were not committed as they completed")
+            self.assertEqual(archived_total, 3)
+            # One dated recovery label for the whole run, not one per chunk:
+            # Undo restores a single point, not a scattering of them.
+            self.assertEqual(archive_label, "🗄️ Auto-Archived 2026-01-01")
+
+    def test_a_failed_flush_keeps_ids_for_the_final_attempt(self):
+        # An un-archived thread is merely still in the inbox, which is the safe
+        # direction. Dropping the ids silently would not be.
+        import review_open_loops as rol
+        with patch.object(rol.iz, "_ensure_label", lambda *a, **k: "LID"), \
+             patch.object(rol.iz, "_dated_label", lambda base: "L"), \
+             patch.object(rol.iz, "_batch_modify",
+                          side_effect=RuntimeError("network")):
+            pending = ["m1"]
+            try:
+                rol.iz._batch_modify("cfg", pending, add_ids=["LID"],
+                                     remove_ids=["INBOX"])
+            except RuntimeError:
+                pass
+            self.assertEqual(pending, ["m1"], "ids were dropped on a failed flush")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

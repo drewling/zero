@@ -1592,6 +1592,35 @@ def main():
             pass  # apply_category retains its authoritative fallback
 
     n_judge = max(len(to_judge), 1)
+    # ARCHIVE AS WE GO, not once at the very end.
+    #
+    # Archiving used to be a single batch after every thread had been
+    # classified. On a large mailbox that step was never reached: the parent
+    # kills a run at 600s, classification took longer than that, and the child
+    # died with 2,812 decided archives still in a list in memory. The inbox
+    # therefore never shrank, so the NEXT run re-read and re-classified all
+    # 3,285 threads and died the same way. Forever. That, not per-call latency,
+    # is why the app felt slow no matter what was optimised around it.
+    #
+    # Flushing per chunk means a run that is cut short still leaves the mailbox
+    # better than it found it, and the next run has less to do. Archiving is
+    # reversible (a dated recovery label, nothing deleted), so a partial flush
+    # is safe; losing the work is what was not.
+    archive_label = archive_label_id = None
+
+    def _flush_archive(ids):
+        nonlocal archive_label, archive_label_id, archived_total
+        if not (a.execute and ids):
+            return 0
+        if archive_label_id is None:
+            archive_label = iz._dated_label(iz._BASE_LABEL)
+            archive_label_id = iz._ensure_label(a.config_dir, archive_label)
+        n = iz._batch_modify(a.config_dir, ids, add_ids=[archive_label_id],
+                             remove_ids=["INBOX"])
+        archived_total += n or 0
+        return n or 0
+
+    archived_total = 0
     for i in range(0, len(to_judge), a.chunk):
         chunk = to_judge[i:i + a.chunk]
         _emit_progress(65 + int(30 * i / n_judge),
@@ -1616,6 +1645,17 @@ def main():
                         label_ok += 1
                     else:
                         label_failed += 1
+        # Commit this chunk's archives before moving on, so the work survives
+        # a timeout, a crash or a quit.
+        if archive_msg_ids:
+            try:
+                _flush_archive(archive_msg_ids)
+                archive_msg_ids = []
+            except Exception as exc:
+                # A failed flush keeps the ids for the final attempt rather than
+                # dropping them: an un-archived thread is merely still in the
+                # inbox, which is the safe direction.
+                print(f"archive flush failed, will retry at end: {exc}", file=sys.stderr)
 
     if label_failed:
         print(f"keeper: labeled {label_ok}, {label_failed} label failures",
@@ -1642,12 +1682,14 @@ def main():
         result["cache"] = dict(_CACHE.stats(), reads_served=cached_reads,
                                reads_performed=len(needs_read))
 
+    # Anything a per-chunk flush could not commit (plus the owner-handled
+    # threads decided before the loop) goes now.
     if a.execute and archive_msg_ids:
-        lab = iz._dated_label(iz._BASE_LABEL)
-        lid = iz._ensure_label(a.config_dir, lab)
-        result["archived_messages"] = iz._batch_modify(a.config_dir, archive_msg_ids,
-                                                        add_ids=[lid], remove_ids=["INBOX"])
-        result["recovery_label"] = lab
+        _flush_archive(archive_msg_ids)
+    if a.execute:
+        result["archived_messages"] = archived_total
+        if archive_label:
+            result["recovery_label"] = archive_label
 
     # The run reached the end without raising, so the cursor may now advance.
     # Deliberately LAST: any earlier failure leaves the old cursor in place and
