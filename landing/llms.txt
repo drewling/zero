@@ -15,6 +15,9 @@
 - Privacy: runs on your Mac with your own keys. No zero server, no account, and the project never receives your mail. Thread text is sent to Jev to be judged, and to your drafting model when you request a reply.
 - AI: keep/archive decisions are always made by Jev (TypeSafe AI), a typed-judgment model that returns an answer plus a probability rather than free text. You supply the Jev API key. Reply drafting uses a separate text model via the Claude Code, Codex, or opencode CLI you already have, because Jev does not generate prose.
 
+- Performance (perf/safe-pipeline release): on one measured live account with about 3,000 Inbox threads, the inbox pipeline reached a 2.3-second steady state after the first pass, using 18 Gmail quota units. The same investigation measured panel open at 538 ms before the change and 48, 57, and 50 ms across three open-close cycles afterwards on one Mac. These are observed results, not a guarantee for every mailbox or machine; first-run time depends on the mail that has not yet been read and Gmail's limits.
+- Safety and sync: the release makes archiving complete for every Inbox-bearing message in a thread and avoids re-downloading threads that zero has already archived. It still never deletes mail: archive removes the Inbox label, adds a dated recovery label, and leaves mail in All Mail.
+
 ## Links
 - Site: https://zero.headless.com/
 - Source & download: https://github.com/drewling/zero
