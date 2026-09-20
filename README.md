@@ -7,7 +7,7 @@
 A quiet macOS menu-bar app that reads each Gmail thread, sets aside everything that
 isn't waiting on you, and keeps the rest one tap away. Nothing is ever deleted.
 
-<img src="design/screenshots/panel-loops.png" width="320" alt="zero open loops panel">
+<img src="design/screenshots/readme-hero.png" width="720" alt="zero's Open loops panel showing conversations across two accounts, with fictional demo email content">
 
 [![Website](https://img.shields.io/badge/website-zero.headless.com-1A73E8)](https://zero.headless.com)
 [![Platform: macOS](https://img.shields.io/badge/platform-macOS%2026%2B-black?logo=apple)](https://github.com/drewling/zero/releases)
