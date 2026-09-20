@@ -1,28 +1,24 @@
-# Launch announcement draft
+# zero 1.7.0 launch announcement
 
 ## Subject
-zero is faster when you open it, and steadier after it runs
+zero 1.7.0 is faster when you open it, and steadier after it runs
 
 ## Draft
 
-This release is mostly about getting out of zero's own way.
+zero 1.7.0 makes zero faster and steadier at its one job: leave you with only the email that needs you.
 
-zero is meant to disappear after it has kept the few emails that still need you. But parts of that experience were doing work twice, doing it for mail that had already left the Inbox, or building a settings screen before you asked to see it.
+zero works quietly. We found it repeating work, including after it had already set mail aside. That slowed some runs and the app.
 
-We measured the fixes on the same live Gmail account and the same Mac used for the investigation. On that account, the inbox pipeline now reaches a 2.3-second steady state using 18 Gmail quota units, after earlier runs could still be reading when they hit a 10-minute timeout. That is not a promise for every inbox. A first pass still has to read mail it has never seen, and its time depends on mailbox size and Gmail's limits.
+On the same live Gmail account used for the investigation, with about 3,000 Inbox threads, zero reached a 2.3-second steady state after its first pass. On the same Mac, opening the panel measured 538 ms before the change, then 48, 57, and 50 ms across three open-close cycles afterwards.
 
-Opening zero's panel was also measured at 538 ms before this change and 48, 57, and 50 ms across three open-close cycles afterwards on that machine. The change does not cut corners in the panel. It waits to build settings tabs until you visit them, then keeps visited tabs ready so their state and scroll position remain intact.
+Those are observed results, not a promise for every inbox or machine. A first pass still needs to read mail zero has not seen before, and timing varies with your mailbox and Gmail.
 
-The release also fixes work that could make a run look successful without actually clearing the Inbox. zero now collects every Inbox-bearing message before archiving a thread, and its mirror sync drops threads that a run has already archived instead of downloading them again. Safety remains the same: archiving removes the Inbox label, adds a dated recovery label, and never deletes mail.
+The release also fixes cases where a run could look complete without fully clearing qualifying mail from the Inbox. zero still never deletes anything. It removes the Inbox label, adds a dated recovery label, and leaves your mail in All Mail.
 
-The important part is not a benchmark. It is that zero can get back to being quiet: it should finish its work, show the few things that still need you, and leave the rest alone.
+The point is simple: zero should finish its work, show you the few things that still need you, and then get out of your way.
 
-## Measurement note
+## Optional measurement notes
 
-- Inbox results: one live account with about 3,000 Inbox threads, same verdicts before and after.
-- Panel results: one Mac, measured with an opt-in main-thread hitch monitor across three open-close cycles.
+- Inbox result: one live account with about 3,000 Inbox threads, using the same verdicts before and after.
+- Panel result: one Mac, measured with an opt-in main-thread hitch monitor across three open-close cycles.
 - These are observed results from the investigation, not a guaranteed runtime for every account or machine.
-
-## Release-version placeholder
-
-Add the release version here after the release planner confirms it. Do not publish this draft until then.
