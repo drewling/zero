@@ -378,6 +378,8 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         startServerAsync()
         model.startUpdateWatch()   // announce a just-applied update, then watch for new ones
         launchLog("didFinishLaunching: setup complete")
+        // No-op unless ZERO_PERF=1. See Perf.swift.
+        Perf.startHitchMonitor()
 
         // First-run safety net: a brand-new user's only UI is the menu-bar icon. With
         // multiple displays the icon lands on whichever screen is active (often not the

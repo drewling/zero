@@ -199,6 +199,7 @@ final class KeeperModel: ObservableObject {
     var isBusy: Bool { job?.isRunning == true }
 
     var loopRows: [LoopRow] {
+        Perf.tick("loopRows")
         guard let s = state else { return [] }
         var rows: [LoopRow] = []
         for a in s.accounts where a.ok { for l in a.loops { rows.append(LoopRow(loop: l, account: a)) } }

@@ -11,7 +11,8 @@ struct PanelView: View {
     @Namespace private var segNS
 
     var body: some View {
-        ZStack(alignment: .bottom) {
+        Perf.tick("panelBody")
+        return ZStack(alignment: .bottom) {
             // Starting state: server not yet reachable, or server is building state with
             // no accounts yet. Shown BEFORE needsOnboarding so boot never flashes onboarding.
             if !m.serverReady || (m.state?.building == true && (m.state?.accounts.isEmpty ?? true)) {
@@ -264,24 +265,56 @@ private struct SegmentedNav: View {
 
 private struct ContentArea: View {
     @EnvironmentObject var m: KeeperModel
+    /// Tabs the user has actually opened. A pane is built the first time it is
+    /// needed and then kept alive, so it still preserves scroll position and
+    /// expanded previews on later switches.
+    @State private var visited: Set<Tab> = [.loops]
 
-    // All four panes stay alive in a horizontal track; switching tabs slides the
-    // track on a single spring. Native macOS pane-switch feel, and each view keeps
-    // its own scroll position + expanded previews instead of being torn down.
+    // All four panes share a horizontal track; switching tabs slides the track on a
+    // single spring. Native macOS pane-switch feel, and a pane that has been opened
+    // keeps its own scroll position + expanded previews instead of being torn down.
+    //
+    // COST: this used to build all four panes eagerly on every panel open, including
+    // PolicyView, which is eight settings sections (text editors, pickers, the
+    // category editor, the learned list). Measured with the hitch monitor on the real
+    // app, a panel open blocked the main thread for ~540 ms with almost none of it in
+    // our own code -- it was SwiftUI's _makeViewList walking view trees the user
+    // cannot see. Panes not yet visited are now an empty spacer of the right width,
+    // so the track geometry and the slide are unchanged.
     var body: some View {
         GeometryReader { geo in
             let w = geo.size.width
+            // Union the CURRENT tab in as the body is built, rather than relying on
+            // an onChange having already fired. The tab is set from five different
+            // places (the nav, two model paths, a menu command, a notification), so
+            // deriving this from the value itself cannot miss one and leave a pane
+            // blank. `union` is cheap and does not mutate state during the body.
+            let live = visited.union([m.tab])
             HStack(spacing: 0) {
-                LoopsView().frame(width: w)
-                AccountsView().frame(width: w)
-                UndoView().frame(width: w)
-                PolicyView().frame(width: w)
+                pane(.loops, w, live) { LoopsView() }
+                pane(.accounts, w, live) { AccountsView() }
+                pane(.undo, w, live) { UndoView() }
+                pane(.policy, w, live) { PolicyView() }
             }
             .frame(width: w, alignment: .leading)
             .offset(x: -CGFloat(tabIndex) * w)
             .animation(Motion.morph, value: m.tab)
         }
         .clipped()
+        // Persist the visit so the pane STAYS built (and keeps its scroll position
+        // and expanded previews) after the user moves away again.
+        .onChange(of: m.tab) { _, new in visited.insert(new) }
+    }
+
+    /// A pane slot: the real view once visited, otherwise a correctly-sized blank.
+    @ViewBuilder
+    private func pane<V: View>(_ tab: Tab, _ w: CGFloat, _ live: Set<Tab>,
+                               @ViewBuilder _ make: () -> V) -> some View {
+        if live.contains(tab) {
+            make().frame(width: w)
+        } else {
+            Color.clear.frame(width: w)
+        }
     }
 
     private var tabIndex: Int { Tab.allCases.firstIndex(of: m.tab) ?? 0 }
@@ -393,6 +426,7 @@ private struct StaggeredLoopList: View {
         // Read ONCE here rather than in each row: the list is already rebuilding, so
         // this costs nothing, and it keeps the expansion lookup out of the row bodies.
         let open = m.expandedLoops
+        Perf.tick("listBody")
         return LazyVStack(spacing: 0) {
             ForEach(Array(rows.enumerated()), id: \.element.id) { idx, row in
                 let revealed = idx < shown
@@ -483,9 +517,10 @@ private struct LoopRowView: View {
     private var m: KeeperModel { model }
 
     var body: some View {
+        Perf.tick("rowBody")
         // Swipe right → reply, swipe left → AI archive. Hints sit behind the card and
         // bloom in as it slides; the card itself rides `dragX`.
-        ZStack {
+        return ZStack {
             swipeHints
             card.offset(x: dragX)
         }
@@ -1081,12 +1116,35 @@ private struct UndoBatch: View {
     }
 
     /// "2026-06-24" -> "Wed 24 Jun"; "earlier" -> "Earlier".
+    ///
+    /// The formatters are static, and the result is memoised. Building a
+    /// DateFormatter is famously expensive (it spins up ICU locale/calendar
+    /// machinery), and this used to build TWO of them per call, inside a view
+    /// body, for every undo batch. Measured with the hitch monitor on the real
+    /// app: this was the single largest identifiable block of main-thread time
+    /// during a panel open. The input is a plain "yyyy-MM-dd" string from the
+    /// server, so the same handful of values repeat constantly and the cache
+    /// stays tiny.
+    private static let inFmt: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")   // fixed-format input
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+    private static let outFmt: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "EEE d MMM"
+        return f
+    }()
+    private static var prettyCache: [String: String] = [:]
+
     static func prettyDate(_ raw: String) -> String {
         guard raw != "earlier" else { return "Earlier" }
-        let inFmt = DateFormatter(); inFmt.dateFormat = "yyyy-MM-dd"
+        if let hit = prettyCache[raw] { return hit }
         guard let d = inFmt.date(from: raw) else { return raw }
-        let out = DateFormatter(); out.dateFormat = "EEE d MMM"
-        return out.string(from: d)
+        let s = outFmt.string(from: d)
+        prettyCache[raw] = s
+        return s
     }
 }
 
@@ -1124,10 +1182,15 @@ private struct UndoEmailRow: View {
         .padding(.vertical, 7)
     }
 
+    /// Static: RelativeDateTimeFormatter is expensive to construct and this runs
+    /// once per message in a thread preview, inside a view body.
+    private static let relFmt: RelativeDateTimeFormatter = {
+        let f = RelativeDateTimeFormatter(); f.unitsStyle = .abbreviated; return f
+    }()
+
     private var senderLine: String {
         guard thread.epoch > 0 else { return thread.sender }
-        let f = RelativeDateTimeFormatter(); f.unitsStyle = .abbreviated
-        let when = f.localizedString(for: Date(timeIntervalSince1970: TimeInterval(thread.epoch)), relativeTo: Date())
+        let when = Self.relFmt.localizedString(for: Date(timeIntervalSince1970: TimeInterval(thread.epoch)), relativeTo: Date())
         return thread.sender.isEmpty ? when : "\(thread.sender) · \(when)"
     }
 }
@@ -1226,10 +1289,13 @@ private struct UpdatesSection: View {
             }
         }
     }
+    /// Static: built once, not on every body evaluation of this section.
+    private static let checkedFmt: DateFormatter = {
+        let f = DateFormatter(); f.dateStyle = .none; f.timeStyle = .short; return f
+    }()
     private var lastChecked: String? {
         guard let d = m.lastUpdateCheck else { return nil }
-        let f = DateFormatter(); f.dateStyle = .none; f.timeStyle = .short
-        return "Checked \(f.string(from: d))"
+        return "Checked \(Self.checkedFmt.string(from: d))"
     }
 }
 
