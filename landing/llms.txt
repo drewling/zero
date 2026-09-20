@@ -10,12 +10,13 @@
 - Works across multiple Gmail accounts against one plain-language keep-rule.
 
 ## Facts
+- Release: 1.7.0.
 - Platform: macOS 26 or later on Apple Silicon, menu-bar app. Installed with a one-line command: `curl -fsSL https://zero.headless.com/install | bash`. Not on the App Store; the app is ad-hoc signed and not notarized.
 - Price: zero itself is free and open source (AGPL-3.0-or-later). You pay only your own AI usage, typically a few cents a day. A hosted version is planned at $12/month (or $99/year) for people who would rather not install or manage keys.
 - Privacy: runs on your Mac with your own keys. No zero server, no account, and the project never receives your mail. Thread text is sent to Jev to be judged, and to your drafting model when you request a reply.
 - AI: keep/archive decisions are always made by Jev (TypeSafe AI), a typed-judgment model that returns an answer plus a probability rather than free text. You supply the Jev API key. Reply drafting uses a separate text model via the Claude Code, Codex, or opencode CLI you already have, because Jev does not generate prose.
 
-- Performance (perf/safe-pipeline release): on one measured live account with about 3,000 Inbox threads, the inbox pipeline reached a 2.3-second steady state after the first pass, using 18 Gmail quota units. The same investigation measured panel open at 538 ms before the change and 48, 57, and 50 ms across three open-close cycles afterwards on one Mac. These are observed results, not a guarantee for every mailbox or machine; first-run time depends on the mail that has not yet been read and Gmail's limits.
+- Performance (1.7.0): in one measured mailbox that started with about 3,000 Inbox threads, repeat runs settled at 2.3 seconds after the backlog was cleared, using 18 Gmail quota units. The same investigation measured panel open at 538 ms before the change and 48, 57, and 50 ms across three open-close cycles afterwards on one Mac. These are observed results, not a guarantee for every mailbox or machine; first-run time depends on the mail that has not yet been read and Gmail's limits.
 - Safety and sync: the release makes archiving complete for every Inbox-bearing message in a thread and avoids re-downloading threads that zero has already archived. It still never deletes mail: archive removes the Inbox label, adds a dated recovery label, and leaves mail in All Mail.
 
 ## Links

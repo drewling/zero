@@ -9,23 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.7.0] - 2026-09-19
 
-### Added
-
-- **A much faster, safer mailbox pipeline.** zero now keeps a local mirror of the mail it needs and talks to Gmail directly, instead of starting a Google Workspace command for each thread. Runs reuse unchanged work, remember mailbox facts, and report what they are doing while they run.
-- **Better protection against Gmail limits.** Gmail request budgets are shared across running processes, direct requests are paced together, and the app reports waiting time honestly when Gmail asks it to slow down.
-
 ### Changed
 
-- **The panel opens and updates with less work.** It builds only the tab you are viewing, avoids redrawing every row when unrelated data changes, and reads the local mailbox mirror rather than fetching every thread again.
-- **Mailbox maintenance does more work in fewer requests.** Category labels are applied in groups, missing messages are checked in parallel, and sender and thread facts are cached until the relevant mail changes.
-- **Runs make progress as they go.** zero archives qualifying inbox messages during a run instead of saving all changes for the end, so an interrupted run still keeps the work it finished.
+- **zero opens faster and waits less between runs.** It keeps track of the mail it has already seen, avoids repeating finished work, and opens only the part of the panel you ask to see.
+- **Runs keep making progress.** zero applies qualifying archive decisions as it goes, so work it already finished is retained if a run is interrupted.
+- **Gmail work is lighter and more orderly.** zero groups routine updates, coordinates requests across running processes, and shows honestly when Gmail asks it to wait.
 
 ### Fixed
 
-- **Sync no longer gets stuck or repeats work.** The mailbox cursor only moves forward, a deleted or departed thread cannot hold it back, only one sync runs at a time, and mail archived by a run is not downloaded again.
-- **Archive decisions now cover the inbox correctly.** Every qualifying message that still has the INBOX label is archived, including messages outside the displayed window. If zero cannot safely build the bulk index or read a thread, it keeps that mail rather than risking an incorrect archive.
-- **Runs avoid common Gmail failure loops.** zero no longer re-reads mail it already labelled just to confirm it, avoids a 403 retry storm, and handles rejected AI keys and temporary lookup failures without presenting them as successful settings or hiding mail.
-- **The app keeps its internal mailbox records in step with its actions.** Rows that zero changes are removed from the local view immediately, cached sender negatives refresh when sent mail changes, and archive/sync bookkeeping stays consistent.
+- **Archived mail now actually leaves the Inbox.** zero finds every qualifying message that still carries the Inbox label, and sync does not download mail that zero just archived again.
+- **Sync can finish cleanly.** A missing or departed thread cannot hold it in place, and only one sync runs at a time.
+- **When zero cannot look up a thread safely, it keeps the mail.** Temporary lookup failures and incomplete mailbox data no longer risk an incorrect archive.
+- **Settings report rejected AI keys honestly.** A failed key is no longer shown as working.
 
 ## [1.6.22] - 2026-06-26
 

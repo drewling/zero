@@ -9,7 +9,7 @@ zero 1.7.0 makes zero faster and steadier at its one job: leave you with only th
 
 zero works quietly. We found it repeating work, including after it had already set mail aside. That slowed some runs and the app.
 
-On the same live Gmail account used for the investigation, with about 3,000 Inbox threads, zero reached a 2.3-second steady state after its first pass. On the same Mac, opening the panel measured 538 ms before the change, then 48, 57, and 50 ms across three open-close cycles afterwards.
+In one mailbox that started with about 3,000 Inbox threads, repeat runs settled at 2.3 seconds after the backlog was cleared. On the same Mac, opening the panel measured 538 ms before the change, then 48, 57, and 50 ms across three open-close cycles afterwards.
 
 Those are observed results, not a promise for every inbox or machine. A first pass still needs to read mail zero has not seen before, and timing varies with your mailbox and Gmail.
 
