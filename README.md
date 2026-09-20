@@ -2,10 +2,7 @@
 
 # zero
 
-**Keep your inbox at "only what still needs you," across every account, and never lose anything.**
-
-A quiet macOS menu-bar app that reads each Gmail thread, sets aside everything that
-isn't waiting on you, and keeps the rest one tap away. Nothing is ever deleted.
+**A Mac menu-bar app that keeps Gmail conversations you need to act on and archives the rest.**
 
 <img src="design/screenshots/readme-hero.png" width="720" alt="zero's Open loops panel showing conversations across two accounts, with fictional demo email content">
 
@@ -15,281 +12,54 @@ isn't waiting on you, and keeps the rest one tap away. Nothing is ever deleted.
 
 </div>
 
----
+## What zero does
 
-## What it is
+zero checks your connected Gmail inboxes for mail that needs your attention. It keeps those conversations in the Inbox and archives the rest. Archived mail stays in Gmail and can be restored.
 
-Most "inbox zero" tools make you do the sorting. zero does the one part
-you'd never finish by hand: continuously deciding what in your inbox is still an
-**open loop** (something genuinely awaiting your action) and quietly setting
-everything else aside.
+Open zero from the menu bar to see that list, called **Open loops**. It includes replies people are waiting for and other things that need action, such as a failed payment. Click a conversation to open it in Gmail, set it aside, or ask for a reply draft. Replies are sent only when you click **Send reply**.
 
-It lives in the menu bar. You glance at it between meetings and see, across all
-your accounts, the few things that actually need you. Everything else is archived
-reversibly, so the inbox stops being a swamp without anything going missing.
+It runs on the schedule you choose, or you can run it by hand.
 
-**What it refuses to be:**
+## Before you install
 
-- An auto-replier. Replies are drafted in your voice on demand; you review, edit,
-  and decide when (or whether) to send. It never sends on your behalf.
-- A unified mail client. Your Gmail stays exactly as it is.
-- A rule engine. There is no DSL, no regex, no filter list to maintain.
-- A real-time tool. It runs once a morning.
+- A Mac with Apple Silicon running macOS 26 Tahoe or later.
+- A Gmail account you can authorize with Google.
+- A [TypeSafe Jev API key](https://console.typesafe.ai/keys). Jev is the AI service zero uses to sort mail.
 
-## The panel
+The installer sets up Python 3, Node and the Google Workspace CLI (`gws`) if needed. It also installs Claude Code if it finds no supported agent CLI. Current onboarding still checks for Claude Code even if you do not use drafts. If it reports Claude missing, follow the command shown in the app.
 
-Four views, one icon in the menu bar:
-
-| Open loops | Accounts | Undo | Settings |
-|:---:|:---:|:---:|:---:|
-| ![Open loops](design/screenshots/panel-loops.png) | ![Accounts](design/screenshots/panel-accounts.png) | ![Undo](design/screenshots/panel-undo.png) | ![Settings](design/screenshots/panel-policy.png) |
-| What still needs you, across all accounts | Per-account inbox and archive counts | Restore any day's archived mail in one tap | Your **Rules** (plain English), categories, daily schedule, and AI engine |
-
-The panel is a dark "Raycast"-style liquid-glass overlay. Tap any thread to open
-it in Gmail, hover it to **Reply** (drafts in your voice, stays local until you
-tap Send) or **Set aside** (archived reversibly, immediately restorable).
-
-## How it works
-
-```
-menu-bar app (SwiftUI)  -->  local server (keeper_server.py, 127.0.0.1)
-                                 |  reads
-                             app/state.json  <--  dashboard_state.py
-                                 ^                (per-account status, open loops, undo points)
-                                 |  Run / Undo
-                             review_open_loops.py  (TypeSafe Jev + keep-policy.md)
-                                 |
-                             gws CLI  -->  Gmail (reversible label swaps only)
-```
-
-The Swift shell is deliberately thin: it starts the local Python server and
-renders a native SwiftUI panel against its JSON API. All judgment runs in Python
-with Gmail reached via the `gws` CLI. The panel reads a cached state file so it
-opens instantly; it never talks to Gmail directly.
-
-## Why you can trust it
-
-Three properties, in priority order:
-
-1. **Reversible by construction.** "Archive" means remove the INBOX label and add
-   a dated recovery label (e.g. `zero/undo/2026-06-24`). Mail stays in All Mail,
-   fully searchable. Any day's sweep restores in one tap from the **Undo** view.
-   Nothing is ever deleted.
-2. **Ambient.** No new app to live in. Your Gmail and Apple Mail stay exactly as
-   they are. zero works quietly behind them, once a morning.
-3. **The judgment is a model, not a rule list.** What counts as "needs you" is
-   written in plain English (see [keep-policy.md](keep-policy.md)) and enforced by
-   TypeSafe's Jev model reading each thread. Jev returns a typed keep-or-archive
-   decision with a probability. Cold outreach with a real person's name gets
-   archived; a real person actually awaiting your reply is kept.
-
-## How "needs you" is decided
-
-You edit one plain-language file, [keep-policy.md](keep-policy.md), or the
-**Rules** section under the **Settings** tab in the panel. No regex, no DSL. The default:
-
-> Keep a thread only if a real person is awaiting your reply or decision, there is
-> an unanswered direct question or request addressed to you, a payment has actually
-> failed, it is a legal or contractual matter, or there is an explicit deadline with
-> a real consequence. Archive everything else reversibly.
-
-Two signals settle most cases automatically:
-
-- **Last message from you:** you already responded, the ball is in their court.
-  Archive it.
-- **Never replied to this sender, plus cold/sales content:** not a real loop, even
-  with a person's name on it. Archive it.
-
-When unsure, the policy keeps the thread. Everything archived is one tap away.
-
----
+The app is ad-hoc signed, **not Apple-notarized**, and it is not in the App Store. You can [read the installer](macapp/install-zero.sh) before running it. It downloads the release DMG and verifies its SHA-256 checksum before installing.
 
 ## Install
 
-> **Requirements:** macOS 26 (Tahoe) on Apple Silicon. Everything else — Python, Node,
-> the `gws` and `claude` CLIs — the installer sets up for you.
-
-### One command
-
 ```bash
-curl -fsSL https://raw.githubusercontent.com/drewling/zero/master/macapp/install-zero.sh | bash
+curl -fsSL https://zero.headless.com/install | bash
 ```
 
-This installs any missing prerequisites (Homebrew → Python 3 / Node → the `gws` CLI, plus
-an agent CLI only if you don't already have one), copies `zero.app` into `/Applications`,
-and launches it. Re-running is safe. When it opens, skip to **[First run](#first-run)**.
+The installer puts `zero.app` in `/Applications` when possible, otherwise `~/Applications`, then opens it. It stops on an unsupported Mac and reports any missing prerequisites.
 
-It stops with a clear message rather than installing something broken: it refuses to run
-on Intel or macOS below 26, refuses an app that fails signature verification, falls back
-to `~/Applications` when `/Applications` isn't writable, and if a prerequisite fails it
-says *"Installed, but not ready yet"* and names what's missing instead of claiming success.
+You can also download a release from the [Releases page](https://github.com/drewling/zero/releases). A browser-downloaded copy may trigger Gatekeeper because the app is not notarized. Follow macOS's **Privacy & Security → Open Anyway** guidance if needed.
 
-<details>
-<summary><b>Is this safe? It's not notarized.</b></summary>
+## First run
 
-zero is signed ad-hoc, not notarized — there's no paid Apple Developer account behind a
-free app. It is **not** on the App Store. You can read
-[the install script](macapp/install-zero.sh) before running it, which is a good habit for
-any `curl | bash`.
+1. **Connect Gmail.** Open zero from the menu bar and choose **Connect your first inbox**. The official download includes Google sign-in. You do not need to create a Google Cloud project. Google may show an unverified-app warning. zero has not completed Google's app verification. Read the prompt, then use **Advanced → Go to zero** only if you're comfortable granting access to your own mailbox. The app never sees your Google password.
 
-Useful detail: macOS only applies the `com.apple.quarantine` flag that Gatekeeper blocks
-on when the *downloading application* sets it. Browsers do; command-line tools don't.
-Verified 2026-09-17 on macOS 27.0 (26A5388g) — a release fetched with `curl` carries no
-quarantine attribute anywhere in the bundle and launches normally. So the one-line install
-needs no flag-stripping at all.
+   A source build without the bundled client can ask you for a `client_secret.json`. Use [docs/SETUP.md](docs/SETUP.md) for the complete Google Cloud and advanced setup instructions.
 
-To be precise about what that does and doesn't mean: `spctl -a -t execute` still reports
-`rejected`, and `syspolicy_check distribution` still reports a missing notarization
-ticket. Both are correct — the app genuinely isn't notarized, and it is not suitable for
-*browser* distribution. What was verified is narrower and is the thing that matters for a
-`curl` install: with no quarantine flag, launching the app through Finder/`open` is not
-stopped, and no Gatekeeper denial is logged.
+2. **Add your Jev key.** In **Settings → Sorting engine**, choose **Get a key** to open TypeSafe. Create a key, paste it into zero, and click **Save**. zero verifies it and stores it locally with owner-only permissions. Jev receives thread text to decide whether a thread should stay in the Inbox, and it's required even if you never touch drafting.
 
-If you instead download the DMG **in a browser**, that copy *is* quarantined. The
-installer detects this and clears that single flag (it never blanket-clears attributes).
-Should macOS ever block it anyway, the supported route is
-**System Settings → Privacy & Security → Open Anyway**.
-</details>
+3. Reply drafts are optional. To use them, configure your chosen provider under **Settings → AI engine** and complete any login it requires. You review and edit the result in zero, then explicitly click **Send reply**.
 
-<details>
-<summary><b>Manual install</b> — prefer to do each step yourself</summary>
+4. Choose **Run zero now** for a first sweep, then set its days and time in **Settings → Daily schedule** once you like the result.
 
-```bash
-# 1. Prerequisites
-brew install node python3
-npm install -g @googleworkspace/cli
+## Safety and data
 
-# 2. An AI engine. Skip if you already have claude, codex, or opencode.
-npm install -g @anthropic-ai/claude-code
-claude            # finish login on first run
+- **Nothing is deleted.** Archiving removes Gmail's `INBOX` label and adds a dated undo label. The mail stays in All Mail and searchable. Restore a day's changes from zero's **Undo** view.
+- The model can be wrong. Review your first few runs and adjust **Settings → Rules** if needed.
+- The zero project does not operate a server that receives your email. The app connects to Google from your Mac. Classification sends relevant thread text to TypeSafe's Jev under your key. Reply drafts go to whichever agent provider you selected. Read the [privacy policy](https://zero.headless.com/privacy.html) and your providers' terms.
+- zero itself is free. Jev usage is billed and rate-limited under your TypeSafe account. Optional drafts use the account behind your chosen agent CLI. Check those providers' prices and limits before scheduling unattended runs.
+- Revoke Google access from [Google account permissions](https://myaccount.google.com/permissions). Removing an account in zero or deleting local app data does not revoke the Google grant.
 
-# 3. Get the app WITHOUT a browser, so it's never quarantined:
-curl -fL https://github.com/drewling/zero/releases/latest/download/zero.dmg -o /tmp/zero.dmg
-hdiutil attach /tmp/zero.dmg -nobrowse -readonly -mountpoint /tmp/zero-dmg
-cp -R /tmp/zero-dmg/zero.app /Applications/
-hdiutil detach /tmp/zero-dmg
-```
+## Contribute
 
-If you'd rather download the DMG from the
-[Releases page](https://github.com/drewling/zero/releases) in a browser, that copy will be
-quarantined, so clear that one flag after dragging it across (use the full path — a
-Homebrew/Python `xattr` earlier in `PATH` may silently no-op):
-
-```bash
-/usr/bin/xattr -dr com.apple.quarantine /Applications/zero.app
-```
-
-Then open it and follow **[First run](#first-run)** below.
-</details>
-
-### First run
-
-Open zero — it lives in the menu bar (no Dock icon, no window). The onboarding walks you
-through connecting Google and your AI, both in your browser, and **nothing leaves your Mac**:
-
-1. **Connect Google.** Sign in to each Gmail account you want zero to watch. zero asks for
-   one Gmail permission and your basic identity — [nothing else](#privacy-and-trust). For
-   now this uses *your own* Google OAuth client (a one-time setup — see **Bring your own
-   Google Cloud project** below); built-in one-click sign-in is in Google verification.
-2. **Connect your AI.** TypeSafe's Jev classifies threads as keep or archive and
-   returns a typed decision with a probability. An agent CLI such as `claude`,
-   `codex`, or `opencode` is used only to draft replies. Claude is the default
-   drafting model. Pick a drafting model under **Settings → AI engine**.
-
-   **Jev needs an API key.** It is an HTTP service rather than a CLI, so you get a key from
-   [console.typesafe.ai/keys](https://console.typesafe.ai/keys):
-
-   ```bash
-   zero key            # prompts for the key, hidden input, then verifies it
-   zero key status     # check it still works
-   zero key remove     # delete it
-   ```
-
-   The key is stored on your Mac only, readable by you alone (`0600`), and survives app
-   updates. `zero key` tells you immediately whether it actually works, so a typo can't
-   quietly break tomorrow morning's run. Jev makes the keep/archive decisions; a text
-   LLM writes reply drafts because Jev does not generate prose.
-3. **Run it.** Hit **Run zero now** for the first sweep. To run it automatically each
-   morning, set a time under **Settings → Daily schedule** (or `./bin/zero schedule`).
-
-<details>
-<summary><b>Bringing your own Google Cloud project</b> — advanced</summary>
-
-Until zero's own Google client clears verification, sign-in uses a Cloud project you
-create. It's a one-time setup: make a **Desktop app** OAuth client at
-[console.cloud.google.com](https://console.cloud.google.com/) (APIs & Services →
-Credentials), enable the **Gmail API**, and paste the downloaded JSON into zero's
-onboarding screen.
-
-One catch worth knowing: Gmail's `gmail.modify` is a *restricted* scope, so an
-**unverified** personal client can only grant it while the consent screen is in
-**Testing** with your address added as a **test user** — and Google then expires that
-grant after **7 days**, so you'll re-authorize weekly. (A client in "production" but
-unverified can't grant restricted scopes at all.) Verifying your own client removes the
-weekly re-auth. See [docs/SETUP.md](docs/SETUP.md) for the full click-path.
-</details>
-
-### Build from source
-
-Requires Xcode command-line tools (`xcode-select --install`) on macOS 26 (Apple Silicon).
-
-```bash
-git clone https://github.com/drewling/zero.git
-cd zero/macapp
-./build.sh           # produces zero.app in macapp/build/
-./make-dmg.sh        # optional: packages it as a .dmg
-```
-
-> **Contributor resources:** [Architecture](docs/ARCHITECTURE.md) · [API reference](docs/api/) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
-
----
-
-## Configuration
-
-**One file.** Edit [keep-policy.md](keep-policy.md) directly or via the **Rules**
-section under the **Settings** tab in the panel. Write it in plain English. No syntax to learn.
-
-Everything else is optional and lives under **Settings**: your **categories**, the
-  **daily schedule** (what time, which days, whether macOS notifies you), how far back
-  to label archived mail, and which text model to use for reply drafts (Claude by
-  default, with other supported agent CLIs available).
-
-**Optional voice grounding.** Copy `knowledge/profile.example.md` to
-`knowledge/profile.md` and fill it in. The drafter uses it as background when
-composing replies in your voice. You can also create per-account files at
-`knowledge/<account-slug>.md`. These files are gitignored and stay on your machine.
-
-There is nothing else to configure.
-
----
-
-## Privacy and trust
-
-- **No project-operated backend.** Everything runs on your Mac. Thread text is sent to
-  TypeSafe's Jev service for keep/archive decisions, and reply text is sent to your
-  selected drafting model, Claude by default. See [SECURITY.md](SECURITY.md).
-- **The local server binds to `127.0.0.1` only.** Nothing is reachable from the
-  network.
-- **Nothing is ever deleted.** Archiving is a reversible label change. Mail stays
-  in All Mail, fully searchable in Gmail.
-- **Your data stays on your machine.** `accounts.json` and `knowledge/*.md` are
-  gitignored and never committed.
-- **Gmail access uses your own credentials.** The `gws` CLI authenticates with
-  your Google account via OAuth; zero never handles your password or OAuth
-  tokens directly.
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## License
-
-[GNU AGPL-3.0-or-later](LICENSE). Free and open source: use it for anything,
-including at work, read it, change it, share it. If you distribute a modified
-version, or run one as a network service, your changes are AGPL too and your
-users get the source.
-
-Why AGPL for an email tool, and what it means in practice:
-[COPYRIGHT.md](COPYRIGHT.md).
+The project is [AGPL-3.0-or-later](LICENSE). Start with [CONTRIBUTING.md](CONTRIBUTING.md), then see [setup instructions](docs/SETUP.md), the [architecture](docs/ARCHITECTURE.md), [API reference](docs/api/), [security policy](SECURITY.md), and [open issues](https://github.com/drewling/zero/issues).

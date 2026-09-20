@@ -102,7 +102,7 @@ PATH may not support the recursive flag and will silently fail, leaving the app
 blocked. (On macOS 26 the old right-click → Open trick no longer works for
 ad-hoc-signed apps.)
 
-Full setup (Google + Claude CLIs, first run) is in the [README](https://github.com/drewling/zero#install--first-run).
+Install and setup instructions are in the [README](https://github.com/drewling/zero#install).
 FOOTER
 
 # ── 6. Create and push the tag ───────────────────────────────────────────────
