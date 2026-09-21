@@ -4,26 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Privacy — zero</title>
-<meta name="description" content="How zero handles your email and Google account data. Short version: it runs on your Mac, on your own keys, and sends nothing to us — because there is no us to send it to.">
+<meta name="description" content="How zero handles your email and Google account data. zero runs on your Mac, connects directly to Google and your configured AI services, and does not operate a server that receives your mail.">
 <link rel="canonical" href="https://zero.headless.com/privacy.html">
-<meta name="theme-color" content="#0a0b0d">
+<meta name="theme-color" content="#151313">
 <meta name="color-scheme" content="dark">
 <meta name="robots" content="index, follow">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='2' width='60' height='60' rx='15' fill='%234285F4'/%3E%3Cpath d='M18 34L28.5 44.5L48 19.5' fill='none' stroke='%23ffffff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
   :root {
-    --bg:        oklch(9.5%  0.006 255);
-    --surface:   oklch(14.5% 0.009 255);
-    --hairline:  oklch(100% 0 0 / 0.09);
-    --text:      oklch(95%   0.004 255);
-    --text-2:    oklch(72%   0.009 255);
-    --text-3:    oklch(60%   0.009 255);
-    --accent:    oklch(74%   0.135 250);
-    --green:     oklch(76%   0.16  158);
+    --bg:        #151313;
+    --surface:   #201b1a;
+    --hairline:  rgba(245, 241, 238, 0.14);
+    --text:      #f5f1ee;
+    --text-2:    rgba(245, 241, 238, 0.76);
+    --text-3:    rgba(245, 241, 238, 0.56);
+    --accent:    #ffaaa0;
+    --green:     #ffaaa0;
     --max: 720px;
-    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+    --font: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'Geist Mono', ui-monospace, monospace;
   }
+  @font-face { font-family: 'Geist'; src: url('assets/geist.woff2') format('woff2'); font-style: normal; font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: 'Geist Mono'; src: url('assets/geist-mono.woff2') format('woff2'); font-style: normal; font-weight: 100 900; font-display: swap; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { -webkit-text-size-adjust: 100%; }
   body {
@@ -62,20 +64,20 @@
   </a>
 
   <h1>Privacy</h1>
-  <p class="updated">Last updated 26 June 2026</p>
+  <p class="updated">Last updated 21 September 2026</p>
 
   <div class="tldr">
     <h2>The short version</h2>
     <ul>
-      <li>zero runs entirely on your Mac, signed in with <strong>your own</strong> Google account and AI provider.</li>
-      <li>There is no zero server, no zero account, and no analytics. We never receive your email — there is nowhere for it to go.</li>
-      <li>Your mail is read and sorted on your machine. To judge a thread, its text is sent to TypeSafe's Jev service under your own API key and TypeSafe's terms — the same as if you'd pasted it in yourself.</li>
+      <li>zero runs on your Mac, using <strong>your own</strong> Google account and the services configured in its settings.</li>
+      <li>There is no zero server, no zero account, and no analytics. The project does not operate a server that receives your email.</li>
+      <li>Your mail is read on your Mac. To sort it, relevant thread text is sent to TypeSafe's Jev service using the key configured in <strong>Settings → Sorting engine</strong>, subject to TypeSafe's terms.</li>
       <li>zero only ever asks Google for Gmail access and your basic identity. Nothing else.</li>
-      <li>Nothing is sold, shared for ads, or used to train anything.</li>
+      <li>zero does not sell your data or use it for its own advertising or model training. Each external provider's handling is governed by that provider's terms.</li>
     </ul>
   </div>
 
-  <p>zero is a macOS menu-bar app that reads your Gmail each day, keeps the threads that still need a reply, and archives the rest — reversibly, never deleting. This page explains exactly what it touches and where that data goes. It's short because zero's design is simple: everything happens on your computer.</p>
+  <p>zero is a macOS menu-bar app that checks your connected inboxes on the schedule you choose, keeps conversations that still need action, and archives the rest — reversibly, never deleting. This page explains exactly what it touches and where that data goes. The app runs on your computer, but sorting and optional drafting can involve external services you configure.</p>
 
   <h2>Who runs zero</h2>
   <p>zero is made by Tayo Onabule (Drewl). It is an open-source app you install and run on your own Mac, not a hosted service. When we say "we," we mean the people who write the code — not an operator sitting between you and your mail, because there isn't one.</p>
@@ -89,28 +91,28 @@
   <p>zero does <strong>not</strong> request access to Google Drive, Calendar, Docs, Sheets, Slides, Tasks, or your contacts. If you ever see those on the consent screen, something is wrong — tell us.</p>
 
   <h2>Where your data goes</h2>
-  <p>Your email data travels along exactly two paths, both of which you already use and control:</p>
+  <p>Your email data travels between your Mac and the services needed for the features you use:</p>
   <ul>
     <li><strong>To and from Google</strong> — zero reads your mailbox through Google's Gmail API, directly from your Mac, using your sign-in. This is your own data moving between you and Google.</li>
-    <li><strong>To the AI assistant you choose</strong> — to decide whether a thread still needs you (and to draft a reply when you ask), zero sends the relevant message text to the AI provider configured on your machine. Keep-or-archive decisions go to TypeSafe's Jev under your own API key. Reply drafts, only when you ask for one, go to the agent CLI you have signed into (Claude Code, Codex, or opencode). That text is handled under <em>your</em> agreement with that provider. zero adds nothing on top and keeps no copy.</li>
+    <li><strong>To external AI services</strong> — keep-or-archive decisions always go to TypeSafe's Jev under the API key configured in <strong>Settings → Sorting engine</strong>. If you request a reply draft, zero sends the relevant thread text to the provider configured in <strong>Settings → AI engine</strong>, through the agent CLI you have signed into (Claude Code, Codex, or opencode). Those providers handle the text under their own terms and policies.</li>
   </ul>
-  <p>That's it. The data does not pass through any server we operate, because we don't operate one.</p>
+  <p>These requests are made from your Mac. The data does not pass through any server we operate, because we don't operate one.</p>
 
   <h2>What zero stores, and where</h2>
   <ul>
     <li><strong>Sign-in tokens</strong> live only on your Mac — in your login keychain or in an encrypted file in zero's application-support folder. They never leave your machine except to talk to Google.</li>
     <li><strong>Your settings, labels, and the day's sorting results</strong> are kept in local files on your Mac so the app can show you what it did.</li>
-    <li>We keep <strong>nothing</strong>. There is no database on our side with your information in it.</li>
+    <li>We do not operate a database that stores your information. The project cannot delete data held by Google or by an AI provider.</li>
   </ul>
 
   <h2>Limited Use</h2>
-  <p>zero's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API Services User Data Policy</a>, including its Limited Use requirements. zero uses Gmail data only to provide and improve the in-app features you can see — sorting your inbox and drafting replies — and for no other purpose. We do not transfer this data to others except as needed to provide those features (the AI provider you choose), and we do not use it for advertising or sell it to anyone.</p>
+  <p>zero's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API Services User Data Policy</a>, including its Limited Use requirements. zero uses Gmail data to provide the in-app features you request — sorting your inbox and drafting replies — and does not use it for advertising or sell it. The relevant thread text is transferred to TypeSafe's Jev for sorting and, when you request a draft, to the provider configured in <strong>Settings → AI engine</strong>.</p>
 
   <h2>What we never do</h2>
   <ul>
     <li>We don't sell your data, or share it for advertising.</li>
     <li>We don't read your mail. No human at zero can — we never receive it.</li>
-    <li>We don't use your mail to train AI models. (Whether your chosen AI provider does is governed by their policy — with Claude, on the standard developer terms, your content is not used for training.)</li>
+    <li>We don't use your mail to train AI models. Whether an external provider retains or uses content is governed by that provider's terms and settings.</li>
     <li>We don't track you. No analytics, no telemetry, no usage pings.</li>
   </ul>
 

@@ -6,6 +6,11 @@ COPY og.png /usr/share/nginx/html/og.png
 COPY robots.txt /usr/share/nginx/html/robots.txt
 COPY sitemap.xml /usr/share/nginx/html/sitemap.xml
 COPY llms.txt /usr/share/nginx/html/llms.txt
+COPY assets /usr/share/nginx/html/assets
+# These shared bundles are created alongside the homepage by the landing-page
+# owner. Keep them explicit so a site image cannot silently omit them.
+COPY site.css /usr/share/nginx/html/site.css
+COPY site.js /usr/share/nginx/html/site.js
 
 # Adds /install and /install.sh, which redirect to macapp/install-zero.sh in the
 # repo. Redirecting rather than baking a copy into this image means the branded

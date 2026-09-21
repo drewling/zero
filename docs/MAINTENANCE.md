@@ -124,7 +124,7 @@ new tag, recreate just that service.
 SHA=$(git rev-parse --short HEAD)
 tar czf /tmp/zero-landing.tgz -C landing \
   index.html privacy.html terms.html og.png robots.txt sitemap.xml llms.txt \
-  nginx.conf Dockerfile
+  nginx.conf Dockerfile site.css site.js assets
 gcloud compute scp /tmp/zero-landing.tgz production-server:/tmp/ \
   --zone=us-central1-a --project=drewl-366215 --tunnel-through-iap
 

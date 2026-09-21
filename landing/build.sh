@@ -11,7 +11,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 IMAGE="${1:-zero-landing}"
-PORT="${PORT:-8099}"
+PORT="${PORT:-}"
 
 command -v docker >/dev/null || { echo "ERROR: docker not found." >&2; exit 1; }
 
@@ -27,7 +27,12 @@ echo "ok  built image: $IMAGE"
 # ---------------------------------------------------------------------------
 # Smoke test: run it and check the routes that matter.
 # ---------------------------------------------------------------------------
-CID="$(docker run -d --rm -p "$PORT:80" "$IMAGE")"
+if [ -n "$PORT" ]; then
+  CID="$(docker run -d --rm -p "$PORT:80" "$IMAGE")"
+else
+  CID="$(docker run -d --rm -p '127.0.0.1::80' "$IMAGE")"
+  PORT="$(docker port "$CID" 80/tcp | sed 's/.*://')"
+fi
 cleanup() { docker stop "$CID" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
@@ -52,6 +57,16 @@ check "privacy" \
   "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/privacy.html")" "200"
 check "terms" \
   "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/terms.html")" "200"
+check "site.css" \
+  "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/site.css")" "200"
+check "site.js" \
+  "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/site.js")" "200"
+check "Geist font" \
+  "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/assets/geist.woff2")" "200"
+check "Geist Mono font" \
+  "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/assets/geist-mono.woff2")" "200"
+check "panel image" \
+  "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/assets/zero-panel.png")" "200"
 check "unknown path 404s" \
   "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/nope")" "404"
 

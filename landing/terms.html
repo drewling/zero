@@ -4,26 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Terms — zero</title>
-<meta name="description" content="The terms of use for zero: a free, open-source macOS app that sorts your Gmail on your own machine. Plain English, no surprises.">
+<meta name="description" content="The terms of use for zero: a free, open-source macOS app that sorts your Gmail on your Mac and uses the external services you configure. Plain English, no surprises.">
 <link rel="canonical" href="https://zero.headless.com/terms.html">
-<meta name="theme-color" content="#0a0b0d">
+<meta name="theme-color" content="#151313">
 <meta name="color-scheme" content="dark">
 <meta name="robots" content="index, follow">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='2' width='60' height='60' rx='15' fill='%234285F4'/%3E%3Cpath d='M18 34L28.5 44.5L48 19.5' fill='none' stroke='%23ffffff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
   :root {
-    --bg:        oklch(9.5%  0.006 255);
-    --surface:   oklch(14.5% 0.009 255);
-    --hairline:  oklch(100% 0 0 / 0.09);
-    --text:      oklch(95%   0.004 255);
-    --text-2:    oklch(72%   0.009 255);
-    --text-3:    oklch(60%   0.009 255);
-    --accent:    oklch(74%   0.135 250);
-    --green:     oklch(76%   0.16  158);
+    --bg:        #151313;
+    --surface:   #201b1a;
+    --hairline:  rgba(245, 241, 238, 0.14);
+    --text:      #f5f1ee;
+    --text-2:    rgba(245, 241, 238, 0.76);
+    --text-3:    rgba(245, 241, 238, 0.56);
+    --accent:    #ffaaa0;
+    --green:     #ffaaa0;
     --max: 720px;
-    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+    --font: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'Geist Mono', ui-monospace, monospace;
   }
+  @font-face { font-family: 'Geist'; src: url('assets/geist.woff2') format('woff2'); font-style: normal; font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: 'Geist Mono'; src: url('assets/geist-mono.woff2') format('woff2'); font-style: normal; font-weight: 100 900; font-display: swap; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { -webkit-text-size-adjust: 100%; }
   body {
@@ -57,18 +59,18 @@
   </a>
 
   <h1>Terms of use</h1>
-  <p class="updated">Last updated 26 June 2026</p>
+  <p class="updated">Last updated 21 September 2026</p>
 
   <p>These are the terms for using <strong>zero</strong>, a macOS app made by Tayo Onabule (Drewl). Installing or using zero means you're okay with what's below. We've kept it plain.</p>
 
   <h2>What zero is</h2>
-  <p>zero is a free, open-source desktop app that reads your Gmail on your own Mac, keeps the threads that still need you, and archives the rest reversibly. It runs on your machine using your own Google sign-in and your own AI provider. We don't host it or run it for you — you do.</p>
+  <p>zero is a free, open-source desktop app that reads your Gmail on your Mac, keeps the threads that still need you, and archives the rest reversibly. It uses your Google sign-in, TypeSafe's Jev service for sorting, and any optional drafting provider you configure. We don't host it or run it for you.</p>
 
   <h2>What you need</h2>
   <ul>
     <li>A Mac that meets the requirements on the <a href="/">home page</a>.</li>
     <li>Your own Google account, which you connect through Google's sign-in.</li>
-    <li>Your own access to an AI assistant (Claude by default), which zero uses to judge threads and draft replies. Any cost or limit there is between you and that provider.</li>
+    <li>A TypeSafe Jev API key for sorting, configured in <strong>Settings → Sorting engine</strong>. Optional reply drafts use the provider configured in <strong>Settings → AI engine</strong>. Any cost, retention, or limit is between you and the relevant provider.</li>
   </ul>
   <p>You're responsible for keeping your accounts and your machine secure, and for using zero only with accounts you're allowed to use.</p>
 

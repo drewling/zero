@@ -1,19 +1,19 @@
 # zero
 
-> zero is a quiet macOS 26 menu-bar app that reads every Gmail thread each morning, keeps only the threads that still need you, and archives the rest reversibly. Nothing is ever deleted. It runs on your own Mac using your own Google account and your own Jev API key, so there is no zero server and no account.
+> zero is a quiet macOS 26 menu-bar app that checks your connected Gmail inboxes on the schedule you choose, keeps conversations that still need you, and archives the rest reversibly. Nothing is ever deleted. It runs on your own Mac using your own Google account and your own Jev API key, so there is no zero server and no account.
 
 ## What it does
-- Reads each Gmail thread and judges it the way you would: is anyone waiting on you, is there a live consequence, would you regret missing it today.
-- Keeps only open loops in the Inbox; archives everything else by removing the Inbox label and adding a dated recovery label.
-- Never deletes mail. One Gmail search of the dated recovery label (e.g. `label:"🗄️ Auto-Archived 2026-06-25"`) restores an entire run.
+- Checks connected Gmail inboxes and judges conversations the way you would: is anyone waiting on you, is there a live consequence, would you regret missing it today.
+- Keeps open loops in the Inbox and archives the rest by removing the Inbox label and adding a dated recovery label.
+- Never deletes mail. Archived mail remains in Gmail and can be restored from zero's Undo view or the dated recovery label.
 - Drafts replies in your voice on demand. It never sends on its own.
 - Works across multiple Gmail accounts against one plain-language keep-rule.
 
 ## Facts
 - Release: 1.7.0.
 - Platform: macOS 26 or later on Apple Silicon, menu-bar app. Installed with a one-line command: `curl -fsSL https://zero.headless.com/install | bash`. Not on the App Store; the app is ad-hoc signed and not notarized.
-- Price: zero itself is free and open source (AGPL-3.0-or-later). You pay only your own AI usage, typically a few cents a day. A hosted version is planned at $12/month (or $99/year) for people who would rather not install or manage keys.
-- Privacy: runs on your Mac with your own keys. No zero server, no account, and the project never receives your mail. Thread text is sent to Jev to be judged, and to your drafting model when you request a reply.
+- Price: zero itself is free and open source (AGPL-3.0-or-later). You are responsible for usage, pricing, and limits under the external services you configure.
+- Privacy: runs on your Mac with your own keys and sends relevant thread text directly to external services. There is no zero server or account, and the project does not receive your mail. Sorting sends text to TypeSafe's Jev under the key configured in Settings → Sorting engine. Reply drafting sends text to the provider configured in Settings → AI engine when you request a draft.
 - AI: keep/archive decisions are always made by Jev (TypeSafe AI), a typed-judgment model that returns an answer plus a probability rather than free text. You supply the Jev API key. Reply drafting uses a separate text model via the Claude Code, Codex, or opencode CLI you already have, because Jev does not generate prose.
 
 - Performance (1.7.0): in one measured mailbox that started with about 3,000 Inbox threads, repeat runs settled at 2.3 seconds after the backlog was cleared, using 18 Gmail quota units. The same investigation measured panel open at 538 ms before the change and 48, 57, and 50 ms across three open-close cycles afterwards on one Mac. These are observed results, not a guarantee for every mailbox or machine; first-run time depends on the mail that has not yet been read and Gmail's limits.

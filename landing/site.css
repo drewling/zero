@@ -1,0 +1,446 @@
+@font-face {
+  font-family:Geist;
+  src:url('/assets/geist.woff2') format('woff2');
+  font-weight:100 900;
+  font-style:normal;
+  font-display:swap}
+
+@font-face {
+  font-family:'Geist Mono';
+  src:url('/assets/geist-mono.woff2') format('woff2');
+  font-weight:100 900;
+  font-style:normal;
+  font-display:swap}
+
+:root {
+  --bg:#151313;
+  --surface:#1e1a19;
+  --text:#f5f1ee;
+  --muted:#bfb6b1;
+  --line:#403836;
+  --accent:#ffaaa0;
+  --button:#ffb1a6;
+  --ink:#261513;
+  --max:1200px}
+
+* {
+  box-sizing:border-box}
+html {
+  scroll-behavior:smooth;
+  scroll-padding-top:32px}
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font:400 17px/1.6 Geist,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+a {
+  color:inherit;
+  text-underline-offset:4px}
+a:hover {
+  color:var(--accent)}
+button,a,summary {
+  -webkit-tap-highlight-color:transparent}
+button {
+  font:inherit}
+a:focus-visible,button:focus-visible,summary:focus-visible {
+  outline:3px solid var(--accent);
+  outline-offset:6px}
+.wrap {
+  width:min(var(--max),calc(100% - 96px));
+  margin-inline:auto}
+.skip-link {
+  position:absolute;
+  z-index:5;
+  left:24px;
+  top:16px;
+  background:var(--text);
+  color:var(--ink);
+  padding:12px 20px;
+  transform:translateY(-150%)}
+.skip-link:focus {
+  transform:none}
+.site-header {
+  height:108px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between}
+.brand {
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  font-size:25px;
+  line-height:1;
+  font-weight:650;
+  letter-spacing:-.035em;
+  text-decoration:none}
+.brand svg {
+  width:30px;
+  height:30px}
+.site-header nav {
+  display:flex;
+  gap:34px;
+  font-size:14px;
+  font-weight:550}
+.site-header nav a {
+  text-decoration:none}
+.site-header nav span {
+  margin-left:6px}
+.hero {
+  display:grid;
+  grid-template-columns:.9fr 1.1fr;
+  align-items:center;
+  gap:10px;
+  padding-block:36px 72px;
+  min-height:700px}
+.hero-copy {
+  position:relative;
+  z-index:1;
+  padding-bottom:24px}
+h1,h2,h3,p,figure {
+  margin:0}
+h1,h2,h3 {
+  text-wrap:balance}
+h1 {
+  font-size:clamp(46px,5.35vw,76px);
+  font-weight:560;
+  letter-spacing:-.04em;
+  line-height:1.04}
+h2 {
+  font-size:clamp(32px,3.5vw,46px);
+  font-weight:530;
+  letter-spacing:-.035em;
+  line-height:1.13}
+h3 {
+  font-size:20px;
+  line-height:1.35;
+  letter-spacing:-.02em;
+  font-weight:550}
+p {
+  color:var(--muted)}
+.intro {
+  font-size:19px;
+  line-height:1.6;
+  max-width:39ch;
+  margin-block:26px 30px}
+.button {
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  gap:24px;
+  padding:15px 21px;
+  border-radius:9px;
+  background:var(--button);
+  color:var(--ink);
+  font-size:16px;
+  font-weight:650;
+  line-height:1.5;
+  text-decoration:none;
+  transition:background .18s ease}
+.button:hover {
+  background:#ffcbc3;
+  color:var(--ink)}
+.button svg {
+  width:20px;
+  height:20px;
+  stroke:currentColor;
+  stroke-width:1.75;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round}
+.requirements {
+  font-size:13px;
+  margin-top:15px}
+.cost-note {
+  font-size:14px;
+  margin-top:24px}
+.product-shot {
+  margin-right:-30px}
+.product-shot img {
+  width:100%;
+  height:auto;
+  display:block;
+  border-radius:16px}
+.product-shot figcaption {
+  font-size:12px;
+  text-align:center;
+  color:var(--muted);
+  margin-top:13px}
+.section {
+  padding-block:100px;
+  border-top:1px solid var(--line)}
+.workflow {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:120px}
+.section-intro>p {
+  max-width:40ch;
+  margin-top:24px}
+.workflow-list {
+  display:grid;
+  gap:32px}
+.workflow-list p {
+  margin-top:10px;
+  max-width:48ch}
+.install-section {
+  background:var(--surface);
+  padding-block:94px;
+  scroll-margin-top:0}
+.install-grid {
+  display:grid;
+  grid-template-columns:.85fr 1.15fr;
+  gap:100px}
+.section-intro a,.setup a,.faq-list a {
+  color:var(--accent)}
+.privacy-note {
+  font-size:15px;
+  padding-top:24px;
+  border-top:1px solid var(--line)}
+.setup-steps {
+  list-style:none;
+  counter-reset:setup;
+  padding:0;
+  margin:0}
+.setup-steps>li {
+  counter-increment:setup;
+  position:relative;
+  padding-left:40px;
+  margin-bottom:32px}
+.setup-steps>li:before {
+  content:counter(setup);
+  position:absolute;
+  left:0;
+  top:1px;
+  width:25px;
+  height:25px;
+  border:1px solid #71615b;
+  border-radius:50%;
+  text-align:center;
+  font-size:13px;
+  line-height:23px;
+  color:var(--text)}
+.setup-steps p {
+  margin-top:10px}
+.command {
+  margin-top:16px;
+  background:#110f0f;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:16px;
+  display:flex;
+  align-items:center;
+  gap:12px}
+.command code {
+  font-family:'Geist Mono',monospace;
+  font-size:13px;
+  line-height:1.7;
+  overflow-wrap:anywhere;
+  flex:1;
+  min-width:0}
+.command button {
+  color:var(--text);
+  background:#302825;
+  border:1px solid #655550;
+  border-radius:6px;
+  padding:8px 10px;
+  cursor:pointer;
+  font-size:12px;
+  min-height:40px}
+.command button:hover {
+  background:#483b36}
+.command button:disabled {
+  cursor:wait;
+  opacity:.6}
+.command button[hidden] {
+  display:none}
+.setup-steps .copy-status {
+  font-size:13px;
+  color:var(--accent);
+  min-height:0;
+  margin:0}
+.copy-status:not(:empty) {
+  padding-top:8px}
+.setup-steps .setup-detail {
+  font-size:14px;
+  line-height:1.6}
+strong {
+  color:var(--text);
+  font-weight:550}
+.setup-caveat {
+  margin-left:40px;
+  font-size:14px}
+.setup-caveat summary {
+  min-height:44px;
+  padding-block:8px}
+.setup-caveat p {
+  margin-top:12px}
+.questions {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:120px;
+  border-top:0}
+.faq-list details {
+  border-bottom:1px solid var(--line)}
+.faq-list details:first-child {
+  border-top:1px solid var(--line)}
+summary {
+  cursor:pointer;
+  color:var(--text)}
+.faq-list summary {
+  position:relative;
+  list-style:none;
+  padding:22px 34px 22px 0;
+  font-size:17px;
+  font-weight:500}
+.faq-list summary::-webkit-details-marker {
+  display:none}
+.faq-list summary::after {
+  content:'+';
+  position:absolute;
+  right:4px;
+  top:20px;
+  font-size:22px;
+  color:var(--muted);
+  font-weight:400}
+.faq-list details[open] summary::after {
+  content:'−'}
+.faq-list details>div {
+  padding:0 28px 24px 0}
+.faq-list p {
+  font-size:16px;
+  line-height:1.65}
+.site-footer {
+  border-top:1px solid var(--line);
+  padding-block:36px;
+  display:flex;
+  align-items:center;
+  gap:24px}
+.site-footer .brand {
+  font-size:22px}
+.site-footer p {
+  font-size:13px}
+.site-footer nav {
+  margin-left:auto;
+  display:flex;
+  gap:25px;
+  font-size:13px}
+.site-footer nav a {
+  text-decoration:none}
+
+@media(min-width:1000px) and (prefers-reduced-motion:no-preference) {
+  .product-shot img {
+  animation:arrive .8s cubic-bezier(.16,1,.3,1) both}
+@keyframes arrive {
+  from {
+  clip-path:inset(0 0 6% 0 round 16px);
+  transform:translateY(12px)}
+to {
+  clip-path:inset(0 0 0 0 round 16px);
+  transform:translateY(0)}
+}
+}
+
+@media(min-width:1500px) {
+  .hero {
+  padding-block:54px 92px;
+  min-height:740px}
+}
+
+@media(max-width:1100px) {
+  .wrap {
+  width:calc(100% - 64px)}
+.hero {
+  min-height:620px}
+.product-shot {
+  margin-right:0}
+.workflow,.questions {
+  gap:70px}
+.install-grid {
+  gap:55px}
+.command {
+  flex-wrap:wrap}
+}
+
+@media(max-width:760px) {
+  .wrap {
+  width:calc(100% - 40px)}
+.site-header {
+  height:84px}
+.site-header nav {
+  gap:22px;
+  font-size:13px}
+.brand {
+  font-size:23px}
+.brand svg {
+  width:27px;
+  height:27px}
+.hero {
+  grid-template-columns:1fr;
+  gap:30px;
+  padding-block:38px 58px;
+  min-height:0}
+.hero-copy {
+  padding:0}
+h1 {
+  font-size:clamp(43px,8.7vw,65px)}
+.intro {
+  font-size:18px;
+  max-width:42ch;
+  margin-block:22px 25px}
+.requirements {
+  font-size:12px}
+.cost-note {
+  margin-top:18px}
+.product-shot {
+  width:100%;
+  max-width:570px;
+  margin:auto}
+.product-shot figcaption {
+  font-size:11px}
+.workflow,.questions,.install-grid {
+  grid-template-columns:1fr;
+  gap:36px}
+.section {
+  padding-block:60px}
+.section-intro>p {
+  max-width:50ch;
+  margin-top:20px}
+.workflow-list {
+  gap:27px}
+.workflow-list p {
+  max-width:55ch}
+.install-section {
+  padding-block:60px}
+.setup-steps>li {
+  padding-left:35px}
+.setup-caveat {
+  margin-left:35px}
+.command {
+  padding:14px;
+  gap:10px}
+.command code {
+  font-size:12px;
+  flex-basis:100%}
+.command button {
+  min-height:40px;
+  min-width:64px}
+.site-footer {
+  flex-wrap:wrap;
+  gap:16px;
+  padding-block:30px}
+.site-footer nav {
+  width:100%;
+  margin-left:0;
+  gap:26px}
+.questions h2 {
+  max-width:12ch}
+}
+
+@media(prefers-reduced-motion:reduce) {
+  html {
+  scroll-behavior:auto}
+*,*::before,*::after {
+  animation:none!important;
+  transition:none!important}
+}
+
