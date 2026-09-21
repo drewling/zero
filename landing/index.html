@@ -65,10 +65,9 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
       <div class="section-intro"><h2 id="install-title">Set up zero.</h2><p>You’ll need a Mac with Apple Silicon and macOS 26 or later, a Gmail account, and a <a href="https://console.typesafe.ai/keys">TypeSafe Jev API key</a>.</p><p>Jev sorts your mail. The app is free. Jev usage is charged to your TypeSafe account.</p><p class="privacy-note">Sorting sends email text to Jev. Optional reply drafts send it to your chosen AI provider. <a href="/privacy.html">How your data is used</a></p></div>
       <div class="setup">
         <ol class="setup-steps">
-          <li><h3>Install from Terminal.</h3><p>Open Terminal on your Mac and run:</p>
+          <li><h3>Install from Terminal.</h3><p class="setup-detail">zero isn’t Apple-notarized. The installer may add Homebrew and command-line tools. Google may show an unverified-app warning when you connect Gmail. <a href="/install.sh">Read the script first</a>.</p><p>Open Terminal on your Mac and run:</p>
             <div class="command"><code id="install-command">curl -fsSL https://zero.headless.com/install | bash</code><button type="button" id="copy-command" hidden aria-label="Copy install command">Copy</button></div>
             <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
-            <p class="setup-detail">The installer sets up the app and its command-line tools. <a href="/install.sh">Read the script first</a>.</p>
           </li>
           <li><h3>Connect Gmail and add your key.</h3><p>Open zero from the menu bar and choose <strong>Connect your first inbox</strong>. Add your Jev key in <strong>Settings → Sorting engine</strong>.</p></li>
           <li><h3>Try your first sweep.</h3><p>Choose <strong>Run zero now</strong>. Review what it kept and archived before setting a daily schedule.</p></li>

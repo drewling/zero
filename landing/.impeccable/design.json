@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-21T21:56:00-07:00",
+  "title": "Design System: zero landing",
+  "extensions": {
+    "colorMeta": {
+      "charcoal": {
+        "role": "neutral",
+        "displayName": "Warm Charcoal",
+        "canonical": "#151313",
+        "tonalRamp": ["#151313", "#211d1c", "#302a28", "#463c39", "#62534f", "#806d67", "#a28d86", "#c9b9b2"]
+      },
+      "warm-surface": {
+        "role": "neutral",
+        "displayName": "Lifted Warm Surface",
+        "canonical": "#1e1a19",
+        "tonalRamp": ["#1e1a19", "#292321", "#382f2c", "#4e413d", "#695752", "#866f68", "#a88d84", "#cdb8ae"]
+      },
+      "warm-white": {
+        "role": "neutral",
+        "displayName": "Warm White",
+        "canonical": "#f5f1ee",
+        "tonalRamp": ["#292625", "#403c3a", "#5d5754", "#7b7370", "#9b918d", "#b9aea9", "#d8ceca", "#f5f1ee"]
+      },
+      "coral": {
+        "role": "primary",
+        "displayName": "Soft Coral Action",
+        "canonical": "#ffaaa0",
+        "tonalRamp": ["#3b1714", "#65251f", "#913830", "#b94e44", "#d96b60", "#ed887d", "#f9a095", "#ffaaa0"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Utility Display", "purpose": "Hero promise and primary section headlines." },
+      "body": { "displayName": "Clear Body", "purpose": "Plain explanations, requirements, and trust details." },
+      "mono": { "displayName": "Operational Mono", "purpose": "Install commands only." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "button-color", "value": "0.18s ease", "purpose": "Quiet CTA hover feedback." },
+      { "name": "product-arrival", "value": "arrive .8s cubic-bezier(.16,1,.3,1) both", "purpose": "Desktop product image reveal from a 12px vertical offset with a 6% bottom clip-path inset; disabled for reduced motion." }
+    ],
+    "breakpoints": [
+      { "name": "wide", "value": "1500px", "purpose": "Give the hero more vertical room." },
+      { "name": "compact", "value": "1100px", "purpose": "Reduce gutters and inter-column gaps." },
+      { "name": "narrow", "value": "760px", "purpose": "Collapse editorial columns into a single flow." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Install Button",
+      "kind": "button",
+      "refersTo": "primary-button",
+      "description": "The single dominant action for installing zero.",
+      "html": "<a class=\"ds-primary-button\" href=\"#install\">Install zero for Mac <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 4v16m-6-6 6 6 6-6\"/></svg></a>",
+      "css": ".ds-primary-button { display:inline-flex; align-items:center; justify-content:center; gap:24px; padding:15px 21px; border-radius:9px; background:#ffb1a6; color:#261513; font:650 16px/1.5 Geist,Arial,sans-serif; text-decoration:none; transition:background .18s ease; } .ds-primary-button:hover { background:#ffcbc3; color:#261513; } .ds-primary-button:focus-visible { outline:3px solid #ffaaa0; outline-offset:6px; } .ds-primary-button svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }"
+    },
+    {
+      "name": "Product Shot",
+      "kind": "card",
+      "refersTo": "product-shot",
+      "description": "A bounded view of the real app, with a factual caption.",
+      "html": "<figure class=\"ds-product-shot\"><div class=\"ds-product-frame\">Product image</div><figcaption>The zero app. Names and subjects are fictional.</figcaption></figure>",
+      "css": ".ds-product-shot { margin:0; color:#bfb6b1; font:400 12px/1.6 Geist,Arial,sans-serif; text-align:center; } .ds-product-frame { min-height:180px; display:grid; place-items:center; border-radius:16px; background:#1e1a19; color:#f5f1ee; } .ds-product-shot figcaption { margin-top:13px; }"
+    },
+    {
+      "name": "Install Command",
+      "kind": "custom",
+      "refersTo": "command-block",
+      "description": "A readable, copyable command surface inside setup.",
+      "html": "<div class=\"ds-command\"><code>curl -fsSL https://zero.headless.com/install | bash</code><button type=\"button\">Copy</button></div>",
+      "css": ".ds-command { display:flex; align-items:center; gap:12px; padding:16px; border:1px solid #403836; border-radius:10px; background:#110f0f; color:#f5f1ee; } .ds-command code { flex:1; min-width:0; overflow-wrap:anywhere; font:400 13px/1.7 'Geist Mono',monospace; } .ds-command button { min-height:40px; padding:8px 10px; border:1px solid #655550; border-radius:6px; background:#302825; color:#f5f1ee; font:400 12px/1.4 Geist,Arial,sans-serif; } .ds-command button:hover { background:#483b36; } .ds-command button:focus-visible { outline:3px solid #ffaaa0; outline-offset:6px; }"
+    },
+    {
+      "name": "FAQ Disclosure",
+      "kind": "custom",
+      "refersTo": "faq-list",
+      "description": "Native disclosure rows for short trust and capability answers.",
+      "html": "<details class=\"ds-faq\"><summary>A few things to know.</summary><div><p>Archived mail stays searchable in Gmail.</p></div></details>",
+      "css": ".ds-faq { border-top:1px solid #403836; border-bottom:1px solid #403836; color:#f5f1ee; } .ds-faq summary { cursor:pointer; padding:22px 34px 22px 0; list-style:none; font:500 17px/1.4 Geist,Arial,sans-serif; } .ds-faq summary::-webkit-details-marker { display:none; } .ds-faq div { padding:0 28px 24px 0; color:#bfb6b1; } .ds-faq:focus-within { outline:3px solid #ffaaa0; outline-offset:6px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A useful Mac utility, shown plainly.",
+    "overview": "The landing page is a restrained product showcase: warm charcoal, warm-white Geist, a quiet coral action color, and one large bounded view of the real app. It explains the promise before the mechanics, then makes setup, privacy, reversibility, and limitations easy to find. The result should feel crafted and calm in the spirit of Raycast, without imitating Raycast's identity or inventing an interactive inbox.",
+    "keyCharacteristics": [
+      "Plainspoken product clarity over spectacle.",
+      "Warm dark surfaces with one soft coral action voice.",
+      "Real product evidence, fictional demo content clearly captioned.",
+      "Generous two-column breathing room that collapses cleanly on small screens.",
+      "Trust information is part of the interface, not buried in decoration."
+    ],
+    "rules": [
+      { "name": "The Plain Utility Rule", "body": "Show one useful Mac utility, one clear installation path, and the real product image. Do not make the page compete with the app.", "section": "overview" },
+      { "name": "The Single Accent Rule", "body": "Coral carries action and attention; do not introduce a second promotional accent.", "section": "colors" },
+      { "name": "The Useful Scale Rule", "body": "Typography should make the next decision obvious: understand, inspect, install, or review.", "section": "typography" },
+      { "name": "The Evidence-Adjacent Action Rule", "body": "Keep requirements and cost directly below the install action so the decision is informed before the click.", "section": "layout" },
+      { "name": "The Quiet Container Rule", "body": "Round containers only when they group a meaningful object or action; do not turn every text block into a card.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do use self-hosted Geist and Geist Mono from landing/assets.",
+      "Do preserve the warm charcoal, warm red-coral, and warm-white relationship.",
+      "Do show the actual product image and label fictional demo content.",
+      "Do state macOS 26+, Apple Silicon, Gmail, Jev key, provider billing, privacy, and reversibility plainly.",
+      "Do keep interactions native, sparse, keyboard-visible, and understandable."
+    ],
+    "donts": [
+      "Don't clone Raycast, add neon gradients, or turn the page into a generic SaaS dashboard.",
+      "Don't invent inbox interactions, testimonials, metrics, or product capabilities.",
+      "Don't use Persuade as a universal visual rule; it belongs to a surface brief when explicitly requested.",
+      "Don't hide risk: zero can be wrong, sends thread text to configured services, and is ad-hoc signed.",
+      "Don't replace the simple install path with competing offers or distracting secondary CTAs."
+    ]
+  }
+}
