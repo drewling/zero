@@ -25,6 +25,18 @@ The visual direction follows the user's charcoal/warm-red and Raycast-restraint 
 
 ## Deployment handoff
 
+### Additional end-user acceptance on the release image
+
+The final image was run through its real nginx interface at `http://127.0.0.1:8101/`, without the Python preview server or test fixtures. A browser visitor followed the install action, observed the TypeSafe billing and external-email-processing disclosures, read the warning before the command, and clicked Copy. The real UI announced “Copied. Paste it into Terminal when you’re ready.” Clipboard contents were not independently pasted during this run.
+
+The visitor followed the script-review link through nginx to `https://github.com/drewling/zero/blob/master/macapp/install-zero.sh`, opened both rendered legal pages, and opened the recovery FAQ to find the Undo instructions. No installer execution or mailbox authorization was attempted because this is website acceptance, not an app installation request.
+
+An independent worker launched a separate disposable instance, checked all asset and redirect boundaries, and confirmed served homepage bytes exactly match `git show 14e9e2b:landing/index.html`. The candidate contains no hosted offer and places the disclosure before the command.
+
+The improvement is observable in this acceptance path: the visitor can find the actual requirements and costs, inspect the real script, copy the installation command, and find recovery guidance without navigating staged demos or a competing hosted offer. Copy volume fell by about 64%. This is evidence of a simpler working path, not a claim of measured conversion lift or a human usability study.
+
+A fresh public fetch still returned the old title, “zero — an inbox you can finally ignore,” and the `$12` offer, without the new headline. This confirms that source publication did not deploy the website. Live delivery remains blocked as described below.
+
 **Not deployed.** Production remains unchanged. GCP authentication for the existing account expired and requires interactive `gcloud auth login`. This was checked again after visual verification. Native Dokploy schema discovery returned no callable tools in this session, so no alternate production mutation was attempted.
 
 The local Docker image `zero-landing:14e9e2b` is smoke-tested. A complete deployment archive is prepared in the coordinator's scratch directory as `zero-landing-14e9e2b.tgz`. Build again on the server for its architecture rather than transferring the Mac-built image.
