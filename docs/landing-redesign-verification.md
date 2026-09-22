@@ -2,6 +2,18 @@
 
 Date: 21 September 2026. Site artifact: `14e9e2b`.
 
+## Production delivery: 22 September 2026
+
+**Deployed successfully at 05:00 UTC.** Authentication was renewed and `zero-landing:14e9e2b` was built on `production-server`. All 11 nginx smoke routes passed on the server, and the redirected installer parsed without execution. The production container is healthy. Both the generated compose and Dokploy's stored compose now reference the new image.
+
+Only the Zero container was recreated: before/after container IDs and images showed no changes to unrelated services. The previous image `zero-landing:0f97354` remains available. Backup directory: `/root/zero-landing-backup-20260922T050008Z`, containing the previous generated `docker-compose.yml`, `restore-compose.sql` for the stored Dokploy compose, and before/after container inventory.
+
+The live browser at `https://zero.headless.com/` confirmed the new headline, loaded app artwork, install action, visible warning before the command, and successful Copy feedback. It then returned to `http://127.0.0.1:8099/` and left the requested local preview visible. No installer was executed.
+
+Independent public HTTP verification passed: the homepage returned 200 and exactly matched the committed 9,115-byte HTML, with the new headline and no `$12` offer. CSS, JS, both fonts, artwork, privacy and terms returned 200. Both installer routes returned the expected 302 destinations. The followed installer matched the repository byte-for-byte and passed `bash -n`.
+
+For rollback, restore that backup's generated compose to `/etc/dokploy/compose/zero-zerolanding-m7cxtx/code/docker-compose.yml`, apply `restore-compose.sql` to the Dokploy database, and run `docker compose up -d --no-deps zero-landing` in the compose directory. Verify the live page afterward. The blocked-deployment notes below describe the earlier session, not the current state.
+
 ## Scope and decisions
 
 Replaced the old landing with one product explanation, approved anonymized app image, one installation path, setup requirements and native FAQs. Removed the hosted offer, fabricated inbox interactions and unsupported cost claims. Kept the existing static nginx deployment. Current product facts are grounded in `README.md`, `macapp/install-zero.sh` and the app's settings. `PRODUCT.md` contains older aspirations and was not treated as release documentation.
@@ -23,7 +35,7 @@ The visual direction follows the user's charcoal/warm-red and Raycast-restraint 
 | Design finish | Final reviewer disposition **PASS**. Installation trust finding **RESOLVED**, no remaining material issues in the requested verification. Detector's only findings were retained Geist/Geist Mono font-choice warnings. |
 | Source delivery | Implementation and follow-up committed and pushed to `master`: `40e86c3`, `14e9e2b`. |
 
-## Deployment handoff
+## Earlier verification and deployment handoff (21 September)
 
 ### Additional end-user acceptance on the release image
 
@@ -37,7 +49,7 @@ The improvement is observable in this acceptance path: the visitor can find the 
 
 A fresh public fetch still returned the old title, “zero — an inbox you can finally ignore,” and the `$12` offer, without the new headline. This confirms that source publication did not deploy the website. Live delivery remains blocked as described below.
 
-**Not deployed.** Production remains unchanged. GCP authentication for the existing account expired and requires interactive `gcloud auth login`. This was checked again after visual verification. Native Dokploy schema discovery returned no callable tools in this session, so no alternate production mutation was attempted.
+**At this checkpoint, not deployed.** Production was unchanged. GCP authentication for the existing account had expired and required interactive `gcloud auth login`. This was checked again after visual verification. Native Dokploy schema discovery returned no callable tools in this session, so no alternate production mutation was attempted. This blocker was resolved on 22 September, as recorded above.
 
 The local Docker image `zero-landing:14e9e2b` is smoke-tested. A complete deployment archive is prepared in the coordinator's scratch directory as `zero-landing-14e9e2b.tgz`. Build again on the server for its architecture rather than transferring the Mac-built image.
 
