@@ -82,7 +82,7 @@ Choose Run zero now. Look at what stayed and what was archived. When you're happ
 ## Questions
 
 Q: Does my email stay on my Mac?
-A: No. zero runs on your Mac, but it sends relevant thread text to TypeSafe's Jev to decide what to keep. If you ask for a reply draft, that text also goes to the AI provider you chose. Both handle it under their own terms. The zero project doesn't run a server that receives your email. Your Google sign-in tokens stay on your Mac. The privacy policy lists what else zero stores there.
+A: No. zero runs on your Mac, but it sends relevant thread text to TypeSafe's Jev to decide what to keep. If you ask for a reply draft, that text also goes to the AI provider you chose. Both handle it under their own terms. The zero project doesn't run a server that receives your email. Your Google sign-in tokens are stored on your Mac. The privacy policy lists what else zero stores there.
 
 Q: What if it archives something important?
 A: It can happen. The message stays in All Mail with a dated recovery label. Open Undo in zero and restore that day, or find the message in Gmail yourself.

@@ -29,10 +29,11 @@ This is a product-install funnel with one rung: visitor, then install, then firs
 
 ### FAQ "Does my email stay on my Mac?" (scrutinized per main-lead)
 
-Final: *"No. zero runs on your Mac, but it sends relevant thread text to TypeSafe's Jev to decide what to keep. If you ask for a reply draft, that text also goes to the AI provider you chose. Both handle it under their own terms. The zero project doesn't run a server that receives your email. Your Google sign-in tokens stay on your Mac. The privacy policy lists what else zero stores there."*
+Final: *"No. zero runs on your Mac, but it sends relevant thread text to TypeSafe's Jev to decide what to keep. If you ask for a reply draft, that text also goes to the AI provider you chose. Both handle it under their own terms. The zero project doesn't run a server that receives your email. Your Google sign-in tokens are stored on your Mac. The privacy policy lists what else zero stores there."*
 
 - The answer starts with **"No"**. Draft 1's "Not all of it" softened a real transfer, so it was replaced.
-- Token clause, retained and explicit: "Your Google sign-in tokens stay on your Mac." Primary citation: privacy.html:103. Corroborated by lib/keeper_server.py:47-49 and macapp/Sources/main.swift:729-732 (gws uses per-account keyring credentials, never a global token). main-lead supplied these at 04:59Z, and I re-read them myself.
+- Token clause, retained and explicit: "Your Google sign-in tokens are stored on your Mac." Primary citation: privacy.html:103. Corroborated by lib/keeper_server.py:47-49 and macapp/Sources/main.swift:729-732 (gws uses per-account keyring credentials, never a global token). main-lead supplied these at 04:59Z, and I re-read them myself.
+- **Correction (05:49Z, found by review.qa):** the clause previously said "stay on your Mac". That implied the tokens never leave the machine, but privacy.html:103 says they "never leave your machine except to talk to Google." "Are stored on your Mac" states where they live without implying they never travel. The builder is making the same change to the landing FAQ.
 - "No server" is scoped to "a server that receives your email" (README wording). It is not a broad privacy promise.
 
 ## 3. Claims ledger
@@ -66,7 +67,7 @@ Authority order: **app source > README > install-zero.sh > privacy.html**. PRODU
 | 23 | Run zero now | PanelView.swift (footer button); README First run 4 |
 | 24 | Settings → Daily routine | PanelView.swift:1396; README matches since cbb4073 (said "Daily schedule" when audited) |
 | 25 | Multiple accounts together in Open loops | README; screenshot shows 2 accounts |
-| 26 | Google sign-in tokens stay on your Mac | privacy.html:103 (primary); lib/keeper_server.py:47-49; macapp/Sources/main.swift:729-732 |
+| 26 | Google sign-in tokens are stored on your Mac (storage location only; they are sent to Google for API calls) | privacy.html:103 (primary: "live only on your Mac … never leave your machine except to talk to Google"); lib/keeper_server.py:47-49; macapp/Sources/main.swift:729-732. Corrected 05:49Z from "stay on your Mac" |
 | 27 | "When zero sorts a conversation…" (scoped; no every-thread claim) | README "checks your connected Gmail inboxes"; main-lead 04:41Z/05:01Z |
 | 28 | "The recovery label is dated for the day" | lib/inbox_zero.py:225-232 (`f"{user_label} {today}"`, so same-day runs share one label) |
 
@@ -81,6 +82,7 @@ Authority order: **app source > README > install-zero.sh > privacy.html**. PRODU
 | Cleanse fact check | Diffed line by line. Only phrasing changed: no facts added or removed, and the "can sort wrongly" warning kept | this section |
 | Post-cleanse claim fixes (main-lead 04:58-05:00Z) | Server wording scoped. Token clause re-added with citations. "Daily routine" kept (app source) | `copy-cleansed.md` |
 | Re-lint final | **5/5 CLEAN** | `lint-final.txt` |
+| Post-QA claim fix (05:49Z) | Token clause "stay on" → "are stored on", per privacy.html:103's Google exception. One-phrase fact fix, so the copy process was not rerun (per main-lead) | `copy-cleansed.md`, ledger row 26 |
 
 ## 5. Long mobile yellow: tonal break (builder)
 
