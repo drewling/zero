@@ -8,6 +8,7 @@ created: 2026-09-28
 
 ## Top of mind
 
+- 2026-09-28 14:41Z scope correction: this turn requested **mission creation**, not end-to-end shipping. Direction seat can finish its planning prototype, but do not dispatch build/QA/release or modify production without a separate go-ahead. A message to the design seat failed because the OpenRig daemon was slow/unresponsive; this committed contract is the durable boundary.
 - 2026-09-28 13:38Z: User requested a **new mission** for animations throughout the existing zero.headless.com page plus HTML Canvas effects. Mission `OPR.99.0.2` scopes direction → implementation → independent QA → release. No production/code changes yet.
 - Direction boundary: retain the approved Departure board visual world and product truth. Existing hero tiles already cycle/settle once and are static under reduced motion. The new focal Canvas effect must have a product-specific job and several supporting page beats without becoming animation on every node.
 - Open design decision: exact Canvas metaphor, intensity and optional pointer interaction. Design lead will storyboard desktop, mobile and reduced-motion states for mission-owner approval before builder starts.
