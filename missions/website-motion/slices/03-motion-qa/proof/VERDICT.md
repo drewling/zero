@@ -52,6 +52,16 @@
 - **Routes**: `/`, `/site.js`, `/site.css`, `/privacy.html`, `/robots.txt`, `/sitemap.xml`, `/llms.txt`, `/og.png` all 200 on the local static server. `install.sh` syntax valid (`bash -n`).
 - **Docker build/smoke — BLOCKED, not waived.** The Docker daemon is unavailable in this environment, exactly as noted in slice 02's own `PROOF.md` and flagged by main-lead's QA-gate reminder. This QA compensated with everything checkable without a running container: source syntax, `nginx.conf`/`Dockerfile` diff-against-the-already-QA'd baseline (byte-identical, confirming infra was untouched), and all static-file routes reachable via the fallback server. The one thing this QA genuinely cannot verify locally is the live nginx `/install.sh` rewrite route and a true containerized boot. Per main-lead's note, Docker smoke may run as an isolated production-server preflight after this source-level QA passes, with no deploy until that resolves.
 
+### 5. Mission-level guardrails (self-validation addendum) — **PASS**
+
+Re-checked directly against `mission.yaml`'s explicit boundaries and the approved-direction constraints in `NOTES.md` (2026-09-28 20:26Z: "no pointer-reactive effect"):
+
+- **No pointer-reactive effect**: grep for `mousemove`/`pointermove`/`mouseenter`/`pointerenter` listeners in `site.js` — zero matches. The Canvas effects respond only to scroll-into-view and explicit button clicks, never cursor position.
+- **No autoplay sound**: zero `<audio>` elements, zero `AudioContext`/`.play()` usage anywhere in the shipped JS.
+- **No scroll-jacking**: zero `preventDefault` calls on wheel/scroll listeners; native scroll behavior is fully preserved.
+- **No fake inbox activity**: the sort/rail canvases only animate the same static example rows already present in the approved copy — no synthetic new-message arrival or live-looking activity was added.
+- **Pre-existing hero flap-board animation** (the departure-board-style headline tiles, explicitly called out in mission NOTES.md as needing to remain settle-under-1s and reduced-motion-suppressed): `site.css` diff against baseline `57deff2` for this rule block is byte-identical — confirmed via direct diff, not inference, that this mission did not touch or regress it.
+
 ## Overall verdict: **PASS, with one named residue**
 
 All storyboard-scoped motion, accessibility, interaction, fallback, and performance requirements in SPEC.md items 1-3 and the testable parts of item 4 are met, with direct evidence (not inference) for every claim, including live re-measurement of both gates the brief itself flagged as unproven (mobile narrow-viewport visual states, and rAF performance under throttling). Both are now closed with passing evidence.
