@@ -23,19 +23,24 @@
   z-index: 1;
 }
 
+/* The verdict word is always the real, readable word. Before its ticket arrives it is
+   dimmed (still above 4.5:1 on the board); on arrival it flaps once into full colour. */
 .has-track .status-word {
-  position: relative;
+  display: inline-block;
+  transform-origin: 50% 60%;
+  transition: color .18s var(--ease-out);
 }
 
-.has-track .status-word[data-scramble] {
-  color: transparent;
+.has-track .status[data-pending] .status-word {
+  color: var(--pending-word, #b9b2a6);
 }
 
-.has-track .status-word[data-scramble]::after {
-  position: absolute;
-  inset: 0;
-  color: var(--glyph-dim);
-  content: attr(data-scramble);
+.has-track .status-word.flap {
+  animation: verdict-flap .22s steps(2, jump-none);
+}
+
+@keyframes verdict-flap {
+  from { transform: scaleY(.2); }
 }
 
 .has-track .status[data-pending] i {
@@ -108,13 +113,7 @@
   outline-color: var(--ink);
 }
 
-.rail-wrap.instant .rail-diagram {
-  animation: rail-swap .22s ease-out;
-}
-
-@keyframes rail-swap {
-  from { opacity: .35; }
-}
+/* Reduced motion: the rail swaps state instantly. No transition of any kind. */
 
 /* ---------- Install steps board like departures ---------- */
 .will-board .install-steps > li::before {

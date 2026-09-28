@@ -12,7 +12,7 @@ A concrete, runnable motion and Canvas direction ("The board sorts") for the liv
    - Runnable prototype: `proof/prototype/`. Serve that directory statically, for example `python3 -m http.server` from inside it. `assets` is a relative symlink to `landing/assets` so the prototype uses the real fonts and app image without duplicating 1.5 MB.
    - Desktop frames (Aside, 1440×900): `storyboard/d-sort-0/700/1300/settled.jpg`, `d-rail-0/450/900.jpg`, `d-restore-450.jpg`, `d-restore-live.jpg`, `d-hero-flap-mid.jpg`, `d-hero.jpg`, `d-install-boarding.jpg`, `d-install-settled.jpg`.
    - Reduced motion / no Canvas: `d-rm-sort.jpg`, `d-rm-undo.jpg`, `d-nocanvas-sort.jpg`, `d-nocanvas-undo.jpg`.
-   - Mobile (390 px iframe, not device emulation): `m-hero.jpg`, `m-sort-700.jpg`, `m-sort-settled.jpg`, `m-rail-450.jpg`.
+   - Mobile (390 px iframe, not device emulation): `m-hero.jpg`, `m-sort-settled.jpg`, `m-rail-450.jpg`. (`m-sort-700.jpg` was removed after review because it showed the retired scramble. The recapture hung in Aside.)
 2. **Written motion brief** covering purpose, triggers, timing, reduced-motion and static states, failure fallbacks and the measured baseline: `proof/MOTION-BRIEF.md` §§1 to 7. Owner approval: **pending**, with the questions listed in §9.
 
 ## Residue / caveats

@@ -20,11 +20,11 @@ Everything else stays still. No particles, no ambient loops, no scroll-jacking, 
 |---|---|
 | Job | Turn the static "Examples from zero's default rules" table into a witnessed decision: each rule is routed, and you see which ones stay. |
 | Trigger | Plays **once** when the board is 45% visible (IntersectionObserver). "Run the sort again" replays it. Hover does nothing (pointer effects rejected, §8). |
-| Choreography | Per row, staggered 170 ms: a ticket travels the row divider (520 ms, ease-out) to the verdict dot. The verdict word scrambles through 4 split-flap ticks (40 ms each), then lands. **Stays** rows keep a lit yellow track and a short bloom. **Archived** tickets drop 14 px and fade over 620 ms, and their labels dim. Total 2.16 s, then the board settles and the canvas stops drawing. |
-| Truth | The real verdict text never leaves the DOM. The scramble is a `data-scramble` overlay on `.status-word`, so screen readers and copy/paste get "Stays" or "Archived". The canvas is `aria-hidden`. The existing footnote ("This isn't a live inbox… The AI can sort a message wrongly") stays unchanged directly under the effect. |
+| Choreography | Per row, staggered 170 ms: a ticket travels the row divider (520 ms, ease-out) to the verdict dot. The verdict word is **always the real word and always legible**. Before its ticket arrives it shows dimmed (#b9b2a6, 8.7:1 on the board), and on arrival it flaps once (220 ms, two steps) to full colour. There is no scramble and no placeholder dots (corrected after main-lead's review in `be48c02`). **Stays** rows keep a lit yellow track and a short bloom. **Archived** tickets drop 14 px and fade over 620 ms, and their labels dim. Total 2.16 s, then the board settles and the canvas stops drawing. |
+| Truth | The real verdict text never leaves the DOM and is never visually replaced. Only its colour and one flap change, so readers, screen readers and copy/paste always get "Stays" or "Archived" (verified in the section 11 T1 check). The canvas is `aria-hidden`. The existing footnote ("This isn't a live inbox… The AI can sort a message wrongly") stays unchanged directly under the effect. |
 | Why Canvas and not CSS | The ticket has to travel between two measured DOM points (row start to verdict dot) on seven rows whose geometry changes with wrapping at every width. It carries a gradient trail and ends in either a bloom or a drop. In CSS that means seven extra positioned elements per row state, keyframes recomputed from JS on resize, and radial-gradient layers that repaint the table. One canvas behind the table draws all of it in 0.07 ms per frame (measured, §6), leaves the table DOM untouched, and can be seeked deterministically for review. |
 
-Frames (desktop 1440, Aside capture): `storyboard/d-sort-0.jpg` (unsorted: dots dim, verdicts pending) → `d-sort-700.jpg` (row 1 decided, row 2 scrambling "NYVRK", rows 3 to 5 tickets in flight) → `d-sort-1300.jpg` (Stays lit, archived tickets dropping, newsletter scrambling) → `d-sort-settled.jpg`.
+Frames (desktop 1440, Aside capture): `storyboard/d-sort-0.jpg` (unsorted: dots dim, verdicts pending) → `d-sort-700.jpg` (rows 1 and 2 decided in yellow, rows 3 to 7 still showing their real word dimmed, tickets in flight) → `d-sort-1300.jpg` (all three Stays lit, archived tickets dropping, every word legible) → `d-sort-settled.jpg`. These four were recaptured after the review.
 
 ## 3. Second Canvas: the recovery rails ("Nothing is deleted")
 
@@ -51,7 +51,7 @@ Explicitly **not** animated: the headings, the body copy, the app screenshot, th
 
 ## 5. Reduced motion and static fallback
 
-- **`prefers-reduced-motion: reduce`** (simulate with `?rm=1`): no sort track, so the table renders exactly as production with its final verdicts (`d-rm-sort.jpg`). There's no boarding either, so install steps are visible immediately. The hero is already static in production. The rails show the settled archive state, and the button still works but swaps the state instantly with a 220 ms opacity settle, keeping the explanation without the travel (`d-rm-undo.jpg`).
+- **`prefers-reduced-motion: reduce`** (simulate with `?rm=1`): no sort track, so the table renders exactly as production with its final verdicts (`d-rm-sort.jpg`). There's no boarding either, so install steps are visible immediately. The hero is already static in production. The rails show the settled archive state, and the button still works but swaps the state instantly with no transition (corrected after review; the section 11 T5 check found 0 running animations after the click), keeping the explanation without the travel (`d-rm-undo.jpg`).
 - **No Canvas or no JS** (simulate with `?nocanvas=1`): the canvases and rail block stay `hidden`, and the page is byte-for-byte the production reading order (`d-nocanvas-sort.jpg`, `d-nocanvas-undo.jpg`). The "Run the sort again" button is also `hidden` until the track initialises, so there are no dead controls.
 - All content is present in HTML before any script runs. Motion only adds on top.
 
@@ -69,15 +69,15 @@ Baseline: production https://zero.headless.com/, measured with Aside at 1440×90
 | LCP | not reported by Aside's buffered observer (null) |
 | Running `document.getAnimations()` after load | 0 |
 
-Prototype cost (Aside, local server, same Chrome, task `117558q29o`):
+Prototype cost (Aside, local server, same Chrome, first pass `117558q29o`, re-measured after the review changes as `8376244ni7`):
 
 | Metric | Measured | Budget for the build |
 |---|---|---|
-| Added bytes | +5.8 KB gzip JS (including prototype-only instruments), +1.6 KB gzip CSS; no new images, fonts or libraries | ≤ 10 KB gzip total |
-| Sort draw, synchronous bench (200 seeked frames) | **0.067 ms/frame** | ≤ 2 ms/frame |
-| Rail draw, same bench | **0.019 ms/frame** | ≤ 2 ms/frame |
-| Live playback, script time per rAF callback | mean 2.1 ms, max 19.9 ms (first frame, includes fonts and measure) | mean ≤ 4 ms |
-| Frames drawn when idle or settled | 0 (rAF only while playing) | 0 |
+| Added bytes | +5.7 KB gzip JS (5,720 B including prototype-only instruments; the scramble was removed), +1.7 KB gzip CSS (1,677 B); no new images, fonts or libraries | ≤ 10 KB gzip total |
+| Sort draw, synchronous bench | **0.067 ms/frame** (200 frames, first pass). **0.031 ms/frame** (300 frames, after review) | ≤ 2 ms/frame |
+| Rail draw, same bench | **0.019 ms/frame** (both passes) | ≤ 2 ms/frame |
+| Live playback, script time per rAF callback | First pass: mean 2.1 ms, max 19.9 ms. After review: 41 frames, mean 3.3 ms, max 66.9 ms, in a heavily throttled session (mean rAF gap 44 ms, max 167 ms). This figure mixes the first-frame measure and the font load with automation throttling. **It is not proven within budget on the max.** The build must re-measure it unthrottled, and the one-shot `.flap` reflow restart is the first suspect if the max stays high | mean ≤ 4 ms, max ≤ 16 ms |
+| Frames drawn when idle or settled | 0 (rAF only while playing). Re-checked after review: `stats().frames` was 255 before and after a 2 s idle wait | 0 |
 | CLS from motion | not measured on the prototype. The sort canvas is absolutely positioned inside the existing board, so it can't shift layout. The rail block and the replay button are unhidden by the deferred script, below the fold. The build should reserve their space in CSS so a slow script can't shift content | 0 |
 
 Caveat, stated plainly: Aside's Chrome was delivering only about 30 fps even with **nothing animating** (idle rAF on the prototype: mean 33 ms). A same-session idle sample on production returned no frames at all, so that session was throttled. Live frame pacing captured through Aside therefore reflects the automation browser, not the animation. The synchronous per-draw bench is the reliable number. The build slice should re-measure pacing on a real, unthrottled browser and a mid-tier Mac before release.
@@ -113,6 +113,30 @@ Also rejected: a pointer-reactive "departure board" background (ambient and dist
 ## 10. Method and limitations
 
 - All captures and measurements were made by design-lead through **Aside** against the prototype on `127.0.0.1:8741` and against production. No Playwright.
-- **Mobile is iframe width, not device emulation.** The 390 px frames come from a 390×844 iframe inside desktop Chrome (the `mobile.html` harness), with no mobile UA, touch or device DPR. The harness reported `scrollWidth 390 = clientWidth 390` (no horizontal overflow) for the sort, rail, install and reduced-motion states. Captured mobile frames: `m-hero.jpg`, `m-sort-700.jpg` (mid-sort: tickets in flight, "NYVRK" scramble, the verdict column wraps its header but not its rows), `m-sort-settled.jpg` and `m-rail-450.jpg` (mid-archive, with the rightmost tag inside the frame). Aside's screenshot command timed out repeatedly on the mobile install and reduced-motion states, so those two are **not** proven visually, only width-checked. The build slice's QA owns that proof on a real narrow viewport. The prototype's `?at=` jump had also run before the rail was unhidden. It was fixed before `m-rail-450.jpg` was recaptured. At the 760 px breakpoint the geometry is re-measured per row, and the same code path runs.
+- **Mobile is iframe width, not device emulation.** The 390 px frames come from a 390×844 iframe inside desktop Chrome (the `mobile.html` harness), with no mobile UA, touch or device DPR. The harness reported `scrollWidth 390 = clientWidth 390` (no horizontal overflow) for the sort, rail, install and reduced-motion states. Captured mobile frames: `m-hero.jpg`, `m-sort-settled.jpg` and `m-rail-450.jpg` (mid-archive, with the rightmost tag inside the frame). Aside's screenshot command timed out repeatedly on the mobile install and reduced-motion states, so those two are **not** proven visually, only width-checked. The mobile mid-sort frame showed the old scramble. It was removed after the review, and the recapture hung in Aside again, so mobile mid-sort is also **not** proven visually for the corrected verdicts. The build slice's QA owns that proof on a real narrow viewport. The prototype's `?at=` jump had also run before the rail was unhidden. It was fixed before `m-rail-450.jpg` was recaptured. At the 760 px breakpoint the geometry is re-measured per row, and the same code path runs.
 - Frames were seeked (`?seek=`), not screen-recorded, except `d-restore-live.jpg` (a real click) and `d-hero-flap-mid.jpg` / `d-install-boarding.jpg` (captured during live playback).
 - Fixed during review: the first capture pass scrolled with smooth-scroll, so the frames showed the hero (discarded). The resize redraw also turned t = 0 into "settled". Both were fixed before the frames listed here were recaptured. The row verdict DOM writes now happen only on state change, not every frame.
+
+## 11. Review response (main-lead review, `be48c02`)
+
+Changes made:
+
+- **Verdicts are always legible.** The scramble overlay is gone. Before a ticket arrives, the real word shows dimmed (`#b9b2a6`, 8.7:1 on `#161514`). On arrival it flaps once (`verdict-flap`, 220 ms, `steps(2)`) to its final colour. "Run the sort again" restarts the flap.
+- **Reduced motion rail toggle is instant.** It calls `seek(DURATION)` with no opacity settle.
+
+Functional checks through Aside (task `298480xhmn`, local prototype; every page reported zero console errors):
+
+| # | Check | Result |
+|---|---|---|
+| T1 | Mid-sort (`seek=sort:700`): the words in the DOM, their colours, and the accessibility tree | Seven real words ("Stays" ×3, "Archived" ×4). Decided rows are `rgb(255,199,44)` and pending rows `rgb(185,178,166)`. The accessibility tree exposes all seven words |
+| T2 | Real wheel scroll into view, then replay | The board plays on view. `sorted` is removed on replay (false at 300 ms) and set again after it finishes (true at 3 s) |
+| T3 | Idle after settle | `stats().frames` was 255 before and after 2 s, so nothing was drawn |
+| T4 | Keyboard to Copy before boarding plays | Two Tabs reached "Copy". The install step's opacity was 1, so keyboard users never land on hidden steps |
+| T5 | `?rm=1` rail toggle | 0 running animations right after the click, and no pending verdicts. The sort track stays hidden. `d-rm-undo.jpg` shows the swapped state ("Show the archive again", rails restored). The button text read in the same tick as the click was not captured |
+| T6 | `?nocanvas=1` | The track, rails and replay button are all `hidden`. The table words match production |
+| T7 | FAQ | 0 animations before the first `<summary>` click and 1 after. The disclosure motion runs only on demand |
+| T8 | Production comparison | The words and their order are identical to the prototype |
+
+Re-measured after the changes (task `8376244ni7`): see §6. The synchronous draw cost is still well inside budget. The live max is inconclusive under throttling and is flagged for the build.
+
+Recaptured: `d-sort-0`, `d-sort-700`, `d-sort-1300`, `d-sort-settled` and `d-rm-undo`. `m-sort-700` was removed (see §10).

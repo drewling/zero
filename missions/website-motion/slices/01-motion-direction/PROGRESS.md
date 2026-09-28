@@ -14,3 +14,4 @@
 ## Log
 
 - 2026-09-28 design-lead@zero: measured the production baseline, built the prototype, captured the desktop, reduced-motion and no-Canvas storyboard and a partial mobile set (Aside), and wrote the brief. Awaiting owner approval. No downstream dispatch, per `1c55bd1`.
+- 2026-09-28 design-lead@zero: responded to main-lead's review (`be48c02`). Verdicts are now always the real, legible word (dimmed, then a single flap), and the reduced-motion rail swap is now instant. Recaptured 5 desktop frames and removed the stale `m-sort-700`. Ran functional checks T1 to T8 and re-benched through Aside. The results are in brief §6 and §11. Owner decision is still pending.

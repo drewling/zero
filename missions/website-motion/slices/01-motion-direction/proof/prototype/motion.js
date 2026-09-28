@@ -175,29 +175,26 @@
     const TRAVEL = 520;
     const SETTLE = 620;
     const DURATION = STAGGER * (rows.length - 1) + TRAVEL + SETTLE;
-    const scramble = 'ABCDEHIKNORSTVY';
-
     function setStatus(i, t) {
       const r = rows[i];
       const local = t - i * STAGGER - TRAVEL;
-      // DOM is only written when a row's visible state changes (at most ~6 writes per row
-      // per run), so style recalculation never runs on every frame.
-      let key;
-      if (local < 0) key = 'pending';
-      else if (local < 160) key = `s${Math.floor(local / 40)}`;
-      else key = 'final';
+      // The verdict word is never hidden or scrambled: it is the real word, dimmed until
+      // its ticket arrives, then it flaps once to full colour. DOM is written only on a
+      // state change (twice per row per run), never every frame.
+      const key = local < 0 ? 'pending' : 'final';
       if (r.key === key) return;
+      const arriving = r.key === 'pending' && key === 'final' && local < 200;
       r.key = key;
-      if (local < 0) {
+      if (key === 'pending') {
         r.status.dataset.pending = '';
-        r.word.dataset.scramble = '·'.repeat(r.final.length);
-      } else if (local < 160) {
-        const tick = Math.floor(local / 40);
-        delete r.status.dataset.pending;
-        r.word.dataset.scramble = [...r.final].map((c, k) => scramble[(c.charCodeAt(0) + tick * 7 + k * 3) % scramble.length]).join('');
+        r.word.classList.remove('flap');
       } else {
         delete r.status.dataset.pending;
-        delete r.word.dataset.scramble;
+        if (arriving) {
+          r.word.classList.remove('flap');
+          void r.word.offsetWidth; // restart the one-shot flap on replay
+          r.word.classList.add('flap');
+        }
       }
     }
 
@@ -383,9 +380,7 @@
       settledArchived = dir === 1;
       button.textContent = settledArchived ? 'Show a restore' : 'Show the archive again';
       if (reduced) {
-        wrap.classList.add('instant');
-        tl.seek(DURATION);
-        requestAnimationFrame(() => wrap.classList.remove('instant'));
+        tl.seek(DURATION); // instant state swap, no transition
       } else {
         tl.play(0);
       }
