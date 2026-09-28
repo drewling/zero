@@ -8,7 +8,7 @@
 ## Acceptance
 
 - [x] Scope complete: plan and five ordered slices recorded in `d49b160`; specialist design, development and review seats verified.
-- [ ] Direction and copy approved: discovery is active with design.lead; implementation intentionally held.
+- [ ] Direction and copy approved: Departure board direction approved at 04:54Z with desktop/mobile proof; slice 02 copy and claims still under review, so implementation remains held.
 - [ ] Implementation and local checks pass.
 - [ ] Independent QA / review pass.
 - [ ] Production Compose deployment and live user-path verification.
