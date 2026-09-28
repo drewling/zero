@@ -8,7 +8,7 @@ A visitor understands in one viewport that zero is a Mac menu-bar app that keeps
 
 ## Product and offer truth
 
-The repository [README](../README.md) and [product description](../PRODUCT.md) are the claims ledger. zero runs on Apple Silicon with macOS 26+, needs Gmail and a TypeSafe Jev key, is free and open source, and the provider bills for usage. It sends thread text to Jev for sorting. Optional drafts go to the chosen provider and are sent only by a user click. Archive is reversible. The installer is not notarized and Google can show an unverified-app warning. Do not hide any of these costs or caveats to improve clicks. Do not invent adoption numbers, logos, endorsements, privacy promises, or customer quotes.
+The repository [README](../README.md), [installer](../macapp/install-zero.sh), actual app implementation and [privacy policy](../landing/privacy.html) are the release-claims ledger. [PRODUCT.md](../PRODUCT.md) includes older aspirations and is context, not authority for current capability (see [previous release verification](landing-redesign-verification.md#scope-and-decisions)). zero runs on Apple Silicon with macOS 26+, needs Gmail and a TypeSafe Jev key, is free and open source, and the provider bills for usage. It sends thread text to Jev for sorting. Optional drafts go to the chosen provider and are sent only by a user click. Archive is reversible. The installer is not notarized and Google can show an unverified-app warning. Do not hide any of these costs or caveats to improve clicks. Do not invent adoption numbers, logos, endorsements, privacy promises, or customer quotes.
 
 ## Reference study, checked September 28, 2026
 

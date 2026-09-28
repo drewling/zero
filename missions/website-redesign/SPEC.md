@@ -28,4 +28,4 @@ Planning complete. Seats requested from `operator-agent@kernel` as a design/stra
 
 ## Decision boundaries
 
-Use updated `/impeccable` for replacement-world direction and mockups, `/funnels` for the install path, `/slopmonster` for final copy. The actual product, costs and warnings in README/PRODUCT.md prevail over aspirational language. The design lead may propose a direction; mission owner selects and signs off before builder starts. Avoid simultaneous edits to landing files. If requested model cannot be verified, report rather than substitute silently.
+Use updated `/impeccable` for replacement-world direction and mockups, `/funnels` for the install path, `/slopmonster` for final copy. Current README, installer, implementation and privacy disclosures prevail over aspirational language in PRODUCT.md. The design lead may propose a direction; mission owner selects and signs off before builder starts. Avoid simultaneous edits to landing files. If requested model cannot be verified, report rather than substitute silently.
