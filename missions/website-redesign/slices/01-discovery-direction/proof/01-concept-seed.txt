@@ -1,0 +1,129 @@
+DIRECTION CONCEPT SEED (key: cd8d10fe; mode: persuade; source: api; approved pool: c3b204a1eed6; 306/564 human-approved; rerun with --scope direction --mode persuade --from cd8d10fe --candidate-count 7 to reproduce this roll against this catalog revision)
+ASSIGNED INDEX: 5
+  After ordering the grounded directions by resonance, build candidate
+  5 of your own grounded list; the assignment never points at a
+  challenger. The assignment is the roll, not a suggestion: your top-ranked
+  direction is what every run would ship, so the script decides which grounded
+  direction gets built. Each direction joins a durable visual system to a
+  concrete expression for the requested first surface, decided as one. It must
+  survive the current task plus navigation, quiet and dense content,
+  interaction and state, and a substantially different future surface. In an
+  attended run, present the assigned direction fully committed and offer
+  re-roll. You may add ONE card for your top-ranked grounded candidate when
+  it is not the assigned direction, kicker IMPECCABLE’S PICK, with an honest risk line
+  naming its familiarity; one pick card, never a ranked lineup, and the pick
+  never takes the lead position. When the assignment IS your top candidate,
+  there is no pick card. Re-roll yourself only
+  on named factual grounds, when the assignment cannot carry the product's
+  truth or task; taste is never grounds.
+  The assignment exists to refuse the model's ranking rut, never to outrank
+  the user or the brief. Never expose assignment metadata in user-facing labels.
+CHALLENGERS:
+  1. a small aircraft's night instrument six-pack, where six luminous gauges hold a pilot's trust through cloud with nothing outside the glass
+     SOURCE ID: signals-instruments-night-flight-six-pack
+     CREATIVE SPARK: Outside is ink; inside, six calm dials agree with each other, and the practiced eye sweeps them in a quiet ritual of cross-checks.
+     SYSTEM GRAMMAR:
+       - Palette/material: matte black panel ground, instrument faces near-black with luminous white markings, radium-green glow for needles; amber and red lamps only for caution
+       - Type/composition: white aviation numerals and tick scales on round dials, terse placard caps beneath each gauge; two ranked rows of three set the fixed composition
+       - Topology/navigation: a fixed constellation of instruments, each owning one truth; the cross-check sweep is the reading order.
+       - Controls/state: deviations tilt needles before alarms; every gauge shows trend as well as value.
+       - Responsive/motion: the six-pack stacks by criticality on phones; needle motion is damped and physical, never snapped.
+     WEB LEVERAGE: Real-time data binds to SVG gauges with damped spring physics and a screen-reader flight summary.
+     QUALITY BAR: board https://impeccable.style/worlds/cards/signals-instruments-night-flight-six-pack.webp · hero https://impeccable.style/worlds/cards/signals-instruments-night-flight-six-pack-hero.webp
+  2. a hand-drawn technical zine on the web, where marker lettering, doodle arrows, and mascots teach a hard concept the way a friend sketches it on a napkin
+     SOURCE ID: hand-drawn-zine-explainer
+     CREATIVE SPARK: A cheerful marker headline sits above a doodled diagram, hand-drawn arrows looping from a wide-eyed mascot to a boxed code snippet, highlighter swipes marking the one line that matters as you step through the comic panels.
+     SYSTEM GRAMMAR:
+       - Palette/material: cream paper ground, black marker ink, two or three flat highlighter accents in yellow, pink, and teal
+       - Type/composition: a hand-lettered marker face for headings paired with a clean readable sans for body
+       - Topology/navigation: Move by stepping through numbered comic panels, by clicking mascot-guided call-outs, and by a sketched table-of-contents sidebar.
+       - Controls/state: Hovering a doodle reveals its explanation; highlighter swipes animate across the active line; a mascot changes expression to mark done, warning, and gotcha states.
+       - Responsive/motion: draw-on animation traces arrows in on scroll, and reduced-motion renders them already drawn.
+     WEB LEVERAGE: Author diagrams as inline SVG with hand-drawn paths and animate the doodle arrows via stroke-dashoffset draw-on tied to scroll position.
+     QUALITY BAR: board https://impeccable.style/worlds/cards/hand-drawn-zine-explainer.webp · hero https://impeccable.style/worlds/cards/hand-drawn-zine-explainer-hero.webp
+  3. a jet-age airline ticket wallet, where carbon-copy coupons, route maps, and baggage tags choreograph one journey through crisp official color
+     SOURCE ID: vernacular-ephemera-jet-age-ticket-wallet
+     CREATIVE SPARK: Red carbon numerals, a fold-out route arc, a stapled baggage stub: the whole Atlantic crossing fits in a paper wallet.
+     SYSTEM GRAMMAR:
+       - Palette/material: carrier navy and red over crisp white coupon stock, carbon purple for every filled figure, the red VOID stamp owning the cancelled state
+       - Type/composition: airline grotesk caps on tabbed coupon heads, fare and flight boxes ruled in hairlines, carbon numerals striking fixed fields, one leg per sheet
+       - Topology/navigation: the flow is a coupon book; each leg tears off in sequence and the wallet always shows what remains.
+       - Controls/state: validated, used, and void states stamp themselves onto the coupon; nothing disappears, it cancels.
+       - Responsive/motion: coupons stack into a single stub column on phones; tear-off animates once
+     WEB LEVERAGE: Printable, deep-linkable coupon states with URL-addressable legs and offline-capable stubs.
+     QUALITY BAR: board https://impeccable.style/worlds/cards/vernacular-ephemera-jet-age-ticket-wallet.webp · hero https://impeccable.style/worlds/cards/vernacular-ephemera-jet-age-ticket-wallet-hero.webp
+  4. a public theater street poster, wood-type capitals shouting at architectural scale, baselines cut on diagonals, type cropped by the edge like crowd noise made visible
+     SOURCE ID: brand-identity-canon-scher-street-typography
+     CREATIVE SPARK: you cross the street and the wall yells at you, stacked wood-type capitals leaning on diagonals, a word sliced by the poster edge so your eye finishes the shout for it
+     SYSTEM GRAMMAR:
+       - Palette/material: taxi yellow and paper white grounds, dense black wood-type ink, one red-orange band held for the active call to action
+       - Type/composition: condensed wood-type caps at architectural scale, baselines rotated on diagonals, words butted and cropped by the frame, no lowercase
+       - Topology/navigation: the loudest word is the door, sections stack like postered walls and you move by following the shout that names where you are
+       - Controls/state: hover tilts a word onto its diagonal, the selected item flips to reversed type, white out of black, disabled words are half torn away
+       - Responsive/motion: on small screens the diagonals relax to steep stacks and the crop gets harder; entrances slam in one beat
+     WEB LEVERAGE: variable fonts stretch wood-type weight to viewport; css clip-path crops letters at the frame
+     QUALITY BAR: board https://impeccable.style/worlds/cards/brand-identity-canon-scher-street-typography.webp · hero https://impeccable.style/worlds/cards/brand-identity-canon-scher-street-typography-hero.webp
+  5. an alphabet storm, where letters condense into words, break into weather, and reshape the landscape according to grammar
+     SOURCE ID: dream-surreal-impossible-worlds-alphabet-storm
+     CREATIVE SPARK: Black letters gather into CLOUD, burst into rain, and carve the word RIVER across white ground; changing one vowel turns the current into a field of silver ravens.
+     SYSTEM GRAMMAR:
+       - Palette/material: paper white ground, storm-letter black as both body ink and weather mass, one silver flash for words mid-transformation, rain gray for spent grammar
+       - Type/composition: a single monumental grotesk behaving as matter, kerning loosening into wind, words breaking across lines as literal weather fronts on an open field
+       - Topology/navigation: Travel between letter fronts, word formations, grammatical forces, and the landscapes they produce.
+       - Controls/state: Type, split, conjugate, and recombine language while physical consequences remain reversible.
+       - Responsive/motion: Use one word-weather event per phone viewport and preserve readable text throughout transformation.
+     WEB LEVERAGE: Text parsing, procedural particles, and semantic rules turn typed language into deterministic weather with accessible narrative descriptions.
+     QUALITY BAR: board https://impeccable.style/worlds/cards/dream-surreal-impossible-worlds-alphabet-storm.webp · hero https://impeccable.style/worlds/cards/dream-surreal-impossible-worlds-alphabet-storm-hero.webp
+  6. a sneaker archive wall, stacked cardboard boxes with silhouette line art printed on the ends, colorway names read as poetry beside monospaced size runs, tissue folded inside each lid
+     SOURCE ID: textiles-weave-drape-fashion-sneaker-box-stacks
+     CREATIVE SPARK: You slide a box from a stack taller than you; the end label lists the colorway name like a line of verse, the lid lifts with a cardboard sigh, and tissue paper folds back from the shape you already know by silhouette.
+     SYSTEM GRAMMAR:
+       - Palette/material: burnt orange box board as the ground, black one-line silhouette art for ink, tissue white interiors, the colorway chip strip carrying accent states
+       - Type/composition: condensed caps on the end label over monospaced size-run digits, the label grid of name, colorway, and size ruling every card
+       - Topology/navigation: a wall of stacked boxes indexed by their end labels; you browse the stack face, pull a box halfway, and open the lid to go deeper
+       - Controls/state: the selected box slides half out of the stack, opening hinges the lid and folds back tissue, the colorway chip marks which variant is live
+       - Responsive/motion: the wall re-shelves to a single column of end labels on narrow screens; motion is lid hinge and tissue lift
+     WEB LEVERAGE: css 3d transforms hinging box lids open on interaction, grid re-shelving the stack from wall to single column across breakpoints
+     QUALITY BAR: board https://impeccable.style/worlds/cards/textiles-weave-drape-fashion-sneaker-box-stacks.webp · hero https://impeccable.style/worlds/cards/textiles-weave-drape-fashion-sneaker-box-stacks-hero.webp
+Fuse each challenger before judging it: the challenger supplies the form
+  and its system grammar, the product supplies every fact, and clarity wins
+  conflicts. Weigh the fused result against the assigned direction on exactly
+  two axes, audience identification and product clarity. Losing to strong
+  grounded material is a valid outcome; beating a thin or tool-monoculture
+  list is the point. A fused challenger that wins both axes becomes the build.
+  Close the weighing with a verdict per challenger, decided before any
+  borrowing is considered: wins (beats the assigned direction on both axes),
+  competitive (holds one axis), or declined (loses both). A declined
+  challenger is not spent: name the one discipline of its system the assigned
+  direction lacks, and raise the assigned direction to match before
+  presenting it. A donation transfers ambition and system discipline, never
+  the challenger's clothes; one world owns the page. Write each raise as its
+  own named line on the presented direction, and carry every verdict, kept
+  line, and raise into the decision page payload.
+When you can view images, open the QUALITY BAR board and hero for any
+challenger you weigh seriously and for the world you build. They exist as a
+craft bar, the finish level and commitment the build is expected to reach,
+never as a mockup to copy; your surface serves this product, not that render.
+PRODUCT.md and explicit incumbent brand commitments constrain every direction.
+The seed never chooses exact colors, fonts, tokens, or a user preference, and
+it never permits the world and first surface to be selected independently.
+The CREATIVE SPARK is a complete visual system, not a theme or decorative
+reference. Translate every supplied system rule into the product: palette and
+material, type and composition, topology, controls and states, and adaptation.
+Keep the source's visible character, scale, rhythm, and interaction instead of
+reducing vivid grammar to generic nouns. When the source is already a credible
+interface language, commit to it across navigation, content, controls, and
+states. Otherwise keep a literal carrier only when it becomes functional.
+Ambitious motion, spatial media, or interaction is welcome when it strengthens
+the product without weakening semantics, performance, or fallback behavior.
+TELEMETRY: after the user's choice resolves, rerun this script once with
+  --kind <assigned|pick|challenger|canon> --from cd8d10fe --scope direction --mode persuade,
+  adding --chosen <challenger-id> when a dealt challenger won and keeping
+  --register <safer|bolder> when the resolved round came from a steered hand.
+  One ping per resolved attended round. The ping is anonymous, the card kind
+  plus the catalog id when one won; your grounded candidates' names never
+  leave the machine, and the ping is skipped automatically when DO_NOT_TRACK
+  or IMPECCABLE_NO_TELEMETRY is set.
+A user- or brief-pinned decision beats the roll, always.
+ASSIGNED INDEX (restated for truncated readers): 5. Build candidate
+5 of your own grounded list; seed key cd8d10fe.

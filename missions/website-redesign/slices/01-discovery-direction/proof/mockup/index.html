@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>zero: Keep the mail that needs you (direction mockup)</title>
+<!-- Mockup only. Builder self-hosts Archivo (OFL) in landing/assets; no Google Fonts request in production. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:"Geist Mono";src:url(geist-mono.woff2) format("woff2");font-display:swap}
+:root{
+  --signal:#FFC72C;      /* station signal yellow: the page ground */
+  --signal-deep:#F2B705; /* ruled lines and pressed states on yellow */
+  --ink:#0A1F44;         /* enamel navy: all type on yellow, primary action */
+  --ink-soft:#2B3F66;    /* secondary text on yellow (tinted from ink, not gray) */
+  --board:#161514;       /* flap housing */
+  --flap:#23211F;        /* flap face */
+  --glyph:#F4EFE2;       /* flap characters */
+  --glyph-dim:#9C958A;   /* spent/secondary board text */
+  --kept:#FFC72C;        /* KEPT status on the board reuses the signal */
+  --gap:clamp(4px,.45vw,7px);
+  --wrap:1296px;
+  --pad:clamp(20px,5vw,72px);
+  font-family:"Archivo",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html{background:var(--signal);color:var(--ink);-webkit-font-smoothing:antialiased}
+::selection{background:var(--ink);color:var(--signal)}
+a{color:inherit;text-underline-offset:.2em;text-decoration-thickness:1.5px}
+:focus-visible{outline:3px solid var(--ink);outline-offset:4px;border-radius:4px}
+.board :focus-visible,.command :focus-visible{outline-color:var(--signal)}
+.wrap{max-width:calc(var(--wrap) + 2*var(--pad));margin-inline:auto;padding-inline:var(--pad)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- header ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;height:76px;border-bottom:2px solid var(--ink)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;letter-spacing:-.02em;text-decoration:none}
+.brand svg{width:28px;height:28px}
+.top nav{display:flex;align-items:center;gap:28px;font-size:15px;font-weight:600}
+.top nav a{text-decoration:none}
+.top nav a:hover{text-decoration:underline}
+.btn{display:inline-flex;align-items:center;gap:10px;background:var(--ink);color:var(--signal);font-weight:750;text-decoration:none;border-radius:8px;padding:12px 18px;font-size:15px;transition:transform .15s cubic-bezier(.2,.8,.2,1)}
+.btn:hover{transform:translateY(-1px)}
+.btn svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.btn.lg{font-size:18px;padding:17px 24px;border-radius:10px}
+
+/* ---------- split-flap tiles ---------- */
+.flaps{display:grid;gap:var(--gap);padding:clamp(10px,1.1vw,16px);background:var(--board);border-radius:12px;box-shadow:0 18px 40px -18px rgba(10,31,68,.55)}
+.row{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:var(--gap)}
+.t{position:relative;aspect-ratio:.72;background:linear-gradient(var(--flap) 0 49.4%,#0d0c0b 49.4% 50.6%,#2a2826 50.6%);border-radius:clamp(3px,.35vw,5px);display:grid;place-items:center;overflow:hidden;
+  font-weight:800;font-stretch:72%;color:var(--glyph);font-size:calc(var(--tile) * 1.05);line-height:1;letter-spacing:0}
+.t::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.04),transparent 45%,rgba(0,0,0,.18) 50%,transparent 56%)}
+.t.b{color:transparent}
+.hero-board{--cols:15;--tile:calc((min(100vw,var(--wrap) + 2*var(--pad)) - 2*var(--pad) - 32px - 14*var(--gap))/15)}
+.hero-board.m{display:none;--cols:10;--tile:calc((100vw - 2*var(--pad) - 20px - 9*var(--gap))/10)}
+
+/* ---------- hero ---------- */
+.hero{padding-top:clamp(20px,2.6vw,36px)}
+.hero-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(28px,4vw,64px);align-items:start;margin-top:clamp(24px,2.8vw,40px)}
+.lead{font-size:clamp(19px,1.55vw,23px);line-height:1.45;font-weight:450;max-width:34ch;text-wrap:pretty}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin-top:28px}
+.actions .quiet{font-weight:650;font-size:15px}
+.reqs{margin-top:22px;border-top:2px solid var(--ink);padding-top:14px;display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-size:15px;line-height:1.4;max-width:460px}
+.reqs dt{font-weight:800;font-stretch:80%;text-transform:uppercase;letter-spacing:.04em;font-size:13px;padding-top:2px}
+.reqs dd{color:var(--ink-soft);font-weight:500}
+.shot{margin:0}
+.shot img{display:block;width:100%;height:auto;border-radius:14px;box-shadow:0 30px 60px -28px rgba(10,31,68,.6),0 2px 0 rgba(10,31,68,.25)}
+.shot figcaption{font-size:13px;color:var(--ink-soft);margin-top:10px;font-weight:550}
+
+/* ---------- sections ---------- */
+section{padding-top:clamp(72px,9vw,128px)}
+h2{font-weight:800;font-stretch:78%;font-size:clamp(40px,5.2vw,76px);line-height:.98;letter-spacing:-.02em;text-transform:uppercase;max-width:14ch;text-wrap:balance}
+.sub{font-size:clamp(17px,1.35vw,20px);line-height:1.5;max-width:56ch;margin-top:18px;color:var(--ink-soft);font-weight:480}
+.split{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,7fr);gap:clamp(28px,5vw,80px);align-items:start}
+
+/* timetable board: how zero sorts */
+.board{background:var(--board);color:var(--glyph);border-radius:12px;padding:clamp(14px,1.6vw,22px);box-shadow:0 18px 40px -18px rgba(10,31,68,.55)}
+.board-head{display:grid;grid-template-columns:1fr 11em;gap:14px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--glyph-dim);padding:0 4px 10px;border-bottom:1px solid #34312d}
+.tt{list-style:none;padding:0}
+.tt li{display:grid;grid-template-columns:minmax(0,1fr) 11em;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid #2c2926}
+.cells{display:flex;flex-wrap:wrap;gap:4px .5em;min-width:0}
+.word{display:inline-flex;gap:3px}
+.cell{display:inline-grid;place-items:center;min-width:1.05em;height:1.6em;padding:0 .12em;background:linear-gradient(var(--flap) 0 49%,#0d0c0b 49% 51%,#2a2826 51%);border-radius:3px;font-weight:750;font-stretch:72%;font-size:clamp(15px,1.45vw,21px);text-transform:uppercase}
+.cell.sp{background:transparent;min-width:.45em}
+.status{justify-self:start;font-weight:800;font-stretch:72%;font-size:clamp(15px,1.45vw,21px);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.status i{width:10px;height:10px;border-radius:50%;background:var(--kept);box-shadow:0 0 0 3px rgba(255,199,44,.18)}
+.status.kept{color:var(--kept)}
+.status.aside{color:var(--glyph-dim)}
+.status.aside i{background:transparent;border:2px solid var(--glyph-dim);box-shadow:none}
+.board-foot{font-size:13px;color:var(--glyph-dim);padding:12px 4px 0;line-height:1.45}
+
+/* recovery label */
+.label-demo{margin-top:28px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:var(--signal);font-family:"Geist Mono",monospace;font-size:14px;padding:8px 12px;border-radius:6px}
+.undo-list{list-style:none;padding:0;margin-top:8px;border-top:2px solid var(--ink)}
+.undo-list li{display:grid;grid-template-columns:12em 1fr;gap:18px;padding:18px 0;border-bottom:1.5px solid rgba(10,31,68,.35);font-size:17px;line-height:1.45}
+.undo-list b{font-weight:800;font-stretch:80%;text-transform:uppercase;letter-spacing:.03em;font-size:15px;padding-top:2px}
+
+/* before-you-install timetable */
+.facts{border-top:3px solid var(--ink)}
+.facts .f{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,5fr) minmax(0,4fr);gap:24px;padding:22px 0;border-bottom:1.5px solid rgba(10,31,68,.35);align-items:baseline}
+.facts .k{font-weight:800;font-stretch:76%;font-size:clamp(22px,2vw,30px);text-transform:uppercase;line-height:1}
+.facts .v{font-size:17px;line-height:1.5;font-weight:520}
+.facts .n{font-size:15px;line-height:1.5;color:var(--ink-soft)}
+.facts a{font-weight:650}
+
+/* install */
+.install{background:var(--ink);color:#EDE8DA;margin-top:clamp(72px,9vw,128px);padding:clamp(64px,8vw,112px) 0}
+.install h2{color:var(--signal)}
+.install .sub{color:#C9CFDC}
+.steps{list-style:none;padding:0;counter-reset:s;border-top:1px solid #33456b}
+.steps li{display:grid;grid-template-columns:3.2em minmax(0,1fr);gap:16px;padding:22px 0;border-bottom:1px solid #33456b;counter-increment:s}
+.steps li::before{content:counter(s);display:grid;place-items:center;width:1.6em;height:2.1em;font-weight:800;font-stretch:72%;font-size:22px;color:var(--glyph);background:linear-gradient(var(--flap) 0 49%,#0d0c0b 49% 51%,#2a2826 51%);border-radius:4px}
+.steps h3{font-size:20px;font-weight:750;letter-spacing:-.01em}
+.steps p{margin-top:6px;font-size:16px;line-height:1.55;color:#C9CFDC;max-width:62ch}
+.steps strong{color:#fff;font-weight:650}
+.steps a{color:var(--signal)}
+.warn{margin-top:12px;border:1.5px solid var(--signal);border-radius:8px;padding:12px 14px;font-size:15px;line-height:1.5;color:#EDE8DA;max-width:62ch}
+.warn b{color:var(--signal)}
+.command{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--board);border-radius:10px;padding:14px 14px 14px 18px;max-width:640px}
+.command code{font-family:"Geist Mono",monospace;font-size:15px;color:var(--glyph);overflow-x:auto;white-space:nowrap}
+.command code span{color:var(--signal)}
+.copy{background:var(--signal);color:var(--ink);border:0;border-radius:6px;font:inherit;font-weight:750;font-size:14px;padding:8px 12px;cursor:pointer}
+
+/* faq */
+.faq details{border-bottom:1.5px solid rgba(10,31,68,.35)}
+.faq{border-top:3px solid var(--ink)}
+.faq summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:20px;padding:22px 0;font-size:clamp(19px,1.6vw,23px);font-weight:700;letter-spacing:-.01em}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-weight:800;font-size:1.2em;line-height:1}
+.faq details[open] summary::after{content:"–"}
+.faq details p{padding:0 0 22px;max-width:64ch;font-size:17px;line-height:1.55;color:var(--ink-soft)}
+
+footer{margin-top:clamp(72px,9vw,120px);border-top:2px solid var(--ink);padding:28px 0 48px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;font-size:15px;font-weight:600}
+footer nav{display:flex;gap:24px}
+
+/* ---------- motion: headline flaps settle once ---------- */
+@media (prefers-reduced-motion:no-preference){
+  .t.flip{animation:flap .09s steps(1) infinite}
+  @keyframes flap{50%{transform:scaleY(.94)}}
+}
+
+/* ---------- responsive ---------- */
+@media (max-width:1000px){
+  .hero-grid,.split{grid-template-columns:minmax(0,1fr)}
+  .top nav .hide-m{display:none}
+}
+@media (max-width:760px){
+  .hero-board.d{display:none}
+  .hero-board.m{display:grid}
+  .top{height:64px}
+  .top nav{gap:16px}
+  .btn{padding:10px 14px;font-size:14px}
+  .btn.lg{width:100%;justify-content:center;font-size:17px}
+  .board-head{grid-template-columns:1fr 7.2em}
+  .tt li{grid-template-columns:minmax(0,1fr) 6.4em;gap:8px}
+  .board-head{grid-template-columns:minmax(0,1fr) 6.4em}
+  .cell{font-size:13px;min-width:.9em}
+  .word{gap:2px}
+  .status{font-size:13px;gap:6px}
+  .status i{width:8px;height:8px}
+  .facts .f{grid-template-columns:1fr;gap:6px}
+  .undo-list li{grid-template-columns:1fr;gap:4px}
+  .command{flex-direction:column;align-items:stretch}
+  .command code{font-size:12.5px;white-space:normal;overflow-wrap:anywhere}
+  .steps li{grid-template-columns:2.4em minmax(0,1fr);gap:12px}
+  .steps li::before{font-size:18px}
+  .top nav a[href^="https"]{display:none}
+}
+</style>
+</head>
+<body>
+<header class="wrap">
+  <div class="top">
+    <a class="brand" href="/"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="2" y="2" width="60" height="60" rx="15" fill="#1A73E8"/><path d="M18 34L28.5 44.5L48 19.5" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>zero</a>
+    <nav aria-label="Main">
+      <a class="hide-m" href="#sort">How it sorts</a>
+      <a class="hide-m" href="#before">Before you install</a>
+      <a href="https://github.com/drewling/zero">Source ↗</a>
+      <a class="btn" href="#install">Install</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap" style="padding-top:clamp(20px,2.6vw,36px)" aria-labelledby="h1">
+    <h1 id="h1" class="sr">Keep the mail that needs you.</h1>
+    <div class="flaps hero-board d" aria-hidden="true" data-lines="KEEP THE MAIL|THAT NEEDS YOU." data-cols="15"></div>
+    <div class="flaps hero-board m" aria-hidden="true" data-lines="KEEP THE|MAIL THAT|NEEDS YOU." data-cols="10"></div>
+
+    <div class="hero-grid">
+      <div>
+        <p class="lead">zero is a Mac menu-bar app. It checks your Gmail, keeps the conversations that still need you, and archives the rest. Archived mail stays in Gmail, and you can restore it.</p>
+        <div class="actions">
+          <a class="btn lg" href="#install">Install zero for Mac <svg viewBox="0 0 24 24"><path d="M12 4v16m-6-6 6 6 6-6"/></svg></a>
+          <a class="quiet" href="/install.sh">Read the installer first</a>
+        </div>
+        <dl class="reqs">
+          <dt>Needs</dt><dd>Apple Silicon Mac, macOS 26+, Gmail</dd>
+          <dt>Sorting</dt><dd>Your own TypeSafe Jev key. TypeSafe bills the usage.</dd>
+          <dt>Cost</dt><dd>zero is free and open source.</dd>
+        </dl>
+      </div>
+      <figure class="shot">
+        <img src="zero-panel.png" width="1349" height="1166" alt="zero's Open loops panel lists conversations needing attention across two Gmail accounts, with Accounts, Undo and Settings tabs.">
+        <figcaption>The real zero app. Names and subjects are fictional.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="wrap" id="sort" aria-labelledby="sort-h">
+    <div class="split">
+      <div>
+        <h2 id="sort-h">What stays. What's set aside.</h2>
+        <p class="sub">zero reads each conversation against plain-language rules you can edit in Settings. If it still needs your reply or action, it stays in your Inbox. Everything else is archived.</p>
+        <p class="sub">It can be wrong. Review your first few runs.</p>
+      </div>
+      <div class="board" role="table" aria-label="Examples from zero's default rules">
+        <div class="board-head" role="row"><span role="columnheader">Kind of mail</span><span role="columnheader">Default rule</span></div>
+        <ul class="tt" role="rowgroup">
+          <li role="row"><span class="cells" role="cell" data-text="Someone awaits your reply"></span><span role="cell" class="status kept"><i></i>Stays</span></li>
+          <li role="row"><span class="cells" role="cell" data-text="A payment has failed"></span><span role="cell" class="status kept"><i></i>Stays</span></li>
+          <li role="row"><span class="cells" role="cell" data-text="Deadline with a consequence"></span><span role="cell" class="status kept"><i></i>Stays</span></li>
+          <li role="row"><span class="cells" role="cell" data-text="Receipt or statement"></span><span role="cell" class="status aside"><i></i>Set aside</span></li>
+          <li role="row"><span class="cells" role="cell" data-text="Newsletter or digest"></span><span role="cell" class="status aside"><i></i>Set aside</span></li>
+          <li role="row"><span class="cells" role="cell" data-text="Cold sales email"></span><span role="cell" class="status aside"><i></i>Set aside</span></li>
+          <li role="row"><span class="cells" role="cell" data-text="You sent the last message"></span><span role="cell" class="status aside"><i></i>Set aside</span></li>
+        </ul>
+        <p class="board-foot">Illustration of zero's default rules. Not a live inbox, and not a guarantee: the AI can sort a message wrongly. In the app, what stays appears under <b>Waiting on you</b> in <b>Open loops</b>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap" aria-labelledby="undo-h">
+    <div class="split">
+      <div>
+        <h2 id="undo-h">Nothing is deleted.</h2>
+        <p class="sub">Archiving removes Gmail's Inbox label and adds a dated recovery label. The mail stays in All Mail, searchable as usual.</p>
+        <div class="label-demo"><span class="chip">🗄️ Auto-Archived YYYY-MM-DD</span><span style="font-size:14px;color:var(--ink-soft);font-weight:550">The label's format. Each run adds that day's date.</span></div>
+      </div>
+      <ul class="undo-list">
+        <li><b>Restore a run</b><span>Open zero's <strong>Undo</strong> view and put a day's changes back.</span></li>
+        <li><b>Find it in Gmail</b><span>Search the dated label, or look in All Mail. Archived messages remain in Gmail.</span></li>
+        <li><b>Change the rules</b><span>Edit what counts as "needs you" in <strong>Settings → Rules</strong>.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="wrap" id="before" aria-labelledby="before-h">
+    <h2 id="before-h" style="max-width:none">Before you install</h2>
+    <p class="sub">Everything zero needs, sends and costs, in one place.</p>
+    <div class="facts" style="margin-top:36px">
+      <div class="f"><span class="k">Your Mac</span><span class="v">Apple Silicon, macOS 26 Tahoe or later.</span><span class="n">The installer stops on an unsupported Mac.</span></div>
+      <div class="f"><span class="k">Gmail</span><span class="v">You sign in with Google from the app. zero never sees your password.</span><span class="n">Google may show an unverified-app warning. zero hasn't completed Google's app verification.</span></div>
+      <div class="f"><span class="k">Jev key</span><span class="v">Required. Jev is the AI service that sorts your mail.</span><span class="n">Usage is billed and rate-limited by <a href="https://console.typesafe.ai/keys">TypeSafe</a>.</span></div>
+      <div class="f"><span class="k">Your data</span><span class="v">Thread text goes to Jev for sorting. Optional drafts go to the AI provider you choose.</span><span class="n">The zero project runs no server that receives your email. <a href="/privacy.html">Privacy policy</a></span></div>
+      <div class="f"><span class="k">Replies</span><span class="v">Optional drafts. Nothing is sent until you click Send reply.</span><span class="n">Drafts use the account behind your chosen agent CLI.</span></div>
+      <div class="f"><span class="k">The app</span><span class="v">Ad-hoc signed, not Apple-notarized, not in the App Store.</span><span class="n">The installer may add Python, Node, the Google Workspace CLI and Claude Code.</span></div>
+    </div>
+  </section>
+</main>
+
+<section class="install" id="install" aria-labelledby="install-h">
+  <div class="wrap split">
+    <div>
+      <h2 id="install-h">Install zero.</h2>
+      <p class="sub">About four steps from Terminal to your first sweep.</p>
+    </div>
+    <ol class="steps">
+      <li><div><h3>Run the installer in Terminal.</h3>
+        <p class="warn"><b>Read first:</b> zero isn't Apple-notarized, and the installer may add developer tools. <a href="/install.sh">Read the script</a> before you run it.</p>
+        <div class="command"><code><span>$</span> curl -fsSL https://zero.headless.com/install | bash</code><button class="copy" type="button">Copy</button></div>
+        <p>Prefer a download? Use <a href="https://github.com/drewling/zero/releases">GitHub Releases</a>.</p></div></li>
+      <li><div><h3>Connect Gmail.</h3><p>Open zero from the menu bar and choose <strong>Connect your first inbox</strong>.</p></div></li>
+      <li><div><h3>Add your Jev key.</h3><p>In <strong>Settings → Sorting engine</strong>, choose <strong>Get a key</strong>, paste it and save.</p></div></li>
+      <li><div><h3>Run your first sweep.</h3><p>Choose <strong>Run zero now</strong>. Check what stayed and what was archived, then pick a schedule in Settings.</p></div></li>
+    </ol>
+  </div>
+</section>
+
+<section class="wrap" aria-labelledby="faq-h">
+  <h2 id="faq-h" style="max-width:none">Questions</h2>
+  <div class="faq" style="margin-top:36px">
+    <details><summary>Does my email stay on my Mac?</summary><p>No. zero runs on your Mac, but sends thread text to TypeSafe's Jev for sorting. Reply drafts go to your chosen AI provider. The zero project doesn't run a server that receives your email.</p></details>
+    <details><summary>What if it archives something important?</summary><p>It can happen. The mail stays in All Mail with a dated recovery label, and zero's Undo view restores a run.</p></details>
+    <details><summary>Can zero send email for me?</summary><p>Only when you click Send reply on a draft you've reviewed.</p></details>
+    <details><summary>Can I use more than one Gmail account?</summary><p>Yes. Their conversations appear together in Open loops.</p></details>
+  </div>
+</section>
+
+<footer class="wrap"><span>zero · Free and open source, AGPL-3.0</span><nav aria-label="Footer"><a href="https://github.com/drewling/zero">Source</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a></nav></footer>
+
+<script>
+// Build flap tiles. Mockup behaviour: headline tiles cycle and settle once (<1s).
+const CH="ABCDEFGHIJKLMNOPRSTUVWY.";
+const still=new URLSearchParams(location.search).has('static')||matchMedia('(prefers-reduced-motion: reduce)').matches;
+document.querySelectorAll('.hero-board').forEach(b=>{
+  const cols=+b.dataset.cols;b.style.setProperty('--cols',cols);
+  b.dataset.lines.split('|').forEach(line=>{
+    const r=document.createElement('div');r.className='row';
+    [...line.padEnd(cols,' ')].forEach((c,i)=>{
+      const t=document.createElement('span');t.className='t'+(c===' '?' b':'');t.textContent=c===' '?'·':c;
+      r.appendChild(t);
+      if(!still&&c!==' '){t.classList.add('flip');let n=0;const end=6+i*2;
+        const id=setInterval(()=>{t.textContent=CH[(Math.random()*CH.length)|0];if(++n>end){clearInterval(id);t.textContent=c;t.classList.remove('flip')}},45)}
+    });b.appendChild(r);
+  });
+});
+document.querySelectorAll('.cells').forEach(s=>{s.dataset.text.split(' ').forEach(w=>{const g=document.createElement('span');g.className='word';[...w].forEach(c=>{const e=document.createElement('span');e.className='cell';e.textContent=c;g.appendChild(e)});s.appendChild(g)});s.setAttribute('aria-label',s.dataset.text)});
+</script>
+</body>
+</html>

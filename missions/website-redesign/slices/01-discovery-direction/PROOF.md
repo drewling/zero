@@ -1,23 +1,23 @@
 # PROOF — OPR.99.0.1.1 Research and design direction
 
-> **WHO/WHEN:** the impl/QA pair that worked the slice, at slice-close — a slice is NOT done until this file exists and every `SPEC.md` proof-contract item has evidence (mapped 1:1, artifacts under `proof/`). See the `mission-slice-sop` skill + the conventions SSOT (`docs/reference/sdlc-conventions.md` in the repo, `$OPENRIG_HOME/reference/sdlc-conventions.md` on an installed package).
->
-> **HOW (the drop verb, not hand-placement):** put media files under `proof/`, then ATTACH them with `rig proof add OPR.99.0.1.1 --artifact-type qa --verdict PASS --candidate-sha <tip> --money-evidence "<one line>" --evidences "1" --media "screenshot-01.png"` — the drop writes the C1 header the Living Notes DELIVERED pairing joins on. Hand-placing files without a drop leaves the deliverable unpaired and `unverified`.
-
-Closed by: <seat>   Date: <date>   Verdict: <pass | pass-with-residue | ...>
+Closed by: design-lead@zero   Date: 2026-09-28   Verdict: pass-with-residue (pending mission-owner direction decision)
 
 ## What this proves
 
-<1-3 sentences: the claim the slice made, now demonstrated>
+A replacement visual world ("Departure board") was derived from zero's real mechanism and a candidate list written before the roll, assigned by the impeccable direction roll, checked against six live references, and rendered as a buildable desktop/mobile mockup. The mockup uses only the real app screenshot as product proof and only sourced claims.
 
-## Artifacts (media in proof/)
+## Artifacts (proof/)
 
-Dropped via `rig proof add … --evidences … --media …` (one drop per verdict; media attached, never only hand-listed):
+- 00-grounding.md: mechanism, audience, rut, seven candidates, written before the roll
+- 01-concept-seed.txt: raw roll output (seed cd8d10fe, challengers)
+- DESIGN-BRIEF.md: direction contract, challenger verdicts, reference study, claims ledger, must-stay list, build notes, risks
+- refs/*.png: live captures of zero, Linear, Raycast, Vercel, Granola, Things at 1440×900 and 390×844 (2026-09-28 ~04:38Z); qb-ticket-wallet.png quality-bar board
+- mockup/index.html: mockup source (reference only, not production)
+- mockup-desktop-{viewport,full}.png, mockup-mobile-{viewport,full}.png, mockup-mobile-320-{viewport,full}.png: 2x captures. The scripted overflow check found 0 overflowing elements at all widths.
 
-- proof/screenshot-01.png — <what it shows>
-- proof/capture-behavior.gif — <what it shows>
-- proof/command-output.txt — <what it proves>
+## Residue / caveats
 
-## Residue / caveats (if any)
-
-<documented residue: what's not covered + where it's tracked>
+- Mission-owner acknowledgement outstanding (proof contract item 3).
+- Copy is draft; slice 02 owns final wording.
+- Surface brief in landing/ and DESIGN.md rewrite deferred to build (outside design boundary).
+- Mockup loads Archivo from Google Fonts; production must self-host.
