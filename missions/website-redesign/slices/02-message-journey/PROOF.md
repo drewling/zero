@@ -1,6 +1,6 @@
 # PROOF — OPR.99.0.1.2 Message and install journey
 
-Closed by: design-lead@zero   Date: 2026-09-28   Verdict: pass-with-residue (wording approval pending with main-lead)
+Closed by: design-lead@zero   Date: 2026-09-28   Verdict: pass-with-residue (wording APPROVED by main-lead 05:03Z at 9122d60)
 
 ## What this proves
 
@@ -16,6 +16,6 @@ The homepage copy follows a factual Hook-Story-Offer install path. Every visitor
 
 ## Residue
 
-- Wording approval by main-lead is outstanding.
+- Wording approved by main-lead 05:03Z (verified corrections, Daily routine, privacy.html:103, Jev data path, installer caveats).
 - README is stale on "Daily schedule" and "AI engine" vs the app ("Daily routine", "Reply drafting"). This is outside the landing scope and was flagged, not fixed.
 - The slice-01 mockup board uses "Set aside"; the deck recommends "Archived". The builder follows the deck.
