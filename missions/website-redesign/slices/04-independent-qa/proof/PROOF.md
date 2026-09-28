@@ -55,6 +55,24 @@ found. Two non-blocking hygiene nits noted below for the record.
   block, app screenshot, "What stays / What's set aside" board, "Nothing is deleted" panel, "Before you
   install" 3-column facts, install steps 1-4, FAQ disclosures, footer. Off-white tonal break present per
   brief §7 refinement.
+- **Mobile 390×844 viewport and full-page (acceptance-matrix 1.2, initially missed in this pass, completed
+  in this validation round).** `screenshots/built-mobile-390-viewport.png` (390×844, 2x DPR, matches
+  mockup's 780×1688 exactly) and `screenshots/built-mobile-390-full.png` (matches mockup's 780px width)
+  compared against `slices/01-discovery-direction/proof/mockup-mobile-viewport.png` and
+  `mockup-mobile-full.png`. Same result as the 320 comparison: flap board, hero copy layout, CTA,
+  requirements list, install steps, board section, and FAQ all structurally match; text differs only where
+  the copy deck legitimately updated it (e.g. "TypeSafe bills the usage" → "TypeSafe bills you for what you
+  use", "COST" → "PRICE" label, mockup's older lead paragraph vs the approved deck's current one). No
+  layout drift found.
+- **Desktop full-page scroll (acceptance-matrix 1.8, initially missed in this pass, completed in this
+  validation round).** `screenshots/built-desktop-full.png` (2880×9790, matches mockup's 2880px width)
+  compared section-by-section against `slices/01-discovery-direction/proof/mockup-desktop-full.png`
+  (2880×9314). Same section order top to bottom: hero/board → "What stays/What's archived" → "Nothing is
+  deleted" → "Before you install" → "Install zero" steps → "Questions" FAQ → footer. Off-white ticket-stock
+  break for "Before you install"/"Questions" present per §7 refinement in both. Built page is ~5% taller
+  overall (9790 vs 9314px), consistent with the approved copy deck's longer final body copy versus the
+  mockup's shorter placeholder text (brief §5 explicitly tolerates ~±30% length variance without being a
+  layout defect) — no unapproved section reordering, insertion, or removal found.
 - Responsive edge cases at 320/390/1440, both chromium and webkit engines: **0 elements with
   horizontal overflow** at any width (script-verified, not eyeballed). `.status` table-cell/flex collision
   that main-lead flagged pre-`44c24ee` is resolved and re-confirmed absent on current tip: computed
@@ -247,12 +265,17 @@ silently treating Playwright output as equivalent.
 
 - `screenshots/built-desktop-1440.png` — clean 1440 desktop render, corrected SHA, 2x DPR.
 - `screenshots/built-mobile-320-full.png` — full-page 320 mobile render, corrected SHA.
+- `screenshots/built-mobile-390-viewport.png` — 390×844 mobile viewport render, corrected SHA, 2x DPR.
+- `screenshots/built-mobile-390-full.png` — full-page 390 mobile render, corrected SHA.
+- `screenshots/built-desktop-full.png` — full-page desktop scroll render, corrected SHA.
 - `screenshots/focus-ring-nav-fixed-chromium.png` — nav "Install" button with visible navy focus ring,
   corrected SHA.
 - `screenshots/focus-ring-hero-fixed-chromium.png` — hero "Install zero for Mac" button with visible navy
   focus ring, corrected SHA.
 - Mockup references compared against: `slices/01-discovery-direction/proof/mockup-desktop-viewport.png`,
-  `slices/01-discovery-direction/proof/mockup-mobile-320-full.png`.
+  `mockup-desktop-full.png`, `mockup-mobile-viewport.png`, `mockup-mobile-full.png`,
+  `mockup-mobile-320-viewport.png`, `mockup-mobile-320-full.png` — all six mockup captures now compared,
+  not just the two initially checked.
 - Claims source of truth: `slices/02-message-journey/proof/COPY-DECK.md` §3 (28-row ledger), cross-checked
   against `README.md`, `macapp/install-zero.sh`, `macapp/Sources/PanelView.swift`,
   `macapp/Sources/OnboardingView.swift`, `lib/inbox_zero.py`, `landing/privacy.html`.
@@ -277,5 +300,6 @@ silently treating Playwright output as equivalent.
 
 ![screenshots/built-desktop-1440.png](screenshots/built-desktop-1440.png)
 ![screenshots/built-mobile-320-full.png](screenshots/built-mobile-320-full.png)
+![screenshots/built-mobile-390-viewport.png](screenshots/built-mobile-390-viewport.png)
 ![screenshots/focus-ring-nav-fixed-chromium.png](screenshots/focus-ring-nav-fixed-chromium.png)
 ![screenshots/focus-ring-hero-fixed-chromium.png](screenshots/focus-ring-hero-fixed-chromium.png)
