@@ -1,5 +1,23 @@
 ---
 slice: OPR.99.0.1.3
+candidate_sha: 5b6da43
+artifact_type: qa
+verdict: PASS
+money_evidence: Responsive fixes pass tests and Docker smoke; fresh Aside 1440px
+  confirms no overflow, no deadline/status overlap, and a fully rendered
+  installer command. 390px/320px remain for independent QA recapture.
+evidences:
+  - "1"
+  - "2"
+  - "3"
+self_check: I reran node tests, shell syntax checks, git diff check, and nginx
+  Docker smoke after the mobile CSS fixes. Fresh Aside verification covered
+  1440px; the remote browser exposed no viewport control, so independent QA must
+  recapture 390px and 320px.
+---
+
+---
+slice: OPR.99.0.1.3
 candidate_sha: 5c84ac2
 artifact_type: qa
 verdict: PASS
@@ -49,6 +67,12 @@ Date: 2026-09-28
 ## Residue
 
 The strict visual capture workflow is owned by the independent QA seat. The committed screenshots are pre-fix reference captures and must not be used as acceptance evidence for the corrected mobile command wrapping or 320px sorting-row spacing. Fresh Aside verification is complete at 1440px; the remote browser session exposed no viewport/emulation control, so 390px and 320px recapture remain a QA blocker. No deployment or push was performed.
+
+## Media
+
+![implementation-desktop.png](implementation-desktop.png)
+![implementation-mobile.png](implementation-mobile.png)
+![implementation-mobile-320.png](implementation-mobile-320.png)
 
 ## Media
 
