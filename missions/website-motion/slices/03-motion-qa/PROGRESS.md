@@ -7,6 +7,6 @@
 
 ## Acceptance
 
-- [ ] Implementation complete
-- [ ] Tests passing
-- [ ] Review approved
+- [x] Implementation complete (independent QA of candidate `0505816f`, see PROOF.md)
+- [x] Tests passing (node --test 5/5; Chromium+WebKit cross-browser sweep 0 errors)
+- [x] Review approved (verdict: pass-with-residue; residue = Docker smoke blocked by unavailable daemon, not a candidate defect)

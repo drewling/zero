@@ -1,0 +1,151 @@
+=== QA SESSION LOG — OPR.99.0.2.3 Motion QA ===
+Candidate SHA: 0505816f97aa56e7cde4c821100a2b40bf116e86
+Baseline SHA (pre-motion, prior QA'd candidate): 57deff2
+Local method: python3 -m http.server 8973 from landing/ (Docker daemon unavailable, same as slice 02's own PROOF.md)
+Playwright: chromium + webkit (real engines, real viewport widths — not device emulation)
+
+--- node --test (fresh run against candidate) ---
+tests 5
+pass 5
+fail 0
+
+--- Static/source checks ---
+node --check landing/site.js: OK
+bash -n landing/build.sh landing/deploy.sh macapp/install-zero.sh: OK
+grep for prototype hooks (?seek, ?rm, ?nocanvas, ?slow, ?at=, stats(), bench(), mobile.html, zeroMotion) in site.js/index.html: 0 matches — clean
+git diff --stat 57deff2..0505816f -- landing/ install.sh macapp/:
+  landing/index.html    |   6 +
+  landing/site.css      | 204 ++++
+  landing/site.js       | 431 ++++++++--
+  landing/test-site.mjs |   7 +
+  (4 files changed, 623 insertions(+), 25 deletions(-))
+  -> matches brief's stated scope exactly: DOM/CSS/JS only, no new assets/deps.
+nginx.conf, Dockerfile: byte-identical to baseline (diff exit 0) — infra untouched.
+index.html diff: only new canvas/button/rail-wrap markup added; zero existing copy lines changed.
+
+--- Routes (local static server; nginx-specific rewrites like /install.sh not exercised here) ---
+/ 200, /site.js 200, /site.css 200, /privacy.html 200, /robots.txt 200, /sitemap.xml 200, /llms.txt 200, /og.png 200
+root install.sh: bash -n OK
+
+--- Reduced-motion (chromium, reducedMotion:'reduce', 1440x900) ---
+trackHidden: true, replayHidden: true, railHidden: false (rail diagram itself IS shown, but instantly settled)
+hasHasTrack: false (sort track never activates)
+words: [] (no .status-word spans created — original plain verdict text untouched)
+railBtnText: "Show a restore" (settled/final state instantly, no animation)
+motionReducedClass: true
+animCount: 0 (no running CSS animations)
+
+--- Full motion, verdict legibility mid-sort (chromium, 1440x900) ---
+mid-sort (during animation): words = [Stays,Stays,Stays,Archived,Archived,Archived,Archived] — always real text
+canvasAriaHidden: "true", canvasHidden: false
+after settle: sorted:true, same correct words, 4 CSS transitions still finishing (tbody th color fade, expected/cosmetic, confirmed gone by t+1000ms — see idle check below)
+
+--- Exhaustive scramble-regression check (the brief's named historical bug) ---
+1440px: 49 snapshots @ 50ms intervals across full 2400ms animation — 0 mismatches vs expected verdict words
+320px (true narrow viewport): 49 snapshots @ 50ms intervals — 0 mismatches
+-> Confirms the previously-removed "old scramble" (brief §mobile note) does not reproduce on the shipped candidate at either width.
+
+--- Idle-frame-budget ---
+rAF calls scheduled during 1s idle window after full settle: 0 (confirms timeline stops cleanly, no leaked rAF loop)
+
+--- Performance: per-rAF-callback script time (brief budget: mean <=4ms, max <=16ms) ---
+Sort track, unthrottled:      124 frames, mean 0.230ms, max 1.600ms
+Sort track, 4x CPU throttle:  131 frames, mean 0.802ms, max 4.800ms
+Rail diagram, unthrottled:     64 frames, mean 0.200ms, max 0.300ms
+-> All measurements pass with wide margin, including under 4x CPU throttle. This closes the brief's explicitly-flagged
+   "not proven within budget" gate (brief §6, live playback max was inconclusive under automation throttling).
+   Note: the brief's own budget is *script time per rAF callback*, not frame-to-frame interval; measured accordingly here.
+
+--- Narrow-viewport (390/320) TRUE viewport captures (chromium, real viewport size, not iframe) ---
+No horizontal overflow at any tested width/state (scrollWidth === clientWidth in every case):
+  m390-full, m320-full, m390-sort-mid, m390-sort-settled, m320-sort-mid,
+  m390-install-boarding, m390-reduced-sort, m390-reduced-install, m320-reduced-sort
+-> Closes the brief's named mobile-unproven gate (prototype's own Aside tooling could not capture 390x844 real
+   viewport or the mobile install/reduced-motion states; this QA used Playwright's true viewport sizing instead).
+
+--- Resize / 760px breakpoint crossing ---
+Canvas at 1440: width=779 (buffer px, DPR-scaled)
+After live resize to 700 (crossing 760px breakpoint) mid-session: canvas redraws to width=660, sorted state persists,
+no overflow (scrollWidth==clientWidth==700). ResizeObserver behaves correctly.
+
+--- Keyboard navigation ---
+Tab order diff vs baseline (57deff2): IDENTICAL except two new stops (BUTTON.sort-replay, BUTTON.rail-replay)
+inserted exactly where they visually sit in each section — no existing tab stop reordered or broken.
+Focus-within on .install-steps: reveal is instant (transition:none via :focus-within CSS rule) — confirmed via
+computed style (opacity:1, clip-path:none, transitionDuration:0s), not just visual proxy.
+sort-replay / rail-replay: both keyboard-focusable, Enter key triggers the same restart/flip behavior as click.
+
+--- Interrupt / re-entry ---
+Mid-run replay click: immediately un-sorts and restarts from 0 (no queueing).
+5x rapid-fire replay clicks: rAF calls remain bounded to a single active timeline (104 rAF calls total across
+~1.5s of rapid clicking + settle — consistent with one restart-and-settle cycle per click via cancelAnimationFrame,
+not N stacked loops).
+Rail flip mid-move: button text updates immediately on click even mid-animation; rapid double-flip settles to a
+single consistent final state, no stuck/inconsistent button text.
+
+--- Hidden-tab pause/resume ---
+document.hidden=true (simulated via visibilitychange): 0 rAF calls scheduled in an 800ms hidden window
+(timeline.pause() correctly stops the rAF loop).
+Resume (hidden=false + visibilitychange): rAF resumes immediately (20 calls in next 300ms).
+Animation completes correctly to sorted:true after the full hide/resume/wait cycle — no desync or stuck state.
+
+--- No-JS fallback (javaScriptEnabled:false) ---
+canvas/replay/rail: all hidden via server-rendered HTML `hidden` attribute (not JS-toggled) — degrades cleanly
+with zero script execution.
+Verdict words: plain unmodified text, all correct (Stays x3, Archived x4).
+Copy button: hidden (clipboard requires JS) — install command text itself remains fully visible/selectable.
+
+--- No-Canvas-context fallback (canvas.getContext forced to return null via addInitScript) ---
+canvas/replay/rail: hidden (getContext() null triggers early return in setupSortTrack/setupRail).
+0 page errors on load or reload with this shim active.
+Verdict words correct, static content fully intact — visually confirmed against brief's own
+d-nocanvas-sort.jpg / d-nocanvas-undo.jpg reference frames (structural match).
+
+--- Accessibility tree (install-steps pre-reveal state, CDP Accessibility.getFullAXTree) ---
+"Run the installer in Terminal." (heading): FOUND, ignored=false
+"Read this first" (safety warning paragraph): FOUND, ignored=false
+"curl -fsSL" (install command text): FOUND, ignored=false
+"Connect Gmail" / "Add your Jev key" (later steps' headings): FOUND, ignored=false
+-> The visual opacity:0.001 + clip-path pre-reveal trick is purely decorative; all content (including the
+   non-notarized-installer safety warning) is exposed to assistive tech at all times, never actually hidden.
+
+--- Focus ring / contrast on new elements (WCAG relative luminance, computed live from rendered styles) ---
+.sort-replay button: text rgb(244,239,226) on effective bg rgb(22,21,20) -> contrast 15.89:1 (AAA)
+  :focus-visible outline: 3px solid rgb(255,199,44) (signal yellow), 3px offset — clearly visible
+.rail-replay button: text rgb(10,31,68) on effective bg rgb(255,199,44) -> contrast 10.41:1 (AAA)
+  :focus-visible outline: 3px solid rgb(10,31,68) — clearly visible
+.status-word[data-pending] dimmed state: rgb(185,178,166) on board bg rgb(22,21,20) -> contrast 8.67:1 (AAA)
+  (the verdict word itself stays fully legible in the dimmed pending state; only the small status dot icon
+  drops to opacity 0.25, which is decorative, not load-bearing text)
+
+--- Byte budget (gzip -9, brief budget: <=10KB gzip total added) ---
+site.js:  before=828B gzip, after=4074B gzip, delta=+3246B
+site.css: before=3683B gzip, after=4537B gzip, delta=+854B
+TOTAL ADDED: 4100B gzip (~4.0KB) — well within the 10KB budget, and leaner than the prototype's own
+7.4KB estimate (prototype-only instrumentation was correctly stripped from the shipped build).
+
+--- Cross-browser error sweep (full-page scroll-through, all observers triggered) ---
+Chromium: 0 page errors, 0 console errors
+WebKit (Safari engine — the relevant engine for this macOS-only product): 0 page errors, 0 console errors
+  :has() CSS selector (used for .has-track.sorted tbody tr:has(.archived)): supported in WebKit, confirmed via
+  CSS.supports('selector(:has(a))') === true
+Firefox: not installed locally, not exercised (not a target platform for this Mac-only product; noted as a
+  minor coverage gap, not a blocking one).
+
+--- Touch interaction (390px, hasTouch:true, isMobile:true) ---
+Tap on .sort-replay: restarts sort correctly (sorted:false immediately after tap).
+Tap on .rail-replay: flips button text correctly (Show a restore -> Show the archive again).
+
+--- Regression: pre-existing copy-to-clipboard feature (from prior redesign QA) with new flap animation attached ---
+Click copy: status message correct, clipboard actually contains the exact install command (verified via
+navigator.clipboard.readText()), button text flips to "Copy again", .flapped class added by MutationObserver
+-> No regression from attaching the new copy-flap animation to this pre-existing feature.
+
+--- FAQ interaction (motion newly attached via .faq-ready class + CSS animations) ---
+First FAQ item: opens on click (details.open=true), answer text present, closes correctly on second click.
+
+--- Docker build/smoke ---
+BLOCKED: docker info fails locally (daemon unavailable), same constraint noted in slice 02's own PROOF.md and
+in main-lead's QA-gate reminder. Not waived — recorded as blocked residue below. All checks not requiring a
+running Docker container (source syntax, static routes, installer script syntax, nginx.conf/Dockerfile diff-
+against-baseline) were completed as a partial substitute.
