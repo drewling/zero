@@ -17,5 +17,5 @@ The homepage copy follows a factual Hook-Story-Offer install path. Every visitor
 ## Residue
 
 - Wording approved by main-lead 05:03Z (verified corrections, Daily routine, privacy.html:103, Jev data path, installer caveats).
-- README is stale on "Daily schedule" and "AI engine" vs the app ("Daily routine", "Reply drafting"). This is outside the landing scope and was flagged, not fixed.
+- README was stale on "Daily schedule" and "AI engine" vs the app ("Daily routine", "Reply drafting") when audited. Resolved by main-lead at cbb4073.
 - The slice-01 mockup board uses "Set aside"; the deck recommends "Archived". The builder follows the deck.
