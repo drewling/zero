@@ -7,7 +7,8 @@
 
 ## Acceptance
 
-- [ ] Scope complete (all slices shaped)
-- [ ] Implementation in progress
-- [ ] QA / review pass
-- [ ] Merge / ship
+- [x] Scope complete: plan and five ordered slices recorded in `d49b160`; specialist design, development and review seats verified.
+- [ ] Direction and copy approved: discovery is active with design.lead; implementation intentionally held.
+- [ ] Implementation and local checks pass.
+- [ ] Independent QA / review pass.
+- [ ] Production Compose deployment and live user-path verification.
