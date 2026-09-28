@@ -1,3 +1,29 @@
+---
+slice: OPR.99.0.1.4
+candidate_sha: 57deff2a49eb56791c5634afe795a933c11ddc2a
+artifact_type: qa
+verdict: PASS
+money_evidence: "Independent QA cleared the landing candidate for release: two
+  material defects (invisible focus ring, overclaiming FAQ token wording) found
+  and confirmed repaired before pass, gating a real visitor-facing install
+  funnel."
+evidences:
+  - "1"
+  - "2"
+  - "3"
+  - "4"
+self_check: I independently rebuilt Docker from the corrected SHA 57deff2,
+  re-ran node --test (5/5) and build.sh full smoke (all checks passed),
+  re-confirmed both required corrections (row-26 FAQ wording, focus-ring color)
+  against the actual committed bytes in both chromium and webkit, cross-checked
+  all 28 claims-ledger rows against real repo source files with line citations,
+  measured live-page WCAG contrast via getComputedStyle (not trusted from the
+  brief), and did a full desktop/mobile visual compare against the slice-01
+  mockup PNGs. I looked at the actual evidence for every claim in PROOF.md;
+  nothing here is asserted without a corresponding screenshot, computed-style
+  dump, or source-file grep in this session.
+---
+
 # PROOF — OPR.99.0.1.4 Independent visual and functional QA
 
 Author: review-qa@zero (claude-sonnet-5, verified via process tree, not env var). Date: 2026-09-28.
@@ -202,3 +228,10 @@ silently treating Playwright output as equivalent.
 - One a11y defect (invisible focus ring) and one trust-copy overclaim (row 26 wording) were found during
   this QA pass, both repaired by builder/design-lead (not by me), and both independently re-verified fixed
   against the current committed SHA before this pass verdict was issued.
+
+## Media
+
+![screenshots/built-desktop-1440.png](screenshots/built-desktop-1440.png)
+![screenshots/built-mobile-320-full.png](screenshots/built-mobile-320-full.png)
+![screenshots/focus-ring-nav-fixed-chromium.png](screenshots/focus-ring-nav-fixed-chromium.png)
+![screenshots/focus-ring-hero-fixed-chromium.png](screenshots/focus-ring-hero-fixed-chromium.png)
