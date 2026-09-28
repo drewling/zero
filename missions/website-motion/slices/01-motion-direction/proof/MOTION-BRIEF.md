@@ -140,3 +140,10 @@ Functional checks through Aside (task `298480xhmn`, local prototype; every page 
 Re-measured after the changes (task `8376244ni7`): see §6. The synchronous draw cost is still well inside budget. The live max is inconclusive under throttling and is flagged for the build.
 
 Recaptured: `d-sort-0`, `d-sort-700`, `d-sort-1300`, `d-sort-settled` and `d-rm-undo`. `m-sort-700` was removed (see §10).
+
+Storyboard audit after the review:
+- All 20 frames decode. The 17 desktop frames are 1440×900 and the 3 mobile frames are 780×1688 (390 px at DPR 2).
+- Every frame named in this brief and in PROOF.md exists. The only exception is the removed `m-sort-700`, which is mentioned only as removed.
+- On a contact sheet, each frame matches its caption. None still shows the retired scramble. `d-install-boarding.jpg` is small (31 KB) because it is the boarding t = 0 frame, with the steps still hidden on navy.
+- I made one more attempt at the missing mobile frames at a true 390×844 viewport instead of the iframe. It failed because Aside's page object has no `setViewportSize` (`TypeError: not a function`).
+- So mobile mid-sort, install and reduced-motion remain unproven visually and belong to the build QA.
