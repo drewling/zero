@@ -434,6 +434,7 @@ h2 {
   display: flex;
   align-items: center;
   gap: 10px;
+  white-space: nowrap;
   font-size: clamp(15px, 1.45vw, 21px);
   font-stretch: 78%;
   font-weight: 800;
@@ -833,7 +834,11 @@ h2 {
 
   .sorting-board thead th:last-child,
   .sorting-board tbody td {
-    width: 6.4em;
+    width: 7em;
+  }
+
+  .sorting-board tbody td {
+    padding-left: 10px;
   }
 
   .sorting-board tbody th {
@@ -863,6 +868,13 @@ h2 {
   .command-block {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .command-block code {
+    overflow-x: visible;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    word-break: break-word;
   }
 
   .copy-button {

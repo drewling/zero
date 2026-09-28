@@ -21,4 +21,4 @@ Dropped via `rig proof add … --evidences … --media …` (one drop per verdic
 
 ## Residue / caveats (if any)
 
-The strict visual capture workflow is owned by the independent QA seat. The attached screenshots were produced during local browser verification before the final desktop table-width correction; the final Aside inspection independently confirmed the corrected 1440px overflow result. QA should recapture strict policy-compliant visual evidence before approval. No deployment or push was performed.
+The strict visual capture workflow is owned by the independent QA seat. The committed screenshots are pre-fix reference captures and must not be used as acceptance evidence for the corrected mobile command wrapping or 320px sorting-row spacing. Fresh Aside verification is complete at 1440px; the remote browser session exposed no viewport/emulation control, so 390px and 320px recapture remain a QA blocker. No deployment or push was performed.

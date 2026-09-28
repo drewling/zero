@@ -1,0 +1,33 @@
+{
+  "status": "requires-independent-qa-mobile-recapture",
+  "candidate": "working-tree-after-5c84ac2",
+  "checks": {
+    "aside_desktop_1440": {
+      "viewport": "1440x900",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "overflow": false,
+      "deadlineStatusOverlap": false,
+      "installerCommandFullyRendered": true
+    },
+    "aside_mobile_390": {
+      "viewport": "390x844",
+      "verified": false,
+      "reason": "Aside remote browser session exposed no viewport or emulation control"
+    },
+    "aside_mobile_320": {
+      "viewport": "320x800",
+      "verified": false,
+      "reason": "Aside remote browser session exposed no viewport or emulation control"
+    }
+  },
+  "responsiveFixes": [
+    "Mobile installer command wraps instead of clipping",
+    "Mobile sorting status column widened and given left padding to prevent deadline-row collision"
+  ],
+  "routes": {
+    "staticServerInstall": 404,
+    "note": "Python static server lacks nginx redirects; Docker smoke verified /install and /install.sh as 302"
+  },
+  "qaNote": "Independent QA must recapture 390px and 320px through strict Aside workflow before approval."
+}
