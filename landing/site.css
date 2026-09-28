@@ -180,7 +180,10 @@ button {
   transform: translateY(-1px);
 }
 
-.button:focus-visible,
+.button:focus-visible {
+  outline-color: var(--ink);
+}
+
 .command-block :focus-visible,
 .install-band :focus-visible {
   outline-color: var(--signal);
