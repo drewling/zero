@@ -27,6 +27,10 @@ From a design standpoint, no material visual differences remain against the appr
 - The pre-fix captures in `~/.jcode/scratch/crit/` were taken with direct Playwright, before the Aside-only instruction. They support the pre-fix findings only. No repaired-candidate claim rests on them.
 - No polish loop was requested or run.
 
+## Scope note (added after the verdict)
+
+Later commit `44c24ee` changed `landing/index.html` after this critique was measured: the `status` class moved from the `<td>` to an inner `<span>` in all 7 sorting-board rows, and `site.css` was not changed. Findings 1 and 3 were measured on the `e7b5809` markup and have **not** been re-measured on `44c24ee`. The change could affect the dot and label spacing in finding 1, so QA should re-check that row gap at 320px on the current tip.
+
 ## Evidence
 
 - Aside background task `858361uqh1` (iframe measurements and screenshots), with output at `~/.jcode/scratch/jcode-bg-tasks/858361uqh1.output`
