@@ -126,6 +126,12 @@ found. Two non-blocking hygiene nits noted below for the record.
 - **No-JS + reduced-motion:** page content still renders without JS (h1 present in DOM, ~6095 chars of body
   text, sorting board visible in markup even though intended `aria-hidden` on the flap boards specifically,
   not the sorting board).
+- **Install-safety warning precedes the command (acceptance-matrix 3.8, prior-reviewer must-stay).**
+  Confirmed in DOM source order: `<p class="warning">` ("Read this first… isn't notarized by Apple…")
+  appears immediately before `.command-block`/`#install-command` inside the same `<li>`, not after. Same
+  order visually and in the accessibility tree (matches tab order capture below, which reaches "Read the
+  installer first" and the warning's own "Read the script" link before Copy). No regression risk observed
+  across the corrected SHA.
 - **Contrast (computed WCAG, live rendered page, chromium, not trusted from the brief alone):**
 
   | Pair | Measured | Brief §4/§7 claim | AA (4.5:1 text) |
@@ -139,11 +145,13 @@ found. Two non-blocking hygiene nits noted below for the record.
   | Glyph-dim (`"Kind of mail" / "Waiting on you"` labels) on board-black | **6.15:1** | 6.2:1 | Pass |
   | Ink-soft body text ("When zero sorts a conversation…") on yellow | **6.71:1** | 6.7:1 | Pass |
   | `#C9CFDC`-family install-band body text on navy | **10.40:1** | 10.4:1 | Pass |
+  | Ink-soft (`.fact-note` / `.faq-list p`) on ticket-stock off-white (`#F6F1E4`) | **9.28:1** | 9.3:1 (DESIGN-BRIEF.md:91) | Pass |
 
-  All six pairs itemized in `DESIGN-BRIEF.md` §4 are now measured and confirmed (initial pass in this
-  session only captured four of six; the remaining two — glyph-dim and ink-soft — were completed in a
-  follow-up validation check). All match the brief's claimed numbers to within rounding and clear WCAG AA
-  by a wide margin. I did not find any pair the brief claimed that the live page contradicts.
+  All seven pairs itemized across `DESIGN-BRIEF.md` §4 and §7 (the §7 off-white-ground refinement
+  specifies its own ink-soft/off-white pair, separate from the ink-soft/yellow pair in §4, and this
+  seventh pair was initially missed in this table — found and measured in this validation round) are now
+  measured and confirmed. All match the brief's claimed numbers to within rounding and clear WCAG AA by a
+  wide margin. I did not find any pair the brief claimed that the live page contradicts.
 
 ## Requirement 3 — Claims audit (repo source), routes, `build.sh` smoke
 
@@ -161,6 +169,19 @@ found. Two non-blocking hygiene nits noted below for the record.
   `"Connect your first inbox"`), row 22 (`PanelView.swift` `SettingsHeader("Sorting engine", ...)`,
   `Link("Get a key", ...)`), row 23 (`PanelView.swift:2941` `"Run zero now"`), row 24
   (`PanelView.swift:1394` `SettingsHeader("Daily routine", ...)`).
+- **Excluded-claims scan (acceptance-matrix 3.2).** Full-text grep of `landing/index.html` for the
+  named forbidden categories — "once a day", "every thread" (as a standalone frequency/scope claim,
+  distinct from row 2's correctly-scoped "every thread stays in All Mail" retention claim which is
+  approved copy, not excluded), "nothing leaves your account", conversion/adoption metrics, customer
+  logos, testimonials, star ratings — returns zero matches. The page makes no unapproved
+  metrics/social-proof/absolute-scope claims.
+- **Requirements visibility near CTA (acceptance-matrix 3.9).** The `<dl class="requirements">` block
+  (macOS 26+/Apple Silicon/Gmail, TypeSafe Jev key + billing note, free/open-source price) sits directly
+  in the hero, 22px below the primary "Install zero for Mac" CTA button (script-measured
+  `getBoundingClientRect` gap, chromium 1440). Computed `opacity: 1` on both the `dl` and its `dd` text —
+  not dimmed/de-emphasized despite `ink-soft` coloring (already independently confirmed 6.71:1 contrast
+  against yellow, well above AA, in the table above). All four named requirements (Apple Silicon, macOS
+  26+, Gmail, Jev key) present verbatim in the visible text.
 - **Row 26 — found defect, now fixed and re-verified.** Landing FAQ said Google sign-in tokens "stay on
   your Mac"; `privacy.html:103` says tokens "live only on your Mac… **except to talk to Google**" — i.e.
   they do transit during OAuth calls. "Stay on your Mac" implies they never leave, which overclaims trust
