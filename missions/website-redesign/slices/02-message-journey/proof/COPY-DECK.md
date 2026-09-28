@@ -37,7 +37,7 @@ Final: *"No. zero runs on your Mac, but it sends relevant thread text to TypeSaf
 
 ## 3. Claims ledger
 
-Authority order: **app source > README > install-zero.sh > privacy.html**. PRODUCT.md is not authoritative. App source outranks README for UI strings, because the README is stale on at least "Daily schedule" and "AI engine".
+Authority order: **app source > README > install-zero.sh > privacy.html**. PRODUCT.md is not authoritative. App source outranks README for UI strings, because the README was stale on "Daily schedule" and "AI engine" when audited (fixed by main-lead at cbb4073).
 
 | # | Visitor claim (copy-cleansed.md) | Source |
 | --- | --- | --- |
@@ -64,7 +64,7 @@ Authority order: **app source > README > install-zero.sh > privacy.html**. PRODU
 | 21 | Connect your first inbox | OnboardingView.swift:82 |
 | 22 | Settings → Sorting engine, Get a key, Save | PanelView.swift:1618, 1629; README First run 2 |
 | 23 | Run zero now | PanelView.swift (footer button); README First run 4 |
-| 24 | Settings → Daily routine | PanelView.swift:1396 (the README's "Daily schedule" is stale) |
+| 24 | Settings → Daily routine | PanelView.swift:1396; README matches since cbb4073 (said "Daily schedule" when audited) |
 | 25 | Multiple accounts together in Open loops | README; screenshot shows 2 accounts |
 | 26 | Google sign-in tokens stay on your Mac | privacy.html:103 (primary); lib/keeper_server.py:47-49; macapp/Sources/main.swift:729-732 |
 | 27 | "When zero sorts a conversation…" (scoped; no every-thread claim) | README "checks your connected Gmail inboxes"; main-lead 04:41Z/05:01Z |
