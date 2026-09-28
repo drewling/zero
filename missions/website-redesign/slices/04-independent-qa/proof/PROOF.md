@@ -128,9 +128,14 @@ found. Two non-blocking hygiene nits noted below for the record.
   | Yellow "STAYS" status on board-black | **11.69:1** | 11.7:1 | Pass |
   | Off-white command-block text on black | **14.90:1** | not itemized, well above AA | Pass |
   | Navy text on ticket-stock off-white (`#F6F1E4`) | **14.4:1** (confirmed bg `rgb(246,241,228)` matches `#F6F1E4`) | 14.4:1 | Pass |
+  | Glyph-dim (`"Kind of mail" / "Waiting on you"` labels) on board-black | **6.15:1** | 6.2:1 | Pass |
+  | Ink-soft body text ("When zero sorts a conversation…") on yellow | **6.71:1** | 6.7:1 | Pass |
+  | `#C9CFDC`-family install-band body text on navy | **10.40:1** | 10.4:1 | Pass |
 
-  All measured pairs match the brief's claimed numbers to within rounding, and all clear WCAG AA by a wide
-  margin. I did not find any pair the brief claimed that the live page contradicts.
+  All six pairs itemized in `DESIGN-BRIEF.md` §4 are now measured and confirmed (initial pass in this
+  session only captured four of six; the remaining two — glyph-dim and ink-soft — were completed in a
+  follow-up validation check). All match the brief's claimed numbers to within rounding and clear WCAG AA
+  by a wide margin. I did not find any pair the brief claimed that the live page contradicts.
 
 ## Requirement 3 — Claims audit (repo source), routes, `build.sh` smoke
 
