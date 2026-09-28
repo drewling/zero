@@ -207,6 +207,12 @@ found. Two non-blocking hygiene nits noted below for the record.
   - No horizontal-overflow or `.status`/table-cell regression on the corrected SHA (re-ran the full
     320/390/1440 × chromium/webkit sweep after the fix landed): 0 offenders, `display: table-cell` intact
     at every width in both engines.
+  - **`build.sh` does not itself check `robots.txt`/`sitemap.xml`/`llms.txt`/`og.png` (acceptance-matrix
+    3.4 names all four)**, so I checked them independently against the running Docker image: all four
+    return `200`. Content sanity-checked too, not just status code: `robots.txt` has a real crawler
+    policy (search/AI-answer bots allowed, training crawlers opted out, `Sitemap:` line present);
+    `sitemap.xml` is well-formed with the three real routes (`/`, `/privacy.html`, `/terms.html`);
+    `og.png` is a real 1200×630 image (standard OG card size), not a placeholder.
 
 ## Requirement 4 — Explicit pass/fail, no overclaiming automated tests as visual acceptance
 
