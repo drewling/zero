@@ -93,6 +93,7 @@
           <p class="sub">It gets things wrong sometimes. Check your first few runs before you set a schedule.</p>
         </div>
         <div class="sorting-board">
+          <canvas class="sort-track" hidden aria-hidden="true"></canvas>
           <table>
             <caption class="sr-only">Examples from zero’s default rules</caption>
             <thead><tr><th scope="col">Kind of mail</th><th scope="col">Default rule</th></tr></thead>
@@ -107,6 +108,7 @@
             </tbody>
           </table>
           <p class="board-foot">These are zero’s default rules. This isn’t a live inbox, and it isn’t a promise. The AI can sort a message wrongly. In the app, mail that stays appears under <strong>Waiting on you</strong> in <strong>Open loops</strong>.</p>
+          <button class="demo-button sort-replay" type="button" hidden>Run the sort again</button>
         </div>
       </div>
     </section>
@@ -117,6 +119,10 @@
           <h2 id="undo-title">Nothing is deleted.</h2>
           <p class="sub">When zero archives a conversation, it removes Gmail’s Inbox label and adds a recovery label with that day’s date. The mail stays in All Mail, and search still finds it.</p>
           <div class="label-demo"><span class="label-chip">🗄️ Auto-Archived YYYY-MM-DD</span><span class="label-note">This is the label’s format. The recovery label is dated for the day.</span></div>
+          <div class="rail-wrap" hidden>
+            <canvas class="rail-diagram" aria-hidden="true"></canvas>
+            <button class="demo-button rail-replay" type="button">Show a restore</button>
+          </div>
         </div>
         <ul class="undo-list">
           <li><strong>Put a run back</strong><span>Open the <strong>Undo</strong> tab in zero and choose <strong>Restore all</strong> for that day.</span></li>

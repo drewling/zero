@@ -80,6 +80,13 @@ test('homepage preserves approved static structure and self-hosts fonts', () => 
   assert.match(homepage, /<table>/);
   assert.match(homepage, /<td><span class="status stays">/);
   assert.doesNotMatch(homepage, /<td class="status/);
+  assert.match(homepage, /class="sort-track" hidden/);
+  assert.match(homepage, /class="rail-wrap" hidden/);
+  assert.match(homepage, /Run the sort again/);
+  assert.match(source, /IntersectionObserver/);
+  assert.match(source, /prefers-reduced-motion/);
+  assert.match(source, /document\.hidden/);
+  assert.match(source, /ResizeObserver/);
   assert.match(homepage, /archivo-latin\.woff2/);
   assert.doesNotMatch(homepage, /fonts\.googleapis\.com/);
   assert.match(homepage, /href="\/privacy\.html"/);

@@ -898,3 +898,207 @@ h2 {
     padding-inline: 12px;
   }
 }
+
+/* ---------- Approved motion layer: The board sorts ---------- */
+:root {
+  --motion-ease: cubic-bezier(.16, 1, .3, 1);
+  --pending-word: #b9b2a6;
+}
+
+.sorting-board {
+  position: relative;
+}
+
+.sort-track {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.sorting-board table,
+.sorting-board .board-foot,
+.sorting-board .sort-replay {
+  position: relative;
+  z-index: 1;
+}
+
+.has-track .status-word {
+  display: inline-block;
+  transform-origin: 50% 60%;
+  transition: color .18s var(--motion-ease);
+}
+
+.has-track .status[data-pending] .status-word {
+  color: var(--pending-word);
+}
+
+.has-track .status-word.flap {
+  animation: verdict-flap .22s steps(2, jump-none);
+}
+
+@keyframes verdict-flap {
+  from { transform: scaleY(.2); }
+}
+
+.has-track .status[data-pending] i {
+  opacity: .25;
+  box-shadow: none;
+}
+
+.has-track .status i {
+  transition: opacity .18s var(--motion-ease), box-shadow .5s var(--motion-ease);
+}
+
+.has-track tbody th {
+  transition: color .4s var(--motion-ease);
+}
+
+.has-track.sorted tbody tr:has(.archived) th {
+  color: #cfc8bb;
+}
+
+.demo-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 4px 0;
+  padding: 7px 12px;
+  border: 1.5px solid #3a3733;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--glyph);
+  cursor: pointer;
+  font: 700 13px/1.2 Archivo, system-ui, sans-serif;
+  letter-spacing: .02em;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+
+.demo-button:hover {
+  border-color: var(--signal);
+}
+
+.demo-button:focus-visible {
+  outline: 3px solid var(--signal);
+  outline-offset: 3px;
+}
+
+.rail-wrap {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1.5px solid rgba(10, 31, 68, .35);
+}
+
+.rail-diagram {
+  display: block;
+  width: 100%;
+  height: 150px;
+}
+
+.rail-wrap .demo-button {
+  margin: 10px 0 0;
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.rail-wrap .demo-button:hover {
+  background: rgba(10, 31, 68, .08);
+  border-color: var(--ink);
+}
+
+.rail-wrap .demo-button:focus-visible {
+  outline-color: var(--ink);
+}
+
+.will-board .install-steps > li::before {
+  transform-origin: 50% 50%;
+}
+
+.will-board:not(.boarding) .install-steps > li::before {
+  color: transparent;
+  transform: rotateX(80deg);
+}
+
+.will-board:not(.boarding) .install-steps > li > div {
+  opacity: .001;
+  clip-path: inset(0 100% 0 0);
+}
+
+.boarding .install-steps > li::before {
+  transition: transform .42s var(--motion-ease), color .12s linear .2s;
+}
+
+.boarding .install-steps > li > div {
+  transition: opacity .3s ease-out, clip-path .6s var(--motion-ease);
+}
+
+.boarding .install-steps > li:nth-child(1)::before,
+.boarding .install-steps > li:nth-child(1) > div { transition-delay: 0s, .08s; }
+.boarding .install-steps > li:nth-child(2)::before,
+.boarding .install-steps > li:nth-child(2) > div { transition-delay: .12s, .2s; }
+.boarding .install-steps > li:nth-child(3)::before,
+.boarding .install-steps > li:nth-child(3) > div { transition-delay: .24s, .32s; }
+.boarding .install-steps > li:nth-child(4)::before,
+.boarding .install-steps > li:nth-child(4) > div { transition-delay: .36s, .44s; }
+
+.will-board .install-steps:focus-within > li > div,
+.will-board .install-steps:focus-within > li::before {
+  opacity: 1;
+  clip-path: none;
+  color: var(--glyph);
+  transform: none;
+  transition: none;
+}
+
+.copy-button.flapped {
+  animation: copy-flap .26s var(--motion-ease);
+}
+
+@keyframes copy-flap {
+  0% { transform: scaleY(1); }
+  40% { transform: scaleY(.2); background: var(--glyph); }
+  100% { transform: scaleY(1); }
+}
+
+.faq-ready summary::after {
+  display: inline-block;
+}
+
+.faq-ready details[open] summary::after {
+  animation: sign-flap .2s steps(2, jump-none);
+}
+
+@keyframes sign-flap {
+  from { transform: scaleY(.15); }
+}
+
+.faq-ready details[open] > p {
+  animation: faq-open .28s var(--motion-ease);
+}
+
+@keyframes faq-open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy-button.flapped,
+  .faq-ready details[open] summary::after,
+  .faq-ready details[open] > p,
+  .has-track .status-word.flap {
+    animation: none;
+  }
+}
+
+.motion-reduced .copy-button.flapped,
+.motion-reduced .faq-ready details[open] summary::after,
+.motion-reduced .faq-ready details[open] > p,
+.motion-reduced .has-track .status-word.flap {
+  animation: none;
+}
+
+.demo-button[hidden] {
+  display: none;
+}

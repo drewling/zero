@@ -1,0 +1,24 @@
+Motion slice pre-handoff evidence (2026-09-28)
+
+Source checks:
+- node --test landing/test-site.mjs: 5 passed, 0 failed.
+- node --check landing/site.js: passed.
+- bash -n landing/build.sh landing/deploy.sh macapp/install-zero.sh: passed.
+- git diff --check -- landing: passed.
+
+Real browser path via Aside, viewport reported 1440x900:
+- Landing rendered with native semantic table and visible verdict words.
+- Sorting section exposed the Run the sort again control. Activating it completed without console errors.
+- Recovery section exposed Show a restore. Activation changed exact textContent to Show the archive again. No console errors.
+- FAQ activation opened the answer for Does my email stay on my Mac?, including the current token-storage wording.
+- Install command, copy control, install steps, legal links, and footer remained available in the accessibility tree.
+
+Lifecycle/source evidence:
+- Source contains IntersectionObserver, ResizeObserver, document.hidden pause/resume handling, prefers-reduced-motion, DPR cap 2, and no prototype query hooks.
+- Canvas elements are aria-hidden and hidden in static HTML until Canvas support is available.
+- Static tests assert the native table, hidden optional controls, and lifecycle markers.
+
+Blocked or QA-owned checks:
+- bash landing/build.sh zero-motion-candidate-1: installer parse passed, Docker smoke blocked because the local Docker daemon was unavailable at unix:///Users/light/.docker/run/docker.sock.
+- Aside did not expose viewport emulation or prefers-reduced-motion controls. Strict narrow-mobile and reduced-motion captures remain for independent QA.
+- No deployment was attempted.
