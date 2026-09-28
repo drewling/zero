@@ -2,7 +2,7 @@
 id: OPR.99.0.2.2
 slice: 02-motion-implementation
 mission: website-motion
-status: blocked
+status: ready
 stage: wip
 verified: 2026-09-28 against current landing source and motion mission contract
 created: 2026-09-28
@@ -35,4 +35,4 @@ Translate the approved storyboard into the existing static HTML/CSS/JS landing p
 
 ## Status
 
-Blocked on approved design direction. Builder owns `landing/`; design and QA should not concurrently edit those files.
+Approved 2026-09-28 20:26Z by the user. Builder owns `landing/`; design and QA should not concurrently edit those files. Use `../01-motion-direction/proof/MOTION-BRIEF.md` and prototype revision `3f06044` as the direction, with legible verdicts, instant reduced-motion rail swap, both Canvas moments, replay controls and no pointer effect. Follow the brief's lifecycle/budget; do not ship prototype query hooks. Hand off a source SHA and evidence for independent QA before release.
