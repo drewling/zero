@@ -1,135 +1,103 @@
 ---
 name: zero landing
-description: A restrained, plainspoken landing page for a Mac menu-bar utility that keeps Gmail's open loops visible.
+description: A departure-board landing page for a Mac menu-bar utility that keeps Gmail conversations needing action visible and archives the rest reversibly.
 colors:
-  charcoal: "#151313"
-  warm-surface: "#1e1a19"
-  warm-white: "#f5f1ee"
-  muted-stone: "#bfb6b1"
-  hairline: "#403836"
-  coral: "#ffaaa0"
-  coral-hover: "#ffcbc3"
-  dark-ink: "#261513"
-  command-black: "#110f0f"
-  control-brown: "#302825"
+  signal-yellow: "#FFC72C"
+  enamel-navy: "#0A1F44"
+  ink-soft: "#2B3F66"
+  board-black: "#161514"
+  flap-face: "#23211F"
+  glyph: "#F4EFE2"
+  glyph-dim: "#9C958A"
+  ticket-stock: "#F6F1E4"
 typography:
   display:
-    fontFamily: "Geist, Arial, sans-serif"
-    fontSize: "clamp(46px, 5.35vw, 76px)"
-    fontWeight: 560
-    lineHeight: 1.04
-    letterSpacing: "-0.04em"
-  headline:
-    fontFamily: "Geist, Arial, sans-serif"
-    fontSize: "clamp(32px, 3.5vw, 46px)"
-    fontWeight: 530
-    lineHeight: 1.13
-    letterSpacing: "-0.035em"
+    fontFamily: "Archivo, system-ui, sans-serif"
+    fontSize: "clamp(40px, 5.2vw, 76px)"
+    fontWeight: 800
+    fontStretch: "78%"
+    lineHeight: .98
+    letterSpacing: "-0.02em"
   body:
-    fontFamily: "Geist, Arial, sans-serif"
+    fontFamily: "Archivo, system-ui, sans-serif"
     fontSize: "17px"
-    fontWeight: 400
-    lineHeight: 1.6
-  label:
-    fontFamily: "Geist, Arial, sans-serif"
-    fontSize: "14px"
-    fontWeight: 550
-    lineHeight: 1.4
+    fontWeight: 450
+    lineHeight: 1.5
   mono:
     fontFamily: "Geist Mono, monospace"
-    fontSize: "13px"
+    fontSize: "15px"
     lineHeight: 1.7
+  board:
+    fontFamily: "Archivo, system-ui, sans-serif"
+    fontStretch: "72%"
+    fontWeight: 800
 rounded:
-  control: "9px"
-  panel: "16px"
+  board: "12px"
+  tile: "clamp(3px, .35vw, 5px)"
+  button: "8px"
   command: "10px"
-  small: "6px"
 spacing:
-  page-gutter: "48px"
-  section: "100px"
-  content-gap: "32px"
+  page-padding: "clamp(20px, 5vw, 72px)"
+  section: "clamp(72px, 9vw, 128px)"
+  content-gap: "clamp(28px, 5vw, 80px)"
 components:
+  departure-board:
+    backgroundColor: "{colors.board-black}"
+    tileColor: "{colors.flap-face}"
+    glyphColor: "{colors.glyph}"
+    desktopColumns: 15
+    mobileColumns: 10
   primary-button:
-    backgroundColor: "#ffb1a6"
-    textColor: "{colors.dark-ink}"
-    typography: "{typography.label}"
-    rounded: "{rounded.control}"
-    padding: "15px 21px"
-  product-shot:
-    rounded: "{rounded.panel}"
-  command-block:
-    backgroundColor: "{colors.command-black}"
-    rounded: "{rounded.command}"
-    padding: "16px"
+    backgroundColor: "{colors.enamel-navy}"
+    textColor: "{colors.signal-yellow}"
+    rounded: "{rounded.button}"
+  install-command:
+    backgroundColor: "{colors.board-black}"
+    fontFamily: "{typography.mono.fontFamily}"
+  ticket-section:
+    backgroundColor: "{colors.ticket-stock}"
 ---
 
 ## Overview
 
-**Creative North Star: "A useful Mac utility, shown plainly."**
+**Creative North Star: “Departure board.”**
 
-The landing page is a restrained product showcase: warm charcoal, warm-white Geist, a quiet coral action color, and one large bounded view of the real app. It explains the promise before the mechanics, then makes setup, privacy, reversibility, and limitations easy to find. The result should feel crafted and calm in the spirit of Raycast, without imitating Raycast's identity or inventing an interactive inbox.
+The page behaves like a station departure board. A visitor glances at the headline, sees what still needs them, then follows the route through the real app, default sorting rules, reversibility, requirements, costs, and install steps. The page is a replacement visual world, not an extension of the discarded charcoal and coral system.
 
-**Key Characteristics:**
-- Plainspoken product clarity over spectacle.
-- Warm dark surfaces with one soft coral action voice.
-- Real product evidence, fictional demo content clearly captioned.
-- Generous two-column breathing room that collapses cleanly on small screens.
-- Trust information is part of the interface, not buried in decoration.
+The visual language is signal yellow ground, enamel navy rules and type, black split-flap tiles, warm glyphs, and a navy install band. The approved refinement adds ticket-stock off-white to the **Before you install** and **Questions** sections so the long mobile read does not become an uninterrupted yellow field.
 
-**The Plain Utility Rule.** Show one useful Mac utility, one clear installation path, and the real product image. Do not make the page compete with the app.
+## Product evidence and claims
 
-## Colors
+- The real `assets/zero-panel.png` is the only product image. Its caption says names and subjects are made up.
+- The board is an illustration of default rules, not a live inbox or a guarantee.
+- Archive is described as reversible. Nothing is deleted. Gmail All Mail and the dated recovery label remain explicit.
+- The Jev data path, optional draft provider, Apple Silicon and macOS 26 requirements, unverified Google app warning, ad-hoc signing, and provider billing remain visible.
+- No testimonials, logos, metrics, adoption claims, or unsupported privacy promises are used.
 
-The page uses charcoal as its continuous canvas, a slightly lifted warm surface for setup, warm-white for primary reading, muted stone for supporting copy, and coral for actions, links, focus, and hover. The blue checkmark icon is a fixed brand mark, not a general palette role.
+## Typography and assets
 
-**The Single Accent Rule.** Coral carries action and attention; do not introduce a second promotional accent.
+Archivo is self-hosted as the Latin-subset variable `assets/archivo-latin.woff2`, with width axis 62–125 and weight axis 100–900. Its source is the Archivo project at commit `b5d63988ce19d044d3e10362de730af00526b672`; the matching `assets/ARCHIVO-OFL.txt` records the SIL Open Font License and provenance. Geist Mono remains self-hosted for the install command and recovery label.
 
-## Typography
+The mockup used Google Fonts only as an authoring convenience. Production has no Google Fonts request. The Docker image copies the complete `assets/` directory.
 
-Self-hosted Geist is the only family. Large headings are medium-weight, tightly tracked, and balanced rather than ornamental. Body copy is readable and conversational. Geist Mono is reserved for the install command. Keep the hierarchy compact: display promise, section headline, explanatory body, then small operational labels.
+## Layout and responsive rules
 
-**The Useful Scale Rule.** Typography should make the next decision obvious: understand, inspect, install, or review.
+- The desktop headline board is two rows by 15 columns: `KEEP THE MAIL` and `THAT NEEDS YOU.`
+- The mobile board is three rows by 10 columns: `KEEP THE`, `MAIL THAT`, and `NEEDS YOU.` It switches at 760px.
+- The hero uses a 5:6 text-to-product split before collapsing to a single column.
+- Sorting rules use a dark timetable board. `Stays` gets signal yellow. `Archived` gets a dim outline mark.
+- Before-install facts use a three-column label, fact, caveat table on wide screens and a single readable flow on narrow screens.
+- The install band is navy. Questions return to ticket stock.
+- The page was authored against the approved 1440px, 390px, and 320px captures with no horizontal overflow as an acceptance requirement.
 
-## Layout
+## Interaction, accessibility, and motion
 
-The shared content frame is capped at 1200px with a 48px desktop gutter. The first viewport places left-aligned promise, explanation, action, requirements, and cost note beside one large product image. Workflow and FAQ use two-column editorial layouts; setup uses a text-and-steps split inside the lifted surface. Sections are separated by hairlines and generous vertical rhythm, not cards everywhere.
+The headline tiles are server-rendered and visible without JavaScript. JavaScript only cycles and settles them once when reduced motion is not requested. `prefers-reduced-motion: reduce` disables the animation and transitions. The visual board is `aria-hidden` and the semantic headline is the screen-reader-only `h1`.
 
-On narrower screens, columns become a single readable flow at 760px, while the 1100px breakpoint reduces gutters and inter-column gaps. At 1500px and above, the hero gets more vertical room. The navigation remains a compact horizontal pair; it does not become a stacked menu.
+The sorting board retains row and cell semantics. The FAQ uses native `details` disclosures. Focus rings are three pixels and switch to signal yellow on navy and board surfaces. The install command keeps the `install-command`, `copy-command`, and `copy-status` IDs, including clipboard fallback text and pending-button state.
 
-**The Evidence-Adjacent Action Rule.** Keep requirements and cost directly below the install action so the decision is informed before the click.
+## Build and deployment constraints
 
-## Elevation & Depth
+The page remains static HTML, CSS, JavaScript, nginx, and Docker. `landing/build.sh` must validate the homepage, legal routes, install redirects, CSS, JS, Archivo, Geist Mono, product image, 404 behavior, and the returned installer script. `node --test landing/test-site.mjs` covers clipboard behavior and critical page structure.
 
-Depth is tonal, not glossy. The page is mostly flat charcoal with one warm-surface installation band, near-black command block, thin hairlines, and the product screenshot's own visual detail. There are no decorative shadows or gradients in the landing system. On desktop widths of at least 1000px, the product image arrives over 0.8s with a restrained clip-path reveal and 12px upward translation, using `cubic-bezier(.16,1,.3,1)`; reduced-motion users receive no animation.
-
-## Shapes
-
-Use gently rounded controls and panels: 9px for the primary action, 10px for the command block, 16px for the product image, and 6px for compact controls. FAQ rows are line-led rather than enclosed cards. Focus uses a 3px coral outline with a 6px offset and must remain visible.
-
-**The Quiet Container Rule.** Round containers only when they group a meaningful object or action; do not turn every text block into a card.
-
-## Components
-
-- **Brand and navigation:** Small blue checkmark plus `zero`, with sparse text links and no heavy navigation chrome.
-- **Primary install button:** Coral, dark ink text, download icon, and a clear product-specific label. Hover lightens the coral; focus is explicit.
-- **Product shot:** The supplied `zero-panel.png`, displayed large with a 16px radius and a centered note that names and subjects are fictional.
-- **Workflow list:** Three plain text blocks with strong short headings and muted explanations. No icon grid or fabricated metrics.
-- **Setup steps:** Ordered steps use outlined numbered circles, a monospace install command, copy affordance, and an expandable caveat for security and prerequisite details.
-- **FAQ details:** Native disclosure rows with hairlines, plus/minus affordance, and concise answers.
-- **Footer:** Minimal brand, source, privacy, and terms links.
-
-## Do's and Don'ts
-
-### Do:
-- **Do** use self-hosted Geist and Geist Mono from `landing/assets`.
-- **Do** preserve the warm charcoal, warm red-coral, and warm-white relationship.
-- **Do** show the actual product image and label fictional demo content.
-- **Do** state macOS 26+, Apple Silicon, Gmail, Jev key, provider billing, privacy, and reversibility plainly.
-- **Do** keep interactions native, sparse, keyboard-visible, and understandable.
-
-### Don't:
-- **Don't** clone Raycast, add neon gradients, or turn the page into a generic SaaS dashboard.
-- **Don't** invent inbox interactions, testimonials, metrics, or product capabilities.
-- **Don't** use `Persuade` as a universal visual rule; it belongs to a surface brief when explicitly requested.
-- **Don't** hide risk: zero can be wrong, sends thread text to configured services, and is ad-hoc signed.
-- **Don't** replace the simple install path with competing offers or distracting secondary CTAs.
+Deployment is intentionally outside this surface. Dokploy currently serves a raw Compose service pinned to an image, so `autoDeploy=true` is not evidence of Git commit deployment. Do not deploy from the landing build slice.

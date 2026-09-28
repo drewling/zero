@@ -4,20 +4,21 @@
 >
 > **HOW (the drop verb, not hand-placement):** put media files under `proof/`, then ATTACH them with `rig proof add OPR.99.0.1.3 --artifact-type qa --verdict PASS --candidate-sha <tip> --money-evidence "<one line>" --evidences "1" --media "screenshot-01.png"` — the drop writes the C1 header the Living Notes DELIVERED pairing joins on. Hand-placing files without a drop leaves the deliverable unpaired and `unverified`.
 
-Closed by: <seat>   Date: <date>   Verdict: <pass | pass-with-residue | ...>
+Closed by: development-implementer@zero   Date: 2026-09-28   Verdict: pass-with-residue
 
 ## What this proves
 
-<1-3 sentences: the claim the slice made, now demonstrated>
+The approved Departure board landing page is implemented with the approved copy, self-hosted Archivo, responsive 1440/390/320 layouts, semantic sorting table, bounded flap animation, preserved installer/legal seams, and ticket-stock tonal sections. Local automated checks, nginx Docker smoke, and a final Aside inspection passed. Independent QA approval remains open.
 
 ## Artifacts (media in proof/)
 
 Dropped via `rig proof add … --evidences … --media …` (one drop per verdict; media attached, never only hand-listed):
 
-- proof/screenshot-01.png — <what it shows>
-- proof/capture-behavior.gif — <what it shows>
-- proof/command-output.txt — <what it proves>
+- proof/implementation-evidence.md — proof-contract mapping and verification results
+- proof/implementation-desktop.png — desktop implementation capture
+- proof/implementation-mobile.png — 390px mobile implementation capture
+- proof/implementation-mobile-320.png — 320px mobile implementation capture
 
 ## Residue / caveats (if any)
 
-<documented residue: what's not covered + where it's tracked>
+The strict visual capture workflow is owned by the independent QA seat. The attached screenshots were produced during local browser verification before the final desktop table-width correction; the final Aside inspection independently confirmed the corrected 1440px overflow result. QA should recapture strict policy-compliant visual evidence before approval. No deployment or push was performed.

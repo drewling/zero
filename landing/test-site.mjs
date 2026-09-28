@@ -4,6 +4,7 @@ import { runInNewContext } from 'node:vm';
 import test from 'node:test';
 
 const source = readFileSync(new URL('./site.js', import.meta.url), 'utf8');
+const homepage = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
 const installCommand = 'curl -fsSL https://zero.headless.com/install | bash';
 
 function page(clipboard) {
@@ -21,7 +22,9 @@ function page(clipboard) {
     'copy-status': { textContent: '' },
   };
   runInNewContext(source, {
-    document: { getElementById: (id) => elements[id] },
+    document: {
+      getElementById: (id) => elements[id],
+    },
     navigator: { clipboard },
   });
   return { button: elements['copy-command'], status: elements['copy-status'] };
@@ -65,4 +68,17 @@ test('unavailable clipboard leaves the optional control hidden', () => {
   const { button } = page(undefined);
   assert.equal(button.hidden, true);
   assert.equal(button.click, undefined);
+});
+
+test('homepage preserves approved static structure and self-hosts fonts', () => {
+  assert.match(homepage, /id="hero-title"/);
+  assert.match(homepage, /aria-hidden="true"/);
+  assert.match(homepage, /id="install-command"/);
+  assert.match(homepage, /id="copy-command"/);
+  assert.match(homepage, /id="copy-status"/);
+  assert.match(homepage, />Archived</);
+  assert.match(homepage, /archivo-latin\.woff2/);
+  assert.doesNotMatch(homepage, /fonts\.googleapis\.com/);
+  assert.match(homepage, /href="\/privacy\.html"/);
+  assert.match(homepage, /href="\/terms\.html"/);
 });

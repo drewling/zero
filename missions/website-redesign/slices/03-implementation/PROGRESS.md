@@ -7,6 +7,6 @@
 
 ## Acceptance
 
-- [ ] Implementation complete
-- [ ] Tests passing
+- [x] Implementation complete
+- [x] Tests passing
 - [ ] Review approved
