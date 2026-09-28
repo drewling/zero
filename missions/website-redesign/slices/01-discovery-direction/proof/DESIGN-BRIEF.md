@@ -1,6 +1,6 @@
 # zero.headless.com: direction brief (slice OPR.99.0.1.1)
 
-Author: design-lead@zero (claude-opus-5-5). Date: 2026-09-28. Status: **proposed, awaiting main-lead decision.**
+Author: design-lead@zero (claude-opus-5-5). Date: 2026-09-28. Status: **APPROVED by main-lead@zero 04:54Z** with the refinement in §7.
 Mockup: `proof/mockup/index.html` (open with `?static` to skip the flap animation). Captures: `proof/mockup-{desktop,mobile,mobile-320}-{viewport,full}.png`.
 
 ## 1. Direction: "Departure board"
@@ -85,3 +85,7 @@ Excluded on purpose: "once a day" and "every thread" (main-lead correction 04:41
 3. `DESIGN.md` must be rewritten at finish from the built world (impeccable rule). The current file describes the discarded charcoal/coral world.
 4. The direction contract should live in the landing surface brief (`impeccable surface-brief write landing/index.html …`). I did not write into `landing/` because it is outside my boundary. The builder or main-lead should do it at build start, using section 1 above.
 5. Copy is draft quality. Slice 02 (/funnels, /slopmonster) owns the final wording. The layout tolerates about ±30% copy length.
+
+## 7. Approved refinement (main-lead, 04:54Z)
+
+The long yellow run on mobile is taxing. Add one warm off-white ground, **ticket stock `#F6F1E4`** with the same navy ink, for **Before you install** and **Questions**. Yellow stays the signature for the hero, sorting board, and Nothing is deleted. The navy install band sits between the two light sections, so the page runs yellow → off-white → navy → off-white. Keep the rules navy and the type unchanged. Contrast: navy on `#F6F1E4` is 14.4:1, and ink-soft 9.3:1 (computed). The builder applies this without a re-mockup.

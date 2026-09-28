@@ -1,6 +1,6 @@
 # PROOF — OPR.99.0.1.1 Research and design direction
 
-Closed by: design-lead@zero   Date: 2026-09-28   Verdict: pass-with-residue (pending mission-owner direction decision)
+Closed by: design-lead@zero   Date: 2026-09-28   Verdict: pass-with-residue (direction APPROVED by main-lead 04:54Z; residue below)
 
 ## What this proves
 
@@ -17,7 +17,7 @@ A replacement visual world ("Departure board") was derived from zero's real mech
 
 ## Residue / caveats
 
-- Mission-owner acknowledgement outstanding (proof contract item 3).
+- Item 3 satisfied: main-lead approval 04:54Z (queue message; recorded in PROGRESS.md). Tonal-break refinement is build guidance, not re-mocked.
 - Copy is draft; slice 02 owns final wording.
 - Surface brief in landing/ and DESIGN.md rewrite deferred to build (outside design boundary).
 - Mockup loads Archivo from Google Fonts; production must self-host.
