@@ -98,6 +98,14 @@ found. Two non-blocking hygiene nits noted below for the record.
   outline is now `rgb(10, 31, 68) solid 3px` (navy) for both `.button` instances, `:focus-visible` matches
   true, and the ring is clearly visible in full-page screenshots
   (`screenshots/focus-ring-nav-fixed-chromium.png`, `screenshots/focus-ring-hero-fixed-chromium.png`).
+  Also checked the other two interactive elements the scoped override targets: the install-band
+  **Copy** button (`.command-block button`) and FAQ `<summary>` elements. Copy button's computed outline
+  color reads as the page's own yellow-fill color when compared naively against its own tiny background,
+  but `outline-offset: 4px` places the ring outside the button against `.command-block`'s black
+  background, where it renders as a clearly visible yellow ring (confirmed by screenshot, not just
+  computed style — a naive same-element background comparison would have wrongly flagged this as a second
+  invisible-ring defect). FAQ `<summary>` on the off-white "Questions" section shows a clearly visible
+  navy ring. Both screenshot-confirmed, no defect.
 - **Tab order** (40-stop capture, chromium 1440): Skip to content → brand → How it sorts → Before you
   install → Source → nav Install → hero Install zero for Mac → Read the installer first → Privacy policy →
   Read the script → Copy → GitHub Releases → TypeSafe → 5× FAQ `<summary>` → footer Source/Privacy/Terms.
@@ -195,8 +203,12 @@ silently treating Playwright output as equivalent.
    hygiene — safe to remove in a future pass, not a functional or visual defect.
 2. **Mid-word break in install URL at narrow widths.** `overflow-wrap: anywhere` occasionally breaks
    mid-word (e.g. "headle-ss.com") rather than only at natural boundaries, at 320/390. Cosmetic only — the
-   command still fully wraps with no clipping or truncation, and remains copy-paste correct via the Copy
-   button (verified: button copies the un-broken source string, not the visually-wrapped text).
+   command still fully wraps with no clipping or truncation. Copy-paste correctness explicitly tested
+   (not assumed): at 320px, clicked `button.copy-button` via Playwright with clipboard permissions granted
+   and read back `navigator.clipboard.readText()`. Result: clipboard content is the exact clean string
+   `curl -fsSL https://zero.headless.com/install | bash` — matches `.command-block`'s DOM `textContent`
+   exactly, no soft-hyphen or visual-wrap artifact, confirming `site.js`'s `command.textContent.trim()`
+   copies the underlying node text rather than any rendered/broken presentation.
 3. **True native device-metrics emulation not available in this environment.** Aside CLI hung with no
    actionable output; Playwright (real chromium + webkit layout engines) was used as the substitute and is
    considered strong but not fully equivalent evidence. If Aside or equivalent becomes available before a
