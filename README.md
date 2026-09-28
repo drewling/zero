@@ -48,9 +48,9 @@ You can also download a release from the [Releases page](https://github.com/drew
 
 2. **Add your Jev key.** In **Settings → Sorting engine**, choose **Get a key** to open TypeSafe. Create a key, paste it into zero, and click **Save**. zero verifies it and stores it locally with owner-only permissions. Jev receives thread text to decide whether a thread should stay in the Inbox, and it's required even if you never touch drafting.
 
-3. Reply drafts are optional. To use them, configure your chosen provider under **Settings → AI engine** and complete any login it requires. You review and edit the result in zero, then explicitly click **Send reply**.
+3. Reply drafts are optional. To use them, configure your chosen provider under **Settings → Reply drafting** and complete any login it requires. You review and edit the result in zero, then explicitly click **Send reply**.
 
-4. Choose **Run zero now** for a first sweep, then set its days and time in **Settings → Daily schedule** once you like the result.
+4. Choose **Run zero now** for a first sweep, then set its days and time in **Settings → Daily routine** once you like the result.
 
 ## Safety and data
 
