@@ -1,0 +1,15 @@
+<!doctype html>
+<!-- Review harness only: a 390x844 same-origin frame so captures can read layout width.
+     This is iframe width, not device emulation (no mobile UA, touch or DPR change). -->
+<meta charset="utf-8">
+<title>390 harness</title>
+<style>html,body{margin:0;background:#222}iframe{display:block;width:390px;height:844px;border:0;background:#fff}</style>
+<iframe id="f"></iframe>
+<script>
+  const f = document.getElementById('f');
+  f.src = './' + (location.search ? '?' + decodeURIComponent(location.search.slice(1)) : '');
+  f.addEventListener('load', () => setTimeout(() => {
+    const d = f.contentDocument.documentElement;
+    document.title = 'sw=' + d.scrollWidth + ' cw=' + d.clientWidth;
+  }, 1500));
+</script>

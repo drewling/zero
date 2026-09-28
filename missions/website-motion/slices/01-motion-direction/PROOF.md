@@ -1,23 +1,23 @@
-# PROOF — OPR.99.0.2.1 Motion direction and storyboard
+# PROOF: OPR.99.0.2.1 Motion direction and storyboard
 
-> **WHO/WHEN:** the impl/QA pair that worked the slice, at slice-close — a slice is NOT done until this file exists and every `SPEC.md` proof-contract item has evidence (mapped 1:1, artifacts under `proof/`). See the `mission-slice-sop` skill + the conventions SSOT (`docs/reference/sdlc-conventions.md` in the repo, `$OPENRIG_HOME/reference/sdlc-conventions.md` on an installed package).
->
-> **HOW (the drop verb, not hand-placement):** put media files under `proof/`, then ATTACH them with `rig proof add OPR.99.0.2.1 --artifact-type qa --verdict PASS --candidate-sha <tip> --money-evidence "<one line>" --evidences "1" --media "screenshot-01.png"` — the drop writes the C1 header the Living Notes DELIVERED pairing joins on. Hand-placing files without a drop leaves the deliverable unpaired and `unverified`.
-
-Closed by: <seat>   Date: <date>   Verdict: <pass | pass-with-residue | ...>
+Closed by: design-lead@zero   Date: 2026-09-28   Verdict: **direction delivered, owner decision pending** (pass-with-residue on mobile visual proof)
 
 ## What this proves
 
-<1-3 sentences: the claim the slice made, now demonstrated>
+A concrete, runnable motion and Canvas direction ("The board sorts") for the live Departure board page. It covers a focal Canvas sort track on the rules table, a second Canvas recovery-rail diagram for "Nothing is deleted", DOM beats on install, copy and FAQ, and reduced-motion and no-Canvas fallbacks. It was measured against a production baseline. No `landing/` file was edited and nothing was deployed.
 
-## Artifacts (media in proof/)
+## Proof contract mapping
 
-Dropped via `rig proof add … --evidences … --media …` (one drop per verdict; media attached, never only hand-listed):
+1. **Storyboard / runnable prototype showing the Canvas focal moment and multiple beats.**
+   - Runnable prototype: `proof/prototype/`. Serve that directory statically, for example `python3 -m http.server` from inside it. `assets` is a relative symlink to `landing/assets` so the prototype uses the real fonts and app image without duplicating 1.5 MB.
+   - Desktop frames (Aside, 1440×900): `storyboard/d-sort-0/700/1300/settled.jpg`, `d-rail-0/450/900.jpg`, `d-restore-450.jpg`, `d-restore-live.jpg`, `d-hero-flap-mid.jpg`, `d-hero.jpg`, `d-install-boarding.jpg`, `d-install-settled.jpg`.
+   - Reduced motion / no Canvas: `d-rm-sort.jpg`, `d-rm-undo.jpg`, `d-nocanvas-sort.jpg`, `d-nocanvas-undo.jpg`.
+   - Mobile (390 px iframe, not device emulation): `m-hero.jpg`, `m-sort-700.jpg`, `m-sort-settled.jpg`, `m-rail-450.jpg`.
+2. **Written motion brief** covering purpose, triggers, timing, reduced-motion and static states, failure fallbacks and the measured baseline: `proof/MOTION-BRIEF.md` §§1 to 7. Owner approval: **pending**, with the questions listed in §9.
 
-- proof/screenshot-01.png — <what it shows>
-- proof/capture-behavior.gif — <what it shows>
-- proof/command-output.txt — <what it proves>
+## Residue / caveats
 
-## Residue / caveats (if any)
-
-<documented residue: what's not covered + where it's tracked>
+- The mobile install and reduced-motion frames are not visually proven because Aside's screenshots timed out on the iframe harness. Only the no-overflow width check (`scrollWidth = clientWidth = 390`) is recorded for those states. The build slice's QA owns that proof on a real narrow viewport.
+- Live frame pacing through Aside is throttled (about 30 fps even when idle). The synchronous draw bench (0.07 ms and 0.02 ms per frame) is the reliable cost figure. Pacing must be re-measured before release.
+- Prototype-only hooks (`?seek`, `?rm`, `?nocanvas`, `?slow`, `?at`, `zeroMotion.stats/bench`, `mobile.html`) must not ship.
+- Per the `1c55bd1` scope correction, no build, QA or release is dispatched from this slice.

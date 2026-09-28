@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>zero — Keep the mail that needs you.</title>
+  <meta name="description" content="zero is a Mac menu-bar app for Gmail. It keeps conversations that still need your attention and archives the rest. Archived mail stays in Gmail.">
+  <meta name="theme-color" content="#FFC72C">
+  <meta name="color-scheme" content="light">
+  <link rel="canonical" href="https://zero.headless.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://zero.headless.com/">
+  <meta property="og:title" content="zero — Keep the mail that needs you.">
+  <meta property="og:description" content="A Mac menu-bar app for Gmail that keeps conversations needing your attention and archives the rest. Archived mail stays in Gmail.">
+  <meta property="og:image" content="https://zero.headless.com/assets/zero-panel.png">
+  <meta property="og:image:width" content="1349">
+  <meta property="og:image:height" content="1166">
+  <meta property="og:image:alt" content="The zero app with fictional demo names and email subjects.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='2' width='60' height='60' rx='15' fill='%230A1F44'/%3E%3Cpath d='M18 34L28.5 44.5L48 19.5' fill='none' stroke='%23FFC72C' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preload" href="assets/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/geist-mono.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="site.css">
+  <link rel="stylesheet" href="motion.css">
+  <script src="site.js" defer></script>
+  <script src="motion.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="wrap site-header">
+    <div class="header-inner">
+      <a class="brand" href="/" aria-label="zero home">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="2" y="2" width="60" height="60" rx="15" fill="#0A1F44"/><path d="M18 34L28.5 44.5L48 19.5" fill="none" stroke="#FFC72C" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>zero</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a class="hide-small" href="#sort">How it sorts</a>
+        <a class="hide-small" href="#before">Before you install</a>
+        <a href="https://github.com/drewling/zero">Source <span aria-hidden="true">↗</span></a>
+        <a class="button button-small" href="#install">Install</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="wrap hero" aria-labelledby="hero-title">
+      <h1 id="hero-title" class="sr-only">Keep the mail that needs you.</h1>
+
+      <div class="flap-board hero-board desktop-board" aria-hidden="true">
+        <div class="flap-row">
+          <span class="tile" data-final="K">K</span><span class="tile" data-final="E">E</span><span class="tile" data-final="E">E</span><span class="tile" data-final="P">P</span><span class="tile blank" aria-hidden="true">·</span><span class="tile" data-final="T">T</span><span class="tile" data-final="H">H</span><span class="tile" data-final="E">E</span><span class="tile blank" aria-hidden="true">·</span><span class="tile" data-final="M">M</span><span class="tile" data-final="A">A</span><span class="tile" data-final="I">I</span><span class="tile" data-final="L">L</span><span class="tile blank" aria-hidden="true">·</span><span class="tile blank" aria-hidden="true">·</span>
+        </div>
+        <div class="flap-row">
+          <span class="tile" data-final="T">T</span><span class="tile" data-final="H">H</span><span class="tile" data-final="A">A</span><span class="tile" data-final="T">T</span><span class="tile blank" aria-hidden="true">·</span><span class="tile" data-final="N">N</span><span class="tile" data-final="E">E</span><span class="tile" data-final="E">E</span><span class="tile" data-final="D">D</span><span class="tile" data-final="S">S</span><span class="tile blank" aria-hidden="true">·</span><span class="tile" data-final="Y">Y</span><span class="tile" data-final="O">O</span><span class="tile" data-final="U">U</span><span class="tile" data-final=".">.</span>
+        </div>
+      </div>
+
+      <div class="flap-board hero-board mobile-board" aria-hidden="true">
+        <div class="flap-row">
+          <span class="tile" data-final="K">K</span><span class="tile" data-final="E">E</span><span class="tile" data-final="E">E</span><span class="tile" data-final="P">P</span><span class="tile blank" aria-hidden="true">·</span><span class="tile" data-final="T">T</span><span class="tile" data-final="H">H</span><span class="tile" data-final="E">E</span><span class="tile blank" aria-hidden="true">·</span><span class="tile blank" aria-hidden="true">·</span>
+        </div>
+        <div class="flap-row">
+          <span class="tile" data-final="M">M</span><span class="tile" data-final="A">A</span><span class="tile" data-final="I">I</span><span class="tile" data-final="L">L</span><span class="tile blank" aria-hidden="true">·</span><span class="tile" data-final="T">T</span><span class="tile" data-final="H">H</span><span class="tile" data-final="A">A</span><span class="tile" data-final="T">T</span><span class="tile blank" aria-hidden="true">·</span>
+        </div>
+        <div class="flap-row">
+          <span class="tile" data-final="N">N</span><span class="tile" data-final="E">E</span><span class="tile" data-final="E">E</span><span class="tile" data-final="D">D</span><span class="tile" data-final="S">S</span><span class="tile blank" aria-hidden="true">·</span><span class="tile" data-final="Y">Y</span><span class="tile" data-final="O">O</span><span class="tile" data-final="U">U</span><span class="tile" data-final=".">.</span>
+        </div>
+      </div>
+
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="lead">zero is a Mac menu-bar app for Gmail. It keeps conversations that still need your attention and archives the rest. Archived mail stays in Gmail. You can put it back.</p>
+          <div class="actions">
+            <a class="button button-large" href="#install">Install zero for Mac <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16m-6-6 6 6 6-6"/></svg></a>
+            <a class="quiet-link" href="/install.sh">Read the installer first</a>
+          </div>
+          <dl class="requirements">
+            <dt>Needs</dt><dd>Apple Silicon Mac, macOS 26 or later, Gmail</dd>
+            <dt>Sorting</dt><dd>Your own TypeSafe Jev key. TypeSafe bills you for what you use.</dd>
+            <dt>Price</dt><dd>zero is free and open source.</dd>
+          </dl>
+        </div>
+        <figure class="product-shot">
+          <img src="assets/zero-panel.png" width="1349" height="1166" fetchpriority="high" alt="zero’s Open loops panel lists conversations needing attention across two Gmail accounts, with Accounts, Undo and Settings tabs.">
+          <figcaption>The real zero app. Names and subjects are made up.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="wrap section" id="sort" aria-labelledby="sort-title">
+      <div class="split">
+        <div>
+          <h2 id="sort-title">What stays. What gets archived.</h2>
+          <p class="sub">When zero sorts a conversation, it checks it against rules written in plain English. Edit them in Settings. If someone is waiting on you, or something needs action, it stays in your Inbox. The rest is archived.</p>
+          <p class="sub">It gets things wrong sometimes. Check your first few runs before you set a schedule.</p>
+        </div>
+        <div class="sorting-board">
+          <canvas class="sort-track" hidden aria-hidden="true"></canvas>
+          <table>
+            <caption class="sr-only">Examples from zero’s default rules</caption>
+            <thead><tr><th scope="col">Kind of mail</th><th scope="col">Default rule</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Someone is waiting for your reply</th><td><span class="status stays"><i aria-hidden="true"></i>Stays</span></td></tr>
+              <tr><th scope="row">A payment has failed</th><td><span class="status stays"><i aria-hidden="true"></i>Stays</span></td></tr>
+              <tr><th scope="row">A deadline with a consequence</th><td><span class="status stays"><i aria-hidden="true"></i>Stays</span></td></tr>
+              <tr><th scope="row">A receipt or statement</th><td><span class="status archived"><i aria-hidden="true"></i>Archived</span></td></tr>
+              <tr><th scope="row">A newsletter</th><td><span class="status archived"><i aria-hidden="true"></i>Archived</span></td></tr>
+              <tr><th scope="row">Cold sales email</th><td><span class="status archived"><i aria-hidden="true"></i>Archived</span></td></tr>
+              <tr><th scope="row">You sent the last message</th><td><span class="status archived"><i aria-hidden="true"></i>Archived</span></td></tr>
+            </tbody>
+          </table>
+          <p class="board-foot">These are zero’s default rules. This isn’t a live inbox, and it isn’t a promise. The AI can sort a message wrongly. In the app, mail that stays appears under <strong>Waiting on you</strong> in <strong>Open loops</strong>.</p>
+          <button class="demo-button sort-replay" type="button" hidden>Run the sort again</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap section" id="undo" aria-labelledby="undo-title">
+      <div class="split">
+        <div>
+          <h2 id="undo-title">Nothing is deleted.</h2>
+          <p class="sub">When zero archives a conversation, it removes Gmail’s Inbox label and adds a recovery label with that day’s date. The mail stays in All Mail, and search still finds it.</p>
+          <div class="label-demo"><span class="label-chip">🗄️ Auto-Archived YYYY-MM-DD</span><span class="label-note">This is the label’s format. The recovery label is dated for the day.</span></div>
+          <div class="rail-wrap" hidden>
+            <canvas class="rail-diagram" aria-hidden="true"></canvas>
+            <button class="demo-button rail-replay" type="button">Show a restore</button>
+          </div>
+        </div>
+        <ul class="undo-list">
+          <li><strong>Put a run back</strong><span>Open the <strong>Undo</strong> tab in zero and choose <strong>Restore all</strong> for that day.</span></li>
+          <li><strong>Find it in Gmail</strong><span>Search for the dated label, or look in All Mail. Archived messages remain in Gmail.</span></li>
+          <li><strong>Change what stays</strong><span>Edit the rules in <strong>Settings → Rules</strong>.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="ticket-section section" id="before" aria-labelledby="before-title">
+      <div class="wrap">
+        <h2 id="before-title">Before you install</h2>
+        <p class="sub">What zero needs, where your mail goes, and what it costs.</p>
+        <div class="facts">
+          <div class="fact"><span class="fact-key">Your Mac</span><span class="fact-value">Apple Silicon with macOS 26 Tahoe or later.</span><span class="fact-note">The installer stops if your Mac can’t run it.</span></div>
+          <div class="fact"><span class="fact-key">Gmail</span><span class="fact-value">You sign in to Google from the app. zero never sees your password.</span><span class="fact-note">Google may warn that the app is unverified because zero hasn’t completed Google’s app verification.</span></div>
+          <div class="fact"><span class="fact-key">Jev key</span><span class="fact-value">Required. Jev is the TypeSafe AI service that sorts your mail.</span><span class="fact-note">TypeSafe bills and rate-limits usage on your account.</span></div>
+          <div class="fact"><span class="fact-key">Your mail</span><span class="fact-value">zero runs on your Mac. To sort a conversation, it sends the relevant thread text to Jev. If you ask for a reply draft, that text also goes to the AI provider you picked.</span><span class="fact-note">The zero project doesn’t run a server that receives your email. <a href="/privacy.html">Privacy policy</a>.</span></div>
+          <div class="fact"><span class="fact-key">Replies</span><span class="fact-value">Drafts are optional. zero sends nothing until you click <strong>Send reply</strong>.</span><span class="fact-note">Drafts use the account behind the agent CLI you set up.</span></div>
+          <div class="fact"><span class="fact-key">The app</span><span class="fact-value">Ad-hoc signed. It isn’t notarized by Apple or in the App Store.</span><span class="fact-note">The installer may add Homebrew, Python, Node, the Google Workspace CLI, and Claude Code.</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <section class="install-band" id="install" aria-labelledby="install-title">
+    <div class="wrap install-grid">
+      <div>
+        <h2 id="install-title">Install zero.</h2>
+        <p class="sub">Four steps, from Terminal to your first run.</p>
+      </div>
+      <ol class="install-steps">
+        <li>
+          <div>
+            <h3>Run the installer in Terminal.</h3>
+            <p class="warning"><strong>Read this first.</strong> zero isn’t notarized by Apple, and the installer may add developer tools to your Mac. <a href="/install.sh">Read the script</a> before you run it.</p>
+            <div class="command-block">
+              <code id="install-command">curl -fsSL https://zero.headless.com/install | bash</code>
+              <button id="copy-command" class="copy-button" type="button" hidden>Copy</button>
+            </div>
+            <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
+            <p> The installer checks the download’s SHA-256 before it installs. Prefer a manual download? Use <a href="https://github.com/drewling/zero/releases">GitHub Releases</a>.</p>
+          </div>
+        </li>
+        <li><div><h3>Connect Gmail.</h3><p>Open zero from the menu bar and choose <strong>Connect your first inbox</strong>.</p></div></li>
+        <li><div><h3>Add your Jev key.</h3><p>In <strong>Settings → Sorting engine</strong>, choose <strong>Get a key</strong>, create a key at <a href="https://console.typesafe.ai/keys">TypeSafe</a>, paste it in, and click <strong>Save</strong>.</p></div></li>
+        <li><div><h3>Run it once.</h3><p>Choose <strong>Run zero now</strong>. Look at what stayed and what was archived. When you’re happy, set a time in <strong>Settings → Daily routine</strong>.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="ticket-section questions section" aria-labelledby="questions-title">
+    <div class="wrap">
+      <h2 id="questions-title">Questions</h2>
+      <div class="faq-list">
+        <details><summary>Does my email stay on my Mac?</summary><p>No. zero runs on your Mac, but it sends relevant thread text to TypeSafe’s Jev to decide what to keep. If you ask for a reply draft, that text also goes to the AI provider you chose. Both handle it under their own terms. The zero project doesn’t run a server that receives your email. Your Google sign-in tokens are stored on your Mac. The <a href="/privacy.html">privacy policy</a> lists what else zero stores there.</p></details>
+        <details><summary>What if it archives something important?</summary><p>It can happen. The message stays in All Mail with a dated recovery label. Open Undo in zero and restore that day, or find the message in Gmail yourself.</p></details>
+        <details><summary>Can zero send email for me?</summary><p>Only when you tell it to. Ask for a draft, edit it if you want, and click <strong>Send reply</strong>. zero never sends on its own.</p></details>
+        <details><summary>Can I use more than one Gmail account?</summary><p>Yes. Connect each account in zero. Conversations from all of them show up together in Open loops.</p></details>
+        <details><summary>What does it cost?</summary><p>zero is free. Sorting uses your TypeSafe Jev key, and TypeSafe bills you for that. Drafts use whatever account is behind your agent CLI. Check both providers’ prices before you set a daily run.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <footer class="wrap site-footer">
+    <span>zero · Free and open source, AGPL-3.0</span>
+    <nav aria-label="Footer navigation"><a href="https://github.com/drewling/zero">Source</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a></nav>
+  </footer>
+</body>
+</html>
