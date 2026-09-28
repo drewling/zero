@@ -1,23 +1,21 @@
 # PROOF — OPR.99.0.1.2 Message and install journey
 
-> **WHO/WHEN:** the impl/QA pair that worked the slice, at slice-close — a slice is NOT done until this file exists and every `SPEC.md` proof-contract item has evidence (mapped 1:1, artifacts under `proof/`). See the `mission-slice-sop` skill + the conventions SSOT (`docs/reference/sdlc-conventions.md` in the repo, `$OPENRIG_HOME/reference/sdlc-conventions.md` on an installed package).
->
-> **HOW (the drop verb, not hand-placement):** put media files under `proof/`, then ATTACH them with `rig proof add OPR.99.0.1.2 --artifact-type qa --verdict PASS --candidate-sha <tip> --money-evidence "<one line>" --evidences "1" --media "screenshot-01.png"` — the drop writes the C1 header the Living Notes DELIVERED pairing joins on. Hand-placing files without a drop leaves the deliverable unpaired and `unverified`.
-
-Closed by: <seat>   Date: <date>   Verdict: <pass | pass-with-residue | ...>
+Closed by: design-lead@zero   Date: 2026-09-28   Verdict: pass-with-residue (wording approval pending with main-lead)
 
 ## What this proves
 
-<1-3 sentences: the claim the slice made, now demonstrated>
+The homepage copy follows a factual Hook-Story-Offer install path. Every visitor-facing claim maps to app source, README, the installer or privacy.html. The copy passed the SlopMonster linter at 5/5 before and after a rival-family (codex) cleanse, with no facts changed by the cleanse.
 
-## Artifacts (media in proof/)
+## Artifacts (proof/)
 
-Dropped via `rig proof add … --evidences … --media …` (one drop per verdict; media attached, never only hand-listed):
+- COPY-DECK.md: funnel diagnosis, section notes, FAQ data-path scrutiny, 26-row claims ledger, lint/cleanse table, tonal break
+- copy-draft-1.md: first draft
+- copy-cleansed.md: final visitor copy for the builder
+- lint-draft-1.txt, lint-final.txt: deslop.py output (5/5 CLEAN each)
+- cleanse-notes.txt: cleanse.sh stderr notes (codex)
 
-- proof/screenshot-01.png — <what it shows>
-- proof/capture-behavior.gif — <what it shows>
-- proof/command-output.txt — <what it proves>
+## Residue
 
-## Residue / caveats (if any)
-
-<documented residue: what's not covered + where it's tracked>
+- Wording approval by main-lead is outstanding.
+- README is stale on "Daily schedule" and "AI engine" vs the app ("Daily routine", "Reply drafting"). This is outside the landing scope and was flagged, not fixed.
+- The slice-01 mockup board uses "Set aside"; the deck recommends "Archived". The builder follows the deck.

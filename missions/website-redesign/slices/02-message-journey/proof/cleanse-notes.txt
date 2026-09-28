@@ -1,0 +1,9 @@
+
+cleanse: what changed -
+- Replaced a few formal phrases with shorter, plainer sentences.
+- Broke up repeated sentence patterns in the hero and privacy sections.
+- Kept the failure warning that the AI can sort a message wrongly.
+hook: Stop
+hook: Stop
+hook: Stop Completed
+hook: Stop Completed
