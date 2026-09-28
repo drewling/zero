@@ -31,6 +31,8 @@ From a design standpoint, no material visual differences remain against the appr
 
 Later commit `44c24ee` changed `landing/index.html` after this critique was measured: the `status` class moved from the `<td>` to an inner `<span>` in all 7 sorting-board rows, and `site.css` was not changed. Findings 1 and 3 were measured on the `e7b5809` markup and have **not** been re-measured on `44c24ee`. The change could affect the dot and label spacing in finding 1, so QA should re-check that row gap at 320px on the current tip.
 
+**Resolved by review.qa, 05:44Z:** on `beb2541`, which includes `44c24ee`, QA measured a consistent 10px th-to-status gap on all 7 rows at 320 and 390, an 8px dot, no collision, and `td` computed as `table-cell`. QA also cross-checked Chromium and WebKit crops. The `landing/` bytes are identical from `beb2541` to `4b97d4a`. This is QA's own evidence, reported here, not something design.lead re-measured.
+
 ## Evidence
 
 - Aside background task `858361uqh1` (iframe measurements and screenshots), with output at `~/.jcode/scratch/jcode-bg-tasks/858361uqh1.output`
