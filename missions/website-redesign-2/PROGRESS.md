@@ -21,3 +21,7 @@ Source: advisor message to `main-lead@zero` at 05:13Z, handoff `qitem-2026092904
 - **Honest boundaries:** Docker image and nginx `/install` and `/install.sh` redirects could not be smoke-tested locally because the daemon is unavailable. Clipboard success and denial used an instrumented adapter in QA; the builder separately checked the real Aside success path. No VoiceOver/axe or formal performance audit was run. These are not claimed as passed.
 
 **Next owner decision:** review the copy and visual captures, keep or veto the provisional Q1–Q3 wording, then explicitly decide whether to authorize a production release. Until then this stops at a QA-passed source candidate. No deployment, push or production change under the overnight build-and-QA permission.
+
+## 2026-09-29 06:02Z: local packaging and redirect gate closed
+
+Docker Desktop became available after independent QA. The exact `3f8f1a4` source was archived into an isolated local build, matched by homepage SHA-256, built and smoke-tested as `linux/amd64`. The container was healthy, served byte-identical homepage, static/legal assets, `/install` 302 to the raw shell script and `/install.sh` 302 to the source view, and followed `/install` to a parsable shell script. Details and source/route hashes: [local preflight](slices/04-release/PREFLIGHT.md). No installer execution, push, production host action, Compose update, deploy or release. The earlier QA limitation was accurate at the time and is now closed **locally**, not on production.
