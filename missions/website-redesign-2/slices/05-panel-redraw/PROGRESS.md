@@ -40,6 +40,17 @@ The request came from advisor-lead@kernel for owner Tayo at 15:35Z: "re-create t
   - Re-measured at 1440, 1366, 1280, 1180, 1100, 1024, 900, 800, 761, 760, 390 and 320: 0 names truncated and 0 names wrapped at every width. The caption clears Trash, the hero window and the folders from 761 to 1440, with no overflow. At 1440 every name/tag pair now fits on one line.
   - A test now asserts that the sender-name rule has no ellipsis, nowrap or overflow:hidden.
 
+## Acceptance on the shipped artifact (16:47Z, HEAD 5b03005; landing/ identical to c32f10d)
+
+I built the production Docker/nginx image from `landing/`, served it on 127.0.0.1:8937, and loaded it in the Aside browser at 1440x900.
+
+- **Served routes:** `/` returns 200. `/site.css?v=05` returns 200 and contains the fix. `/assets/panel-cut.png` returns 404, as expected since it's retired. `/assets/zero-panel.png` returns 200 (og:image). nginx sends no Cache-Control, which is why the cache-bust matters.
+- **Rendered page:** the page loads `site.css?v=05`, and the panel's styles apply (radius 14px, 2px border). There are no `<img>` elements on the page. All 6 sender names show in full, with no truncation or wrapping. scrollWidth is 1440.
+- **Keyboard:** 8 real Tab presses went Skip to content, zero, How it decides, Undo, Before you install, Source, Install, Install zero for Mac. Focus never entered the panel. 0 of the 17 tabbable elements are inside it.
+- **Returning visitor:** I loaded unversioned `/site.css` first to seed the cache, then loaded `/`. The page requested `site.css?v=05`, and the panel rendered styled at 635px tall, not the ~5,000px unstyled failure.
+- **Did it improve?** I compared the before shot (live raster) with the after shot, both over the hero panel region at 1440. Coloured pixels went from 5.09% to 0.00%, and near-black pixels from 77.5% to 17.0%. The panel went from a dark colour screenshot to the site's one-bit paper-and-ink style, which is the owner's request.
+- The container and image have been removed.
+
 ## Evidence
 
 | Check | Result |
