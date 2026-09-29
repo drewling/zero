@@ -54,7 +54,7 @@ The surface is strict black and white with a 50% dither texture behind solid win
 
 ## Product evidence and claims
 
-- `assets/zero-panel.png` is the only product image. Its caption states that names and subjects are made up.
+- `assets/zero-panel.png` remains the source product screenshot, and `assets/panel-cut.png` is the approved portrait crop used in the hero. The caption states that names and subjects are made up.
 - The rules window is an illustration of zero's default rules, not a live inbox or a guarantee.
 - Archive remains reversible. Nothing is deleted. Gmail All Mail and the dated recovery label stay explicit.
 - The Jev data path, optional draft provider, Apple Silicon and macOS 26 requirements, unverified Google app warning, ad-hoc signing, and provider billing remain visible.
@@ -64,7 +64,7 @@ The surface is strict black and white with a 50% dither texture behind solid win
 
 Pixelify Sans is self-hosted for the display voice. The implementation keeps the official Pixelify files and SIL Open Font License notice in `assets/pixelify-400.woff2`, `assets/pixelify-600.woff2`, and `assets/OFL-pixelify.txt`. The files were sourced from the approved comp font inventory at `missions/website-redesign-2/slices/01-research-direction/proof/comps/fonts/`.
 
-Geist and Geist Mono remain self-hosted for body copy, code, and labels, with their existing OFL notice. Archivo and its license file are removed because the approved world no longer uses them. There are no Google Fonts requests. The real app image remains byte-identical.
+Geist and Geist Mono remain self-hosted for body copy, code, and labels, with their existing OFL notice. Archivo and its license file are removed because the approved world no longer uses them. There are no Google Fonts requests. The source product image remains byte-identical; the portrait crop is the approved crop-only derivative used by the B comp.
 
 ## Layout and responsive rules
 
@@ -84,6 +84,6 @@ Focus rings remain visible at 3px against both black and white surfaces. Decorat
 
 ## Build and deployment constraints
 
-The page remains static HTML, CSS, JavaScript, nginx, and Docker. `landing/build.sh` validates the homepage, legal routes, install redirects, CSS, JS, Pixelify and Geist assets, product image, 404 behavior, and the returned installer script. `node --test landing/test-site.mjs` covers clipboard behavior, structure, product truth, and absence of the replaced motion implementation.
+The page remains static HTML, CSS, JavaScript, nginx, and Docker. `landing/build.sh` validates the homepage, legal routes, install redirects, CSS, JS, Pixelify and Geist assets, the source product image and approved portrait crop, 404 behavior, and the returned installer script. `node --test landing/test-site.mjs` covers clipboard behavior, structure, product truth, install-step count, compact hero requirements, and absence of the replaced motion implementation.
 
 Deployment is outside this slice. Dokploy currently serves a raw Compose service pinned to an image, so `autoDeploy=true` is not evidence of Git commit deployment. Do not deploy from the landing build slice. If the local Docker daemon is unavailable, record that build and `/install` smoke evidence is blocked and leave release preflight to the lead.

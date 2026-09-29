@@ -23,6 +23,7 @@ $ local static HTTP smoke on 127.0.0.1:8877
 /assets/pixelify-600.woff2             200
 /assets/geist.woff2                    200
 /assets/geist-mono.woff2               200
+/assets/panel-cut.png                  200
 /assets/zero-panel.png                 200
 /install                               404 (expected for Python static server, not nginx)
 /install.sh                            404 (expected for Python static server, not nginx)
@@ -35,3 +36,10 @@ exit=1
 
 $ Aside content smoke
 Confirmed the real local page exposes the one-bit hero, native rules table, install command, FAQ, and legal links. Aside could not resize its available viewport controls, so strict 1440/390/320 geometry remains for independent QA.
+
+$ Aside repaired-candidate acceptance smoke
+Hero requirements line: Needs Apple Silicon Mac · macOS 26 or later · Gmail
+Hero image: /assets/panel-cut.png, rendered 372 × 560 px from 700 × 1057 px
+Install steps: 4 — Run the installer in Terminal; Connect Gmail; Add your Jev key; Run it once
+FAQ disclosure: opened and exposed its answer
+Copy button: changed to “Copy again” and announced “Copied. Paste it into Terminal when you’re ready.”

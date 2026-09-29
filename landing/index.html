@@ -47,16 +47,12 @@
             <a class="button button-primary" href="#install">Install zero for Mac</a>
             <a class="button" href="/install.sh">Read the installer first</a>
           </div>
-          <dl class="hero-facts">
-            <div><dt>Needs</dt><dd>Apple Silicon Mac · macOS 26 or later · Gmail</dd></div>
-            <div><dt>Sorting</dt><dd>Your own TypeSafe Jev key. TypeSafe bills you for what you use.</dd></div>
-            <div><dt>Price</dt><dd>zero is free and open source.</dd></div>
-          </dl>
+          <p class="hero-req">Needs Apple Silicon Mac · macOS 26 or later · Gmail</p>
         </div>
       </div>
 
       <figure class="app-window">
-        <img src="/assets/zero-panel.png" width="1349" height="1166" alt="zero’s Open loops panel lists conversations needing attention across two Gmail accounts, with Accounts, Undo and Settings tabs.">
+        <img src="/assets/panel-cut.png" width="700" height="1057" alt="zero’s Open loops panel lists conversations needing attention across two Gmail accounts, with Accounts, Undo and Settings tabs.">
         <figcaption>The real zero app. Names and subjects are made up.</figcaption>
       </figure>
 
@@ -137,11 +133,14 @@
         <div class="terminal window">
           <div class="window-bar"><span class="window-control" aria-hidden="true"></span><span>Terminal</span></div>
           <div class="terminal-body">
-            <p class="warning"><strong>Read this first.</strong> zero isn’t notarized by Apple, and the installer may add developer tools to your Mac. <a href="/install.sh">Read the script</a> before you run it.</p>
-            <div class="command-row"><code id="install-command">curl -fsSL https://zero.headless.com/install | bash</code><button id="copy-command" type="button" hidden>Copy</button></div>
-            <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
-            <p class="fine-print">The installer checks the download’s SHA-256 before it installs. Prefer a manual download? Use <a href="https://github.com/drewling/zero/releases">GitHub Releases</a>.</p>
             <ol class="install-steps">
+              <li class="install-step-terminal">
+                <strong>Run the installer in Terminal.</strong>
+                <p class="warning"><strong>Read this first.</strong> zero isn’t notarized by Apple, and the installer may add developer tools to your Mac. <a href="/install.sh">Read the script</a> before you run it.</p>
+                <div class="command-row"><code id="install-command">curl -fsSL https://zero.headless.com/install | bash</code><button id="copy-command" type="button" hidden>Copy</button></div>
+                <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
+                <p class="fine-print">The installer checks the download’s SHA-256 before it installs. Prefer a manual download? Use <a href="https://github.com/drewling/zero/releases">GitHub Releases</a>.</p>
+              </li>
               <li><strong>Connect Gmail.</strong> Open zero from the menu bar and choose <strong>Connect your first inbox</strong>.</li>
               <li><strong>Add your Jev key.</strong> In <strong>Settings → Sorting engine</strong>, choose <strong>Get a key</strong>, create a key at <a href="https://console.typesafe.ai/keys">TypeSafe</a>, paste it in, and click <strong>Save</strong>.</li>
               <li><strong>Run it once.</strong> Choose <strong>Run zero now</strong>. Look at what stayed and what was archived. When you’re happy, set a time in <strong>Settings → Daily routine</strong>.</li>

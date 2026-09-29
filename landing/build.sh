@@ -69,6 +69,8 @@ check "Geist font" \
   "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/assets/geist.woff2")" "200"
 check "Geist Mono font" \
   "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/assets/geist-mono.woff2")" "200"
+check "portrait app crop" \
+  "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/assets/panel-cut.png")" "200"
 check "panel image" \
   "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/assets/zero-panel.png")" "200"
 check "unknown path 404s" \
