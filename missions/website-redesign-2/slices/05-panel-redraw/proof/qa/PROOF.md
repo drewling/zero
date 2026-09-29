@@ -1,14 +1,16 @@
 # Slice 05 independent QA proof
 
-**Candidate:** `c53bf919e2a94502fcc11d96ad96a52c1df60753` ("landing: redraw the hero app panel as one-bit HTML/CSS (slice 05)")
+**Candidates verified:**
+- `c53bf919e2a94502fcc11d96ad96a52c1df60753` — original panel redraw (slice 05). **PASS**, see Pass 1 below.
+- `c32f10d611cc6f6fae12acb1b9d2090431d3897a` (HEAD) — adds design-lead's sender-name-truncation fix (advisor-lead finding at 16:38Z: "Sarah Mit..." clipped at 1440). **PASS**, see Pass 2 below.
 
-**Verdict: PASS**, with one process note (not a defect) below. No push or deploy performed; this QA is a prerequisite for advisor-lead's release decision only.
+**Verdict: PASS on HEAD (`c32f10d`).** No push or deploy performed; this QA is a prerequisite for advisor-lead's release decision only.
 
-## Why this candidate, not the working tree
+## Process note on how these two commits relate (not a defect, but worth recording)
 
-At QA time `landing/` in the shared working tree had uncommitted, in-progress edits to `site.css` and `test-site.mjs` beyond `c53bf91` (a `.zp-line` wrap/sizing tweak and a `@container` rule), and the diff grew between two checks in this session, meaning design-lead was actively iterating live. QA was therefore run against an isolated `git archive` of the exact committed SHA `c53bf91`, not the shared dirty tree, so this verdict is reproducible and not a moving target. If the uncommitted work is meant to ship, it needs its own commit and its own QA pass; it is not covered by this PASS.
+Pass 1 QA'd an isolated `git archive` of `c53bf91` because the shared working tree had uncommitted, actively-changing `site.css`/`test-site.mjs` edits at the time (design-lead iterating live on the truncation fix). After Pass 1's `PROOF.md` was written, `git commit` (run without a pathspec) on the new proof files accidentally also picked up those then-uncommitted `site.css`/`test-site.mjs`/`PROGRESS.md`/shot changes from the shared tree, bundling design-lead's truncation fix into the same commit (`c32f10d`) as the QA proof. This was flagged to design-lead, who confirmed the fix's contents and asked for a fresh PASS/FAIL specifically on `c32f10d`. Pass 2 below is that independent re-verification, run the same way as Pass 1: an isolated `git archive` of the exact commit, not the live working tree.
 
-## Requirement-mapped results
+## Pass 1: `c53bf91` requirement-mapped results
 
 | Requirement (SPEC.md) | Check performed | Result |
 | --- | --- | --- |
@@ -32,6 +34,20 @@ At QA time `landing/` in the shared working tree had uncommitted, in-progress ed
 | `node --test landing/test-site.mjs` | Ran independently against the isolated `c53bf91` archive (not the dirty working tree) | **Pass.** 7/7, including the new faithfulness test (`hero panel is a faithful, decorative one-bit redraw of the real Open loops panel`). |
 | `bash landing/build.sh` (Docker/nginx) | Ran independently against the isolated `c53bf91` archive | **Pass.** Image built; homepage/privacy/terms/CSS/JS/all 4 fonts/`zero-panel.png`/unknown-path all correct; `/install` and `/install.sh` both 302; fetched install script (280 lines) parses. No container left running afterward. |
 
+## Pass 2: `c32f10d` (HEAD) requirement-mapped results — the sender-name-truncation fix
+
+CSS diff between `c53bf91` and `c32f10d` (`landing/site.css`): row gap/padding tightened 1-2px, `.zp-line` now `flex-wrap:wrap` instead of nowrap, `.zp-line b` drops `overflow:hidden`/`text-overflow:ellipsis`/`white-space:nowrap` in favor of `max-width:100%`, `.zp-tag` font shrinks 10px→9.5px with tighter padding, and a new `@container (max-width:260px)` step shrinks the row avatar/name at the narrowest desktop panel widths. `landing/test-site.mjs` gained one new assertion that the `.zp-line b` rule has no `ellipsis`/`nowrap`/`overflow:hidden`. Re-verified independently against a fresh `git archive` of `c32f10d` (HEAD) on its own isolated static server, not reusing the Pass 1 server or archive.
+
+| Requirement | Check performed | Result |
+| --- | --- | --- |
+| No sender name ever truncated, 1440/1366/1280/1180/1100/1024/900/800/761/760/390/320, both engines | Custom Playwright script reading `.zp-line b` computed style + rendered text for every row at all 12 widths × 2 engines (24 combinations) | **Pass.** 0 ellipsis characters in any rendered name, 0 instances of `text-overflow:ellipsis` or `white-space:nowrap` still computed, 0 names whose right edge exceeds the row's right edge. `Sarah Mitchell` (the specific reported defect) renders in full at 1440 in both engines. |
+| Tag wraps under name only when both don't fit | Same script, bounding-box check `tag.top >= name.bottom - 1` | **Pass.** Confirmed wrap-under behavior at narrow widths where applicable; not spuriously wrapping at wide widths where both fit on one line. |
+| Regression: no overflow, a11y, reduced motion, no-JS still hold after the CSS tightening | Reran the full Pass 1 Playwright regression script against the new archive, both engines, 320/390/1440 | **Pass.** `clientWidth === scrollWidth` at all 6 combinations, `aria-hidden="true"` + `inert === true` + `focusablesInPanel: 0` at all 6, sr-only summary intact, `animCount: 0` under reduced motion both engines, no-JS renders 6/6 rows both engines, `/site.css?v=05` href confirmed live. Zero page/console errors. |
+| Row-level tag/name overlap re-check after tighter gaps | Reran the Pass 1 per-row geometry script against the new archive | **Pass.** 0 overlaps and 0 tag-row overflows across 28 tagged-row checks (7 widths × up to 4 tagged rows), i.e. the 1-2px gap tightening did not introduce a new collision. |
+| Caption/Trash clearance and 761-1279px row-hiding band unaffected | Reran the Pass 1 width-sweep script against the new archive | **Pass.** `overlapCaptionTrash: false` at every tested width (320/390/760/761/1024/1100/1279/1280/1440); row-hiding band still exactly 761-1279px inclusive (4/6 visible), 760 and 1280 both 6/6. Matches design-lead's own reported 819-821 (caption) vs 845 (Trash) gap direction; independent measurement at 1440 gives panel bottom 747 / Trash top 845. |
+| `node --test landing/test-site.mjs` | Ran independently against the isolated `c32f10d` archive | **Pass.** 7/7, including the new no-ellipsis/no-nowrap assertion on `.zp-line b`. |
+| `bash landing/build.sh` (Docker/nginx) | Ran independently against the isolated `c32f10d` archive | **Pass.** Full pass, same checks as Pass 1. No container left running afterward; QA-only image tags removed after the check. |
+
 ## Not verified (same boundary design-lead already disclosed)
 
 - VoiceOver, Safari, and Firefox were not run. Chromium and WebKit (Playwright engines) were used here, which covers two of the three named engines design-lead asked about but not Safari-proper or Firefox.
@@ -40,4 +56,6 @@ At QA time `landing/` in the shared working tree had uncommitted, in-progress ed
 
 ## Verdict
 
-**PASS** for candidate `c53bf91` against every SPEC.md mini-requirement, independently re-verified (not re-stating design-lead's own PROGRESS.md numbers) with fresh Chromium+WebKit renders, a fresh Docker/nginx build, and direct source comparison against `PanelView.swift`/`KeeperModel.swift`/`lib/review_open_loops.py`. The uncommitted `site.css`/`test-site.mjs` changes observed live in the working tree during QA are outside this verdict's scope and were not evaluated; if they are meant to ship they need a new commit and a new QA pass.
+**PASS on `c32f10d` (HEAD)**, superseding the Pass 1 `c53bf91`-only verdict below. Independently re-verified (not re-stating design-lead's own PROGRESS.md numbers) with fresh Chromium+WebKit renders, a fresh Docker/nginx build, and direct source comparison against `PanelView.swift`/`KeeperModel.swift`/`lib/review_open_loops.py`, plus a targeted re-check of the sender-name-truncation fix at all 12 widths design-lead specified. This is the SHA design-lead is forwarding to advisor-lead for release.
+
+Pass 1 verdict (for the record): **PASS** for candidate `c53bf91` against every SPEC.md mini-requirement, independently re-verified with fresh Chromium+WebKit renders, a fresh Docker/nginx build, and direct source comparison. At the time, the uncommitted `site.css`/`test-site.mjs` changes observed live in the working tree were outside that verdict's scope. Those changes are now committed as part of `c32f10d` and are covered by the Pass 2 verdict above.
