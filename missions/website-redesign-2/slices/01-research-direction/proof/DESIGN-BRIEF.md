@@ -90,7 +90,7 @@ It is the category default, and the owner already rejected a dark-board look. It
   - **C:** "It lives in your menu bar. Open it when you want to see what still needs you. Tap any conversation to open it in Gmail." The last sentence echoes the panel's own "Tap any to open it in Gmail".
   - **C:** "zero removes Gmail's Inbox label and adds a label with that day's date." This is shortened from the landing's "adds a recovery label".
   - UI chrome such as window titles ("Default rules", "Terminal") and the "7 items · 3 stay in Inbox" Finder bar.
-  - The same diff caught two abridged install steps (a missing "choose Get a key" and "Look at what stayed and what was archived"). Both were restored in the comps after the `shots/` were captured, so the install shots show the older, shorter steps.
+  - The same diff caught two abridged install steps (a missing "choose Get a key" and "Look at what stayed and what was archived"). Both were restored in the comps, and the install and phone shots were recaptured afterwards (Aside, 03:26–03:27Z). They now show the full steps.
 - **Before you install** and the FAQ are not comped, but they carry over unchanged (see `replacement-inventory.md`).
 - The app image is the real `zero-panel.png`, cropped to the popover with rounded corners by crop and alpha only (`comps/panel-cut.png`). It is not retouched, and the caption "Names and subjects are made up" stays.
 - Illustrative values are labelled:
@@ -109,3 +109,12 @@ Choose **A, B or C** (or "A with B's folders", since the dated-folder idea can m
 - **Mobile is a 390 px-wide same-origin iframe** (`comps/phones.html`), not device emulation: there is no mobile user agent, touch or DPR change. Aside cannot set a true viewport. All three comps measured `scrollWidth 390` at 390, so there is no horizontal overflow.
 - The first viewport, the rules section and install are comped. Before you install, the FAQ, privacy and terms are not.
 - A's sunbeam intensity is judged on one display only.
+- The comps' "Before you install" nav link (`#before`) has no target, because that section is not comped. `/install.sh`, `/privacy.html` and `/terms.html` are root paths. They 404 on a local comp server but resolve on production (checked 03:26Z: `/install` and `/install.sh` return 302 to GitHub, and privacy and terms return 200). `console.typesafe.ai/keys` returned 403 to curl (it is the same URL the live page uses, and it likely blocks non-browser clients), so that link is unverified from here.
+- The Copy buttons in the comps are visual only. The real copy-to-clipboard code is kept per the inventory.
+
+## 6. Interpretations I had to make
+
+- "Ten references of Linear quality" was read as a **craft bar**, not a style to copy (the SPEC says the same). Twelve sites were inspected, and ten were kept.
+- "Visual comps" were built as runnable HTML with the real app image, not as generated images or Figma frames. This lets motion and the static state be shown honestly.
+- "Mobile" was shown through a 390 px iframe, because Aside cannot emulate a device.
+- The owner said "trash" without naming specific faults, so §1 is my reading, grounded in the frames and source. If the owner's objection was narrower (for example colour only), direction C is the smallest change.

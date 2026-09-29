@@ -8,3 +8,4 @@
 - Wrote `proof/DESIGN-BRIEF.md` (critique, the directions, the recommendation and the owner decision).
 - Status: **awaiting owner choice** (A, B or C). Slice 02 (rebuild) must not start until the owner approves a direction.
 - 03:25Z: Accuracy pass after the handoff. The critique now rests on source-checked claims (flap board, sr-only h1, warning box), and the 390 iframe and static shots were all viewed. A sentence diff restored two abridged install steps in the comps (the shots predate this). New comp lines are listed in DESIGN-BRIEF §3.
+- 03:28Z: At main-lead's request, recaptured the 3 install shots and 4 phone shots from a fresh clone of 54b51a9 (Aside). They now show the corrected install steps. Also checked the owner viewing path (all comp assets return 200 from the clone, and the production routes resolve) and recorded interpretations in DESIGN-BRIEF §6.
