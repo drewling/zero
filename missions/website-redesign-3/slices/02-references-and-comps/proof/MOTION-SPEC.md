@@ -49,17 +49,30 @@ Honesty rules for the storyboard:
 - The number of rows the popover shows (4) matches the final count.
 - Frame 3 must never show anything entering Trash.
 
+### 3b. Alternative hero storyboards (comps B and C, 4 frames each)
+
+These are kept for comparison. The brief recommends A. Stills are `storyboard/hero-b-frame-0..3.jpg`, `hero-c-frame-0..3.jpg` and each `*-strip.jpg`.
+
+| # | B, "the Finder select" | C, "the poster and two windows" |
+|---|---|---|
+| 0 | Inbox window with 12 rows (4 readable, 8 greeked). Folder and Trash on the desktop. | Poster headline plate over an Inbox window (12 rows) and an inactive, empty `Auto-Archived 2026-09-29` window. |
+| 1 | The watch cursor appears. The 8 routine rows invert one at a time (70 ms apart). | Zoom rects step open from Inbox to the archive window. |
+| 2 | Dashed drag outlines step from the 8 rows into the folder in 7 steps. The folder highlights as the drop target. | The 8 rows step across as solid blocks, one at a time, and fill the archive slots. |
+| 3 | Final: 4 rows remain, the folder is full and Trash is empty. | Final: Inbox holds 4 rows, the archive holds 8. |
+
+Why A wins: B reads as "you drag mail yourself" (a manual Finder action zero doesn't ask for), and it has no count. C is calm and clear, but it drops the menu-bar tray, which is where zero actually lives, and it pushes both windows below the headline plate at 1440×900.
+
 ## 4. Section motion (one beat each, played on first view)
 
-These are proposals and are built in the section comps (`comps/sections/`). Each plays once, and its final frame is the HTML default.
+These are proposals. Only the demo beat is built as motion in `comps/sections/`. The Undo ants are static CSS there, and the other beats are spec only. Each plays once, and its final frame is the HTML default.
 
-| Section (COPY v3 h2) | Beat | Idiom |
-|---|---|---|
-| See what stays. See what gets archived. | Twelve compact rows split: 8 hop into the `Archived` column and 4 stay under `Stays`. The count steps. | envelope hop + counter |
-| Keep mail that needs your reply or action. | No motion. It's a reading section, and motion here would compete with the rules. | none |
-| Undo an archive. Nothing is deleted. | Marching ants go around one archived row in the Undo window. A click on `Restore all` hops the envelopes back to the Inbox, one by one. | ants + reverse hop |
-| Know what you connect, share and pay for. | No motion. The Get Info window just sits there. | none |
-| Install zero on your Mac. | The Terminal window "types" the single install line in 3 chunks, then shows the result line. It's a text reveal, not a moving caret flourish. **Optional**, and it defaults off if it slows reading. | stepped reveal (3 steps) |
+| Section (COPY v3 h2) | Beat | Idiom | In the comp |
+|---|---|---|---|
+| See what stays. See what gets archived. | All 12 rows start mixed in `Stays`. The 8 archived rows hop one at a time into `Archived`, and 4 stay. There is no counter, because COPY v3 bans extra counters. Stills: `storyboard/demo-strip.jpg` (frames 0, 2 and 3). | envelope hop | built (`?frame=0..3`) |
+| Keep mail that needs your reply or action. | No motion. It's a reading section, and motion here would compete with the rules. | none | static |
+| Undo an archive. Nothing is deleted. | Marching ants go around one archived row in the Undo window (finite, ~2.4 s). `Restore all` is shown as the way back but isn't wired. A reverse hop on click is a slice 04 option that needs an Inbox target on screen. | ants | ants only |
+| Know what you connect, share and pay for. | No motion. The Get Info window just sits there. | none | static |
+| Install zero on your Mac. | Optional: the Terminal reveals the one install line in 3 chunks. No result line, because that would be a new string. Default off if it slows reading. | stepped reveal (3 steps) | static |
 
 ## 5. Implementation constraints for slice 04
 

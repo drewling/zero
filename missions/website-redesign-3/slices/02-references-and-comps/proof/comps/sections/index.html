@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sections · zero redesign 3 comp (draft)</title>
+<link rel="stylesheet" href="../kit/kit.css">
+<style>
+/* One purpose-built scene per outline section. Every string is COPY v3 (primary copy or the owned demo/window strings).
+   Rhythm: dither desktop → paper → quiet dither → paper → ink. Headings on textured fields sit on a plate (rule 1). */
+section{position:relative;padding:clamp(56px,7vw,104px) var(--pad)}
+.wrap{max-width:1180px;margin:0 auto}
+.head{display:inline-block;max-width:760px;margin-bottom:clamp(28px,3.4vw,44px)}
+.head h2{font-size:clamp(30px,3.4vw,48px);line-height:1.02;margin-bottom:14px}
+.head p{max-width:60ch;font-size:clamp(16px,1.15vw,18px);line-height:1.55}
+.head p+p{margin-top:10px}
+.on-dither .head{background:var(--paper);border:var(--line);box-shadow:var(--shadow);padding:22px 26px}
+.paper{background:var(--paper);border-top:var(--line)}
+.quiet{background:var(--paper) var(--dither-25) repeat;border-top:var(--line)}
+b.ui{font-weight:600;white-space:nowrap}
+
+/* ---------- 1 · demo: two destination windows ---------- */
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(20px,3vw,40px);align-items:start}
+.demo-grid .list li{grid-template-columns:22px 8.2em 1fr;height:36px}
+#stays .list{min-height:calc(4 * 36px)}
+.dest{display:flex;align-items:center;gap:10px}
+.dest svg{width:18px;height:16px}
+.bar .t .dest{justify-content:center}
+.last{margin-left:8px;padding:1px 6px;border:1.5px solid currentColor;font:500 11px/1.2 var(--mono);white-space:nowrap}
+.demo-foot{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between}
+.btn.fake{pointer-events:none}
+@media (max-width:860px){.demo-grid{grid-template-columns:1fr}}
+@media (max-width:420px){.demo-grid .list li{grid-template-columns:20px 7.6em 1fr;gap:8px;padding:0 10px;font-size:13px}.last{display:none}}
+
+/* ---------- 2 · decisions: the rules, as a Rules window ---------- */
+.rules{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(20px,3vw,40px);align-items:start}
+.rules .win .body{padding:22px 24px}
+.keeps{list-style:none;margin:10px 0 16px;padding:0;display:grid;gap:8px}
+.keeps li{display:flex;gap:10px;align-items:center;font-weight:500}
+.keeps svg{flex:none;width:18px;height:17px}
+.aside-note{display:grid;gap:12px}
+.aside-note p{padding:16px 18px;border:var(--line);background:var(--paper)}
+.aside-note .caution{display:flex;gap:12px;align-items:flex-start}
+.aside-note .caution svg{flex:none;width:34px;height:23px;margin-top:2px}
+@media (max-width:860px){.rules{grid-template-columns:1fr}}
+
+/* ---------- 3 · undo: the Undo window ---------- */
+.undo{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(20px,3vw,48px);align-items:center}
+.undo .head{margin-bottom:0}
+#undo-win .toolbar{display:flex;justify-content:flex-end;padding:10px 12px;border-bottom:var(--line)}
+#undo-win .list li{grid-template-columns:22px 1fr 1fr;height:34px}
+#undo-win .list li.ants{position:relative;z-index:1;background:var(--paper)}
+.gk{display:block;height:6px;background:var(--ink)}
+.gs{display:block;height:4px;background:var(--dither)}
+#undo-win li:nth-child(odd) .gk{width:62%}#undo-win li:nth-child(even) .gk{width:80%}
+#undo-win li:nth-child(3n) .gs{width:58%}#undo-win li:nth-child(3n+1) .gs{width:86%}#undo-win li:nth-child(3n+2) .gs{width:72%}
+@media (max-width:860px){.undo{grid-template-columns:1fr}}
+
+/* ---------- 4 · Get Info ---------- */
+#info{max-width:980px}
+#info .body{display:grid;grid-template-columns:auto 1fr;gap:0;padding:8px 0}
+#info .k,#info .v{padding:16px 22px;border-bottom:1px solid var(--ink)}
+#info .k:nth-last-child(2),#info .v:last-child{border-bottom:0}
+#info .k{display:flex;gap:12px;align-items:flex-start;font:600 17px/1.2 var(--pixel);white-space:nowrap;border-right:var(--line)}
+#info .k svg{flex:none;width:26px;height:auto}
+#info .v{max-width:66ch}
+@media (max-width:760px){#info .body{grid-template-columns:1fr}#info .k{border-right:0;border-bottom:0;padding-bottom:4px}#info .v{padding-top:4px}}
+
+/* ---------- 5 · install: Terminal on ink ---------- */
+.ink{background:var(--ink);color:var(--paper)}
+.ink .head{background:var(--paper);color:var(--ink);border:2px solid var(--paper);padding:22px 26px}
+.ink .head a{color:var(--ink)}
+.install{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:clamp(20px,3vw,48px);align-items:start}
+.install .head{margin-bottom:0}
+#term{background:var(--ink);color:var(--paper);border:2px solid var(--paper);box-shadow:3px 3px 0 var(--paper)}
+#term .bar{background:var(--paper);color:var(--ink);border-bottom:2px solid var(--paper)}
+#term pre{margin:0;padding:22px 20px 10px;font:500 15px/1.6 var(--mono);white-space:pre-wrap;word-break:break-all}
+#term pre .p{user-select:none}
+#term .cursorblk{display:inline-block;width:.6em;height:1.1em;vertical-align:-.2em;background:var(--paper)}
+#term .foot{display:flex;justify-content:flex-end;padding:0 16px 16px}
+#term .btn{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+.after{margin-top:18px;color:var(--paper);max-width:58ch}
+.after a{color:var(--paper)}
+@media (max-width:960px){.install{grid-template-columns:1fr}}
+
+footer{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;padding:18px var(--pad);border-top:2px solid var(--paper);background:var(--ink);color:var(--paper);font:600 15px/1 var(--pixel)}
+footer a{color:var(--paper);text-decoration:none}
+footer a:hover{background:var(--paper);color:var(--ink)}
+footer .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+footer svg{width:16px;height:15px;filter:invert(1)}
+
+</style>
+</head>
+<body>
+<!--icons:start--><svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+<symbol id="cursor" viewBox="0 0 11 17" shape-rendering="crispEdges"><path fill="#fff" d="M1 2h1v1h-1zM1 3h2v1h-2zM1 4h3v1h-3zM1 5h4v1h-4zM1 6h5v1h-5zM1 7h6v1h-6zM1 8h7v1h-7zM1 9h8v1h-8zM1 10h5v1h-5zM1 11h2v1h-2zM4 11h2v1h-2zM1 12h1v1h-1zM3 12h1v1h-1zM5 12h2v1h-2zM5 13h2v1h-2zM6 14h2v1h-2zM6 15h2v1h-2z"/><path fill="#000" d="M0 0h1v1h-1zM0 1h2v1h-2zM0 2h1v1h-1zM2 2h1v1h-1zM0 3h1v1h-1zM3 3h1v1h-1zM0 4h1v1h-1zM4 4h1v1h-1zM0 5h1v1h-1zM5 5h1v1h-1zM0 6h1v1h-1zM6 6h1v1h-1zM0 7h1v1h-1zM7 7h1v1h-1zM0 8h1v1h-1zM8 8h1v1h-1zM0 9h1v1h-1zM9 9h1v1h-1zM0 10h1v1h-1zM6 10h5v1h-5zM0 11h1v1h-1zM3 11h1v1h-1zM6 11h1v1h-1zM0 12h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM7 12h1v1h-1zM0 13h2v1h-2zM4 13h1v1h-1zM7 13h1v1h-1zM0 14h1v1h-1zM5 14h1v1h-1zM8 14h1v1h-1zM5 15h1v1h-1zM8 15h1v1h-1zM6 16h2v1h-2z"/></symbol>
+<symbol id="watch" viewBox="0 0 16 15" shape-rendering="crispEdges"><path fill="#fff" d="M5 1h6v1h-6zM3 3h10v1h-10zM2 4h5v1h-5zM8 4h6v1h-6zM2 5h5v1h-5zM8 5h6v1h-6zM1 6h6v1h-6zM8 6h7v1h-7zM1 7h6v1h-6zM11 7h4v1h-4zM1 8h14v1h-14zM2 9h12v1h-12zM2 10h12v1h-12zM3 11h10v1h-10zM5 13h6v1h-6z"/><path fill="#000" d="M4 0h8v1h-8zM4 1h1v1h-1zM11 1h1v1h-1zM3 2h10v1h-10zM2 3h1v1h-1zM13 3h1v1h-1zM1 4h1v1h-1zM7 4h1v1h-1zM14 4h1v1h-1zM1 5h1v1h-1zM7 5h1v1h-1zM14 5h1v1h-1zM0 6h1v1h-1zM7 6h1v1h-1zM15 6h1v1h-1zM0 7h1v1h-1zM7 7h4v1h-4zM15 7h1v1h-1zM0 8h1v1h-1zM15 8h1v1h-1zM1 9h1v1h-1zM14 9h1v1h-1zM1 10h1v1h-1zM14 10h1v1h-1zM2 11h1v1h-1zM13 11h1v1h-1zM3 12h10v1h-10zM4 13h1v1h-1zM11 13h1v1h-1zM4 14h8v1h-8z"/></symbol>
+<symbol id="tray" viewBox="0 0 17 13" shape-rendering="crispEdges"><path fill="#fff" d="M4 1h10v1h-10zM4 3h10v1h-10zM4 5h10v1h-10zM1 7h15v1h-15zM1 8h5v1h-5zM11 8h5v1h-5zM1 9h5v1h-5zM7 9h3v1h-3zM11 9h5v1h-5zM7 10h3v1h-3zM1 11h15v1h-15z"/><path fill="#000" d="M3 0h12v1h-12zM3 1h1v1h-1zM14 1h1v1h-1zM3 2h1v1h-1zM5 2h8v1h-8zM14 2h1v1h-1zM3 3h1v1h-1zM14 3h1v1h-1zM3 4h1v1h-1zM5 4h8v1h-8zM14 4h1v1h-1zM3 5h1v1h-1zM14 5h1v1h-1zM0 6h17v1h-17zM0 7h1v1h-1zM16 7h1v1h-1zM0 8h1v1h-1zM6 8h5v1h-5zM16 8h1v1h-1zM0 9h1v1h-1zM6 9h1v1h-1zM10 9h1v1h-1zM16 9h1v1h-1zM0 10h7v1h-7zM10 10h7v1h-7zM0 11h1v1h-1zM16 11h1v1h-1zM0 12h17v1h-17z"/></symbol>
+<symbol id="mail" viewBox="0 0 16 11" shape-rendering="crispEdges"><path fill="#fff" d="M2 1h12v1h-12zM1 2h1v1h-1zM3 2h10v1h-10zM14 2h1v1h-1zM1 3h2v1h-2zM4 3h8v1h-8zM13 3h2v1h-2zM1 4h3v1h-3zM5 4h6v1h-6zM12 4h3v1h-3zM1 5h4v1h-4zM6 5h4v1h-4zM11 5h4v1h-4zM1 6h5v1h-5zM10 6h5v1h-5zM1 7h14v1h-14zM1 8h14v1h-14zM1 9h14v1h-14z"/><path fill="#000" d="M0 0h16v1h-16zM0 1h2v1h-2zM14 1h2v1h-2zM0 2h1v1h-1zM2 2h1v1h-1zM13 2h1v1h-1zM15 2h1v1h-1zM0 3h1v1h-1zM3 3h1v1h-1zM12 3h1v1h-1zM15 3h1v1h-1zM0 4h1v1h-1zM4 4h1v1h-1zM11 4h1v1h-1zM15 4h1v1h-1zM0 5h1v1h-1zM5 5h1v1h-1zM10 5h1v1h-1zM15 5h1v1h-1zM0 6h1v1h-1zM6 6h4v1h-4zM15 6h1v1h-1zM0 7h1v1h-1zM15 7h1v1h-1zM0 8h1v1h-1zM15 8h1v1h-1zM0 9h1v1h-1zM15 9h1v1h-1zM0 10h16v1h-16z"/></symbol>
+<symbol id="folder" viewBox="0 0 32 22" shape-rendering="crispEdges"><path fill="#fff" d="M1 1h10v1h-10zM1 2h11v1h-11zM1 4h30v1h-30zM1 5h30v1h-30zM1 6h30v1h-30zM1 7h30v1h-30zM1 8h30v1h-30zM1 9h30v1h-30zM1 10h30v1h-30zM1 11h30v1h-30zM1 12h30v1h-30zM1 13h30v1h-30zM1 14h30v1h-30zM1 15h30v1h-30zM1 16h30v1h-30zM1 17h30v1h-30zM1 18h30v1h-30zM1 19h30v1h-30z"/><path fill="#000" d="M1 0h10v1h-10zM0 1h1v1h-1zM11 1h1v1h-1zM0 2h1v1h-1zM12 2h20v1h-20zM0 3h32v1h-32zM0 4h1v1h-1zM31 4h1v1h-1zM0 5h1v1h-1zM31 5h1v1h-1zM0 6h1v1h-1zM31 6h1v1h-1zM0 7h1v1h-1zM31 7h1v1h-1zM0 8h1v1h-1zM31 8h1v1h-1zM0 9h1v1h-1zM31 9h1v1h-1zM0 10h1v1h-1zM31 10h1v1h-1zM0 11h1v1h-1zM31 11h1v1h-1zM0 12h1v1h-1zM31 12h1v1h-1zM0 13h1v1h-1zM31 13h1v1h-1zM0 14h1v1h-1zM31 14h1v1h-1zM0 15h1v1h-1zM31 15h1v1h-1zM0 16h1v1h-1zM31 16h1v1h-1zM0 17h1v1h-1zM31 17h1v1h-1zM0 18h1v1h-1zM31 18h1v1h-1zM0 19h1v1h-1zM31 19h1v1h-1zM0 20h32v1h-32zM1 21h31v1h-31z"/></symbol>
+<symbol id="folder-full" viewBox="0 0 32 22" shape-rendering="crispEdges"><path fill="#fff" d="M1 1h10v1h-10zM1 2h9v1h-9zM15 2h14v1h-14zM1 3h9v1h-9zM11 3h5v1h-5zM28 3h1v1h-1zM26 4h5v1h-5zM1 5h30v1h-30zM1 6h30v1h-30zM1 7h30v1h-30zM1 8h30v1h-30zM1 9h30v1h-30zM1 10h30v1h-30zM1 11h30v1h-30zM1 12h30v1h-30zM1 13h30v1h-30zM1 14h30v1h-30zM1 15h30v1h-30zM1 16h30v1h-30zM1 17h30v1h-30zM1 18h30v1h-30zM1 19h30v1h-30z"/><path fill="#000" d="M1 0h10v1h-10zM0 1h1v1h-1zM11 1h1v1h-1zM15 1h14v1h-14zM0 2h1v1h-1zM10 2h5v1h-5zM29 2h1v1h-1zM0 3h1v1h-1zM10 3h1v1h-1zM16 3h12v1h-12zM29 3h2v1h-2zM0 4h26v1h-26zM31 4h1v1h-1zM0 5h1v1h-1zM31 5h1v1h-1zM0 6h1v1h-1zM31 6h1v1h-1zM0 7h1v1h-1zM31 7h1v1h-1zM0 8h1v1h-1zM31 8h1v1h-1zM0 9h1v1h-1zM31 9h1v1h-1zM0 10h1v1h-1zM31 10h1v1h-1zM0 11h1v1h-1zM31 11h1v1h-1zM0 12h1v1h-1zM31 12h1v1h-1zM0 13h1v1h-1zM31 13h1v1h-1zM0 14h1v1h-1zM31 14h1v1h-1zM0 15h1v1h-1zM31 15h1v1h-1zM0 16h1v1h-1zM31 16h1v1h-1zM0 17h1v1h-1zM31 17h1v1h-1zM0 18h1v1h-1zM31 18h1v1h-1zM0 19h1v1h-1zM31 19h1v1h-1zM0 20h32v1h-32zM1 21h31v1h-31z"/></symbol>
+<symbol id="trash" viewBox="0 0 26 23" shape-rendering="crispEdges"><path fill="#fff" d="M9 1h6v1h-6zM1 3h24v1h-24zM2 5h22v1h-22zM2 6h2v1h-2zM5 6h4v1h-4zM10 6h5v1h-5zM16 6h4v1h-4zM21 6h3v1h-3zM2 7h2v1h-2zM5 7h4v1h-4zM10 7h5v1h-5zM16 7h4v1h-4zM21 7h3v1h-3zM2 8h2v1h-2zM5 8h4v1h-4zM10 8h5v1h-5zM16 8h4v1h-4zM21 8h3v1h-3zM2 9h2v1h-2zM5 9h4v1h-4zM10 9h5v1h-5zM16 9h4v1h-4zM21 9h3v1h-3zM2 10h2v1h-2zM5 10h4v1h-4zM10 10h5v1h-5zM16 10h4v1h-4zM21 10h3v1h-3zM2 11h2v1h-2zM5 11h4v1h-4zM10 11h5v1h-5zM16 11h4v1h-4zM21 11h3v1h-3zM2 12h2v1h-2zM5 12h4v1h-4zM10 12h5v1h-5zM16 12h4v1h-4zM21 12h3v1h-3zM2 13h2v1h-2zM5 13h4v1h-4zM10 13h5v1h-5zM16 13h4v1h-4zM21 13h3v1h-3zM2 14h2v1h-2zM5 14h4v1h-4zM10 14h5v1h-5zM16 14h4v1h-4zM21 14h3v1h-3zM2 15h2v1h-2zM5 15h4v1h-4zM10 15h5v1h-5zM16 15h4v1h-4zM21 15h3v1h-3zM2 16h2v1h-2zM5 16h4v1h-4zM10 16h5v1h-5zM16 16h4v1h-4zM21 16h3v1h-3zM2 17h2v1h-2zM5 17h4v1h-4zM10 17h5v1h-5zM16 17h4v1h-4zM21 17h3v1h-3zM2 18h2v1h-2zM5 18h4v1h-4zM10 18h5v1h-5zM16 18h4v1h-4zM21 18h3v1h-3zM2 19h2v1h-2zM5 19h4v1h-4zM10 19h5v1h-5zM16 19h4v1h-4zM21 19h3v1h-3zM2 20h2v1h-2zM5 20h4v1h-4zM10 20h5v1h-5zM16 20h4v1h-4zM21 20h3v1h-3zM2 21h22v1h-22z"/><path fill="#000" d="M8 0h8v1h-8zM8 1h1v1h-1zM15 1h1v1h-1zM0 2h26v1h-26zM0 3h1v1h-1zM25 3h1v1h-1zM0 4h26v1h-26zM1 5h1v1h-1zM24 5h1v1h-1zM1 6h1v1h-1zM4 6h1v1h-1zM9 6h1v1h-1zM15 6h1v1h-1zM20 6h1v1h-1zM24 6h1v1h-1zM1 7h1v1h-1zM4 7h1v1h-1zM9 7h1v1h-1zM15 7h1v1h-1zM20 7h1v1h-1zM24 7h1v1h-1zM1 8h1v1h-1zM4 8h1v1h-1zM9 8h1v1h-1zM15 8h1v1h-1zM20 8h1v1h-1zM24 8h1v1h-1zM1 9h1v1h-1zM4 9h1v1h-1zM9 9h1v1h-1zM15 9h1v1h-1zM20 9h1v1h-1zM24 9h1v1h-1zM1 10h1v1h-1zM4 10h1v1h-1zM9 10h1v1h-1zM15 10h1v1h-1zM20 10h1v1h-1zM24 10h1v1h-1zM1 11h1v1h-1zM4 11h1v1h-1zM9 11h1v1h-1zM15 11h1v1h-1zM20 11h1v1h-1zM24 11h1v1h-1zM1 12h1v1h-1zM4 12h1v1h-1zM9 12h1v1h-1zM15 12h1v1h-1zM20 12h1v1h-1zM24 12h1v1h-1zM1 13h1v1h-1zM4 13h1v1h-1zM9 13h1v1h-1zM15 13h1v1h-1zM20 13h1v1h-1zM24 13h1v1h-1zM1 14h1v1h-1zM4 14h1v1h-1zM9 14h1v1h-1zM15 14h1v1h-1zM20 14h1v1h-1zM24 14h1v1h-1zM1 15h1v1h-1zM4 15h1v1h-1zM9 15h1v1h-1zM15 15h1v1h-1zM20 15h1v1h-1zM24 15h1v1h-1zM1 16h1v1h-1zM4 16h1v1h-1zM9 16h1v1h-1zM15 16h1v1h-1zM20 16h1v1h-1zM24 16h1v1h-1zM1 17h1v1h-1zM4 17h1v1h-1zM9 17h1v1h-1zM15 17h1v1h-1zM20 17h1v1h-1zM24 17h1v1h-1zM1 18h1v1h-1zM4 18h1v1h-1zM9 18h1v1h-1zM15 18h1v1h-1zM20 18h1v1h-1zM24 18h1v1h-1zM1 19h1v1h-1zM4 19h1v1h-1zM9 19h1v1h-1zM15 19h1v1h-1zM20 19h1v1h-1zM24 19h1v1h-1zM1 20h1v1h-1zM4 20h1v1h-1zM9 20h1v1h-1zM15 20h1v1h-1zM20 20h1v1h-1zM24 20h1v1h-1zM1 21h1v1h-1zM24 21h1v1h-1zM1 22h24v1h-24z"/></symbol>
+<symbol id="disk" viewBox="0 0 32 15" shape-rendering="crispEdges"><path fill="#fff" d="M1 1h30v1h-30zM1 2h30v1h-30zM1 3h30v1h-30zM1 4h30v1h-30zM1 5h30v1h-30zM1 6h30v1h-30zM1 7h30v1h-30zM1 8h30v1h-30zM1 9h30v1h-30zM1 10h1v1h-1zM4 10h27v1h-27zM1 11h1v1h-1zM4 11h23v1h-23zM30 11h1v1h-1zM1 12h30v1h-30z"/><path fill="#000" d="M0 0h32v1h-32zM0 1h1v1h-1zM31 1h1v1h-1zM0 2h1v1h-1zM31 2h1v1h-1zM0 3h1v1h-1zM31 3h1v1h-1zM0 4h1v1h-1zM31 4h1v1h-1zM0 5h1v1h-1zM31 5h1v1h-1zM0 6h1v1h-1zM31 6h1v1h-1zM0 7h1v1h-1zM31 7h1v1h-1zM0 8h1v1h-1zM31 8h1v1h-1zM0 9h1v1h-1zM31 9h1v1h-1zM0 10h1v1h-1zM2 10h2v1h-2zM31 10h1v1h-1zM0 11h1v1h-1zM2 11h2v1h-2zM27 11h3v1h-3zM31 11h1v1h-1zM0 12h1v1h-1zM31 12h1v1h-1zM0 13h32v1h-32zM1 14h30v1h-30z"/></symbol>
+<symbol id="doc" viewBox="0 0 22 24" shape-rendering="crispEdges"><path fill="#fff" d="M1 1h14v1h-14zM1 2h14v1h-14zM16 2h1v1h-1zM1 3h14v1h-14zM16 3h2v1h-2zM1 4h14v1h-14zM16 4h3v1h-3zM1 5h14v1h-14zM16 5h4v1h-4zM1 6h14v1h-14zM1 7h20v1h-20zM1 8h2v1h-2zM13 8h8v1h-8zM1 9h20v1h-20zM1 10h2v1h-2zM18 10h3v1h-3zM1 11h20v1h-20zM1 12h2v1h-2zM16 12h5v1h-5zM1 13h20v1h-20zM1 14h2v1h-2zM18 14h3v1h-3zM1 15h20v1h-20zM1 16h2v1h-2zM13 16h8v1h-8zM1 17h20v1h-20zM1 18h20v1h-20zM1 19h20v1h-20zM1 20h20v1h-20zM1 21h20v1h-20zM1 22h20v1h-20z"/><path fill="#000" d="M0 0h16v1h-16zM0 1h1v1h-1zM15 1h2v1h-2zM0 2h1v1h-1zM15 2h1v1h-1zM17 2h1v1h-1zM0 3h1v1h-1zM15 3h1v1h-1zM18 3h1v1h-1zM0 4h1v1h-1zM15 4h1v1h-1zM19 4h1v1h-1zM0 5h1v1h-1zM15 5h1v1h-1zM20 5h1v1h-1zM0 6h1v1h-1zM15 6h6v1h-6zM0 7h1v1h-1zM21 7h1v1h-1zM0 8h1v1h-1zM3 8h10v1h-10zM21 8h1v1h-1zM0 9h1v1h-1zM21 9h1v1h-1zM0 10h1v1h-1zM3 10h15v1h-15zM21 10h1v1h-1zM0 11h1v1h-1zM21 11h1v1h-1zM0 12h1v1h-1zM3 12h13v1h-13zM21 12h1v1h-1zM0 13h1v1h-1zM21 13h1v1h-1zM0 14h1v1h-1zM3 14h15v1h-15zM21 14h1v1h-1zM0 15h1v1h-1zM21 15h1v1h-1zM0 16h1v1h-1zM3 16h10v1h-10zM21 16h1v1h-1zM0 17h1v1h-1zM21 17h1v1h-1zM0 18h1v1h-1zM21 18h1v1h-1zM0 19h1v1h-1zM21 19h1v1h-1zM0 20h1v1h-1zM21 20h1v1h-1zM0 21h1v1h-1zM21 21h1v1h-1zM0 22h1v1h-1zM21 22h1v1h-1zM0 23h22v1h-22z"/></symbol>
+<symbol id="find" viewBox="0 0 13 13" shape-rendering="crispEdges"><path fill="#fff" d="M3 1h5v1h-5zM2 2h7v1h-7zM1 3h9v1h-9zM1 4h9v1h-9zM1 5h9v1h-9zM1 6h9v1h-9zM2 7h7v1h-7zM3 8h5v1h-5zM9 9h1v1h-1zM10 10h1v1h-1zM11 11h1v1h-1z"/><path fill="#000" d="M3 0h5v1h-5zM2 1h1v1h-1zM8 1h1v1h-1zM1 2h1v1h-1zM9 2h1v1h-1zM0 3h1v1h-1zM10 3h1v1h-1zM0 4h1v1h-1zM10 4h1v1h-1zM0 5h1v1h-1zM10 5h1v1h-1zM0 6h1v1h-1zM10 6h1v1h-1zM1 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM8 8h2v1h-2zM3 9h6v1h-6zM10 9h1v1h-1zM9 10h1v1h-1zM11 10h1v1h-1zM10 11h1v1h-1zM12 11h1v1h-1zM11 12h2v1h-2z"/></symbol>
+<symbol id="star" viewBox="0 0 15 14" shape-rendering="crispEdges"><path fill="#fff" d="M7 1h1v1h-1zM7 2h1v1h-1zM6 3h3v1h-3zM6 4h3v1h-3zM1 5h13v1h-13zM2 6h11v1h-11zM3 7h9v1h-9zM4 8h7v1h-7zM4 9h3v1h-3zM8 9h3v1h-3zM3 10h3v1h-3zM9 10h3v1h-3zM3 11h2v1h-2zM10 11h2v1h-2zM2 12h1v1h-1zM12 12h1v1h-1z"/><path fill="#000" d="M7 0h1v1h-1zM6 1h1v1h-1zM8 1h1v1h-1zM6 2h1v1h-1zM8 2h1v1h-1zM5 3h1v1h-1zM9 3h1v1h-1zM0 4h6v1h-6zM9 4h6v1h-6zM0 5h1v1h-1zM14 5h1v1h-1zM1 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM12 7h1v1h-1zM3 8h1v1h-1zM11 8h1v1h-1zM3 9h1v1h-1zM7 9h1v1h-1zM11 9h1v1h-1zM2 10h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1zM12 10h1v1h-1zM2 11h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM12 11h1v1h-1zM1 12h1v1h-1zM3 12h2v1h-2zM10 12h2v1h-2zM13 12h1v1h-1zM1 13h2v1h-2zM12 13h2v1h-2z"/></symbol>
+<symbol id="caution" viewBox="0 0 28 19" shape-rendering="crispEdges"><path fill="#fff" d="M15 1h2v1h-2zM14 2h4v1h-4zM13 3h6v1h-6zM13 4h6v1h-6zM12 5h3v1h-3zM17 5h3v1h-3zM11 6h4v1h-4zM17 6h4v1h-4zM11 7h4v1h-4zM17 7h4v1h-4zM10 8h5v1h-5zM17 8h5v1h-5zM9 9h6v1h-6zM17 9h6v1h-6zM9 10h6v1h-6zM17 10h6v1h-6zM8 11h7v1h-7zM17 11h7v1h-7zM7 12h8v1h-8zM17 12h8v1h-8zM7 13h8v1h-8zM17 13h8v1h-8zM6 14h19v1h-19zM5 15h10v1h-10zM17 15h9v1h-9zM5 16h10v1h-10zM17 16h9v1h-9zM4 17h22v1h-22z"/><path fill="#000" d="M15 0h2v1h-2zM14 1h1v1h-1zM17 1h1v1h-1zM13 2h1v1h-1zM18 2h1v1h-1zM12 3h1v1h-1zM19 3h1v1h-1zM12 4h1v1h-1zM19 4h1v1h-1zM11 5h1v1h-1zM15 5h2v1h-2zM20 5h1v1h-1zM10 6h1v1h-1zM15 6h2v1h-2zM21 6h1v1h-1zM10 7h1v1h-1zM15 7h2v1h-2zM21 7h1v1h-1zM9 8h1v1h-1zM15 8h2v1h-2zM22 8h1v1h-1zM8 9h1v1h-1zM15 9h2v1h-2zM23 9h1v1h-1zM8 10h1v1h-1zM15 10h2v1h-2zM23 10h1v1h-1zM7 11h1v1h-1zM15 11h2v1h-2zM24 11h1v1h-1zM6 12h1v1h-1zM15 12h2v1h-2zM25 12h1v1h-1zM6 13h1v1h-1zM15 13h2v1h-2zM25 13h1v1h-1zM5 14h1v1h-1zM25 14h1v1h-1zM4 15h1v1h-1zM15 15h2v1h-2zM26 15h1v1h-1zM4 16h1v1h-1zM15 16h2v1h-2zM26 16h1v1h-1zM3 17h1v1h-1zM26 17h1v1h-1zM2 18h26v1h-26z"/></symbol>
+<symbol id="check" viewBox="0 0 16 15" shape-rendering="crispEdges"><path fill="#fff" d="M12 3h2v1h-2zM11 4h2v1h-2zM10 5h2v1h-2zM2 6h2v1h-2zM9 6h2v1h-2zM3 7h2v1h-2zM8 7h2v1h-2zM4 8h2v1h-2zM7 8h2v1h-2zM5 9h3v1h-3zM6 10h1v1h-1z"/><path fill="#000" d="M0 0h16v1h-16zM0 1h16v1h-16zM0 2h16v1h-16zM0 3h12v1h-12zM14 3h2v1h-2zM0 4h11v1h-11zM13 4h3v1h-3zM0 5h10v1h-10zM12 5h4v1h-4zM0 6h2v1h-2zM4 6h5v1h-5zM11 6h5v1h-5zM0 7h3v1h-3zM5 7h3v1h-3zM10 7h6v1h-6zM0 8h4v1h-4zM6 8h1v1h-1zM9 8h7v1h-7zM0 9h5v1h-5zM8 9h8v1h-8zM0 10h6v1h-6zM7 10h9v1h-9zM0 11h16v1h-16zM0 12h16v1h-16zM0 13h16v1h-16zM0 14h16v1h-16z"/></symbol>
+<symbol id="app" viewBox="0 0 32 28" shape-rendering="crispEdges"><path fill="#fff" d="M3 1h26v1h-26zM2 2h28v1h-28zM1 3h30v1h-30zM1 4h30v1h-30zM1 5h30v1h-30zM1 6h23v1h-23zM26 6h5v1h-5zM1 7h22v1h-22zM26 7h5v1h-5zM1 8h21v1h-21zM25 8h6v1h-6zM1 9h6v1h-6zM10 9h11v1h-11zM24 9h7v1h-7zM1 10h7v1h-7zM11 10h9v1h-9zM23 10h8v1h-8zM1 11h8v1h-8zM12 11h7v1h-7zM22 11h9v1h-9zM1 12h9v1h-9zM13 12h5v1h-5zM21 12h10v1h-10zM1 13h10v1h-10zM14 13h3v1h-3zM20 13h11v1h-11zM1 14h11v1h-11zM15 14h1v1h-1zM19 14h12v1h-12zM1 15h12v1h-12zM18 15h13v1h-13zM1 16h13v1h-13zM17 16h14v1h-14zM1 17h14v1h-14zM16 17h15v1h-15zM1 18h30v1h-30zM1 20h30v1h-30zM1 21h9v1h-9zM22 21h9v1h-9zM1 22h9v1h-9zM11 22h10v1h-10zM22 22h9v1h-9zM1 23h9v1h-9zM11 23h10v1h-10zM22 23h9v1h-9zM11 24h10v1h-10zM1 25h30v1h-30zM1 26h30v1h-30z"/><path fill="#000" d="M3 0h26v1h-26zM2 1h1v1h-1zM29 1h1v1h-1zM1 2h1v1h-1zM30 2h1v1h-1zM0 3h1v1h-1zM31 3h1v1h-1zM0 4h1v1h-1zM31 4h1v1h-1zM0 5h1v1h-1zM31 5h1v1h-1zM0 6h1v1h-1zM24 6h2v1h-2zM31 6h1v1h-1zM0 7h1v1h-1zM23 7h3v1h-3zM31 7h1v1h-1zM0 8h1v1h-1zM22 8h3v1h-3zM31 8h1v1h-1zM0 9h1v1h-1zM7 9h3v1h-3zM21 9h3v1h-3zM31 9h1v1h-1zM0 10h1v1h-1zM8 10h3v1h-3zM20 10h3v1h-3zM31 10h1v1h-1zM0 11h1v1h-1zM9 11h3v1h-3zM19 11h3v1h-3zM31 11h1v1h-1zM0 12h1v1h-1zM10 12h3v1h-3zM18 12h3v1h-3zM31 12h1v1h-1zM0 13h1v1h-1zM11 13h3v1h-3zM17 13h3v1h-3zM31 13h1v1h-1zM0 14h1v1h-1zM12 14h3v1h-3zM16 14h3v1h-3zM31 14h1v1h-1zM0 15h1v1h-1zM13 15h5v1h-5zM31 15h1v1h-1zM0 16h1v1h-1zM14 16h3v1h-3zM31 16h1v1h-1zM0 17h1v1h-1zM15 17h1v1h-1zM31 17h1v1h-1zM0 18h1v1h-1zM31 18h1v1h-1zM0 19h32v1h-32zM0 20h1v1h-1zM31 20h1v1h-1zM0 21h1v1h-1zM10 21h12v1h-12zM31 21h1v1h-1zM0 22h1v1h-1zM10 22h1v1h-1zM21 22h1v1h-1zM31 22h1v1h-1zM0 23h1v1h-1zM10 23h1v1h-1zM21 23h1v1h-1zM31 23h1v1h-1zM0 24h11v1h-11zM21 24h11v1h-11zM0 25h1v1h-1zM31 25h1v1h-1zM0 26h1v1h-1zM31 26h1v1h-1zM1 27h30v1h-30z"/></symbol>
+</svg><!--icons:end-->
+<p class="draft-flag">DRAFT comp · copy v3 · not approved</p>
+<header class="menubar">
+  <a class="brand" href="#top"><svg class="px" viewBox="0 0 16 15" aria-hidden="true"><use href="#check"/></svg>zero</a>
+  <a class="nav-hide" href="#demo">How it works</a>
+  <a class="nav-hide" href="#undo">Undo</a>
+  <a class="nav-hide" href="#before">Before you install</a>
+  <a class="nav-hide" href="https://github.com/drewling/zero">Source</a>
+  <a class="install" href="#install">Install</a>
+  <span class="spacer"></span>
+  <span class="mi tray" aria-hidden="true"><svg class="px" viewBox="0 0 17 13"><use href="#tray"/></svg></span>
+</header>
+<main id="top">
+
+<!-- 1 · See what stays -->
+<section class="desktop on-dither" id="demo" aria-labelledby="s1">
+ <div class="wrap">
+  <div class="head">
+    <h2 id="s1">See what stays. See what gets archived.</h2>
+    <p>A question from a colleague stays. A newsletter gets archived. A payment problem stays. A routine receipt gets archived.</p>
+    <p>Click <b class="ui">Run zero now</b> on your Mac to sort the Gmail accounts you connect. Open a kept email in Gmail when you're ready to deal with it.</p>
+  </div>
+  <div class="demo-grid">
+    <div class="win" id="stays">
+      <div class="bar"><span class="box close"></span><span class="t"><span class="dest"><svg class="px" viewBox="0 0 17 13" aria-hidden="true"><use href="#tray"/></svg>Stays</span></span><span class="box zoom"></span></div>
+      <ul class="list" id="stay-list">
+        <li><svg class="px" viewBox="0 0 16 11" aria-hidden="true"><use href="#mail"/></svg><span class="from">Alex Rivera</span><span class="sub">Approve quote?</span></li>
+        <li><svg class="px" viewBox="0 0 16 11" aria-hidden="true"><use href="#mail"/></svg><span class="from">Priya Sharma</span><span class="sub">Which date?</span></li>
+        <li><svg class="px" viewBox="0 0 16 11" aria-hidden="true"><use href="#mail"/></svg><span class="from">Daniel Kim</span><span class="sub">Payment failed</span></li>
+        <li><svg class="px" viewBox="0 0 16 11" aria-hidden="true"><use href="#mail"/></svg><span class="from">Sarah Mitchell</span><span class="sub">Contract changes</span></li>
+      </ul>
+    </div>
+    <div class="win inactive" id="archived">
+      <div class="bar"><span class="t"><span class="dest"><svg class="px" viewBox="0 0 32 22" aria-hidden="true"><use href="#folder"/></svg>Archived</span></span></div>
+      <ul class="list" id="arch-list">
+        <li><svg class="px" viewBox="0 0 16 11" aria-hidden="true"><use href="#mail"/></svg><span class="from">Fieldnotes</span><span class="sub">Weekly newsletter</span></li>
+        <li><svg class="px" viewBox="0 0 16 11" aria-hidden="true"><use href="#mail"/></svg><span class="from">Northwind</span><span class="sub">Coffee receipt</span></li>
+        <li><svg class="px" viewBox="0 0 16 11" aria-hidden="true"><use href="#mail"/></svg><span class="from">SalesCo</span><span class="sub">Sales introduction</span></li>
+        <li><svg class="px" viewBox="0 0 16 11" aria-hidden="true"><use href="#mail"/></svg><span class="from">Parcel</span><span class="sub">Shipping confirmation</span></li>
+        <li><svg class="px" viewBox="0 0 16 11" aria-hidden="true"><use href="#mail"/></svg><span class="from">Workshop</span><span class="sub">Webinar invitation</span></li>
+        <li><svg class="px" viewBox="0 0 16 11" aria-hidden="true"><use href="#mail"/></svg><span class="from">Market</span><span class="sub">Product announcement</span></li>
+        <li><svg class="px" viewBox="0 0 16 11" aria-hidden="true"><use href="#mail"/></svg><span class="from">Bank</span><span class="sub">Monthly statement</span></li>
+        <li><svg class="px" viewBox="0 0 16 11" aria-hidden="true"><use href="#mail"/></svg><span class="from">Priya</span><span class="sub">Lunch confirmed<span class="last">Last reply: you</span></span></li>
+      </ul>
+    </div>
+    <div class="demo-foot">
+      <p class="caption">Illustration. Made-up names and email subjects, not a result promised for your inbox.</p>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- 2 · Keep mail that needs you -->
+<section class="paper" id="decisions" aria-labelledby="s2">
+ <div class="wrap rules">
+  <div class="win">
+    <div class="bar"><span class="box close"></span><span class="t">Rules</span><span class="box zoom"></span></div>
+    <div class="body">
+      <h2 id="s2" style="font-size:clamp(28px,3vw,42px);margin-bottom:14px">Keep mail that needs your reply or action.</h2>
+      <p>An AI model checks each thread against your rules. It keeps</p>
+      <ul class="keeps">
+        <li><svg class="px" viewBox="0 0 16 15" aria-hidden="true"><use href="#check"/></svg>replies you owe,</li>
+        <li><svg class="px" viewBox="0 0 16 15" aria-hidden="true"><use href="#check"/></svg>direct requests,</li>
+        <li><svg class="px" viewBox="0 0 16 15" aria-hidden="true"><use href="#check"/></svg>payment problems,</li>
+        <li><svg class="px" viewBox="0 0 16 15" aria-hidden="true"><use href="#check"/></svg>legal matters and deadlines with consequences.</li>
+      </ul>
+      <p>Receipts, newsletters and cold sales emails may be archived.</p>
+    </div>
+  </div>
+  <div class="aside-note">
+    <p>Change what counts in <b class="ui">Settings → Rules</b>.</p>
+    <p class="caution"><svg class="px" viewBox="0 0 28 19" aria-hidden="true"><use href="#caution"/></svg><span>The model can make mistakes. Check your first few runs.</span></p>
+  </div>
+ </div>
+</section>
+
+<!-- 3 · Undo -->
+<section class="quiet on-dither" id="undo" aria-labelledby="s3">
+ <div class="wrap undo">
+  <div class="head">
+    <h2 id="s3">Undo an archive. Nothing is deleted.</h2>
+    <p>Archived mail stays searchable in Gmail's <b class="ui">All Mail</b>, with a dated recovery label. In zero's <b class="ui">Undo</b> tab, restore one email or choose <b class="ui">Restore all</b> for a day's archives.</p>
+    <p>Sorting leaves starred mail alone. If the model can't decide, the email stays in your inbox.</p>
+  </div>
+  <div class="win" id="undo-win" aria-hidden="true">
+    <div class="bar"><span class="box close"></span><span class="t">Undo</span><span class="box zoom"></span></div>
+    <div class="toolbar"><span class="btn fake">Restore all</span></div>
+    <ul class="list">
+      <li class="ants"><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span></li>
+      <li><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span></li>
+      <li><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span></li>
+      <li><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span></li>
+      <li><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span></li>
+      <li><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span></li>
+      <li><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span></li>
+      <li><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span></li>
+    </ul>
+  </div>
+ </div>
+</section>
+
+<!-- 4 · Get Info -->
+<section class="paper" id="before" aria-labelledby="s4">
+ <div class="wrap">
+  <div class="head"><h2 id="s4">Know what you connect, share and pay for.</h2></div>
+  <div class="win" id="info">
+    <div class="bar"><span class="box close"></span><span class="t">zero Info</span><span class="box zoom"></span></div>
+    <div class="body">
+      <div class="k"><svg class="px" viewBox="0 0 16 11" aria-hidden="true"><use href="#mail"/></svg>Gmail access.</div>
+      <p class="v">Sign in with Google in your browser. zero never sees your password. Google may show an unverified-app warning because zero hasn't completed its review.</p>
+      <div class="k"><svg class="px" viewBox="0 0 32 15" aria-hidden="true"><use href="#disk"/></svg>Email data.</div>
+      <p class="v">zero runs on your Mac. Sorting sends TypeSafe's Jev model the sender, subject, a short preview, reply-history signals, your rules and learned preferences. No zero server receives your email. Read the <a href="/privacy.html">Privacy policy</a>.</p>
+      <div class="k"><svg class="px" viewBox="0 0 22 24" aria-hidden="true"><use href="#doc"/></svg>Optional reply drafts.</div>
+      <p class="v">Claude Code, or another AI coding tool you already use, can draft replies. Its provider receives thread previews, sent-mail samples, writing preferences and saved profile context. Review before clicking <b class="ui">Send reply</b>. Nothing sends automatically.</p>
+      <div class="k"><svg class="px" viewBox="0 0 15 14" aria-hidden="true"><use href="#star"/></svg>Cost.</div>
+      <p class="v">zero is free and open source under AGPL-3.0. Sorting needs your own Jev key, billed by TypeSafe. Reply drafts use your coding tool's account and billing.</p>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- 5 · Install -->
+<section class="ink" id="install" aria-labelledby="s5">
+ <div class="wrap install">
+  <div>
+    <div class="head">
+      <h2 id="s5">Install zero on your Mac.</h2>
+      <p>zero is not notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. <a href="/install.sh">Read the installer</a> before running it.</p>
+    </div>
+  </div>
+  <div>
+    <div class="win" id="term">
+      <div class="bar"><span class="box close"></span><span class="t">Terminal</span><span class="box zoom"></span></div>
+      <pre><span class="p" aria-hidden="true">% </span><code>curl -fsSL https://zero.headless.com/install | bash</code> <span class="cursorblk" aria-hidden="true"></span></pre>
+      <div class="foot"><button class="btn" type="button">Copy command</button></div>
+    </div>
+    <p class="after">Open zero, connect Gmail and save your <a href="https://console.typesafe.ai/keys">Jev key</a> in <b class="ui">Settings → Sorting engine</b>. Choose <b class="ui">Run zero now</b> and review the results. Or download from <a href="https://github.com/drewling/zero/releases">GitHub Releases</a>.</p>
+  </div>
+ </div>
+</section>
+</main>
+<footer>
+  <span class="brand"><svg class="px" viewBox="0 0 16 15" aria-hidden="true"><use href="#check"/></svg>zero</span>
+  <span>AGPL-3.0</span>
+  <a href="https://github.com/drewling/zero">Source</a>
+  <a href="/privacy.html">Privacy</a>
+  <a href="/terms.html">Terms</a>
+</footer>
+
+<script src="../kit/motion.js"></script>
+<script>
+(function(){
+  /* 1 · demo: the 8 archived rows start mixed into the Stays window, then hop across one at a time.
+     The real <li>s move (no duplicated text in the DOM). Final frame = the HTML as written. */
+  const demo = document.getElementById('demo');
+  const stay = document.getElementById('stay-list'), arch = document.getElementById('arch-list');
+  const order = [0, 'a', 'a', 1, 'a', 'a', 'a', 2, 'a', 'a', 3, 'a'];
+  const home = [...arch.children];
+  const mix = () => { const s = [...stay.children].filter(li => !home.includes(li)); let a = 0;
+    order.forEach(k => stay.appendChild(k === 'a' ? home[a++] : s[k])); };
+  const unmix = n => home.forEach((li, i) => { if (i < n) arch.appendChild(li); });
+  Zm.when(demo, { frames: [
+    { set: () => mix() },
+    { hold: 200 },
+    { hold: 100, enter: async (r, z) => { for (const li of home) {
+        const a = z.rel(r, li); li.style.visibility = 'hidden';
+        arch.appendChild(li); const b = z.rel(r, li);
+        const e = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); e.setAttribute('class', 'px fly'); e.setAttribute('viewBox', '0 0 16 11');
+        e.innerHTML = '<use href="#mail"/>'; Object.assign(e.style, { position: 'absolute', left: 0, top: 0, width: '32px', height: '22px', zIndex: 38 }); r.appendChild(e);
+        for (let s = 0; s <= 5; s++) { const t = s / 5; z.place(e, a.x + 12 + (b.x - a.x) * t, a.y + 7 + (b.y - a.y) * t - 60 * 4 * t * (1 - t)); await z.wait(34); }
+        e.remove(); li.style.visibility = ''; await z.wait(60); } },
+      still: (r) => { mix(); unmix(4); } },
+    // 3: final (the HTML default): 4 in Stays, 8 in Archived. Also the error fallback target.
+    { set: () => unmix(8) }
+  ]});
+  /* 3 · undo: one archived row wears the marching ants (finite); Restore all is the visible way back. */
+})();
+</script>
+</body>
+</html>
