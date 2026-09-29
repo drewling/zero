@@ -6,7 +6,7 @@
 |---|---|---|
 | Source references for load-bearing claims | `proof/CONTENT-PROPOSAL.md` §4 (fact trace) and §5 | Every claim is checked against HEAD `6067190` source (`lib/review_open_loops.py`, `lib/inbox_zero.py`, `lib/keeper_server.py`, `lib/llm.py`, `lib/jev.py`, `macapp/Sources/*.swift`, `macapp/install-zero.sh`, `landing/nginx.conf`, `privacy.html`, `LICENSE`) and against the shipped v1.7.0 DMG from `releases/latest`, mounted read-only 04:41Z |
 | Shipped vs aspirational | CONTENT-PROPOSAL §5 "Not advertised" | `npx zero init`, a guaranteed morning run, user-visible probabilities, Apple Mail integration and categories are all excluded, with reasons |
-| Word counts | CONTENT-PROPOSAL §2, §7 | The same visible-text script on both pages: live B `landing/index.html` 901, comp `proof/comp/index.html` 600 |
+| Word counts | CONTENT-PROPOSAL §2, §7 | The same visible-text script on both pages: live B `landing/index.html` 901, comp `proof/comp/index.html` 608 |
 | Before/after outline | CONTENT-PROPOSAL §2 | 7 old sections to 6. Each new section is tied to the visitor question it answers. The FAQ is cut |
 | Full proposed copy | CONTENT-PROPOSAL §3 and `proof/comp/index.html` | The same text in both. The comp is the rendered form |
 | Each safety/requirement fact in one best place | CONTENT-PROPOSAL §4 | 23 facts traced. "Nothing is deleted" 4 to 1, Jev data flow 2 to 1, drafts-send-nothing 3 to 1, cost 3 to 1. Two deliberate doubles are named with reasons: the requirements gate and the "read the installer" link |

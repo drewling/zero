@@ -1,6 +1,6 @@
 # zero landing: content and structure proposal (slice 02b)
 
-**For the owner.** The visual world B stays as you approved it. What changes here is what the page says and in what order. The current page is 901 words, and this draft is 600. See the comp at `proof/comp/index.html`, served from `proof/comp/` (for example `python3 -m http.server` in that folder). Shots are in `proof/shots/`.
+**For the owner.** The visual world B stays as you approved it. What changes here is what the page says and in what order. The current page is 901 words, and this draft is 608. See the comp at `proof/comp/index.html`, served from `proof/comp/` (for example `python3 -m http.server` in that folder). Shots are in `proof/shots/`.
 
 **What I need from you:** approve, or edit, §2 (outline) and §3 (copy). Also answer the three product questions in §6. Nothing gets built until you do.
 
@@ -14,7 +14,7 @@
 
 ## 2. Before and after outline
 
-| # | Before (live B build, 901 words) | After (this draft, 600 words) | Visitor question it answers |
+| # | Before (live B build, 901 words) | After (this draft, 608 words) | Visitor question it answers |
 |---|---|---|---|
 | 1 | Hero: "Keep the mail that needs you." + a "Nothing is deleted" note | **Hero: "Only the mail that still needs you."** One job across every account, "every archive can be undone", requirements, the real app | What is this, and is it for my Mac? |
 | 2 | "What stays. What gets archived." with a 7-row default-rules table | **"It asks who's waiting, not who's writing."** Why filters fail on cold email, the two signals (last message yours, ever written to them), Jev reading against plain-English rules, "it will sometimes be wrong" | Why would this get it right when filters don't? |
@@ -69,14 +69,14 @@ Archiving removes Gmail's Inbox label and adds one dated for that day. The mail 
 `🗄️ Auto-Archived 2026-09-29`
 
 - **Undo a day:** Open **Undo** and choose **Restore all**, or put back one email.
-- **Starred mail:** Never touched.
+- **Starred mail:** Runs never archive it.
 - **No answer:** If Jev can't decide, the thread stays in your Inbox.
 
 **What it needs, sends and costs**
 
 - **Your Mac:** Apple Silicon with macOS 26 Tahoe or later. The installer stops on anything else.
 - **Gmail:** You sign in with Google in your browser. zero never sees your password. Google may warn that zero is unverified. It hasn't finished Google's review.
-- **Your mail:** zero runs on your Mac. To sort a thread, it sends Jev the sender, subject, a short preview and your rules. The zero project runs no server that receives your email. [Privacy policy](/privacy.html).
+- **Your mail:** zero runs on your Mac. To sort a thread, it sends Jev the sender, subject, a short preview, your rules and what it has learned from you. The zero project runs no server that receives your email. [Privacy policy](/privacy.html).
 - **Replies:** Optional. Tap **Reply** and your agent CLI, Claude Code by default, drafts one. The thread goes to that provider. Nothing is sent until you click **Send reply**.
 - **Cost:** zero is free and open source. Sorting needs your own TypeSafe Jev key, billed by TypeSafe. Drafts are billed to your agent CLI's account.
 
@@ -100,7 +100,7 @@ Archiving removes Gmail's Inbox label and adds one dated for that day. The mail 
 | One job across every account | Hero lede | FAQ only (1) | PRODUCT.md "The one job". `AccountsView` "Add a Gmail account" (`PanelView.swift` ~935). Panel "Across N accounts" (~492) |
 | Reversible: label, All Mail, search | "Nothing is deleted" section | Hero note, recovery, FAQ, lede (4) | `lib/inbox_zero.py` ~26/37 `🗄️ Auto-Archived <YYYY-MM-DD>`. Removes INBOX label |
 | Undo a day or one email | "Nothing is deleted" rows | Recovery, FAQ (2) | `PanelView.swift` ~1082 **Restore all**. ~1038 "put any of them back in one tap" |
-| Starred never touched | "Nothing is deleted" rows | none (new) | `review_open_loops.py` ~154 `_candidate_q` excludes `is:starred` |
+| Starred never archived by a run | "Nothing is deleted" rows | none (new) | `review_open_loops.py` ~154 `_candidate_q` excludes `is:starred`. `inbox_zero.py` ~210 and `thin_protected.py` ~28 also protect starred. Worded "runs never archive it", not "never touched", because you can still archive a starred thread yourself |
 | No answer means kept | "Nothing is deleted" rows | none (new) | `review_open_loops.py` `_classify` ~1141-1200, and `_jev_decide` "uncertain -> keep" |
 | Can be wrong, check first runs | "How it decides" | Sort section, table fine print, FAQ (3) | Required honesty. Model judgment, not a guarantee |
 | Default rules, editable in plain English | "How it decides" (Settings → Rules) | Sort section + table (2) | `keep-policy.md`. `PanelView.swift` ~1320 "Rules" |
@@ -111,7 +111,7 @@ Archiving removes Gmail's Inbox label and adds one dated for that day. The mail 
 | Apple Silicon, macOS 26+, installer stops | Hero req line + "Your Mac" row | Hero, Mac row (2, kept as 2 on purpose: the short line is a scan-level gate) | `macapp/install-zero.sh` ~61-79 |
 | Google unverified warning | "Gmail" row | Gmail row (1) | `OnboardingView.swift` ~107 |
 | Password never seen | "Gmail" row | Gmail row (1) | `OnboardingView.swift` ~120 |
-| What goes to Jev | "Your mail" row | Mail row, FAQ (2) | `_jev_state`: sender, subject, snippet (≤160 chars), keep_policy. `privacy.html` ~74 |
+| What goes to Jev | "Your mail" row | Mail row, FAQ (2) | `_jev_state` ~974-998: sender, subject, snippet (≤160 chars), `keep_policy`, and `learned_preferences` when present. `privacy.html` ~74 |
 | No zero server receives mail | "Your mail" row | Mail row, FAQ (2) | privacy.html. Architecture: local `keeper_server.py` |
 | Drafts optional, to your agent CLI, nothing sent until Send reply | "Replies" row | Replies row, FAQ ×2 (3) | `PanelView.swift` ~624 Reply, ~2587 Send reply. `lib/llm.py` providers claude/codex/hermes, default claude |
 | Cost: free, Jev billed by TypeSafe, drafts billed to CLI account | "Cost" row | Jev row, FAQ, drafts row (3) | `keeper_server.py` ~372 `_require_jev_key` ("Add your TypeSafe API key in Settings to sort mail") |
@@ -129,7 +129,7 @@ Archiving removes Gmail's Inbox label and adds one dated for that day. The mail 
 1. **Daily routine promise removed from install step 4.** In the shipped v1.7.0 app (DMG checked 04:41Z), `_rewrite_schedule_plist` returns early if `~/Library/LaunchAgents/com.drewl.zero.daily.plist` doesn't exist, and nothing in the app or `install-zero.sh` creates it. Only `bin/zero schedule` (CLI) does. The app's own subtitle says "Changes take effect the next time the launch agent reschedules (if it's installed)." The default is weekdays at 07:00 (`_DEFAULT_SETTINGS`), and the time is user-editable, but an app-only user may never get a scheduled run. So the page says "check it with your coffee" and **Run zero now**, and does not promise an automatic morning run. See Q1.
 2. **"Needs Apple Silicon Mac"** is now "Apple Silicon". The same fact, shorter.
 3. **"The installer may add … Claude Code"**: true, but only when no agent CLI (claude, codex, opencode) is already installed (`install-zero.sh` ~149-156). Kept as "may add".
-4. **The Jev data flow is now specific:** sender, subject, a short preview and your rules. This replaces "relevant thread text", which was vaguer than what the code sends for sorting. Drafts send the thread to your agent CLI, which is stated separately.
+4. **The Jev data flow is now specific:** sender, subject, a short preview, your rules and what it has learned from you (`learned_preferences`). This replaces "relevant thread text", which was vaguer than what the code sends for sorting. Drafts send the thread to your agent CLI, which is stated separately.
 5. **"It gets things wrong sometimes"** stays as "It will sometimes be wrong." The page never claims zero doesn't misclassify.
 
 **Deliberate cuts:**
@@ -159,6 +159,6 @@ Archiving removes Gmail's Inbox label and adds one dated for that day. The mail 
 
 - The code checked is this repo at HEAD `6067190`, plus the shipped v1.7.0 DMG (`releases/latest`, published 2026-09-20) mounted read-only. Its payload has the same `_rewrite_schedule_plist` early return and `_require_jev_key`.
 - Line numbers are approximate (`~`), from HEAD.
-- Word counts are visible body text, excluding script, style and comments, counted by the same script for both pages: 901 → 600.
+- Word counts are visible body text, excluding script, style and comments, counted by the same script for both pages: 901 → 608.
 - The comp reuses `landing/site.css` and `site.js` through symlinks. It has a small inline style block for the two-signal window, which the builder should fold into `site.css`. It is a content proof, not a pixel-final build.
 - `landing/` is unchanged. There was no build, QA dispatch or deploy.
