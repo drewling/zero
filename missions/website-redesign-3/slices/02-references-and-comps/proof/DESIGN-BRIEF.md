@@ -50,7 +50,7 @@ This follows the System 6/7 construction, and System.css is the reference (ref #
 - Title-bar stripes are a `::before` layer inset 5 px × 4 px. The title text sits on a **paper plate** (`.bar .t`, 10 px side padding) that interrupts the stripes. The close and zoom boxes get a 3 px paper halo, so no stripe touches a glyph or a box.
 - An **inactive** window drops the stripes and boxes entirely, as System 7 draws it (the `Archived`, `Auto-Archived` window).
 - Any heading or paragraph on a dither ground sits on a paper plate with a 2 px ink border (`.on-dither .head`, the hero plate, the captions and the folder and Trash labels).
-- Audit: a script walked every visible text node in all 4 comps at 320, 390 and 1440, looking for the nearest painted background. **No visible text sits on a texture.** The only hits were the visually hidden `.sr-only` illustration descriptions, which aren't painted.
+- Audit: a script checked every visible text element in all 4 comps at 320, 390 and 1440 by walking up its ancestors to the first painted background. **None resolves to a texture.** The only hits were the visually hidden `.sr-only` descriptions, which aren't painted. This is an ancestor check, not a pixel check. Text that overlaps a texture by absolute positioning would slip past it, so the screenshots were also reviewed by eye.
 
 ## Other craft bugs found
 
@@ -74,6 +74,7 @@ To stay inside the budget I **removed** chrome that the first comp pass had but 
 | Clipped text | one at 320: `Product announcement` truncates with an ellipsis in the demo list. 390 is clean. |
 | Text on stripes or dither | none painted (see above) |
 | Hero A live playback | ends in the done state with count 4. Development-motion's sandbox measured 5.055 s desktop and 4.112 s mobile in Playwright WebKit (**not** real Safari 26). |
+| Demo section live playback (Aside Chrome) | on scroll-in the rows start mixed. Ten seconds later Stays holds the 4 named rows in order, Archived holds 8, and no flying envelopes are left in the DOM. |
 | Reduced motion, `?static` | the final frame renders with no added DOM |
 | impeccable detector | **ran degraded** (parser modules missing, regex fallback, URL mode blocked by a missing Puppeteer Chrome). 2 findings, both `overused-font` for Geist and Geist Mono. Kept on purpose: they're the incumbent body faces in `landing/DESIGN.md`, and the one-bit voice comes from Pixelify plus the icons. The findings are an undercount, not a clean bill of health. |
 | Word count | 544 rendered, 549 inventory, 550 ceiling |
