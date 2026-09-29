@@ -96,7 +96,49 @@ To stay inside the budget I **removed** chrome that the first comp pass had but 
 | impeccable detector | **ran degraded** (parser modules missing, regex fallback, URL mode blocked by a missing Puppeteer Chrome). 2 findings, both `overused-font` for Geist and Geist Mono. Kept on purpose: they're the incumbent body faces in `landing/DESIGN.md`, and the one-bit voice comes from Pixelify plus the icons. The findings are an undercount, not a clean bill of health. |
 | Word count | 544 rendered, 549 inventory, 550 ceiling |
 
-**Not verified:** real Safari 26, the marching-ants animation in Safari (a `background-position` fallback is specified), real touch devices, and screen-reader passes.
+### Real-engine acceptance pass (2026-09-29 23:00Z, Playwright 1.61.1). Script and raw results: `acceptance/`
+
+Each comp was loaded directly, with no iframe harness, in **Chromium** and **Playwright WebKit build 2336** on macOS. This is WebKit, **not Safari 26**. Device profiles:
+
+- desktop 1440×900 @2x
+- iPhone 390×844 @3x, mobile with touch
+- SE 320×568, mobile with touch
+
+Pages: hero A, reworked hero B, hero C and sections. Per engine that's 3 profiles × 4 pages × 12 checks, plus keyboard, copy and control checks.
+
+| Check | Chromium | WebKit |
+|---|---|---|
+| Live playback reaches `done` (the story's own state flag), 0 leftover motion DOM, 0 console or page errors | 12/12 | 12/12 |
+| No horizontal overflow, no clipped text, no text on texture | 12/12 | 12/12 |
+| Title plates break the stripes (white plate, text box not narrower than its text) | 12/12 | 12/12 |
+| `fi` ligatures off on Pixelify | 12/12 | 12/12 |
+| Tap targets ≥24px (WCAG 2.2 2.5.8, with links inside sentences exempt per the inline exception) | 12/12 | 12/12 |
+| Images and SVGs named or hidden | 12/12 | 12/12 |
+| Reduced motion shows the final frame with no motion DOM | 12/12 | 12/12 |
+| No-JS HTML text equals the played final frame | 12/12 | 12/12 |
+| Keyboard: every link and button reachable, visible focus ring | 4/4 (Tab) | 4/4 (Option+Tab) |
+| COPY v3: all 57 primary sentences render verbatim (hero A + sections) | pass | not run, since it's engine-independent |
+| Control: the audit, pointed at the live site, **does** catch the `fi` ligature bug and the title on the stripes | both caught | not run |
+
+Final: Chromium 155/155. WebKit 146/146 page checks, plus 4/4 keyboard in a separate WebKit pass.
+
+**Fixed because of this pass:**
+
+- `Read the installer first` was 21px tall and the footer links were 15px. Standalone text links now have a `min-height: 24px`.
+
+**Audit false positives corrected, not hidden:**
+
+- The stripe check flagged 5 plates that were narrower than `scrollWidth` by less than 1px. That's subpixel rounding: the plates are white and the text isn't clipped.
+- WebKit reached 0 controls with a plain Tab. macOS WebKit only tabs to links with Option+Tab (Safari's default). With Option+Tab, every control is reachable.
+
+**Harness faults:**
+
+- The first full run died when a WebKit context closed underneath it.
+- A second run hung on WebKit's second `newPage` in a reused context. The keyboard step now uses a fresh context per page.
+
+Neither fault was a page defect.
+
+**Not verified:** real Safari 26 (Playwright WebKit is a stand-in, not the shipping browser), the marching-ants animation in Safari (a `background-position` fallback is specified), real touch devices, and screen-reader passes.
 
 ## Files
 

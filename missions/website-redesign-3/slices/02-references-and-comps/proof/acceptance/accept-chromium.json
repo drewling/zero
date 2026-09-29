@@ -1,0 +1,777 @@
+[
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-a story plays to done",
+  "detail": "1 root(s), 4619 ms, leftover movers 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-a no leftover motion DOM",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-a no console/page errors",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-a no horizontal overflow",
+  "detail": "1440/1440 "
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-a no clipped text",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-a no text on texture",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-a title plates break stripes",
+  "detail": "0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-a ligatures off on Pixelify",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-a tap targets >= 24px",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-a images/svgs named or hidden",
+  "detail": "img 0 svg 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-a reduced motion = final frame",
+  "detail": "{\"modes\":[\"static\"],\"lt\":0,\"movers\":0}"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-a no-JS HTML equals final frame",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-b story plays to done",
+  "detail": "1 root(s), 4839 ms, leftover movers 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-b no leftover motion DOM",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-b no console/page errors",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-b no horizontal overflow",
+  "detail": "1440/1440 "
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-b no clipped text",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-b no text on texture",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-b title plates break stripes",
+  "detail": "0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-b ligatures off on Pixelify",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-b tap targets >= 24px",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-b images/svgs named or hidden",
+  "detail": "img 0 svg 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-b reduced motion = final frame",
+  "detail": "{\"modes\":[\"static\"],\"lt\":0,\"movers\":0}"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-b no-JS HTML equals final frame",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-c story plays to done",
+  "detail": "1 root(s), 3824 ms, leftover movers 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-c no leftover motion DOM",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-c no console/page errors",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-c no horizontal overflow",
+  "detail": "1440/1440 "
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-c no clipped text",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-c no text on texture",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-c title plates break stripes",
+  "detail": "0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-c ligatures off on Pixelify",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-c tap targets >= 24px",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-c images/svgs named or hidden",
+  "detail": "img 0 svg 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-c reduced motion = final frame",
+  "detail": "{\"modes\":[\"static\"],\"lt\":0,\"movers\":0}"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/hero-c no-JS HTML equals final frame",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/sections story plays to done",
+  "detail": "1 root(s), 3328 ms, leftover movers 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/sections no leftover motion DOM",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/sections no console/page errors",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/sections no horizontal overflow",
+  "detail": "1440/1440 "
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/sections no clipped text",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/sections no text on texture",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/sections title plates break stripes",
+  "detail": "0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/sections ligatures off on Pixelify",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/sections tap targets >= 24px",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/sections images/svgs named or hidden",
+  "detail": "img 0 svg 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/sections reduced motion = final frame",
+  "detail": "{\"modes\":[\"static\"],\"lt\":0,\"movers\":0}"
+ },
+ {
+  "ok": true,
+  "name": "chromium/desktop/sections no-JS HTML equals final frame",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-a story plays to done",
+  "detail": "1 root(s), 3317 ms, leftover movers 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-a no leftover motion DOM",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-a no console/page errors",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-a no horizontal overflow",
+  "detail": "390/390 "
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-a no clipped text",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-a no text on texture",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-a title plates break stripes",
+  "detail": "0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-a ligatures off on Pixelify",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-a tap targets >= 24px",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-a images/svgs named or hidden",
+  "detail": "img 0 svg 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-a reduced motion = final frame",
+  "detail": "{\"modes\":[\"static\"],\"lt\":0,\"movers\":0}"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-a no-JS HTML equals final frame",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-b story plays to done",
+  "detail": "1 root(s), 3815 ms, leftover movers 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-b no leftover motion DOM",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-b no console/page errors",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-b no horizontal overflow",
+  "detail": "390/390 "
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-b no clipped text",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-b no text on texture",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-b title plates break stripes",
+  "detail": "0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-b ligatures off on Pixelify",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-b tap targets >= 24px",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-b images/svgs named or hidden",
+  "detail": "img 0 svg 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-b reduced motion = final frame",
+  "detail": "{\"modes\":[\"static\"],\"lt\":0,\"movers\":0}"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-b no-JS HTML equals final frame",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-c story plays to done",
+  "detail": "1 root(s), 3827 ms, leftover movers 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-c no leftover motion DOM",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-c no console/page errors",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-c no horizontal overflow",
+  "detail": "390/390 "
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-c no clipped text",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-c no text on texture",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-c title plates break stripes",
+  "detail": "0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-c ligatures off on Pixelify",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-c tap targets >= 24px",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-c images/svgs named or hidden",
+  "detail": "img 0 svg 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-c reduced motion = final frame",
+  "detail": "{\"modes\":[\"static\"],\"lt\":0,\"movers\":0}"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/hero-c no-JS HTML equals final frame",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/sections story plays to done",
+  "detail": "1 root(s), 3329 ms, leftover movers 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/sections no leftover motion DOM",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/sections no console/page errors",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/sections no horizontal overflow",
+  "detail": "390/390 "
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/sections no clipped text",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/sections no text on texture",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/sections title plates break stripes",
+  "detail": "0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/sections ligatures off on Pixelify",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/sections tap targets >= 24px",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/sections images/svgs named or hidden",
+  "detail": "img 0 svg 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/sections reduced motion = final frame",
+  "detail": "{\"modes\":[\"static\"],\"lt\":0,\"movers\":0}"
+ },
+ {
+  "ok": true,
+  "name": "chromium/iphone/sections no-JS HTML equals final frame",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-a story plays to done",
+  "detail": "1 root(s), 3326 ms, leftover movers 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-a no leftover motion DOM",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-a no console/page errors",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-a no horizontal overflow",
+  "detail": "320/320 "
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-a no clipped text",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-a no text on texture",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-a title plates break stripes",
+  "detail": "0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-a ligatures off on Pixelify",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-a tap targets >= 24px",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-a images/svgs named or hidden",
+  "detail": "img 0 svg 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-a reduced motion = final frame",
+  "detail": "{\"modes\":[\"static\"],\"lt\":0,\"movers\":0}"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-a no-JS HTML equals final frame",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-b story plays to done",
+  "detail": "1 root(s), 3825 ms, leftover movers 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-b no leftover motion DOM",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-b no console/page errors",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-b no horizontal overflow",
+  "detail": "320/320 "
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-b no clipped text",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-b no text on texture",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-b title plates break stripes",
+  "detail": "0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-b ligatures off on Pixelify",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-b tap targets >= 24px",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-b images/svgs named or hidden",
+  "detail": "img 0 svg 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-b reduced motion = final frame",
+  "detail": "{\"modes\":[\"static\"],\"lt\":0,\"movers\":0}"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-b no-JS HTML equals final frame",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-c story plays to done",
+  "detail": "1 root(s), 3827 ms, leftover movers 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-c no leftover motion DOM",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-c no console/page errors",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-c no horizontal overflow",
+  "detail": "320/320 "
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-c no clipped text",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-c no text on texture",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-c title plates break stripes",
+  "detail": "0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-c ligatures off on Pixelify",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-c tap targets >= 24px",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-c images/svgs named or hidden",
+  "detail": "img 0 svg 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-c reduced motion = final frame",
+  "detail": "{\"modes\":[\"static\"],\"lt\":0,\"movers\":0}"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/hero-c no-JS HTML equals final frame",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/sections story plays to done",
+  "detail": "1 root(s), 3322 ms, leftover movers 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/sections no leftover motion DOM",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/sections no console/page errors",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/sections no horizontal overflow",
+  "detail": "320/320 "
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/sections no clipped text",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/sections no text on texture",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/sections title plates break stripes",
+  "detail": "0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/sections ligatures off on Pixelify",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/sections tap targets >= 24px",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/sections images/svgs named or hidden",
+  "detail": "img 0 svg 0"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/sections reduced motion = final frame",
+  "detail": "{\"modes\":[\"static\"],\"lt\":0,\"movers\":0}"
+ },
+ {
+  "ok": true,
+  "name": "chromium/se/sections no-JS HTML equals final frame",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/keyboard/hero-a all 8 controls reachable",
+  "detail": "reached 8"
+ },
+ {
+  "ok": true,
+  "name": "chromium/keyboard/hero-a visible focus",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/keyboard/hero-b all 8 controls reachable",
+  "detail": "reached 8"
+ },
+ {
+  "ok": true,
+  "name": "chromium/keyboard/hero-b visible focus",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/keyboard/hero-c all 8 controls reachable",
+  "detail": "reached 8"
+ },
+ {
+  "ok": true,
+  "name": "chromium/keyboard/hero-c visible focus",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "chromium/keyboard/sections all 14 controls reachable",
+  "detail": "reached 14"
+ },
+ {
+  "ok": true,
+  "name": "chromium/keyboard/sections visible focus",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "copy: all 57 COPY v3 primary sentences render verbatim",
+  "detail": ""
+ },
+ {
+  "ok": true,
+  "name": "control: audit detects live \"fi\" ligature bug",
+  "detail": "Read the installer first"
+ },
+ {
+  "ok": true,
+  "name": "control: audit detects live title text on stripes",
+  "detail": "[{\"text\":\"zero\",\"bg\":\"rgba(0, 0, 0, 0)\"},{\"text\":\"Two questions\",\"bg\":\"rgba(0, 0, 0, 0)\"},{\"text\":\"Terminal\",\"bg\":\"rgba(0, 0, 0, 0)\"}]"
+ }
+]
