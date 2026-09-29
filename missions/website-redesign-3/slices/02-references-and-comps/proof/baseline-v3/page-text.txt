@@ -1,0 +1,140 @@
+
+===== hero-b (visible text, reduced-motion final frame) =====
+DRAFT comp · copy v3 · not approved
+
+zero
+How it works
+Undo
+Before you install
+Source
+Install
+Clean up your Gmail inbox on your Mac.
+
+zero is a Mac app that keeps the emails you need to deal with and archives the rest. Undo any archive. Keep using Gmail or Apple Mail.
+
+Install zero for Mac
+Read the installer first
+
+Apple Silicon. macOS 26 or later. Gmail only.
+
+Illustration: a Gmail inbox shown as a Mac list window. zero selects eight routine emails and they are dragged into a dated Auto-Archived folder. Four emails that need a reply or action stay. The Trash stays empty.
+
+Inbox
+Alex Rivera
+Can you approve the quote?
+11h
+Priya Sharma
+Which date works for you?
+13h
+Daniel Kim
+Your payment failed
+1d
+Sarah Mitchell
+Contract changes to review
+1d
+
+Illustration. Names are made up.
+
+Auto-Archived 2026-09-29
+Trash
+===== sections (visible text, reduced-motion final frame) =====
+DRAFT comp · copy v3 · not approved
+
+zero
+How it works
+Undo
+Before you install
+Source
+Install
+See what stays. See what gets archived.
+
+A question from a colleague stays. A newsletter gets archived. A payment problem stays. A routine receipt gets archived.
+
+Click Run zero now on your Mac to sort the Gmail accounts you connect. Open a kept email in Gmail when you're ready to deal with it.
+
+Stays
+Alex Rivera
+Approve quote?
+Priya Sharma
+Which date?
+Daniel Kim
+Payment failed
+Sarah Mitchell
+Contract changes
+Archived
+Fieldnotes
+Weekly newsletter
+Northwind
+Coffee receipt
+SalesCo
+Sales introduction
+Parcel
+Shipping confirmation
+Workshop
+Webinar invitation
+Market
+Product announcement
+Bank
+Monthly statement
+Priya
+Lunch confirmedLast reply: you
+
+Illustration. Made-up names and email subjects, not a result promised for your inbox.
+
+Rules
+Keep mail that needs your reply or action.
+
+An AI model checks each thread against your rules. It keeps
+
+replies you owe,
+direct requests,
+payment problems,
+legal matters and deadlines with consequences.
+
+Receipts, newsletters and cold sales emails may be archived.
+
+Change what counts in Settings → Rules.
+
+The model can make mistakes. Check your first few runs.
+
+Undo an archive. Nothing is deleted.
+
+Archived mail stays searchable in Gmail's All Mail, with a dated recovery label. In zero's Undo tab, restore one email or choose Restore all for a day's archives.
+
+Sorting leaves starred mail alone. If the model can't decide, the email stays in your inbox.
+
+Undo
+Restore all
+Know what you connect, share and pay for.
+zero Info
+Gmail access.
+
+Sign in with Google in your browser. zero never sees your password. Google may show an unverified-app warning because zero hasn't completed its review.
+
+Email data.
+
+zero runs on your Mac. Sorting sends TypeSafe's Jev model the sender, subject, a short preview, reply-history signals, your rules and learned preferences. No zero server receives your email. Read the Privacy policy.
+
+Optional reply drafts.
+
+Claude Code, or another AI coding tool you already use, can draft replies. Its provider receives thread previews, sent-mail samples, writing preferences and saved profile context. Review before clicking Send reply. Nothing sends automatically.
+
+Cost.
+
+zero is free and open source under AGPL-3.0. Sorting needs your own Jev key, billed by TypeSafe. Reply drafts use your coding tool's account and billing.
+
+Install zero on your Mac.
+
+zero is not notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the installer before running it.
+
+Terminal
+% curl -fsSL https://zero.headless.com/install | bash 
+Copy command
+
+Open zero, connect Gmail and save your Jev key in Settings → Sorting engine. Choose Run zero now and review the results. Or download from GitHub Releases.
+
+zero
+AGPL-3.0
+Source
+Privacy
+Terms
