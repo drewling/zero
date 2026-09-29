@@ -73,3 +73,31 @@ The real acceptance route comes from `slices/04-motion-and-polish/SPEC.md` mini-
 | Build, tests and QA candidate | Sandbox regression suite green | Actual project `build.sh` and project tests on the integrated SHA, then exact QA handoff |
 
 The integrated acceptance workflow was **not attempted**, because the prerequisite approved candidate and assignment have not been supplied and main-lead explicitly disallows landing edits/integration before gate B and the slice 03 SHA. It is not marked acceptance-aligned or described as an attempted project test that failed. Read-only checks of an older landing page would not substitute for that missing integrated candidate. Once authorized, the new assignment must exercise the actual build, full-page browser behavior, Lighthouse baseline comparison and authored review/QA boundaries.
+
+## Changed-output and failure-mode trace
+
+The numbered checks below refer to the actual `ok N` observations in `chromium-green.txt` and `webkit-green.txt`, not merely the aggregate pass count. Checks 1 through 14 passed in both engines. Checks 15 and 16 ran in Chromium only and were explicitly skipped in WebKit.
+
+| Sandbox output or requirement | Concrete check | Observed result and scope |
+|---|---|---|
+| `index.html` final-frame fallback | Check 1: static/reduced/no-JS screenshot comparison | At the tested 1440 px viewport, both script-enabled modes have PNG bytes equal to disabled-JS HTML. This is fixture parity, not full landing parity. |
+| Desktop-only pixel cursor | Check 2: coarse-pointer context at desktop width; check 8: 320/390 px live playback | No visible cursor under emulated coarse pointer and no cursor at mobile widths. Physical-device pointer behavior is not inferred. |
+| Reduced motion wins over QA rewind | Check 3: reduced preference with `?frame=0` | Final count remains 4 and rewind classes are absent. |
+| Safe bad QA input | Check 4: `?frame=oops` | Valid final state, no page exception. |
+| Preference change cancels playback | Check 5: real browser reduced-motion media change while playing | Mode becomes cancelled, final count 4, no overlays, and no subsequent mutation in the observation window. |
+| Missing target error recovery | Check 6: `?fault=target` | Mode becomes error, complete final count and no residual overlays. This does not test failed network assets. |
+| Replay and concurrent activation | Check 7: keyboard Enter replay and concurrent `Zm.play` call | A second call returns the current pending promise. Playback settles again with count 4 and no overlays or page exceptions. |
+| Fixed row slots and mobile layout | Check 8: complete 320/390 px playback; check 14: complete 1440/390 px playback | No mobile horizontal overflow. Chromium reports fixture CLS 0 including startup. WebKit's missing Layout Instability API cannot establish CLS. |
+| Full COPY v3 rows in `index.html` and wrapping slots in `sandbox.css` | Check 9: exact strings in both lists and text-range bounds at 320/390/1440 px | Strings equal the authored sender/subject pairs and text fits every visible tested row. Design-lead independently confirmed exact unclipped rows at 22:28Z. |
+| Mobile source point and path in `story.js` | Check 10: frame-3 and live envelope/label rectangle intersections at 320/390 px | Zero intersections, with at least 40 visible placements per eight-hop playback. Design-lead independently confirmed label clearance at 22:28Z. |
+| Discrete zoom geometry | Check 11: QA frame-1 rectangle inline geometry | Left/top/width/height are whole CSS pixels. Despite the broader test title, the assertion directly covers zoom rectangles, not all transforms at every frame. Transform rounding is additionally source inspection, not a separate measured assertion. |
+| Hidden-document cleanup and replay return | Check 12: synthetic hidden/visible property and event | Final state has no late mutations and replay re-enables on return. An actual OS/browser tab switch remains untested. |
+| Viewport geometry invalidation | Check 13: real browser viewport resize to 390 px during playback | Playback cancels and overlays are absent rather than continuing with old coordinates. |
+| Exactly eight archives and bounded normal story | Check 14: actual live count mutations at 1440/390 px | Sequence is 12 through 4 with each decrement present, mode is done rather than error, and measured durations are within six seconds. The timeout-deadline cancellation branch itself was not forced. |
+| Timing comparison with designer comp | Check 15: active reference renderer | Reference final count is 4 and duration is 4,488 ms. The previously reported nine seconds is not reproduced and no cause is asserted. |
+| Frame and reduced-state evidence files | Check 16: captures at 1440/390 px; rebuilt strips | Fresh individual frame/reduced PNGs and timestamped capture metadata were produced. Corrected mobile strip received explicit designer approval. |
+| Script syntax and leaf loading boundary | `node --check` on changed scripts and test module; all browser checks load the committed fixture over loopback HTTP | Syntax checks passed and scripts/fonts/CSS loaded sufficiently for the observed workflows. This is not project bundling, `build.sh`, production CSP, hosting or deployment verification. |
+| Added-JS budget | Node `zlib.gzipSync` on each served runtime script | 3,508 bytes for runner plus 1,174 bytes for story data, total 4,682 bytes. Fixture-only instrumentation is excluded and no production bundle size is claimed. |
+| Authorized edit territory | Scoped commit file lists and git status | All new/changed tracked files are under slice 04 `proof/sandbox/`. Pre-existing owner untracked files remain untouched. |
+
+Likely failures outside these observations remain explicitly open: `dispose()` cleanup and IntersectionObserver-driven starts are not separately exercised, real hidden-tab throttling and deadline cancellation are not forced, Safari 26 ants and complete section motion do not exist in this fixture, and no integrated packaging/hosting/build/Lighthouse/QA path has been validated. Adding more synthetic checks would not remove the missing approved integration candidate. These are boundaries of the evidence, not silently passed requirements.
