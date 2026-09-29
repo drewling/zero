@@ -46,6 +46,10 @@ h2{font-size:clamp(2.2rem,4.2vw,4rem);margin:0 0 20px}
 .folder-icon:before{content:"";position:absolute;left:-3px;top:-10px;width:20px;height:10px;border:3px solid var(--black);background:var(--white)}
 .file-label{background:var(--white);padding:2px 5px;font:400 13px/1.3 var(--mono)}
 .file-selected{background:var(--black);color:var(--white)}
+@media (prefers-reduced-motion:no-preference){
+  .folder-current{animation:folder-drop 900ms steps(6,end) 700ms both}
+  @keyframes folder-drop{from{transform:translate(260px,-40px);opacity:0}30%{opacity:1}to{transform:none;opacity:1}}
+}
 .trash-cue{position:absolute;right:3%;bottom:34px;z-index:2;display:grid;justify-items:center;gap:6px}
 .trash-icon{width:28px;height:32px;display:block;border:3px solid var(--black);background:var(--white);position:relative}
 .trash-icon:before{content:"";position:absolute;left:-5px;top:-8px;width:32px;border-top:3px solid var(--black)}

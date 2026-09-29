@@ -69,6 +69,7 @@ Geist and Geist Mono remain self-hosted for body copy, code, and labels, with th
 ## Layout and responsive rules
 
 - The first viewport is a dithered desktop with a large white hero window, the real app window, dated archive folders, and an empty Trash cue.
+- The current dated folder has one authored 900ms stepped drop on load, matching the approved B moment. Reduced-motion users see the settled folder with no animation.
 - Hero copy remains the factual product explanation and the requirements line remains visible near the primary action.
 - The rules section uses a native table inside a Finder-style window. The note is outside the table so the accessibility tree has a clear caption, header row, and body rows.
 - The recovery section uses the factual dated-label chip and a short list explaining undo, Gmail search, and changing rules.

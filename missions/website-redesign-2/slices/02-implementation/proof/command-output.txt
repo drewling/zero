@@ -43,3 +43,7 @@ Hero image: /assets/panel-cut.png, rendered 372 × 560 px from 700 × 1057 px
 Install steps: 4 — Run the installer in Terminal; Connect Gmail; Add your Jev key; Run it once
 FAQ disclosure: opened and exposed its answer
 Copy button: changed to “Copy again” and announced “Copied. Paste it into Terminal when you’re ready.”
+
+$ CSS motion/fallback assertion
+folder-drop: 900ms, steps(6,end), one dated folder only
+reduced-motion gate: @media (prefers-reduced-motion:no-preference)

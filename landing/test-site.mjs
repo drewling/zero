@@ -93,6 +93,8 @@ test('homepage preserves the approved one-bit structure and product truth', () =
   assert.match(homepage, /Auto-Archived YYYY-MM-DD/);
   assert.match(homepage, /curl -fsSL https:\/\/zero\.headless\.com\/install \| bash/);
   assert.doesNotMatch(homepage, /class="hero-facts"/);
+  assert.match(styles, /\.folder-current\{animation:folder-drop 900ms steps\(6,end\) 700ms both\}/);
+  assert.match(styles, /@media \(prefers-reduced-motion:no-preference\)/);
   const installSteps = homepage.match(/<ol class="install-steps">[\s\S]*?<\/ol>/)?.[0] ?? '';
   assert.equal((installSteps.match(/<li/g) ?? []).length, 4);
   assert.match(installSteps, /<li class="install-step-terminal">[\s\S]*?Run the installer in Terminal\./);

@@ -15,6 +15,7 @@ Mission: `OPR.99.0.3.2` / `website-redesign-2`
 - Added the approved portrait crop of the real product window so the B hero gives the app its intended prominence on desktop and mobile.
 - Collapsed the hero facts into the single compact requirements line shown in the approved B comp.
 - Restored the Terminal command and safety warning as the first item in the four-step install list, with a regression assertion for the count.
+- Added the approved B folder-drop moment as one CSS-only 900ms stepped animation, gated by `prefers-reduced-motion` so the static state remains settled.
 
 ## Requirement traceability
 
@@ -23,7 +24,7 @@ Mission: `OPR.99.0.3.2` / `website-redesign-2`
 | Approved B one-bit desktop world | `landing/index.html`, `landing/site.css`, `landing/DESIGN.md` | Present. Hero window, dither surface, Finder rules, Terminal install, dated folders, and empty Trash cue are implemented. The hero now uses the approved compact requirements line and portrait app crop. |
 | Product truth and copy | Static tests and direct source inspection | Pass. Product image, archive reversibility, Jev data path, requirements, costs, disclosures, FAQ, privacy, and terms remain present. |
 | No legacy departure-board/motion implementation | `node --test landing/test-site.mjs`; scoped `rg` absence check | Pass. No Canvas, rAF, observers, old board selectors, Archivo references, or old motion controls in shipped source. |
-| No-JS and reduced-motion safety | HTML-only structure and CSS media query inspection | Pass by construction. No required content depends on JavaScript, and the only CSS motion policy is reduced-motion-safe scrolling/transition handling. |
+| No-JS and reduced-motion safety | HTML-only structure, CSS media query, and source assertions | Pass by construction. No required content depends on JavaScript, the single folder-drop uses CSS only, and `prefers-reduced-motion: reduce` leaves the folder settled. |
 | Install clipboard behavior | Four Node tests | Pass. Exact command copy, denial fallback, pending disabled state, and unavailable clipboard behavior all pass. |
 | Install flow semantics | `landing/test-site.mjs`, served homepage extraction | Pass. The visible “Four steps” intro now corresponds to four actual list items, with the Terminal command and warning retained inside step one. |
 | Font licensing/source | `landing/assets/pixelify-*.woff2`, `OFL-pixelify.txt`, `landing/DESIGN.md` | Present. Geist and Geist Mono remain self-hosted. |
@@ -41,6 +42,7 @@ Mission: `OPR.99.0.3.2` / `website-redesign-2`
 - Local static files -> expected 200 responses for page, legal pages, CSS, JS, all four self-hosted fonts, and app image.
 - Impeccable detector -> no errors, with advisory warnings for intentional one-bit title-bar repeating stripes, approved retained Geist body/mono fonts, and a few undocumented tonal/radius values. These are recorded as advisories, not acceptance claims.
 - The focused source assertion now checks four install `<li>` elements, the first Terminal step, the compact `.hero-req` line, and the approved `panel-cut.png` reference.
+- The focused source assertion also checks the single `folder-drop` animation and its `prefers-reduced-motion: no-preference` gate. No Canvas or animation JavaScript was restored.
 
 ## Browser evidence and limitations
 
