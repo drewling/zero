@@ -134,7 +134,9 @@ Review QA has acknowledged a heads-up only and remains parked. It must receive e
 
 Cut: the duplicate Stays/Archived chapter and prose examples, A's Rules-as-text-window chapter, repeated platform sentence, greeked recovery filler, repeated final Run/review instructions and second installer-reading paragraph. Retained: category, agency, configurable/fallible model, untouched starred mail, uncertain-kept behavior, reversible dated Gmail archive/All Mail, both restore paths, every access/data/draft/billing/installation warning, hardware/provider requirements, exact command and legal/source/release/key routes.
 
-“Said once” means one material explanation, not stripping approved hero promises, source-faithful tab/control labels or legal navigation. This interpretation is explicit because literal repeated-token removal would conflict with keeping approved B and truthful app vocabulary.
+“Said once” means one material explanation, not stripping approved hero promises, source-faithful tab/control labels or legal navigation. This interpretation is explicit because literal repeated-token removal would conflict with keeping approved B and truthful app vocabulary. The later instruction to retain approved B overrides the earlier general invitation to rewrite every line only for that hero. Old section prose remains open to replacement, while actual app controls keep their real names.
+
+Requirement re-audit at 23:25Z also added explicit semantic/accessibility-API and keyboard/focus checks to the acceptance ledger. Those are pending new-page observations, not covered by the historical clipboard test result. Production build/nginx/Docker integration and removal of obsolete landing assets remain later approved implementation work. This proof does not change production to manufacture that acceptance.
 
 ## Readiness ledger
 
