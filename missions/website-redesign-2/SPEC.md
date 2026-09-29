@@ -28,6 +28,8 @@ The owner saw the deployed page and said, "you can tell this entire design is tr
 3. [Independent QA](slices/03-independent-qa/SPEC.md): compare rendered candidate to chosen comps, test desktop/mobile, fallback, install/legal, keyboard, performance and content truth.
 4. [Release](slices/04-release/SPEC.md): owner-authorized scoped production release after QA PASS and live browser check, with rollback available.
 
-## Status
+## Owner decision, 2026-09-29 03:49Z
 
-Direction request being dispatched. **No approval to build or deploy this replacement yet.** Prior motion release remains live; prior passing QA does not constitute visual approval.
+The owner chose **B, One-bit desktop**, after viewing Opus 5.5's desktop/mobile comps and the ten-reference atlas: "I think i like B, let's not overcomplicate the pages copy though, or overall clutter it too much, but yeah whatever you done here me likey". This authorizes the *build* of B, not a production release. Keep the existing plainspoken headline and factual copy by default; make only small edits needed for clarity and do not add another elaborate copy deck. Treat the one-bit Mac desktop as a disciplined visual system, not permission to fill the page with Finder chrome, repeated folders, dither everywhere or decorative UI. The real app remains the only colour and primary proof. One dated-folder recovery moment and a restrained empty-Trash cue are enough. Cut anything that competes with the promise, the app or install.
+
+The user also asked that kernel know about this reference-led design process; the mission lead will relay the proof and practical lessons to the kernel seats. **No deployment of this replacement is authorized yet.** Current production remains the prior motion site until a separately checked release.

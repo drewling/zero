@@ -2,7 +2,7 @@
 id: OPR.99.0.3.1
 slice: 01-research-direction
 mission: website-redesign-2
-status: ready
+status: completed
 stage: wip
 created: 2026-09-29
 intent: "Research ten high-craft references and present a genuinely new visual world for the zero site for owner selection"
@@ -30,3 +30,7 @@ The user rejected the entire visual design after seeing the live screenshots and
 - [x] Viewable distinct replacement comps at desktop and mobile, including an accessible/static state, with direct artifact paths.
 - [x] Owner-facing recommendation and explicit request for visual choice, handed to `main-lead@zero` through durable queue.
 - [x] Explicit keep/replace/remove inventory that prevents legacy code from accumulating in implementation.
+
+## Owner selection
+
+Owner chose **B, One-bit desktop** on 2026-09-29 03:49Z after seeing the three comps. The owner also asks for simple copy and a page that does not feel cluttered. See the [mission decision](../../SPEC.md). Slice 02 may build a clean replacement, but this is not production release authorization.
