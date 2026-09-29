@@ -50,3 +50,26 @@ The required one-time Impeccable detector ran on the fixture HTML/CSS and exited
 ## Limits
 
 No production or `landing/` edits, no deploy, no queued assignment claim, no slice-close proof drop. Full section motion, finite ants, Safari 26 jitter verification, genuine OS tab-switch verification, Lighthouse comparison against slice 03, and the exact approved integration candidate remain later work. Integration still requires gate B, the real queue row, and the slice 03 SHA.
+
+## Acceptance boundary and observed improvement
+
+These results are **synthetic fixture evidence**, even though they were collected in real browser engines. The fixture borrows the comp kit and runs the sandbox scripts. It is not the complete landing page, a production integration, or the end-user acceptance path required by slice 04. The full suite passing does not close slice 04.
+
+There is concrete before/after evidence, rather than just source inspection:
+
+- Before the corrections, the two new checks both failed. The 320 px frame-3 envelope rectangle occupied x=123..155, y=358..380, overlapping the label rectangle x=82.109375..237.890625, y=355..381.34375. The copy check observed the four abbreviated strings instead of COPY v3's authored subjects.
+- After the corrections, the exact-copy and text-fitting check passes at 320/390/1440 px, and the frame-3/live mobile rectangle-intersection check reports no collisions at 320/390 px. Both checks pass in Chromium and installed Playwright WebKit. Each live eight-hop story observes at least 40 visible envelope placements, and the independent arrival test still observes every decrement from 12 through 4.
+- Design-lead's 22:12Z observation on the original strip was that the counter-launch reads as archiving. The corrected strip was handed back for visual judgment. A sign-off on the corrected strip has not been received and is not inferred from the automated geometry checks.
+
+The real acceptance route comes from `slices/04-motion-and-polish/SPEC.md` mini-requirements 1 through 6. Its status is still `blocked`. At the 22:25Z dependency check, `slices/03-build-structure/PROGRESS.md` did not record implementation, passing tests or review approval, and the last live destination queue check at 22:22Z returned zero rows. These are scoped observations of the checked surfaces, not a claim that nobody has done work elsewhere.
+
+| Real slice requirement | What this sandbox established | What has not been exercised or accepted |
+|---|---|---|
+| Approved hero storyboard | Draft five-frame story, eight arrivals, settled count and stepped sprites | Owner-selected gate B hero integrated on the exact slice 03 SHA |
+| Section motion and micro-interactions | Keyboard replay in the fixture | Full-page section reveals, Terminal/Undo choices, copy-command feedback and reading flow |
+| Reduced motion and no JS | Fixture final HTML, static and reduced PNG byte parity | Complete slice 03 page parity after integration |
+| Performance and accessibility | 4,682 gzip runtime bytes; Chromium fixture CLS 0; bounded fixture timings | Lighthouse performance/accessibility comparison of the built 03 and 04 candidates |
+| Design-lead polish sign-off | Original counter-launch comprehension judgment; refreshed screenshots delivered | Before/after polish sign-off on the approved integrated page |
+| Build, tests and QA candidate | Sandbox regression suite green | Actual project `build.sh` and project tests on the integrated SHA, then exact QA handoff |
+
+The integrated acceptance workflow was **not attempted**, because the prerequisite approved candidate and assignment have not been supplied and main-lead explicitly disallows landing edits/integration before gate B and the slice 03 SHA. It is not marked acceptance-aligned or described as an attempted project test that failed. Read-only checks of an older landing page would not substitute for that missing integrated candidate. Once authorized, the new assignment must exercise the actual build, full-page browser behavior, Lighthouse baseline comparison and authored review/QA boundaries.
