@@ -48,6 +48,18 @@ CSS diff between `c53bf91` and `c32f10d` (`landing/site.css`): row gap/padding t
 | `node --test landing/test-site.mjs` | Ran independently against the isolated `c32f10d` archive | **Pass.** 7/7, including the new no-ellipsis/no-nowrap assertion on `.zp-line b`. |
 | `bash landing/build.sh` (Docker/nginx) | Ran independently against the isolated `c32f10d` archive | **Pass.** Full pass, same checks as Pass 1. No container left running afterward; QA-only image tags removed after the check. |
 
+## Direct before/after comparison (not just inspecting the fixed state)
+
+The Pass 2 checks above only inspected `c32f10d` in isolation and inferred the defect was gone from the absence of clipping symptoms. To confirm the fix is an actual improvement rather than just a different-looking state, `c53bf91` and `c32f10d` were served simultaneously on two separate isolated ports from two separate `git archive` checkouts, and the exact same row (`Sarah Mitchell`, the row advisor-lead flagged) was measured at 1440px in the same browser session (script: `before-after-compare.mjs`, raw output: `before-after-result.json`).
+
+| | `c53bf91` (before) | `c32f10d` (after) |
+| --- | --- | --- |
+| `text-overflow` | `ellipsis` | `clip` (harmless, nothing overflows) |
+| `white-space` | `nowrap` | `normal` |
+| `scrollWidth > clientWidth` (the actual DOM clipping signal) | **`true`** — the box's content is wider than its box, which is what `ellipsis` was hiding | `false` — no clipping |
+
+This confirms the pre-fix commit had the real, DOM-measurable clipping condition (not just a visual impression), and the post-fix commit does not. A regression sweep across the same row indices at 1440/1024/761/390/320 comparing before vs. after found **0 rows where the after-state clips and the before-state didn't** — the fix does not trade the name-truncation bug for a new clipping bug elsewhere.
+
 ## Not verified (same boundary design-lead already disclosed)
 
 - VoiceOver, Safari, and Firefox were not run. Chromium and WebKit (Playwright engines) were used here, which covers two of the three named engines design-lead asked about but not Safari-proper or Firefox.
