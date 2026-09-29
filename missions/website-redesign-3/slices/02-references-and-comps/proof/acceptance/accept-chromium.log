@@ -1,0 +1,155 @@
+PASS chromium/desktop/hero-a story plays to done
+PASS chromium/desktop/hero-a no leftover motion DOM
+PASS chromium/desktop/hero-a no console/page errors
+PASS chromium/desktop/hero-a no horizontal overflow
+PASS chromium/desktop/hero-a no clipped text
+PASS chromium/desktop/hero-a no text on texture
+PASS chromium/desktop/hero-a title plates break stripes
+PASS chromium/desktop/hero-a ligatures off on Pixelify
+PASS chromium/desktop/hero-a tap targets >= 24px
+PASS chromium/desktop/hero-a images/svgs named or hidden
+PASS chromium/desktop/hero-a reduced motion = final frame
+PASS chromium/desktop/hero-a no-JS HTML equals final frame
+PASS chromium/desktop/hero-b story plays to done
+PASS chromium/desktop/hero-b no leftover motion DOM
+PASS chromium/desktop/hero-b no console/page errors
+PASS chromium/desktop/hero-b no horizontal overflow
+PASS chromium/desktop/hero-b no clipped text
+PASS chromium/desktop/hero-b no text on texture
+PASS chromium/desktop/hero-b title plates break stripes
+PASS chromium/desktop/hero-b ligatures off on Pixelify
+PASS chromium/desktop/hero-b tap targets >= 24px
+PASS chromium/desktop/hero-b images/svgs named or hidden
+PASS chromium/desktop/hero-b reduced motion = final frame
+PASS chromium/desktop/hero-b no-JS HTML equals final frame
+PASS chromium/desktop/hero-c story plays to done
+PASS chromium/desktop/hero-c no leftover motion DOM
+PASS chromium/desktop/hero-c no console/page errors
+PASS chromium/desktop/hero-c no horizontal overflow
+PASS chromium/desktop/hero-c no clipped text
+PASS chromium/desktop/hero-c no text on texture
+PASS chromium/desktop/hero-c title plates break stripes
+PASS chromium/desktop/hero-c ligatures off on Pixelify
+PASS chromium/desktop/hero-c tap targets >= 24px
+PASS chromium/desktop/hero-c images/svgs named or hidden
+PASS chromium/desktop/hero-c reduced motion = final frame
+PASS chromium/desktop/hero-c no-JS HTML equals final frame
+PASS chromium/desktop/sections story plays to done
+PASS chromium/desktop/sections no leftover motion DOM
+PASS chromium/desktop/sections no console/page errors
+PASS chromium/desktop/sections no horizontal overflow
+PASS chromium/desktop/sections no clipped text
+PASS chromium/desktop/sections no text on texture
+PASS chromium/desktop/sections title plates break stripes
+PASS chromium/desktop/sections ligatures off on Pixelify
+PASS chromium/desktop/sections tap targets >= 24px
+PASS chromium/desktop/sections images/svgs named or hidden
+PASS chromium/desktop/sections reduced motion = final frame
+PASS chromium/desktop/sections no-JS HTML equals final frame
+PASS chromium/iphone/hero-a story plays to done
+PASS chromium/iphone/hero-a no leftover motion DOM
+PASS chromium/iphone/hero-a no console/page errors
+PASS chromium/iphone/hero-a no horizontal overflow
+PASS chromium/iphone/hero-a no clipped text
+PASS chromium/iphone/hero-a no text on texture
+PASS chromium/iphone/hero-a title plates break stripes
+PASS chromium/iphone/hero-a ligatures off on Pixelify
+PASS chromium/iphone/hero-a tap targets >= 24px
+PASS chromium/iphone/hero-a images/svgs named or hidden
+PASS chromium/iphone/hero-a reduced motion = final frame
+PASS chromium/iphone/hero-a no-JS HTML equals final frame
+PASS chromium/iphone/hero-b story plays to done
+PASS chromium/iphone/hero-b no leftover motion DOM
+PASS chromium/iphone/hero-b no console/page errors
+PASS chromium/iphone/hero-b no horizontal overflow
+PASS chromium/iphone/hero-b no clipped text
+PASS chromium/iphone/hero-b no text on texture
+PASS chromium/iphone/hero-b title plates break stripes
+PASS chromium/iphone/hero-b ligatures off on Pixelify
+PASS chromium/iphone/hero-b tap targets >= 24px
+PASS chromium/iphone/hero-b images/svgs named or hidden
+PASS chromium/iphone/hero-b reduced motion = final frame
+PASS chromium/iphone/hero-b no-JS HTML equals final frame
+PASS chromium/iphone/hero-c story plays to done
+PASS chromium/iphone/hero-c no leftover motion DOM
+PASS chromium/iphone/hero-c no console/page errors
+PASS chromium/iphone/hero-c no horizontal overflow
+PASS chromium/iphone/hero-c no clipped text
+PASS chromium/iphone/hero-c no text on texture
+PASS chromium/iphone/hero-c title plates break stripes
+PASS chromium/iphone/hero-c ligatures off on Pixelify
+PASS chromium/iphone/hero-c tap targets >= 24px
+PASS chromium/iphone/hero-c images/svgs named or hidden
+PASS chromium/iphone/hero-c reduced motion = final frame
+PASS chromium/iphone/hero-c no-JS HTML equals final frame
+PASS chromium/iphone/sections story plays to done
+PASS chromium/iphone/sections no leftover motion DOM
+PASS chromium/iphone/sections no console/page errors
+PASS chromium/iphone/sections no horizontal overflow
+PASS chromium/iphone/sections no clipped text
+PASS chromium/iphone/sections no text on texture
+PASS chromium/iphone/sections title plates break stripes
+PASS chromium/iphone/sections ligatures off on Pixelify
+PASS chromium/iphone/sections tap targets >= 24px
+PASS chromium/iphone/sections images/svgs named or hidden
+PASS chromium/iphone/sections reduced motion = final frame
+PASS chromium/iphone/sections no-JS HTML equals final frame
+PASS chromium/se/hero-a story plays to done
+PASS chromium/se/hero-a no leftover motion DOM
+PASS chromium/se/hero-a no console/page errors
+PASS chromium/se/hero-a no horizontal overflow
+PASS chromium/se/hero-a no clipped text
+PASS chromium/se/hero-a no text on texture
+PASS chromium/se/hero-a title plates break stripes
+PASS chromium/se/hero-a ligatures off on Pixelify
+PASS chromium/se/hero-a tap targets >= 24px
+PASS chromium/se/hero-a images/svgs named or hidden
+PASS chromium/se/hero-a reduced motion = final frame
+PASS chromium/se/hero-a no-JS HTML equals final frame
+PASS chromium/se/hero-b story plays to done
+PASS chromium/se/hero-b no leftover motion DOM
+PASS chromium/se/hero-b no console/page errors
+PASS chromium/se/hero-b no horizontal overflow
+PASS chromium/se/hero-b no clipped text
+PASS chromium/se/hero-b no text on texture
+PASS chromium/se/hero-b title plates break stripes
+PASS chromium/se/hero-b ligatures off on Pixelify
+PASS chromium/se/hero-b tap targets >= 24px
+PASS chromium/se/hero-b images/svgs named or hidden
+PASS chromium/se/hero-b reduced motion = final frame
+PASS chromium/se/hero-b no-JS HTML equals final frame
+PASS chromium/se/hero-c story plays to done
+PASS chromium/se/hero-c no leftover motion DOM
+PASS chromium/se/hero-c no console/page errors
+PASS chromium/se/hero-c no horizontal overflow
+PASS chromium/se/hero-c no clipped text
+PASS chromium/se/hero-c no text on texture
+PASS chromium/se/hero-c title plates break stripes
+PASS chromium/se/hero-c ligatures off on Pixelify
+PASS chromium/se/hero-c tap targets >= 24px
+PASS chromium/se/hero-c images/svgs named or hidden
+PASS chromium/se/hero-c reduced motion = final frame
+PASS chromium/se/hero-c no-JS HTML equals final frame
+PASS chromium/se/sections story plays to done
+PASS chromium/se/sections no leftover motion DOM
+PASS chromium/se/sections no console/page errors
+PASS chromium/se/sections no horizontal overflow
+PASS chromium/se/sections no clipped text
+PASS chromium/se/sections no text on texture
+PASS chromium/se/sections title plates break stripes
+PASS chromium/se/sections ligatures off on Pixelify
+PASS chromium/se/sections tap targets >= 24px
+PASS chromium/se/sections images/svgs named or hidden
+PASS chromium/se/sections reduced motion = final frame
+PASS chromium/se/sections no-JS HTML equals final frame
+PASS chromium/keyboard/hero-a all 8 controls reachable
+PASS chromium/keyboard/hero-a visible focus
+PASS chromium/keyboard/hero-b all 8 controls reachable
+PASS chromium/keyboard/hero-b visible focus
+PASS chromium/keyboard/hero-c all 8 controls reachable
+PASS chromium/keyboard/hero-c visible focus
+PASS chromium/keyboard/sections all 14 controls reachable
+PASS chromium/keyboard/sections visible focus
+PASS copy: all 57 COPY v3 primary sentences render verbatim
+PASS control: audit detects live "fi" ligature bug
+PASS control: audit detects live title text on stripes

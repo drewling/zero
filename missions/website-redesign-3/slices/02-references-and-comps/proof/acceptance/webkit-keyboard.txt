@@ -1,0 +1,4 @@
+PASS webkit/keyboard/hero-a reached 8/8; PASS focus
+PASS webkit/keyboard/hero-b reached 8/8; PASS focus
+PASS webkit/keyboard/hero-c reached 8/8; PASS focus
+PASS webkit/keyboard/sections reached 14/14; PASS focus

@@ -1,0 +1,146 @@
+PASS webkit/desktop/hero-a story plays to done
+PASS webkit/desktop/hero-a no leftover motion DOM
+PASS webkit/desktop/hero-a no console/page errors
+PASS webkit/desktop/hero-a no horizontal overflow
+PASS webkit/desktop/hero-a no clipped text
+PASS webkit/desktop/hero-a no text on texture
+PASS webkit/desktop/hero-a title plates break stripes
+PASS webkit/desktop/hero-a ligatures off on Pixelify
+PASS webkit/desktop/hero-a tap targets >= 24px
+PASS webkit/desktop/hero-a images/svgs named or hidden
+PASS webkit/desktop/hero-a reduced motion = final frame
+PASS webkit/desktop/hero-a no-JS HTML equals final frame
+PASS webkit/desktop/hero-b story plays to done
+PASS webkit/desktop/hero-b no leftover motion DOM
+PASS webkit/desktop/hero-b no console/page errors
+PASS webkit/desktop/hero-b no horizontal overflow
+PASS webkit/desktop/hero-b no clipped text
+PASS webkit/desktop/hero-b no text on texture
+PASS webkit/desktop/hero-b title plates break stripes
+PASS webkit/desktop/hero-b ligatures off on Pixelify
+PASS webkit/desktop/hero-b tap targets >= 24px
+PASS webkit/desktop/hero-b images/svgs named or hidden
+PASS webkit/desktop/hero-b reduced motion = final frame
+PASS webkit/desktop/hero-b no-JS HTML equals final frame
+PASS webkit/desktop/hero-c story plays to done
+PASS webkit/desktop/hero-c no leftover motion DOM
+PASS webkit/desktop/hero-c no console/page errors
+PASS webkit/desktop/hero-c no horizontal overflow
+PASS webkit/desktop/hero-c no clipped text
+PASS webkit/desktop/hero-c no text on texture
+PASS webkit/desktop/hero-c title plates break stripes
+PASS webkit/desktop/hero-c ligatures off on Pixelify
+PASS webkit/desktop/hero-c tap targets >= 24px
+PASS webkit/desktop/hero-c images/svgs named or hidden
+PASS webkit/desktop/hero-c reduced motion = final frame
+PASS webkit/desktop/hero-c no-JS HTML equals final frame
+PASS webkit/desktop/sections story plays to done
+PASS webkit/desktop/sections no leftover motion DOM
+PASS webkit/desktop/sections no console/page errors
+PASS webkit/desktop/sections no horizontal overflow
+PASS webkit/desktop/sections no clipped text
+PASS webkit/desktop/sections no text on texture
+PASS webkit/desktop/sections title plates break stripes
+PASS webkit/desktop/sections ligatures off on Pixelify
+PASS webkit/desktop/sections tap targets >= 24px
+PASS webkit/desktop/sections images/svgs named or hidden
+PASS webkit/desktop/sections reduced motion = final frame
+PASS webkit/desktop/sections no-JS HTML equals final frame
+PASS webkit/iphone/hero-a story plays to done
+PASS webkit/iphone/hero-a no leftover motion DOM
+PASS webkit/iphone/hero-a no console/page errors
+PASS webkit/iphone/hero-a no horizontal overflow
+PASS webkit/iphone/hero-a no clipped text
+PASS webkit/iphone/hero-a no text on texture
+PASS webkit/iphone/hero-a title plates break stripes
+PASS webkit/iphone/hero-a ligatures off on Pixelify
+PASS webkit/iphone/hero-a tap targets >= 24px
+PASS webkit/iphone/hero-a images/svgs named or hidden
+PASS webkit/iphone/hero-a reduced motion = final frame
+PASS webkit/iphone/hero-a no-JS HTML equals final frame
+PASS webkit/iphone/hero-b story plays to done
+PASS webkit/iphone/hero-b no leftover motion DOM
+PASS webkit/iphone/hero-b no console/page errors
+PASS webkit/iphone/hero-b no horizontal overflow
+PASS webkit/iphone/hero-b no clipped text
+PASS webkit/iphone/hero-b no text on texture
+PASS webkit/iphone/hero-b title plates break stripes
+PASS webkit/iphone/hero-b ligatures off on Pixelify
+PASS webkit/iphone/hero-b tap targets >= 24px
+PASS webkit/iphone/hero-b images/svgs named or hidden
+PASS webkit/iphone/hero-b reduced motion = final frame
+PASS webkit/iphone/hero-b no-JS HTML equals final frame
+PASS webkit/iphone/hero-c story plays to done
+PASS webkit/iphone/hero-c no leftover motion DOM
+PASS webkit/iphone/hero-c no console/page errors
+PASS webkit/iphone/hero-c no horizontal overflow
+PASS webkit/iphone/hero-c no clipped text
+PASS webkit/iphone/hero-c no text on texture
+PASS webkit/iphone/hero-c title plates break stripes
+PASS webkit/iphone/hero-c ligatures off on Pixelify
+PASS webkit/iphone/hero-c tap targets >= 24px
+PASS webkit/iphone/hero-c images/svgs named or hidden
+PASS webkit/iphone/hero-c reduced motion = final frame
+PASS webkit/iphone/hero-c no-JS HTML equals final frame
+PASS webkit/iphone/sections story plays to done
+PASS webkit/iphone/sections no leftover motion DOM
+PASS webkit/iphone/sections no console/page errors
+PASS webkit/iphone/sections no horizontal overflow
+PASS webkit/iphone/sections no clipped text
+PASS webkit/iphone/sections no text on texture
+PASS webkit/iphone/sections title plates break stripes
+PASS webkit/iphone/sections ligatures off on Pixelify
+PASS webkit/iphone/sections tap targets >= 24px
+PASS webkit/iphone/sections images/svgs named or hidden
+PASS webkit/iphone/sections reduced motion = final frame
+PASS webkit/iphone/sections no-JS HTML equals final frame
+PASS webkit/se/hero-a story plays to done
+PASS webkit/se/hero-a no leftover motion DOM
+PASS webkit/se/hero-a no console/page errors
+PASS webkit/se/hero-a no horizontal overflow
+PASS webkit/se/hero-a no clipped text
+PASS webkit/se/hero-a no text on texture
+PASS webkit/se/hero-a title plates break stripes
+PASS webkit/se/hero-a ligatures off on Pixelify
+PASS webkit/se/hero-a tap targets >= 24px
+PASS webkit/se/hero-a images/svgs named or hidden
+PASS webkit/se/hero-a reduced motion = final frame
+PASS webkit/se/hero-a no-JS HTML equals final frame
+PASS webkit/se/hero-b story plays to done
+PASS webkit/se/hero-b no leftover motion DOM
+PASS webkit/se/hero-b no console/page errors
+PASS webkit/se/hero-b no horizontal overflow
+PASS webkit/se/hero-b no clipped text
+PASS webkit/se/hero-b no text on texture
+PASS webkit/se/hero-b title plates break stripes
+PASS webkit/se/hero-b ligatures off on Pixelify
+PASS webkit/se/hero-b tap targets >= 24px
+PASS webkit/se/hero-b images/svgs named or hidden
+PASS webkit/se/hero-b reduced motion = final frame
+PASS webkit/se/hero-b no-JS HTML equals final frame
+PASS webkit/se/hero-c story plays to done
+PASS webkit/se/hero-c no leftover motion DOM
+PASS webkit/se/hero-c no console/page errors
+PASS webkit/se/hero-c no horizontal overflow
+PASS webkit/se/hero-c no clipped text
+PASS webkit/se/hero-c no text on texture
+PASS webkit/se/hero-c title plates break stripes
+PASS webkit/se/hero-c ligatures off on Pixelify
+PASS webkit/se/hero-c tap targets >= 24px
+PASS webkit/se/hero-c images/svgs named or hidden
+PASS webkit/se/hero-c reduced motion = final frame
+PASS webkit/se/hero-c no-JS HTML equals final frame
+PASS webkit/se/sections story plays to done
+PASS webkit/se/sections no leftover motion DOM
+PASS webkit/se/sections no console/page errors
+PASS webkit/se/sections no horizontal overflow
+PASS webkit/se/sections no clipped text
+PASS webkit/se/sections no text on texture
+PASS webkit/se/sections title plates break stripes
+PASS webkit/se/sections ligatures off on Pixelify
+PASS webkit/se/sections tap targets >= 24px
+PASS webkit/se/sections images/svgs named or hidden
+PASS webkit/se/sections reduced motion = final frame
+PASS webkit/se/sections no-JS HTML equals final frame
+PASS webkit/keyboard/hero-a all 8 controls reachable
+PASS webkit/keyboard/hero-a visible focus
