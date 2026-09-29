@@ -1,0 +1,1 @@
+window.ZmBoxes={"cursor": "0 0 11 17", "watch": "0 0 16 15", "tray": "0 0 17 13", "mail": "0 0 16 11", "folder": "0 0 32 22", "folder-full": "0 0 32 22", "trash": "0 0 26 23", "disk": "0 0 32 15", "doc": "0 0 22 24", "find": "0 0 13 13", "star": "0 0 15 14", "caution": "0 0 28 19", "check": "0 0 16 15", "app": "0 0 32 28"};
