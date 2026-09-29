@@ -1,0 +1,66 @@
+A: Skip to content
+A: ✓ zero
+A: How it decides
+A: Undo
+A: Before you install
+A: Source ↗
+A: Install
+H1: Only the mail that still needs you.
+P: zero is a Mac menu-bar app for Gmail. Across every account you connect, it keeps the conversations that still need something from you and archives the rest. Every archive can be undone.
+A: Install zero for Mac
+A: Read the installer first
+P: Apple Silicon · macOS 26 or later · Gmail
+P: WAITING ON YOU
+LI: TA Alex Rivera Action required Re: Team sync next steps 11h
+LI: TA Priya Sharma RE: Project timeline update 13h
+LI: TA Daniel Kim Needs reply Re: Marketing deck feedback 13h
+LI: LI Sarah Mitchell Action required Re: Workshop agenda 1d
+LI: TA James Carter Re: Q3 Planning | Budget 1d
+LI: TA Emma Wilson Needs reply Follow-up & Next Steps | Client 1d
+P: Illustration of zero’s Open loops panel: 416 things still need you across 2 Gmail accounts. A “Waiting on you” list shows each conversation’s sender, subject, an Action required or Needs reply tag, its age, and Reply, AI archive and Archive actions. A Run zero now button sits at the bottom.
+FIGCAPTION: zero’s real layout, redrawn. Names and subjects are made up.
+H2: It asks who’s waiting, not who’s writing.
+P: Cold email comes with a real person’s name on it, so a filter that asks “is this a human?” lets it through. zero looks at your own history instead.
+P: TypeSafe’s Jev model reads each thread against your rules, written in plain English. It keeps a person awaiting your answer, a direct question, a failed payment, a legal matter or a real deadline. Receipts, newsletters, notifications and sales pitches are archived. Edit the rules in Settings → Rules.
+P: It will sometimes be wrong. Check your first few runs.
+LI: Was the last message yours? The ball is in their court. Archived.
+LI: Have you ever written to this sender? Jev weighs it. A stranger who is selling was never an open loop.
+H2: Check it with your coffee. Then close it.
+P: Your mail apps stay as they are. zero lives in the menu bar. Choose Run zero now and Open loops lists what’s waiting on you across all your accounts. Tap one to open it in Gmail.
+P: Set something aside and zero can learn to handle mail like it next time.
+H2: Nothing is deleted.
+P: Archiving removes Gmail’s Inbox label and adds one dated for that day. The mail stays in All Mail, and search still finds it.
+LI: Undo a day Open Undo and choose Restore all, or put back one email.
+LI: Starred mail Runs never archive it.
+LI: No answer If Jev can’t decide, the thread stays in your Inbox.
+H2: What it needs, sends and costs
+H3: Your Mac
+P: Apple Silicon with macOS 26 Tahoe or later.
+P: The installer stops on anything else.
+H3: Gmail
+P: You sign in with Google in your browser. zero never sees your password.
+P: Google may warn that zero is unverified. It hasn’t finished Google’s review.
+H3: Your mail
+P: zero runs on your Mac. To sort a thread, it sends Jev the sender, subject, a short preview, your rules and what it has learned from you.
+P: The zero project runs no server that receives your email. Privacy policy.
+A: Privacy policy
+H3: Replies
+P: Optional. Tap Reply and your agent CLI, Claude Code by default, drafts one. The thread goes to that provider.
+P: Nothing is sent until you click Send reply.
+H3: Cost
+P: zero is free and open source. Sorting needs your own TypeSafe Jev key, billed by TypeSafe.
+P: Drafts are billed to your agent CLI’s account.
+H2: Install zero.
+LI: Run the installer in Terminal. Read this first. zero isn’t notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the script. curl -fsSL https://zero.headless.com/install | bash Copy It checks the download’s SHA-256 and signature before installing. Or download it from GitHub Releases.
+P: Read this first. zero isn’t notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the script.
+A: Read the script
+BUTTON: Copy
+P: It checks the download’s SHA-256 and signature before installing. Or download it from GitHub Releases.
+A: GitHub Releases
+LI: Connect Gmail. Open zero from the menu bar and choose Connect your first inbox. Add more in Accounts.
+LI: Add your Jev key. In Settings → Sorting engine, choose Get a key, create one at TypeSafe, paste it in and click Save.
+A: TypeSafe
+LI: Run it once. Choose Run zero now and look at what stayed and what was archived.
+A: Source
+A: Privacy
+A: Terms

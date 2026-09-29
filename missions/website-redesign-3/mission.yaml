@@ -1,0 +1,26 @@
+schema: openrig.mission/v0alpha1
+kind: mission
+composition:
+  mission_markdown:
+    spec: SPEC.md
+  slices:
+    - ref: slices/01-copy-and-story/slice.yaml
+      order: 10
+      active: true
+    - ref: slices/02-references-and-comps/slice.yaml
+      order: 20
+      active: true
+    - ref: slices/03-build-structure/slice.yaml
+      order: 30
+      active: true
+    - ref: slices/04-motion-and-polish/slice.yaml
+      order: 40
+      active: true
+    - ref: slices/05-independent-qa/slice.yaml
+      order: 50
+      active: true
+    - ref: slices/06-release/slice.yaml
+      order: 60
+      active: true
+
+# Optional team and SDLC sections are added here.
