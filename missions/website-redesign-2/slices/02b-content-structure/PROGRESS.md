@@ -10,4 +10,10 @@
   - "Starred mail: Never touched" is now "Runs never archive it". The code only stops runs from archiving starred mail, and you can still archive a starred thread yourself.
   - The Jev data-flow row now includes "what it has learned from you". `_jev_state` also sends `learned_preferences`, so the earlier wording under-disclosed.
   - The word count is now 608 (was 600) and still within the 500-650 target.
-  - This was a text-only change inside existing paragraphs. I didn't retake the shots, so they show the earlier wording for these two rows.
+  - This was a text-only change inside existing paragraphs.
+- 05:02Z: Acceptance-path checks (evidence in PROOF.md, "Acceptance-path checks").
+  - Retook `d4-undo.jpg` and `d5-before.jpg` with Aside. Both show the ed152a5 wording.
+  - The TypeSafe keys link opens a real "API keys" page in the owner's authenticated browser (Aside). The 403 was curl only.
+  - The live install path works end to end: `zero.headless.com/install` redirects (302) to raw `macapp/install-zero.sh`, and the SHA-256 of the fetched file equals the repo file (e3e29530...). `/install.sh` redirects (302) to the GitHub view, and `/privacy.html` and `/terms.html` return 200.
+  - GitHub repo and Releases return 200. All 6 in-page anchors resolve.
+  - Parity between §3 and the comp: 62 lines checked, and 54 match the comp word for word. The other 8 are layout notes and markup, not copy: the menu, button pair, caption, window label, command and footer, plus the notarized note and meta description, which only failed because of italic markers. I checked those last two by hand and they match.

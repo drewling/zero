@@ -16,4 +16,14 @@
 | Viewable comp on approved B | `proof/comp/index.html` (+ `phones.html`) | Uses `landing/site.css`/`site.js`/`assets` via symlinks. All 8 assets returned 200 from `127.0.0.1:8935` |
 | Rendered check | `proof/shots/d2-decides … d6-install.jpg`, `phones.jpg` | Aside, 04:56Z: desktop 1440 (innerWidth 1440, scrollWidth 1440), 5 section shots; 390 iframe harness, 3 frames, each `scrollWidth 390 · past right edge 0`. All viewed. An Aside full-page capture repeated the hero (a stitching artifact), so it was discarded and not committed. No hero desktop shot is committed separately, but the hero is the first phone frame, and the desktop hero was viewed in the discarded capture |
 
-**Not verified:** true device emulation (the phone view is a 390 iframe), the TypeSafe keys link (403 to curl in slice 01), and whether the owner prefers this story. That last one is the gate.
+**Acceptance-path checks (05:02Z):**
+- The TypeSafe keys link opens a real "API keys" page in the owner's authenticated browser, checked with Aside. The earlier 403 was curl only.
+- The live install command `curl -fsSL https://zero.headless.com/install` redirects (302) to raw `macapp/install-zero.sh`. The fetched file's SHA-256 equals the repo file.
+- `/install.sh` (the "Read the installer first" link) redirects (302) to the GitHub source view. `/privacy.html` and `/terms.html` return 200 live.
+- GitHub repo and Releases return 200. All 6 in-page anchors resolve.
+- Copy parity between §3 and the comp: 54 of 62 lines match word for word. The other 8 are layout notes, and I checked two of them by hand.
+- `shots/d4-undo.jpg` and `d5-before.jpg` were retaken after ed152a5 and viewed.
+
+**Not verified:**
+- True device emulation. The phone view is a 390 iframe.
+- Whether the owner prefers this story. That is the gate, and it belongs to the owner through main-lead.
