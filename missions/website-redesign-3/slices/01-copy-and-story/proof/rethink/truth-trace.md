@@ -1,14 +1,14 @@
 # Truth trace for the two rethink drafts
 
-2026-09-29. Applies to `SECTION-COPY.md` Draft2's marked A/B blocks and the approved hero. This is an authoring/source check, not verification of the still-being-built full-width comps. After comp swap, every row must be checked against its rendered location. The detailed prior source trace remains `../truth-trace.md`; this file maps rewritten words rather than treating old wording as a constraint.
+2026-09-29. Applies to `SECTION-COPY.md` Draft3's marked A/B blocks and the approved hero. This is an authoring/source check, not verification of the still-being-built full-width comps. After comp swap, every row must be checked against its rendered location. The detailed prior source trace remains `../truth-trace.md`; this file maps rewritten words rather than treating old wording as a constraint.
 
 | Requirement / truth | A location | B location | Source and scoped conclusion |
 |---|---|---|---|
 | Mac app cleaning Gmail inbox, keep action mail/archive rest | Approved hero unchanged | Approved hero unchanged | `PRODUCT.md:9–15,25–34`; `keep-policy.md:8–23`. Intended policy, not error-free classification. |
 | Usual email client, Gmail only | Hero requirement plus recovery intro's connected Gmail-account clarification | Hero requirement plus ledger intro's connected Gmail-account clarification | `PRODUCT.md:31–34,74`; `PanelView.swift:490–492`. Apple Mail is a viewing client for the Gmail account, not another supported provider. |
-| Manual run, connected accounts | Recovery intro: start a run from menu bar/app sorts accounts | Rules intro: same operation context | `PanelView.swift:2941–2947`; `keeper_server.py:294–310,392–412`. No implied install-default schedule. Hero popover keeps exact Run zero now/Working states. |
-| AI classification against editable rules | Recovery rules paragraph | Rules intro plus exact editor excerpt pending designer | `review_open_loops.py:974–998`; `PanelView.swift:1320–1322`. No invented per-email explanation mode. |
-| Default action categories and may-archive examples | Recovery policy sentence | Faithful default-policy editor excerpt, final inventory pending | `keep-policy.md:8–23`. Preserve policy meaning, avoid guaranteed category accuracy. |
+| Manual run, connected accounts | Recovery intro: start a run from menu bar/app sorts accounts | Rules intro: explicit menu-bar run sorts connected Gmail accounts | `PanelView.swift:2941–2947`; `keeper_server.py:294–310,392–412`. No implied install-default schedule. Hero popover keeps exact Run zero now/Working states. |
+| AI classification against editable rules | Recovery rules paragraph | Rules intro plus exact source-contiguous Settings/Rules excerpt | `review_open_loops.py:974–998`; `PanelView.swift:1320–1322`. No invented per-email explanation mode. |
+| Default action categories and may-archive examples | Recovery policy sentence | Faithful keep-policy.md:8–21 excerpt including Cold outreach; final rendered inventory pending | `keep-policy.md:8–23`. Preserve policy meaning, avoid guaranteed category accuracy. |
 | Model can err, check first runs | Recovery before restore mechanics | Rules intro | Classification source is fallible. This is a user action, not security assurance. |
 | Starred untouched by sorting | Recovery rules paragraph | Rules intro | `review_open_loops.py:152–155` excludes starred from sorting query. |
 | Uncertain thread kept | Recovery rules paragraph | Rules intro | `review_open_loops.py:1070–1099`. Not every error is necessarily recognized as uncertain. |
@@ -35,10 +35,10 @@
 | Read installer route | Approved hero source-reading link | Same | `/install.sh` in `landing/nginx.conf:28–33`. Install CTA targets material ledger before command, not a new download endpoint. |
 | Setup/key/release/source routes | Terminal setup/footer | Same | Connect Gmail, key in Settings → Sorting engine, `https://console.typesafe.ai/keys`, actual source/release repo. No aspirational npx init/add-account. |
 | Privacy/Terms destinations | Sorting-data inline privacy + footer links | Same | `/privacy.html`, `/terms.html` remain unchanged legal pages, no legal rewrite in this slice. |
-| Honest examples, no owner mail exposed | Approved hero caption + readable Undo facsimile caption | Same, plus faithful Rules illustration | Five fictional archived rows/address/ages, not a measured customer result or real screenshot. No live inbox read needed. |
+| Honest examples, no owner mail exposed | Approved hero caption + readable Undo facsimile caption | Same, plus faithful Rules illustration | Five visible fictional archived rows/address/ages in an eight-item batch with a scrollbar, not a measured customer result or real screenshot. No live inbox read needed. |
 
 ## Boundary status
 
-- Complete source/authoring map for material mission boundaries. B's exact Rules object inventory and both final rendered-source inventories are still pending designer output.
+- Complete source/authoring map for material mission boundaries. B's exact proposed Rules object is now counted at 110 words and matches a contiguous source excerpt. Both final rendered-source inventories still await stable designer output.
 - No landing edit, push, release, Gatekeeper override, installer execution, Gmail permission grant, archive/restore/send or real inbox screenshot occurred in this pass.
 - “Said once” means one canonical material explanation. Approved hero promises, real UI labels and legal navigation remain, but repeated feature paragraphs and repeated demo examples are cut. Literal repeated-word removal would conflict with the approved hero and source-faithful controls, so this interpretation is disclosed rather than hidden.

@@ -11,7 +11,7 @@ Owner's latest feedback is incorporated: easier headings, edge-to-edge sections,
 - Rejected proposed page: [desktop full](before/page-full-1440.jpg), [mobile full](before/page-full-390.jpg), [old visible copy](before/PAGE-TEXT.txt). It stacks two actual comps and has duplicate headers/author-only draft flags, not a single built page.
 - Three isolated full-page/copy baseline critiques: [reader1](readers/before/matched-1.answer.md), [reader2](readers/before/matched-2.answer.md), [reader3](readers/before/matched-3.answer.md). Raw JSONL and exact input/session/model metadata sit alongside each answer. [Protocol and limits](PROTOCOL.md).
 - Five dated whole-page comparables, including Rectangle/Things/Raycast beyond inbox tools: [structure research](structure-research.md). The prior six inbox-tool first-viewport references remain [comparables](../comparables.md). No popularity or conversion claims borrowed.
-- Both rewritten story drafts and truth/framework pass committed in `b0816b9`: [full draft copy](SECTION-COPY.md), [all-line audit](v3-line-audit.md), [disclosure/source map](truth-trace.md), [what the skills changed](frameworks-and-section-jobs.md).
+- Both rewritten story drafts and truth/framework pass began in `b0816b9`; Draft3 below adds the contiguous Rules object, eight-item recovery batch and extra app-icon label: [full draft copy](SECTION-COPY.md), [all-line audit](v3-line-audit.md), [disclosure/source map](truth-trace.md), [what the skills changed](frameworks-and-section-jobs.md).
 
 ## What the old page actually failed to do
 
@@ -48,7 +48,7 @@ Old: **See what stays. See what gets archived.** “A question from a colleague 
 
 New A operation context: “Start a run from zero's menu bar. The app sorts the Gmail accounts you connect. Keep reading your connected Gmail account in Gmail or Apple Mail.” It precedes recovery, not another pair of inbox lists.
 
-New B: the connected-account clarification is at the top of the risk-first ledger. The run sentence is in the later Rules block, with the app explicitly acting. The separate demo is cut in both. Fictional archived examples appear only when they help explain recovery.
+New B: “Read your connected Gmail in Gmail or Apple Mail” is at the top of the risk-first ledger. The run sentence is in the later Rules block, with the app explicitly acting. The separate demo is cut in both. Fictional archived examples appear only when they help explain recovery.
 
 ### Rules: one explanation or one faithful editing view
 
@@ -56,7 +56,7 @@ Old: **Keep mail that needs your reply or action.** “An AI model checks each t
 
 New A, within recovery: “An AI model uses your rules to keep replies you owe, direct requests, payment problems, legal matters and consequential deadlines. Receipts, newsletters and cold sales may be archived. Change the rules in Settings → Rules. Sorting leaves starred mail alone and keeps threads it can't decide about.” No separate decorative Rules chapter.
 
-New B, **Choose what needs to stay.** “Start a run from zero's menu bar. The app sorts the Gmail accounts you connect. An AI model checks threads against your rules in Settings → Rules. Sorting leaves starred mail alone and keeps threads it can't decide about. Check your first few runs: the model can make mistakes.” Default-policy meaning must be shown once in the exact readable PolicyView excerpt, still pending designer's final inventory.
+New B, **Choose what needs to stay.** “Run zero from its menu bar to sort connected Gmail accounts. AI applies your rules. Starred mail stays untouched. Uncertain threads stay in your inbox. Check your first runs: the model can make mistakes.” Default-policy meaning appears in the source-contiguous `keep-policy.md:8–21` excerpt: five keep bullets, archive heading, then Cold outreach, Receipts and Notifications. Settings/tab/pane/Save labels plus excerpt total 110 words. Final comp inventory still pending.
 
 ### Recovery: add a readable way back, not another promise
 
@@ -64,9 +64,9 @@ Old: **Undo an archive. Nothing is deleted.** “Archived mail stays searchable 
 
 New A, **See what went into the archive.** “Check your first few runs. The model can make mistakes. In zero's Undo tab, restore one email or choose Restore all for a day's archives. Nothing is deleted: archived mail stays searchable in Gmail's All Mail under a dated recovery label.” Starred/uncertain rules are explained once in its preceding policy paragraph.
 
-New B uses the same mechanics but moves the first-run/model warning to Rules: “In zero's Undo tab, restore one email or choose Restore all for a day's archives. Nothing is deleted: archived mail stays searchable in Gmail's All Mail under a dated recovery label.”
+New B, **Restore archived mail**, moves the first-run/model warning to Rules: “In zero's Undo tab, restore one email or a day's archives with Restore all. Nothing is deleted. Find archived mail in Gmail's All Mail under a dated recovery label.”
 
-New object: source-faithful one-bit Undo facsimile, readable fictional rows, real tabs, batch date/count, Restore all and tray-up individual action with real tooltip. It is labelled as an illustration. A real Undo screenshot would expose real mail and there is no demo mode. No Restore control is invented in Finder or Gmail, and All Mail is not misrepresented as the app's restore button.
+New object: source-faithful one-bit Undo facsimile, five readable fictional rows from an eight-item batch (matching hero B), a visible scrollbar, real tabs, batch date/count, Restore all and tray-up individual action with real tooltip. It is labelled as an illustration. A real Undo screenshot would expose real mail and there is no demo mode. No Restore control is invented in Finder or Gmail, and All Mail is not misrepresented as the app's restore button.
 
 ### Decision ledger: each disclosure in one place
 
@@ -93,7 +93,7 @@ The installer warning moves here from the final command block. The new pricing l
 
 Old: **Install zero on your Mac.** “zero is not notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the installer before running it.” Same exact Terminal command, then “Open zero, connect Gmail and save your Jev key in Settings → Sorting engine. Choose Run zero now and review the results. Or download from GitHub Releases.”
 
-New: **Install when you're ready.** Same exact `curl -fsSL https://zero.headless.com/install | bash`, optional Copy command. “Open zero, connect Gmail and save your Jev key in Settings → Sorting engine. Or download from GitHub Releases.” Footprint/warnings are already before it, operation/first-run review already described. No repeated category pitch or run instruction. Source, Privacy, Terms and AGPL navigation remain.
+New A: **Install when you're ready.** New B: **Ready to install?** Same exact `curl -fsSL https://zero.headless.com/install | bash`, optional Copy command. A says “Open zero, connect Gmail and save your Jev key in Settings → Sorting engine. Or download from GitHub Releases.” B says “Open zero, connect Gmail, then add your Jev key in Settings → Sorting engine. Or download from GitHub Releases.” Footprint/warnings are already before it, operation/first-run review already described. No repeated category pitch or run instruction. Source, Privacy, Terms and AGPL navigation remain.
 
 ## Old/new objects and visual evidence
 
@@ -103,14 +103,14 @@ Old objects are observable now. After screenshot pairs are intentionally pending
 |---|---|---|---|
 | Hero | [old B](before/hero-b/hero-b-1440.jpg) | Approved B with zero actor, legible heading treatment | Final full-width desktop/mobile plus static/stepped frames |
 | Sort proof | [duplicate Stays/Archived](before/sections/shots/demo-1440.jpg) | Cut; no replacement second demo | New full-page pair showing shortened story |
-| Decision policy | [Rules text card](before/sections/shots/decisions-1440.jpg) | A concise prose, B source-faithful editor | B exact text and editor screenshot, A comparison |
+| Decision policy | [Rules text card](before/sections/shots/decisions-1440.jpg) | A concise prose, B source-faithful editor | B stable rendered text/editor screenshot, A comparison |
 | Recovery | [greeked Undo](before/sections/shots/undo-1440.jpg) | Readable fictional Undo facsimile | Both widths and purposeful restore animation frames |
 | Tradeoffs | [Info wall](before/sections/shots/before-1440.jpg), [mobile](before/sections/shots/before-390.jpg) | One shorter-labelled decision ledger | Both widths, target routing before command, scan/read check |
 | Acquisition | [old install](before/sections/shots/install-1440.jpg) | Functional Terminal after ledger | Exact command/copy recovery/no-JS state, motion specimen |
 
 ## Type, layout and motion: old versus new
 
-- **Type before:** Pixelify long headings, already reported too hard to read by owner. After must show two or three heading alternatives beside current Pixelify on actual page headlines, not a single font recommendation. Check lowercase/long-heading readability and the “fi” ligature at 320/390/1440/1920. Designer is collecting licensed alternatives, no winner asserted yet.
+- **Type before:** Pixelify long headings, already reported too hard to read by owner. After must show two or three heading alternatives beside current Pixelify on actual page headlines, not a single font recommendation. Check lowercase/long-heading readability and the “fi” ligature at 320/390/1440/1920. Designer recommends T3 (Geist 700 headings, ChicagoFLF only for short UI labels), reported at 23:29Z. Its comparison proof in comps/type/ is still uncommitted and not yet independently checked, so this is not owner approval or a verified readability winner.
 - **Layout before:** constrained centred sections and repeated bands/text-left/object-right grammar. After must be edge-to-edge sections with paragraph measures kept readable, and a stated layout at 320/390/768/1440/1920/2560. Six breakpoint captures and overflow evidence pending.
 - **Motion before:** hero sorting plus limited reveal/greeked recovery. After every chosen block gets purposeful stepped one-bit motion explaining operation, policy, recovery, decision grouping or command action. No data/labels solely revealed by motion. Reduced-motion and no-JS end states remain complete. Designer spec plus sandbox prototype/byte budget pending. No production motion integration is part of this proposal.
 
@@ -140,8 +140,8 @@ Requirement re-audit at 23:25Z also added explicit semantic/accessibility-API an
 
 ## Readiness ledger
 
-Complete: before captures, three raw baseline critiques, comparable structure research, joint two-outline selection, both bounded copy drafts, old-line audit, source disclosure trace, recorded funnels/impeccable changes. Current authored counts: A473, B455 before exact Rules object; final comp counts pending.
+Complete: before captures, three raw baseline critiques, comparable structure research, joint two-outline selection, both bounded copy drafts, old-line audit, source disclosure trace, recorded funnels/impeccable changes. Current authored Draft3 counts: A474, B544 including all proposed Rules text and the extra zero app-icon label; final comp counts pending. B has six spare words, not unbounded space for new chrome.
 
-[Whole-workflow acceptance ledger](acceptance-checklist.md) maps every remaining requirement to an observable check, with unverified paths explicitly pending. Latest regression rerun at 23:23Z: 16/16 historical copy/landing contracts passed. Reader CLI rejects invalid reader IDs, missing after snapshots and overwriting existing baseline results before any model call. All 28 local evidence links in the proposal/protocol/checklist currently resolve. These are packaging/regression checks, not acceptance of the new page.
+[Whole-workflow acceptance ledger](acceptance-checklist.md) maps every remaining requirement to an observable check, with unverified paths explicitly pending. Latest regression rerun at 23:47Z: 21/21 checks passed (17 historical copy/landing/report checks plus 4 Draft3 count/source-fidelity/negative-fixture checks). The larger run exposed intermittent historical report truncation at 23:38Z: forced CLI exit discarded queued stdout. Fix `50e0141` drains the output before exit. Its large-final-answer test failed before the fix, then passed; eight consecutive actual CLI pipe captures also reproduced the complete committed report. Reader CLI rejects invalid reader IDs, missing after snapshots and overwriting existing baseline results before any model call. All 28 local evidence links in the proposal/protocol/checklist currently resolve. These are packaging/regression checks, not acceptance of the new page.
 
 Pending: merged full-width runnable A/B; exact rendered inventories; type options and ligature/readability evidence; six-breakpoint layout proof; section-motion storyboard/prototype/static/byte budget; matched after readers and evidence-based recommendation; adversarial review/responses; consolidated viewable one-page owner presentation and handoff.

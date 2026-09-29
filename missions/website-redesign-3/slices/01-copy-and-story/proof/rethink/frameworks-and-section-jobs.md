@@ -40,6 +40,10 @@ Baseline job clarity is 4/5 in all three model reads, story 3/5, visuals 2/5, re
 6. **Make objects add information.** Source-faithful readable Undo rows replace greeked bars. The facsimile remains explicitly illustrative, because a real mailbox screenshot would expose owner mail and there's no demo mode.
 7. **Readable not merely short.** Compact labels organize full disclosures. Full-width section geometry still needs capped paragraph measures and 320–2560 responsive checks by designer. Heading type alternatives and ligature proof are pending, not solved by rewriting text alone.
 
+## Draft3 object follow-through
+
+Designer reported the eight-item hero batch and extra zero icon at 23:29Z. Undo now says **8 set aside**, with five visible rows and a scrollbar, rather than silently inventing a different batch. B's Rules object uses a source-contiguous excerpt including the Cold outreach bullet that would otherwise be missing between the archive heading and Receipts. This preserves both visible source order and the cold-sales archive category. Its 110 words (102 policy + 8 UI labels) required a 22-word B trim, not removal of a material disclosure. B now says **Read your connected Gmail in Gmail or Apple Mail**, **Restore archived mail**, and **Ready to install?** The common ledger stays identical. Authored A474/B544 includes the new icon and proposed Rules text. These changes are count/source checks, not reader-tested improvements.
+
 ## Before/after evidence to collect, declared before new readers
 
 - All three fresh readers of each new outline should identify Mac/Gmail/inbox sorting without confusing it for a mail client or manual dragging.

@@ -16,16 +16,18 @@ const frozenHeroWords = words(inventory.hero.textNodes.join('\n'));
 const actorDelta = words('zero Run zero now Working…');
 const hero = frozenHeroWords + actorDelta;
 const objectWords = words(block('OBJECT-COPY'));
+const rulesObjectWords = words(block('RULES-B-COPY'));
 const banned = ['open loops', "who's waiting", "who’s waiting", "who's writing", "who’s writing", 'ball is in their court', 'check it with your coffee', 'two questions', 'set something aside', 'agent cli', 'jev model reads each thread'];
 const output = ['A', 'B'].map(outline => {
   const text = visible(block(`COPY-${outline}`));
   for (const phrase of banned) if (text.toLowerCase().includes(phrase)) throw new Error(`${outline}: banned explanation ${phrase}`);
   if (!text.includes('curl -fsSL https://zero.headless.com/install | bash')) throw new Error(`${outline}: missing exact command`);
   const primary = words(text);
-  const total = hero + primary + objectWords;
+  const rules = outline === 'B' ? rulesObjectWords : 0;
+  const total = hero + primary + objectWords + rules;
   if (total > 550 || total < 350) throw new Error(`${outline}: authored draft outside 350–550: ${total}`);
-  return { outline, hero, primarySections: primary, sharedObjects: objectWords, authoredTotal: total,
-    pendingRulesObject: outline === 'B', finalRenderedInventoryChecked: false, proseBanHits: 0 };
+  return { outline, hero, primarySections: primary, sharedObjects: objectWords, rulesObjectWords: rules, authoredTotal: total,
+    pendingRulesObject: false, finalRenderedInventoryChecked: false, proseBanHits: 0 };
 });
 console.log(JSON.stringify(output, null, 2));
-console.log('Authored draft only. B Rules-view text and any added comp strings must be counted before final signoff. Actual Open loops tab is UI nomenclature, not banned prose.');
+console.log('Authored Draft3 only, including the proposed Rules object. Any added comp strings and actual rendered inventory must be checked before final signoff. Actual Open loops tab is UI nomenclature, not banned prose.');

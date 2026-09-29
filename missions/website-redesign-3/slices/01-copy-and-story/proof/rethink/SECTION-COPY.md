@@ -1,6 +1,6 @@
 # Section copy for two whole-page proposals
 
-DRAFT 2, 2026-09-29. Joint selection: make both A and B, then recommend from reader evidence. Hero B is approved and remains unchanged. These are section words for proof comps, not approved implementation copy. The hero's frozen authored inventory is 104 words, including one navigation bar, illustration rows/ages, both popover states and its extra zero mark.
+DRAFT 3, 2026-09-29. Joint selection: make both A and B, then recommend from reader evidence. Hero B is approved and remains unchanged. These are section words for proof comps, not approved implementation copy. The hero's frozen authored inventory is 104 words, including one navigation bar, illustration rows/ages, both popover states and its extra zero mark.
 
 The marked blocks below are visitor copy. Markdown headings, bold/link labels and command text render, but authoring markers and notes do not. Use one shared footer. Count all repeated app labels and readable window text separately when rendered. Do not add a second header.
 
@@ -46,7 +46,7 @@ Open zero, connect Gmail and save your [Jev key](https://console.typesafe.ai/key
 
 ### Before you install.
 
-Keep reading your connected Gmail account in Gmail or Apple Mail.
+Read your connected Gmail in Gmail or Apple Mail.
 
 **Google sign-in.** Connect Gmail through Google in your browser. zero never sees your password. You may see an unverified-app warning because zero hasn't completed Google's app review.
 
@@ -60,13 +60,13 @@ Keep reading your connected Gmail account in Gmail or Apple Mail.
 
 ### Choose what needs to stay.
 
-Start a run from zero's menu bar. The app sorts the Gmail accounts you connect. An AI model checks threads against your rules in **Settings → Rules**. Sorting leaves starred mail alone and keeps threads it can't decide about. Check your first few runs: the model can make mistakes.
+Run zero from its menu bar to sort connected Gmail accounts. AI applies your rules. Starred mail stays untouched. Uncertain threads stay in your inbox. Check your first runs: the model can make mistakes.
 
-### See what went into the archive.
+### Restore archived mail.
 
-In zero's **Undo** tab, restore one email or choose **Restore all** for a day's archives. Nothing is deleted: archived mail stays searchable in Gmail's **All Mail** under a dated recovery label.
+In zero's **Undo** tab, restore one email or a day's archives with **Restore all**. Nothing is deleted. Find archived mail in Gmail's **All Mail** under a dated recovery label.
 
-### Install when you're ready.
+### Ready to install?
 
 ```sh
 curl -fsSL https://zero.headless.com/install | bash
@@ -74,7 +74,7 @@ curl -fsSL https://zero.headless.com/install | bash
 
 **Copy command**
 
-Open zero, connect Gmail and save your [Jev key](https://console.typesafe.ai/keys) in **Settings → Sorting engine**. Or download from [GitHub Releases](https://github.com/drewling/zero/releases).
+Open zero, connect Gmail, then add your [Jev key](https://console.typesafe.ai/keys) in **Settings → Sorting engine**. Or download from [GitHub Releases](https://github.com/drewling/zero/releases).
 
 <!-- COPY-B-END -->
 
@@ -88,7 +88,7 @@ Accounts
 Undo
 Settings
 Tue 29 Sep
-5 set aside · alex@example.com
+8 set aside · alex@example.com
 Restore all
 Weekly newsletter
 Fieldnotes · 2d
@@ -102,6 +102,7 @@ Webinar invitation
 Workshop · 4d
 Put this email back in the inbox
 Illustration. Made-up mail.
+zero
 Before you install
 Terminal
 zero
@@ -112,9 +113,38 @@ Terms
 
 <!-- OBJECT-COPY-END -->
 
-The first Undo above is the editorial window title, the second is the actual tab. These are five archived example rows, not repeated kept hero rows. Ages and fictional address count. Tooltip is the real shipped individual-control wording; **Restore all** is the real batch control. The caption identifies an editorial facsimile, not a screenshot of someone's mail. If designer replaces the Get Info title with a shorter title, use exactly the rendered title in the final inventory. No live inbox screenshot, no new explanation badge, no Finder/Gmail Restore.
+The first Undo above is the editorial window title, the second is the actual tab. These are five visible rows from an eight-item fictional batch, not repeated kept hero rows. A visible System 7 scrollbar makes the window's partial view clear, with no extra copy. Eight matches the hero's archived-message count. Ages and fictional address count. The additional zero before the ledger title is the new app icon label, distinct from the footer's zero. Tooltip is the real shipped individual-control wording; **Restore all** is the real batch control. The caption identifies an editorial facsimile, not a screenshot of someone's mail. If designer replaces the Get Info title with a shorter title, use exactly the rendered title in the final inventory. No live inbox screenshot, no new explanation badge, no Finder/Gmail Restore.
 
-B's Rules object text is pending designer's exact PolicyView excerpt and labels. A's policy sentence is omitted from B because its faithful Rules excerpt must explain that once. Keep a short readable excerpt of real default policy in the scrolled editor, not an invented policy mode or an additional copy paragraph. Send the exact inventory before final budget signoff.
+## B Rules object: exact source-contiguous excerpt
+
+<!-- RULES-B-COPY-START -->
+
+Settings
+Open loops
+Accounts
+Undo
+Settings
+Rules
+Save
+
+## Keep a thread only if it genuinely needs me to act
+
+- A real person is awaiting my reply or my decision.
+- There is an unanswered direct question or request addressed to me.
+- A payment has actually failed or is a live problem (not a routine receipt).
+- It is a legal, contractual, or dispute matter.
+- There is an explicit deadline with a real consequence.
+
+## Archive everything else (reversibly)
+
+- Cold outreach, sales, prospecting, pitches, even when the sender uses a real
+  human name and I have never replied to them.
+- Receipts, invoices, statements, order and delivery confirmations.
+- Notifications, alerts, digests, newsletters, social, marketing, surveys.
+
+<!-- RULES-B-COPY-END -->
+
+This is a faithful contiguous excerpt of `keep-policy.md:8–21`, including the Cold outreach bullet that lies between the archive heading and Receipts. Do not silently remove a middle bullet from a supposedly real editor. Settings is selected, the pane is Rules, and Save is the real control. A's policy sentence is omitted from B because this excerpt explains it once. The complete policy continues beyond the frame. The real editor scroll affordance may show that without inventing additional words. All authored excerpt text counts, even if a scroll viewport clips its last lines. Final rendered inventory still requires designer's stable source; no per-email reason badge or new policy mode.
 
 `#install` begins the decision ledger plus installation area, so the approved hero CTA does not skip warnings/cost/data. `#before` can point to the same ledger. `#command` points to the Terminal. `#undo` identifies readable recovery, `#how` identifies operation/rules (A can share the recovery area). Preserve `/install.sh` as the approved hero's Read the installer first route, `/privacy.html`, `/terms.html`, source/release links and the exact command. TypeSafe pricing is a verified new public documentation route, not an unverified /pricing guess.
 
@@ -122,6 +152,8 @@ B's Rules object text is pending designer's exact PolicyView excerpt and labels.
 
 The high-level hero promises and material explanation are different jobs: hero says the task, recovery explains the route back. No second stays/archived lesson. Rules only in one explanation or B's editor. Requirements only in approved hero. Access/data/cost/draft/footprint facts only in the decision ledger. The optional draft paragraph's automatic-send statement is scoped to replies. Footer labels are links, not repeated paragraphs.
 
-## Draft2 authored count
+## Draft3 authored count
 
-`node count-section-drafts.mjs`: A = hero104 + primary314 + shared objects55 = **473**. B = hero104 + primary296 + shared objects55 = **455**, before the Rules object's exact readable excerpt and labels. Prose ban hits: **0** for each. Shared objects include every planned Undo tab/date/count/address/tooltip/row/age, one ledger title, Terminal and footer. This is not the final rendered comp inventory. Added labels, font specimen text or other comp chrome must be counted or kept outside visitor content.
+`node count-section-drafts.mjs`: A = hero104 + primary314 + shared objects56 = **474**. B = hero104 + primary274 + shared objects56 + Rules110 = **544**, including the complete proposed Rules excerpt and its eight label words. Prose ban hits: **0** for each. Shared objects include every planned Undo tab/date/count/address/tooltip/row/age, the extra zero app-icon label, one ledger title, Terminal and footer. The policy itself is 102 words and the UI labels are 8, kept separate by a newline when counting. This leaves B six words below the ceiling before any further comp strings. This is not the final rendered comp inventory. Added labels or other comp chrome must be counted or kept outside visitor content. Typeface specimens are proof material, not visitor page content.
+
+Draft3 changes are limited to the extra app icon, consistent eight-item batch, faithful contiguous B policy excerpt, and 22-word net trim of B's operation/recovery/setup text and headings. Both five-row facsimiles remain fictional. The common decision ledger and all material access/data/billing/install facts are unchanged. A's prose and approved hero words are unchanged.
