@@ -20,6 +20,9 @@ const media = images.map((file, index) => {
   return { path: path.resolve(file), sha256: crypto.createHash('sha256').update(bytes).digest('hex'), bytes: bytes.length };
 });
 const output = path.resolve(outputPrefix);
+if (['.jsonl', '.metadata.json', '.answer.md'].some(suffix => fs.existsSync(output + suffix))) {
+  throw new Error(`Retain prior reader evidence: use a new output prefix, not ${output}`);
+}
 fs.mkdirSync(path.dirname(output), { recursive: true });
 const cwd = fs.mkdtempSync(path.join(process.env.JCODE_SCRATCH_DIR, 'zero-blind-reader-'));
 const args = ['-p', '--model', 'claude-sonnet-5', '--session-id', sessionId,
@@ -49,7 +52,7 @@ child.on('close', code => {
     resultSessionId: result?.session_id, resultModelUsage: result?.modelUsage,
     numTurns: result?.num_turns, isError: result?.is_error, toolCalls: toolCalls.length };
   fs.writeFileSync(output + '.metadata.json', JSON.stringify(metadata, null, 2) + '\n');
-  if (code !== 0 || !result || result.is_error || result.num_turns !== 1 || toolCalls.length || result.session_id !== sessionId || !Object.keys(result.modelUsage ?? {}).every(model => model.startsWith('claude-sonnet-5')) || !Object.keys(result.modelUsage ?? {}).length) {
+  if (code !== 0 || !result || result.is_error || result.num_turns !== 1 || toolCalls.length || result.session_id !== sessionId || !Object.keys(result.modelUsage ?? {}).every(model => model === 'claude-sonnet-5') || !Object.keys(result.modelUsage ?? {}).length) {
     console.error(`Reader failed isolation/result checks: ${output}`);
     process.exitCode = 1;
     return;
