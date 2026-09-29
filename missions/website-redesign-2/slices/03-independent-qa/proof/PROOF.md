@@ -6,6 +6,17 @@
 
 **Update (re-check, same candidate SHA, no source changed):** The Docker daemon that was unavailable in the original pass is now reachable. `bash landing/build.sh` was re-run against the unmodified candidate and passed end to end, including the previously unverified `/install` and `/install.sh` 302 redirects served through the real `nginx.conf`, so the "Blocked, not passed" build/package row below is superseded by a Pass. Separately, a second independent check drove the exact-SHA candidate through real Chromium and WebKit page interactions (not just DOM assertions): visible navigation to each anchor section, the hero and mobile install CTAs, live disclosure content, native `navigator.clipboard` outcomes (WebKit succeeded, Chromium's headless permission denial correctly triggered the manual-copy fallback with focus retained), and the privacy/terms routes, all with zero page errors in both engines. See [`direct-interaction-report.json`](direct-interaction-report.json) for the full machine-readable record, in addition to the original [`browser-report.json`](browser-report.json).
 
+**Live production boundary check (read-only, no state change):** To confirm this re-check's local Docker pass does not overstate production status, the actual public site was queried directly:
+
+```text
+GET https://zero.headless.com/                → 200, <title>zero — Keep the mail that needs you.</title>
+GET https://zero.headless.com/install          → 302 → raw.githubusercontent.com/drewling/zero/master/macapp/install-zero.sh
+GET https://zero.headless.com/install.sh       → 302 → github.com/drewling/zero/blob/master/macapp/install-zero.sh
+GET raw install script target                  → 200
+```
+
+Production is still serving the **old** headline ("Keep the mail that needs you.", not the redesigned "Only the mail that still needs you."), confirming the redesign candidate has not been deployed and this QA pass has made no live change. The `/install` and `/install.sh` redirects already work correctly on the current production host, independent of this candidate; `deploy.sh` (unmodified, not run) re-verifies the same two routes against `$ZERO_SITE_URL` after any future deploy. No credentials, SSH, or write path was exercised.
+
 No landing source was changed by QA. The six full-page desktop/mobile captures and machine-readable browser reports in this directory were produced from the candidate served from an immutable checkout at the exact SHA above.
 
 ## Requirement-mapped results
