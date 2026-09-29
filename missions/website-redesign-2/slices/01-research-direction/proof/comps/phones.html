@@ -25,7 +25,14 @@ for (const [hash, label] of [['', 'first viewport'], ['#sort', 'rules section'],
   fig.append(cap);
   f.addEventListener('load', () => setTimeout(() => {
     const d = f.contentDocument.documentElement;
-    cap.textContent = `${label} · 390 iframe · scrollWidth ${d.scrollWidth}`;
+    const w = d.clientWidth;
+    // scrollWidth alone misses content clipped by body{overflow-x:hidden}; also count visible elements whose box passes the right edge.
+    const over = [...f.contentDocument.body.querySelectorAll('*')].filter(el => {
+      if (el.closest('[aria-hidden="true"]')) return false;
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.right > w + 1 && getComputedStyle(el).visibility !== 'hidden';
+    }).length;
+    cap.textContent = `${label} · 390 iframe · scrollWidth ${d.scrollWidth} · past right edge ${over}`;
   }, 1200));
   document.getElementById('r').append(fig);
 }
