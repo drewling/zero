@@ -1,0 +1,174 @@
+[
+  {
+    "engine": "Chromium",
+    "pageErrors": [],
+    "checks": {
+      "home": {
+        "status": "complete",
+        "title": "zero — Only the mail that still needs you.",
+        "headings": [
+          "Only the mail that still needs you.",
+          "It asks who’s waiting, not who’s writing.",
+          "Check it with your coffee. Then close it.",
+          "Nothing is deleted.",
+          "What it needs, sends and costs",
+          "Install zero."
+        ],
+        "imageLoaded": true,
+        "installCommand": "curl -fsSL https://zero.headless.com/install | bash",
+        "installSteps": 4,
+        "facts": [
+          "Your Mac",
+          "Gmail",
+          "Your mail",
+          "Replies",
+          "Cost"
+        ],
+        "oldSystems": {
+          "tables": 0,
+          "faq": 0,
+          "canvas": 0
+        },
+        "httpStatus": 200
+      },
+      "decides": {
+        "hash": "#decides",
+        "heading": "It asks who’s waiting, not who’s writing."
+      },
+      "undo": {
+        "hash": "#undo",
+        "heading": "Nothing is deleted."
+      },
+      "disclosures": {
+        "hash": "#before",
+        "title": "What it needs, sends and costs",
+        "privacyHref": "/privacy.html"
+      },
+      "heroInstall": {
+        "hash": "#install",
+        "heading": "Install zero."
+      },
+      "navInstall": {
+        "hash": "#install",
+        "heading": "Install zero."
+      },
+      "mobile": {
+        "status": 200,
+        "cta": {
+          "hash": "#install",
+          "heading": "Install zero.",
+          "hiddenNav": true
+        },
+        "copy": {
+          "available": true,
+          "nativeClipboardAPI": "function",
+          "focusBefore": "copy-command",
+          "focusAfter": "copy-command",
+          "status": "Couldn’t copy. Select the command above and copy it manually."
+        }
+      },
+      "privacy": {
+        "url": "http://127.0.0.1:8891/privacy.html",
+        "status": 200,
+        "title": "Privacy — zero"
+      },
+      "terms": {
+        "url": "http://127.0.0.1:8891/terms.html",
+        "status": 200,
+        "title": "Terms — zero"
+      },
+      "staticRouteBoundary": {
+        "installScriptStatus": 404,
+        "unknownStatus": 404,
+        "note": "Static server only; production nginx redirects are not exercised here."
+      }
+    },
+    "passed": true
+  },
+  {
+    "engine": "WebKit",
+    "pageErrors": [],
+    "checks": {
+      "home": {
+        "status": "complete",
+        "title": "zero — Only the mail that still needs you.",
+        "headings": [
+          "Only the mail that still needs you.",
+          "It asks who’s waiting, not who’s writing.",
+          "Check it with your coffee. Then close it.",
+          "Nothing is deleted.",
+          "What it needs, sends and costs",
+          "Install zero."
+        ],
+        "imageLoaded": true,
+        "installCommand": "curl -fsSL https://zero.headless.com/install | bash",
+        "installSteps": 4,
+        "facts": [
+          "Your Mac",
+          "Gmail",
+          "Your mail",
+          "Replies",
+          "Cost"
+        ],
+        "oldSystems": {
+          "tables": 0,
+          "faq": 0,
+          "canvas": 0
+        },
+        "httpStatus": 200
+      },
+      "decides": {
+        "hash": "#decides",
+        "heading": "It asks who’s waiting, not who’s writing."
+      },
+      "undo": {
+        "hash": "#undo",
+        "heading": "Nothing is deleted."
+      },
+      "disclosures": {
+        "hash": "#before",
+        "title": "What it needs, sends and costs",
+        "privacyHref": "/privacy.html"
+      },
+      "heroInstall": {
+        "hash": "#install",
+        "heading": "Install zero."
+      },
+      "navInstall": {
+        "hash": "#install",
+        "heading": "Install zero."
+      },
+      "mobile": {
+        "status": 200,
+        "cta": {
+          "hash": "#install",
+          "heading": "Install zero.",
+          "hiddenNav": true
+        },
+        "copy": {
+          "available": true,
+          "nativeClipboardAPI": "function",
+          "focusBefore": "copy-command",
+          "focusAfter": "copy-command",
+          "status": "Copied. Paste it into Terminal when you’re ready."
+        }
+      },
+      "privacy": {
+        "url": "http://127.0.0.1:8891/privacy.html",
+        "status": 200,
+        "title": "Privacy — zero"
+      },
+      "terms": {
+        "url": "http://127.0.0.1:8891/terms.html",
+        "status": 200,
+        "title": "Terms — zero"
+      },
+      "staticRouteBoundary": {
+        "installScriptStatus": 404,
+        "unknownStatus": 404,
+        "note": "Static server only; production nginx redirects are not exercised here."
+      }
+    },
+    "passed": true
+  }
+]
