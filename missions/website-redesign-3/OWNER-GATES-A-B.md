@@ -66,5 +66,5 @@ Also: a "zero Info" window for access, data and cost (`before-1440.jpg`), and a 
 - Comps are mock-ups in a browser frame, not a real device. Real Safari behaviour is checked in QA.
 - If you pick C or B, the copywriter recounts words (ceiling 550, A is at 544).
 - The live site has a font bug where "Read the installer first" shows as "Arst". The new build fixes it.
-- One label truncates at 320 px ("Product announcement"), to be fixed in the build.
+- The one label that truncated at 320 px ("Product announcement") is fixed in the comps (clip check clean at 320, 360 and 390 px).
 - Mission files: `/Users/light/Documents/GitHub/zero/missions/website-redesign-3/SPEC.md`. Design brief with all reasons: `/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/02-references-and-comps/proof/DESIGN-BRIEF.md`.
