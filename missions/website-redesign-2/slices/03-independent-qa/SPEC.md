@@ -7,4 +7,4 @@ depends_on: [OPR.99.0.3.2]
 ---
 # Slice 03: independent visual and functional QA
 
-Reviewer checks real browser rendering against approved comps at desktop and narrow mobile, visitor/install/legal journeys, no-JS/Canvas, reduced motion, keyboard and screen reader semantics, performance and source-of-truth claims. Report defects or PASS with direct evidence before release.
+Reviewer checks real browser rendering against approved comps at desktop and narrow mobile, visitor/install/legal journeys, no-JS/Canvas, reduced motion, keyboard and screen reader semantics, performance and source-of-truth claims. Inspect the shipped source/asset inventory and dependency graph for obsolete departure-board CSS/JS/Canvas, unused images, duplicate visual systems and dead selectors; validate that needed routes and app functionality survived the replacement. Report defects or PASS with direct evidence before release.
