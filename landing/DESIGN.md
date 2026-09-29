@@ -79,7 +79,7 @@ Geist and Geist Mono remain self-hosted for body copy, code, and labels, with th
 
 ## Interaction and accessibility
 
-The page is complete in HTML without JavaScript. The only script behavior is optional clipboard support for the install command. Buttons expose disabled and manual-copy recovery states. Native headings, table semantics, caption, `thead`, `tbody`, links, `details`, and visible copy provide the primary accessibility path.
+The page is complete in HTML without JavaScript. The only script behavior is optional clipboard support for the install command. The Copy button exposes an aria-disabled pending state with a JS guard so keyboard focus remains on the control, plus manual-copy recovery. Native headings, table semantics, caption, `thead`, `tbody`, links, `details`, and visible copy provide the primary accessibility path.
 
 Focus rings remain visible at 3px against both black and white surfaces. Decorative check, folder, and trash symbols are hidden from assistive technology when their adjacent labels already provide the meaning. There is no Canvas, requestAnimationFrame, IntersectionObserver, layout observer, or motion-specific fallback to maintain.
 

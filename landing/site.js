@@ -6,8 +6,12 @@ const status = document.getElementById('copy-status');
 
 if (copyButton && command && status && navigator.clipboard?.writeText) {
   copyButton.hidden = false;
+  let pending = false;
   copyButton.addEventListener('click', async () => {
-    copyButton.disabled = true;
+    if (pending) return;
+    pending = true;
+    copyButton.setAttribute('aria-disabled', 'true');
+    copyButton.setAttribute('aria-busy', 'true');
     try {
       await navigator.clipboard.writeText(command.textContent.trim());
       status.textContent = 'Copied. Paste it into Terminal when you’re ready.';
@@ -15,7 +19,9 @@ if (copyButton && command && status && navigator.clipboard?.writeText) {
     } catch {
       status.textContent = 'Couldn’t copy. Select the command above and copy it manually.';
     } finally {
-      copyButton.disabled = false;
+      pending = false;
+      copyButton.removeAttribute('aria-disabled');
+      copyButton.removeAttribute('aria-busy');
     }
   });
 }

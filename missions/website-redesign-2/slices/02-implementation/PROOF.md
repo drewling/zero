@@ -16,6 +16,7 @@ Mission: `OPR.99.0.3.2` / `website-redesign-2`
 - Collapsed the hero facts into the single compact requirements line shown in the approved B comp.
 - Restored the Terminal command and safety warning as the first item in the four-step install list, with a regression assertion for the count.
 - Added the approved B folder-drop moment as one CSS-only 900ms stepped animation, gated by `prefers-reduced-motion` so the static state remains settled.
+- Replaced native `disabled` during clipboard writes with an `aria-disabled` pending guard, preserving the focused button and sequential keyboard navigation on success and denial.
 
 ## Requirement traceability
 
@@ -25,7 +26,8 @@ Mission: `OPR.99.0.3.2` / `website-redesign-2`
 | Product truth and copy | Static tests and direct source inspection | Pass. Product image, archive reversibility, Jev data path, requirements, costs, disclosures, FAQ, privacy, and terms remain present. |
 | No legacy departure-board/motion implementation | `node --test landing/test-site.mjs`; scoped `rg` absence check | Pass. No Canvas, rAF, observers, old board selectors, Archivo references, or old motion controls in shipped source. |
 | No-JS and reduced-motion safety | HTML-only structure, CSS media query, and source assertions | Pass by construction. No required content depends on JavaScript, the single folder-drop uses CSS only, and `prefers-reduced-motion: reduce` leaves the folder settled. |
-| Install clipboard behavior | Four Node tests | Pass. Exact command copy, denial fallback, pending disabled state, and unavailable clipboard behavior all pass. |
+| Install clipboard behavior | Four Node tests | Pass. Exact command copy, denial fallback, aria-disabled pending guard, and unavailable clipboard behavior all pass. |
+| Keyboard clipboard focus | `landing/test-site.mjs`, repaired-candidate Aside keyboard smoke | Success path passes. The focused Copy button stayed focused after Enter, changed to `Copy again`, and the next Tab target was GitHub Releases. Denial is covered by the rejection unit test, but browser denial remains pending because the local Python server does not serve `/install.sh`. |
 | Install flow semantics | `landing/test-site.mjs`, served homepage extraction | Pass. The visible “Four steps” intro now corresponds to four actual list items, with the Terminal command and warning retained inside step one. |
 | Font licensing/source | `landing/assets/pixelify-*.woff2`, `OFL-pixelify.txt`, `landing/DESIGN.md` | Present. Geist and Geist Mono remain self-hosted. |
 | Public static files | Local HTTP smoke on port 8877 | Pass for `/`, legal pages, CSS, JS, Pixelify, Geist, Geist Mono, `panel-cut.png`, and `zero-panel.png`. |
@@ -43,6 +45,7 @@ Mission: `OPR.99.0.3.2` / `website-redesign-2`
 - Impeccable detector -> no errors, with advisory warnings for intentional one-bit title-bar repeating stripes, approved retained Geist body/mono fonts, and a few undocumented tonal/radius values. These are recorded as advisories, not acceptance claims.
 - The focused source assertion now checks four install `<li>` elements, the first Terminal step, the compact `.hero-req` line, and the approved `panel-cut.png` reference.
 - The focused source assertion also checks the single `folder-drop` animation and its `prefers-reduced-motion: no-preference` gate. No Canvas or animation JavaScript was restored.
+- The pending clipboard test now asserts `aria-disabled`, `aria-busy`, no duplicate writes, and cleanup without setting native `disabled`.
 
 ## Browser evidence and limitations
 
@@ -51,6 +54,8 @@ Aside opened the real local page and confirmed the one-bit hero, native rules ta
 The follow-up real-page interaction smoke exercised the first FAQ disclosure and the install Copy button. The FAQ exposed the required statement that Google sign-in tokens are stored on the Mac. Copy changed the button to `Copy again` and announced `Copied. Paste it into Terminal when you’re ready.` The browser accessibility snapshot exposed the native table with caption and eight rows, the FAQ disclosure, the install command, legal links, and the expected keyboard-focusable controls. No form was submitted. Aside could not provide a console error stream or true viewport resizing, so those claims remain outside this proof.
 
 The repaired-candidate real-page acceptance smoke then observed the approved compact requirements line, `/assets/panel-cut.png` at its natural 700 × 1057 ratio rendered as 372 × 560, four install list items in order, an opening FAQ disclosure, and a working Copy button that changed to `Copy again` with its live status. This closes the direct browser checks for the repaired public output while strict 1440/390/320 geometry remains with independent QA.
+
+The final keyboard smoke focused Copy, activated it with Enter, and observed focus remaining on the button after the promise resolved. The button became `Copy again`, the live status announced success, and the next Tab target was GitHub Releases. A browser denial-path check was not possible against the local Python server because `/install.sh` returns 404; the unit rejection test still covers the manual-copy fallback, and production/nginx denial behavior remains a release-QA concern.
 
 The explicit source/integration matrix also observed: the source app image SHA-256 stayed `cfc92f3926d69b134cab2c092b8c70b9df7b205e7b44158ddffa3ec717eb2686`; the approved portrait crop is tracked separately and referenced by the hero; one stylesheet, one script, and one script event listener remain; all six shipped binary assets are referenced by page, stylesheet, or smoke packaging checks; both font license files are present; key page content is delivered in the HTML source without JavaScript; and the local public server returned 200 for the homepage, legal pages, CSS, JS, all four fonts, and both app images, with `/nope` returning 404.
 

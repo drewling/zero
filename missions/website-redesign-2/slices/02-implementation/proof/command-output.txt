@@ -47,3 +47,13 @@ Copy button: changed to “Copy again” and announced “Copied. Paste it into 
 $ CSS motion/fallback assertion
 folder-drop: 900ms, steps(6,end), one dated folder only
 reduced-motion gate: @media (prefers-reduced-motion:no-preference)
+
+$ Clipboard keyboard focus regression assertion
+pending state: aria-disabled=true and aria-busy=true, native disabled=false
+concurrent activation: guarded at one write
+completion: aria attributes removed and focusable control preserved
+
+$ Aside keyboard focus smoke
+Enter on focused Copy: focus remained on Copy button after success
+next Tab target: GitHub Releases
+denial browser path: blocked by local Python server `/install.sh` 404; unit rejection path passes

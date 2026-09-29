@@ -14,6 +14,13 @@ function page(clipboard) {
       hidden: true,
       disabled: false,
       textContent: 'Copy',
+      attributes: {},
+      setAttribute(name, value) {
+        this.attributes[name] = value;
+      },
+      removeAttribute(name) {
+        delete this.attributes[name];
+      },
       addEventListener(type, callback) {
         assert.equal(type, 'click');
         this.click = callback;
@@ -37,6 +44,8 @@ test('copy writes the exact install command and announces success', async () => 
   assert.equal(written, installCommand);
   assert.match(status.textContent, /^Copied\./);
   assert.equal(button.disabled, false);
+  assert.equal(button.attributes['aria-disabled'], undefined);
+  assert.equal(button.attributes['aria-busy'], undefined);
   assert.equal(button.textContent, 'Copy again');
 });
 
@@ -48,19 +57,31 @@ test('clipboard denial offers manual recovery and allows retry', async () => {
   await button.click();
   assert.match(status.textContent, /copy it manually/);
   assert.equal(button.disabled, false);
+  assert.equal(button.attributes['aria-disabled'], undefined);
+  assert.equal(button.attributes['aria-busy'], undefined);
   rejected = false;
   await button.click();
   assert.match(status.textContent, /^Copied\./);
 });
 
-test('copy is disabled while clipboard write is pending', async () => {
+test('clipboard is guarded while pending without blurring focusable control', async () => {
   let finish;
-  const { button } = page({ writeText: () => new Promise((resolve) => { finish = resolve; }) });
+  let calls = 0;
+  const { button } = page({ writeText: () => {
+    calls += 1;
+    return new Promise((resolve) => { finish = resolve; });
+  } });
   const pending = button.click();
-  assert.equal(button.disabled, true);
+  assert.equal(button.disabled, false);
+  assert.equal(button.attributes['aria-disabled'], 'true');
+  assert.equal(button.attributes['aria-busy'], 'true');
+  await button.click();
+  assert.equal(calls, 1);
   finish();
   await pending;
   assert.equal(button.disabled, false);
+  assert.equal(button.attributes['aria-disabled'], undefined);
+  assert.equal(button.attributes['aria-busy'], undefined);
 });
 
 test('unavailable clipboard leaves the optional control hidden', () => {
