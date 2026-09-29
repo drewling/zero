@@ -1,0 +1,31 @@
+TAP version 13
+# Subtest: B reduced motion overrides QA frames and adds no overlays
+ok 1 - B reduced motion overrides QA frames and adds no overlays
+  ---
+  duration_ms: 1028.526667
+  type: 'test'
+  ...
+# Subtest: B exact hero subjects and ages stay visible and fit at 320, 390, 760 and 1440
+ok 2 - B exact hero subjects and ages stay visible and fit at 320, 390, 760 and 1440
+  ---
+  duration_ms: 1472.564916
+  type: 'test'
+  ...
+# Subtest: B real button keyboard replay exists and concurrent activation cannot overlap
+ok 3 - B real button keyboard replay exists and concurrent activation cannot overlap
+  ---
+  duration_ms: 7768.07625
+  type: 'test'
+  ...
+# Subtest: B no-JS, static and reduced-motion pixels are identical across device widths
+ok 4 - B no-JS, static and reduced-motion pixels are identical across device widths
+  ---
+  duration_ms: 2051.562583
+  type: 'test'
+  ...
+# Subtest: B six QA frames show no arrow, watch only while Working, eight outlines and truthful final
+ok 5 - B six QA frames show no arrow, watch only while Working, eight outlines and truthful final
+  ---
+  duration_ms: 6196.171542
+  type: 'test'
+  ...

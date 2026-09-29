@@ -1,0 +1,77 @@
+TAP version 13
+# Subtest: B reduced motion overrides QA frames and adds no overlays
+ok 1 - B reduced motion overrides QA frames and adds no overlays
+  ---
+  duration_ms: 2667.000292
+  type: 'test'
+  ...
+# Subtest: B exact hero subjects and ages stay visible and fit at 320, 390, 760 and 1440
+ok 2 - B exact hero subjects and ages stay visible and fit at 320, 390, 760 and 1440
+  ---
+  duration_ms: 2677.482875
+  type: 'test'
+  ...
+# Subtest: B real button keyboard replay exists and concurrent activation cannot overlap
+ok 3 - B real button keyboard replay exists and concurrent activation cannot overlap
+  ---
+  duration_ms: 7939.039958
+  type: 'test'
+  ...
+# Subtest: B no-JS, static and reduced-motion pixels are identical across device widths
+ok 4 - B no-JS, static and reduced-motion pixels are identical across device widths
+  ---
+  duration_ms: 6432.0095
+  type: 'test'
+  ...
+# Subtest: B six QA frames show no arrow, watch only while Working, eight outlines and truthful final
+ok 5 - B six QA frames show no arrow, watch only while Working, eight outlines and truthful final
+  ---
+  duration_ms: 13648.0275
+  type: 'test'
+  ...
+# B_TIMING [{"width":320,"durationMs":3411,"cls":0},{"width":390,"durationMs":3409,"cls":0},{"width":760,"durationMs":3748,"cls":0},{"width":1440,"durationMs":3744,"cls":0}]
+# Subtest: B active playback observes each selection and simultaneous drag, correct actor, empty Trash and zero CLS
+ok 6 - B active playback observes each selection and simultaneous drag, correct actor, empty Trash and zero CLS
+  ---
+  duration_ms: 17011.306375
+  type: 'test'
+  ...
+# Subtest: B reduced-motion, resize and synthetic visibility cancellation during the drag have no late mutations
+ok 7 - B reduced-motion, resize and synthetic visibility cancellation during the drag have no late mutations
+  ---
+  duration_ms: 12215.872333
+  type: 'test'
+  ...
+# Subtest: B missing drag target settles to the final state, and forced deadline cancels safely
+ok 8 - B missing drag target settles to the final state, and forced deadline cancels safely
+  ---
+  duration_ms: 4043.878708
+  type: 'test'
+  ...
+# Subtest: B coarse pointer never receives the watch even in desktop QA frames
+ok 9 - B coarse pointer never receives the watch even in desktop QA frames
+  ---
+  duration_ms: 479.54375
+  type: 'test'
+  ...
+# Subtest: B geometry follows changed fonts and container widths without runtime constants
+ok 10 - B geometry follows changed fonts and container widths without runtime constants
+  ---
+  duration_ms: 4267.2965
+  type: 'test'
+  ...
+# Subtest: B captures all six frames and reduced-motion end states
+ok 11 - B captures all six frames and reduced-motion end states # SKIP
+  ---
+  duration_ms: 0.157875
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 1
+# todo 0
+# duration_ms 71815.307333
