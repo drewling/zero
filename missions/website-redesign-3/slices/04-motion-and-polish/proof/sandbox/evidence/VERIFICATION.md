@@ -1,4 +1,6 @@
-# Sandbox verification, 2026-09-29
+# Historical A sandbox verification, 2026-09-29
+
+This is the A snapshot through `5fd6b91`, not the owner-selected B story. Its payload figures describe the runner before the B drag helper was added. Current selected-story results and current script sizes belong to `../hero-b/evidence/VERIFICATION.md`. The historical A consumer is re-tested against the new shared runner in B's `a-regression.txt`; old captures and logs here are preserved, not silently refreshed.
 
 Scope: slice 04 draft runner prototype only. Candidate source and artifacts are the files in this directory's parent sandbox. This is not slice 04 acceptance or QA approval of the landing page.
 

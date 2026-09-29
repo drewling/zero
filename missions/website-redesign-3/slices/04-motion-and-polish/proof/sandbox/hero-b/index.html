@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>zero hero B motion sandbox, d0a5685</title>
+<link rel="stylesheet" href="../../../../02-references-and-comps/proof/comps/kit/kit.css">
+<link rel="stylesheet" href="sandbox.css">
+<script>
+// Fixture measurement only. Not part of the proposed runtime payload.
+window.cls = 0; window.shifts = [];
+if (PerformanceObserver.supportedEntryTypes.includes('layout-shift')) {
+  new PerformanceObserver(list => { for (const entry of list.getEntries()) if (!entry.hadRecentInput) { window.cls += entry.value; window.shifts.push({value:entry.value, at:entry.startTime, nodes:entry.sources.map(source => source.node?.className || source.node?.id || source.node?.tagName)}); } }).observe({type:'layout-shift', buffered:true});
+}
+</script>
+</head>
+<body>
+<svg class="symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <symbol id="mail" viewBox="0 0 16 11"><path fill="white" stroke="black" d="M.5.5h15v10H.5zM1 1l7 5 7-5"/></symbol>
+  <symbol id="folder" viewBox="0 0 32 22"><path fill="white" stroke="black" d="M1 1h10l3 3h17v17H1z"/></symbol>
+  <symbol id="folder-full" viewBox="0 0 32 22"><path fill="white" stroke="black" d="M1 1h10l3 3h17v17H1zM12 3h15v5H12zM1 8h30v13H1z"/></symbol>
+  <symbol id="watch" viewBox="0 0 16 17"><path fill="white" stroke="black" d="M5 1h6v15H5zM2 4h12v9H2zM8 5v4h3"/></symbol>
+  <symbol id="trash" viewBox="0 0 26 23"><path fill="white" stroke="black" d="M4 5h18v17H4zM2 3h22M9 1h8M8 8v11m5-11v11m5-11v11"/></symbol>
+</svg>
+<header class="menubar"><strong>zero</strong><span class="spacer"></span><span class="mi tray on" aria-hidden="true"><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg></span></header>
+<main class="hero desktop">
+  <div class="sheet plate">
+    <h1>Clean up your Gmail inbox on your Mac.</h1>
+    <p>zero is a Mac app that keeps the emails you need to deal with and archives the rest. Undo any archive. Keep using Gmail or Apple Mail.</p>
+  </div>
+  <p class="sr-only">Illustration: zero opens its menu-bar window, shows Working…, selects eight routine emails and drags them into a dated Auto-Archived folder. Four emails that need your action stay. Nothing goes to Trash. Run zero now replays this illustration.</p>
+  <div class="pop"><div class="zp notch" style="--notch:16px"><div class="zp-head"><strong class="zp-mark">zero</strong></div><div class="zp-foot"><button id="replay" class="zp-run" type="button" disabled aria-label="Replay zero's inbox cleanup illustration"><span class="idle">Run zero now</span><span class="busy">Working…</span></button></div></div></div>
+  <div class="files" aria-hidden="true">
+    <div class="icon folder sel"><svg class="px f-full" viewBox="0 0 32 22"><use href="#folder-full"/></svg><svg class="px f-empty" viewBox="0 0 32 22"><use href="#folder"/></svg><span class="lbl">Auto-Archived 2026-09-29</span></div>
+    <div class="icon trash"><svg class="px" viewBox="0 0 26 23"><use href="#trash"/></svg><span class="lbl">Trash</span></div>
+  </div>
+  <div class="inbox-slot" aria-hidden="true"><div class="win" id="inbox"><div class="bar"><span class="t">Inbox</span></div><ul class="list">
+    <li><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="from">Alex Rivera</span><span class="sub">Can you approve the quote?</span><span class="age">11h</span></li>
+    <li class="g"><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span><span></span></li>
+    <li class="g"><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span><span></span></li>
+    <li><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="from">Priya Sharma</span><span class="sub">Which date works for you?</span><span class="age">13h</span></li>
+    <li class="g"><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span><span></span></li>
+    <li class="g"><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span><span></span></li>
+    <li class="g"><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span><span></span></li>
+    <li><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="from">Daniel Kim</span><span class="sub">Your payment failed</span><span class="age">1d</span></li>
+    <li class="g"><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span><span></span></li>
+    <li class="g"><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span><span></span></li>
+    <li><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="from">Sarah Mitchell</span><span class="sub">Contract changes to review</span><span class="age">1d</span></li>
+    <li class="g"><svg class="px" viewBox="0 0 16 11"><use href="#mail"/></svg><span class="gk"></span><span class="gs"></span><span></span></li>
+  </ul></div></div>
+  <p class="caption">Illustration. Names are made up.</p>
+</main>
+<script src="../motion.js"></script>
+<script src="story.js"></script>
+</body>
+</html>

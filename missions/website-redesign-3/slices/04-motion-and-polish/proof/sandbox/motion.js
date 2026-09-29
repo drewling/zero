@@ -84,7 +84,36 @@
       const a = target(root, from), b = target(root, to);
       ts.forEach(t => { const e = envelope(root), p = arc(a, b, t, lift); place(e, p.x, p.y); });
     }
-    return { wait: ms => wait(ms, signal), rel, target, place, zoom, hop, hopStill };
+    async function drag(root, sources, to, { steps = 7, ms = 560, still, cursorFrom, scale = .5, layer = 2 } = {}) {
+      aborted(signal);
+      const source = typeof sources === 'function' ? sources(root) : sources;
+      // Capture current geometry before overlay writes. No font or container assumptions.
+      const boxes = [...source].map(el => rel(root, el));
+      const end = rel(root, pick(root, to.sel));
+      const aim = { x: end.x + end.w * (to.fx ?? .5), y: end.y + end.h * (to.fy ?? .5) };
+      const cur = root.querySelector(':scope > .cursor');
+      const start = cur && cursorFrom ? target(root, cursorFrom) : null;
+      const outlines = boxes.map(() => overlay(root, 'drop'));
+      const draw = t => {
+        aborted(signal);
+        boxes.forEach((b, i) => {
+          const w = b.w + (end.w * scale - b.w) * t, h = b.h + (end.h * scale - b.h) * t;
+          Object.assign(outlines[i].style, {
+            position: 'absolute', zIndex: String(layer),
+            left: '0px', top: '0px',
+            width: Math.round(w) + 'px', height: Math.round(h) + 'px'
+          });
+          place(outlines[i], b.x + (aim.x - w / 2 - b.x) * t, b.y + (aim.y - h / 2 - b.y) * t);
+        });
+        if (start) place(cur, start.x + (aim.x - start.x) * t, start.y + (aim.y - start.y) * t);
+      };
+      if (still !== undefined) { draw(still); return; }
+      try {
+        draw(0);
+        for (let step = 1; step <= steps; step++) { draw(step / steps); await wait(ms / steps, signal); }
+      } finally { outlines.forEach(el => el.remove()); }
+    }
+    return { wait: ms => wait(ms, signal), rel, target, place, zoom, hop, hopStill, drag };
   }
   function create(root, story) {
     const frames = story.frames, n = frames.length;
