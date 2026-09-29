@@ -1,0 +1,98 @@
+TAP version 13
+# Subtest: static and reduced motion are pixel-identical to no-JS HTML
+ok 1 - static and reduced motion are pixel-identical to no-JS HTML
+  ---
+  duration_ms: 772.727584
+  type: 'test'
+  ...
+# Subtest: coarse pointers never receive an animated cursor even at desktop width
+ok 2 - coarse pointers never receive an animated cursor even at desktop width
+  ---
+  duration_ms: 66.906834
+  type: 'test'
+  ...
+# Subtest: reduced motion takes precedence over QA frame rewinding
+ok 3 - reduced motion takes precedence over QA frame rewinding
+  ---
+  duration_ms: 58.880458
+  type: 'test'
+  ...
+# Subtest: bad frame input is clamped to a valid static frame without an exception
+ok 4 - bad frame input is clamped to a valid static frame without an exception
+  ---
+  duration_ms: 59.397167
+  type: 'test'
+  ...
+# Subtest: switching to reduced motion mid-story cancels and settles immediately
+ok 5 - switching to reduced motion mid-story cancels and settles immediately
+  ---
+  duration_ms: 402.139209
+  type: 'test'
+  ...
+# Subtest: missing animation target falls back to the complete final state
+ok 6 - missing animation target falls back to the complete final state
+  ---
+  duration_ms: 1083.850875
+  type: 'test'
+  ...
+# Subtest: replay cannot overlap, keyboard replay works, and completed story has no overlays
+ok 7 - replay cannot overlap, keyboard replay works, and completed story has no overlays
+  ---
+  duration_ms: 10051.43475
+  type: 'test'
+  ...
+# Subtest: 320 and 390 px playback has no horizontal overflow, no cursor and no layout shift
+ok 8 - 320 and 390 px playback has no horizontal overflow, no cursor and no layout shift
+  ---
+  duration_ms: 8261.459042
+  type: 'test'
+  ...
+# Subtest: zoom rectangles and overlay transforms land on whole CSS pixels
+ok 9 - zoom rectangles and overlay transforms land on whole CSS pixels
+  ---
+  duration_ms: 73.811125
+  type: 'test'
+  ...
+# Subtest: visibilitychange cancellation has no late mutations and re-enables replay on return (synthetic visibility event)
+ok 10 - visibilitychange cancellation has no late mutations and re-enables replay on return (synthetic visibility event)
+  ---
+  duration_ms: 427.349166
+  type: 'test'
+  ...
+# Subtest: viewport change aborts a running story rather than using stale geometry
+ok 11 - viewport change aborts a running story rather than using stale geometry
+  ---
+  duration_ms: 82.21125
+  type: 'test'
+  ...
+# PLAYBACK_TIMING [{"width":1440,"mode":"done","durationMs":4996,"steps":[4,12,11,10,9,8,7,6,5,4],"cls":0},{"width":390,"mode":"done","durationMs":4052,"steps":[4,12,11,10,9,8,7,6,5,4],"cls":0}]
+# Subtest: active playback really lands eight envelopes and completes within six seconds
+ok 12 - active playback really lands eight envelopes and completes within six seconds
+  ---
+  duration_ms: 9165.294958
+  type: 'test'
+  ...
+# REFERENCE_TIMING {"durationMs":4474,"count":"4","engine":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36"}
+# Subtest: time the designer reference in an active local renderer, without asserting an unobserved throttling cause
+ok 13 - time the designer reference in an active local renderer, without asserting an unobserved throttling cause
+  ---
+  duration_ms: 4534.030667
+  type: 'test'
+  ...
+# Subtest: capture draft storyboard evidence when explicitly requested
+ok 14 - capture draft storyboard evidence when explicitly requested
+  ---
+  duration_ms: 1683.658292
+  type: 'test'
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 36890.607083
+
+--- Command finished with exit code: 0 ---

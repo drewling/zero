@@ -1,0 +1,41 @@
+/* Fixture composition only, not a proposed landing design. Reference kit owns the world. */
+/* Keep test typography from swapping baselines after first paint. Same reference fonts,
+   isolated to this sandbox. Production font policy remains a slice 03/04 decision. */
+@font-face{font-family:Geist;src:url(../../../02-references-and-comps/proof/comps/kit/geist.woff2) format('woff2');font-weight:100 900;font-display:block}
+@font-face{font-family:'Geist Mono';src:url(../../../02-references-and-comps/proof/comps/kit/geist-mono.woff2) format('woff2');font-weight:100 900;font-display:block}
+@font-face{font-family:'Pixelify Sans';src:url(../../../02-references-and-comps/proof/comps/kit/pixelify-600.woff2) format('woff2');font-weight:600;font-display:block}
+.symbols{display:none}
+#story{position:relative;min-height:900px;overflow:clip;padding-bottom:28px}
+.intro{margin:24px auto;max-width:680px;width:calc(100% - 32px)}
+.intro h1{font-size:32px;line-height:32px;height:64px;margin-bottom:0}
+.intro p{max-width:65ch;line-height:24px;height:48px}
+.scene{display:grid;grid-template-columns:352px 360px;gap:28px 60px;justify-content:center;align-items:start;margin:32px auto;width:calc(100% - 32px)}
+#inbox .list{height:384px}
+#inbox .list li{grid-template-columns:1fr;height:32px;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.archive-row{visibility:hidden}
+#panel{width:100%;max-width:360px}
+#panel .zp-count{height:112px}
+#count{min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
+#panel .zp-rows{height:172px}
+#panel .zp-rows li{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#run-label{display:block;min-width:12ch;text-align:center}
+.folder,.trash{justify-self:center}
+.folder .lbl{white-space:normal;overflow-wrap:anywhere;max-width:190px}
+.trash svg{width:50px;height:46px}
+.folder .f-empty{display:none}
+.legend{display:block;width:280px;height:32px;max-width:calc(100% - 32px);margin:24px auto 0;line-height:18px;text-align:center}
+.tray{border:0;border-radius:0;font:inherit;cursor:pointer}
+.tray:disabled{cursor:default;opacity:1}
+.tray:focus-visible{outline-offset:-6px;box-shadow:none;outline-color:white}
+.tray svg{width:26px;height:20px;filter:invert(1)}
+.lt-1 #panel{visibility:hidden}
+.lt-4 .archive-row{visibility:visible}
+.lt-4 .zp-rows{visibility:hidden}
+.lt-4 .folder:not(.got) .f-full{display:none}
+.lt-4 .folder:not(.got) .f-empty{display:block}
+.pressed{background:#000!important;color:#fff!important}
+.zr,.fly,.cursor{pointer-events:none}
+/* Defensive CSS also stops overlays if the OS changes preference before the JS listener runs. */
+@media(prefers-reduced-motion:reduce){.zr,.fly,.cursor{display:none!important}}
+@media(max-width:759px){#inbox{display:none}.scene{grid-template-columns:minmax(0,360px);gap:28px;margin-top:24px}.folder,.trash{grid-column:1}.folder{justify-self:start}.trash{justify-self:end;margin-top:-106px}.intro h1{font-size:32px}#story{min-height:900px}.cursor{display:none!important}}
+@media(pointer:coarse){.cursor{display:none!important}}

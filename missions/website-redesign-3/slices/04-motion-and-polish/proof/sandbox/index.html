@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>zero motion sandbox, draft 3e1b0ac</title>
+<link rel="stylesheet" href="../../../02-references-and-comps/proof/comps/kit/kit.css">
+<link rel="stylesheet" href="sandbox.css">
+<script>
+window.cls = 0; window.shifts = [];
+if (PerformanceObserver.supportedEntryTypes.includes('layout-shift')) {
+  new PerformanceObserver(list => { for (const e of list.getEntries()) if (!e.hadRecentInput) { window.cls += e.value; window.shifts.push({value:e.value, at:e.startTime, sources:e.sources.map(s => ({node:s.node?.id || s.node?.className || s.node?.tagName, from:s.previousRect.toJSON(), to:s.currentRect.toJSON()}))}); } }).observe({type:'layout-shift', buffered:true});
+}
+</script>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" class="symbols" aria-hidden="true">
+  <symbol id="mail" viewBox="0 0 16 11"><path fill="white" stroke="black" d="M.5.5h15v10H.5zM1 1l7 5 7-5"/></symbol>
+  <symbol id="folder" viewBox="0 0 32 22"><path fill="white" stroke="black" d="M1 1h10l3 3h17v17H1z"/></symbol>
+  <symbol id="folder-full" viewBox="0 0 32 22"><path fill="white" stroke="black" d="M1 1h10l3 3h17v17H1zM12 3h15v5H12zM1 8h30v13H1z"/></symbol>
+  <symbol id="cursor" viewBox="0 0 16 17"><path fill="white" stroke="black" d="M1 1v13l4-4 3 6 3-2-3-5h6z"/></symbol>
+  <symbol id="watch" viewBox="0 0 16 17"><path fill="white" stroke="black" d="M5 1h6v15H5zM2 4h12v9H2zM8 5v4h3"/></symbol>
+</svg>
+<main id="story" class="desktop">
+  <header class="menubar"><strong>zero</strong><span class="spacer"></span><button id="replay" class="mi tray on" type="button" disabled aria-label="Replay inbox cleanup illustration" title="Replay inbox cleanup illustration"><svg class="px" viewBox="0 0 16 11" aria-hidden="true"><use href="#mail"/></svg></button></header>
+  <div class="intro plate">
+    <h1>Motion sandbox</h1>
+    <p>Draft 3e1b0ac. Not an approved hero.</p>
+  </div>
+  <p class="sr-only">Illustration: eight emails are archived to a dated folder, four emails that need your action stay, and nothing goes to Trash.</p>
+  <div class="scene" aria-hidden="true">
+    <div id="inbox" class="win inactive">
+      <div class="bar"><span class="t">Inbox</span></div>
+      <ul class="list">
+        <li>Alex Rivera · Approve the quote</li><li>Priya Sharma · Choose a date</li><li>Daniel Kim · Payment failed</li><li>Sarah Mitchell · Contract review</li>
+        <li class="archive-row">Newsletter</li><li class="archive-row">Receipt</li><li class="archive-row">Digest</li><li class="archive-row">Confirmation</li><li class="archive-row">Notification</li><li class="archive-row">Statement</li><li class="archive-row">Cold outreach</li><li class="archive-row">Already replied</li>
+      </ul>
+    </div>
+    <div id="panel" class="pop win">
+      <div class="bar"><span class="t">zero</span></div>
+      <div class="zp-count"><strong id="count">4</strong><span>things still need you</span></div>
+      <ul class="zp-rows"><li>Alex Rivera · Approve the quote</li><li>Priya Sharma · Choose a date</li><li>Daniel Kim · Payment failed</li><li>Sarah Mitchell · Contract review</li></ul>
+      <div class="zp-foot"><span class="zp-run"><span id="run-label">Run zero now</span></span></div>
+    </div>
+    <div class="icon folder"><svg class="px f-full" viewBox="0 0 32 22"><use href="#folder-full"/></svg><svg class="px f-empty" viewBox="0 0 32 22"><use href="#folder"/></svg><span class="lbl">Auto-Archived 2026-09-29</span></div>
+    <div class="icon trash"><svg class="px" viewBox="0 0 26 23"><path fill="white" stroke="black" d="M4 5h18v17H4zM2 3h22M9 1h8M8 8v11m5-11v11m5-11v11"/></svg><span class="lbl">Trash</span></div>
+  </div>
+  <p class="caption legend">Illustration. Names are made up.</p>
+</main>
+<script src="motion.js"></script>
+<script src="story.js"></script>
+</body>
+</html>
