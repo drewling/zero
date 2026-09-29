@@ -71,7 +71,7 @@ To stay inside the budget I **removed** chrome that the first comp pass had but 
 | Check | Result |
 |---|---|
 | Horizontal overflow at 320, 390 and 1440, all 4 comps (iframe harness, not device emulation) | `scrollWidth == width` everywhere, with no element past the right edge |
-| Clipped text | one at 320: `Product announcement` truncates with an ellipsis in the demo list. 390 is clean. |
+| Clipped text | none at 320, 360 or 390 (sender, subject, heading, button and title elements). The first pass truncated `Product announcement`, then `Sarah Mitchell`, at 320. A ≤350 px demo-row grid fixed both. |
 | Text on stripes or dither | none painted (see above) |
 | Hero A live playback | ends in the done state with count 4. Development-motion's sandbox measured 5.055 s desktop and 4.112 s mobile in Playwright WebKit (**not** real Safari 26). |
 | Demo section live playback (Aside Chrome) | on scroll-in the rows start mixed. Ten seconds later Stays holds the 4 named rows in order, Archived holds 8, and no flying envelopes are left in the DOM. |
