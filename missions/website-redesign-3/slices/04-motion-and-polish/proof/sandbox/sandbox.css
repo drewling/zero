@@ -16,8 +16,8 @@
 #panel{width:100%;max-width:360px}
 #panel .zp-count{height:112px}
 #count{min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
-#panel .zp-rows{height:172px}
-#panel .zp-rows li{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#panel .zp-rows{height:220px}
+#panel .zp-rows li{font-size:12px;line-height:16px;white-space:normal}
 #run-label{display:block;min-width:12ch;text-align:center}
 .folder,.trash{justify-self:center}
 .folder .lbl{white-space:normal;overflow-wrap:anywhere;max-width:190px}

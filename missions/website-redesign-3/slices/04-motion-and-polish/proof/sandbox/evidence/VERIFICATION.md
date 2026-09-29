@@ -6,8 +6,8 @@ Scope: slice 04 draft runner prototype only. Candidate source and artifacts are 
 
 | Check | Result | Evidence |
 |---|---|---|
-| Chromium full suite | 14 passed, 0 failed | `chromium-green.txt` |
-| Installed Playwright WebKit full suite | 12 passed, 0 failed, 2 optional capture/reference checks skipped | `webkit-green.txt` |
+| Chromium full suite | 16 passed, 0 failed | `chromium-green.txt` |
+| Installed Playwright WebKit full suite | 14 passed, 0 failed, 2 optional capture/reference checks skipped | `webkit-green.txt` |
 | Regression RED against designer runner | 3 expected failures out of 5 selected checks | `reference-red.txt` |
 | Static and reduced-motion render | PNG bytes equal to no-JS final HTML in both engines | parity tests in green logs |
 | Keyboard replay and overlapping activation | Second activation returns current promise, settled result remains truthful | replay test in green logs |
@@ -18,14 +18,16 @@ Scope: slice 04 draft runner prototype only. Candidate source and artifacts are 
 | Eight real arrivals | Numeric transition sequence `12, 11, 10, 9, 8, 7, 6, 5, 4` in both engines | timing log and `timing-chromium.json` |
 | Measured Chromium CLS | Exactly 0 at tested desktop/mobile widths, including startup | Chromium log |
 | WebKit CLS | Not independently measured: the Layout Instability API is absent | do not interpret its zero accumulator as proof |
-| Active Chromium duration | Desktop 4,996 ms; mobile 4,052 ms | `timing-chromium.json` |
-| Active WebKit duration | Desktop 5,050 ms; mobile 4,084 ms | `webkit-green.txt` |
-| Designer reference active Chromium duration | 4,474 ms at 1440 px, final count 4 | `reference-timing.json` |
+| Active Chromium duration | Desktop 4,987 ms; mobile 4,044 ms | `timing-chromium.json` |
+| Active WebKit duration | Desktop 5,065 ms; mobile 4,088 ms | `webkit-green.txt` |
+| Designer reference active Chromium duration | 4,488 ms at 1440 px, final count 4 | `reference-timing.json` |
 | Runner size | 10,480 source bytes, 3,508 gzip bytes | measured with Node `zlib.gzipSync` |
-| Story data size | 2,458 source bytes, 1,041 gzip bytes | measured with Node `zlib.gzipSync` |
-| Separately served runtime gzip total | 4,549 bytes, below 8 KB target | sum of the two runtime scripts, excludes fixture-only metrics instrumentation |
+| Story data size | 2,735 source bytes, 1,174 gzip bytes | measured with Node `zlib.gzipSync` |
+| Separately served runtime gzip total | 4,682 bytes, below 8 KB target | sum of the two runtime scripts, excludes fixture-only metrics instrumentation |
+| COPY v3 hero rows | Exact sender/subject strings in both lists, all text fits at 320/390/1440 px | owned COPY.md and full-string browser geometry test |
+| Mobile envelope/label separation | No rectangle intersections in frame 3 or live playback at 320/390 px | new geometry regression test in both green logs |
 
-The reported nine-second Aside playback was not reproduced in the active local renderer. Timer throttling remains a possible explanation, not a demonstrated cause. The hardened runner cancels to the complete final state on hidden-document events and has a six-second default deadline.
+The reported nine-second Aside playback was not reproduced in the active local renderer. No cause is asserted. The hardened runner cancels to the complete final state on hidden-document events and has a six-second default deadline.
 
 The current designer reference measured above is the live comp as of `9d9d1db`. That update adds alternative hero/section beats, removes the demo counter, and makes Terminal and Undo options explicit. The sandbox remains the originally authorized five-frame hero draft. It does not claim to implement those newer section options.
 
@@ -37,7 +39,9 @@ The current designer reference measured above is the live comp as of `9d9d1db`. 
 - `390-reduced.png` and `1440-reduced.png`: settled end states.
 - `capture.json`: capture timestamp, widths, and Chromium version.
 
-Design-lead still owns the judgment of whether the mobile counter-launch reads correctly. The strips do not assert comprehension approval. No account initials, badges, or ages were added.
+Design-lead judged the original `62f413e` mobile strip on 2026-09-29 at 22:12Z: the counter-launch reads as archiving, so keep it. This refreshed strip addresses the two requested corrections: mobile envelopes launch from the top of the count digits into empty list space, never splitting the label, and both lists use the exact COPY v3 hero sender/subject strings. Row slots are fixed at a height that accommodates full wrapped copy. No account initials, badges, or ages were added. Visual acceptance of this corrected strip remains design-lead's judgment.
+
+The two new regression tests were run against `62f413e` before changing the fixture. Both failed as expected: abbreviated hero copy and a frame-3 label collision at 320 px. After the corrections, both pass in Chromium and WebKit. The live path test observes all five visible positions of each of eight hops. The sixth position is the folder arrival, removed synchronously before paint, and the separate eight-arrival/count test verifies completion.
 
 ## Mechanical design detector
 

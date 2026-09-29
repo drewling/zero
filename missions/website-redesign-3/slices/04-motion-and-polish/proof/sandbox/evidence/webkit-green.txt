@@ -2,96 +2,106 @@ TAP version 13
 # Subtest: static and reduced motion are pixel-identical to no-JS HTML
 ok 1 - static and reduced motion are pixel-identical to no-JS HTML
   ---
-  duration_ms: 1423.445541
+  duration_ms: 1155.341125
   type: 'test'
   ...
 # Subtest: coarse pointers never receive an animated cursor even at desktop width
 ok 2 - coarse pointers never receive an animated cursor even at desktop width
   ---
-  duration_ms: 183.669291
+  duration_ms: 192.30725
   type: 'test'
   ...
 # Subtest: reduced motion takes precedence over QA frame rewinding
 ok 3 - reduced motion takes precedence over QA frame rewinding
   ---
-  duration_ms: 169.126167
+  duration_ms: 172.8
   type: 'test'
   ...
 # Subtest: bad frame input is clamped to a valid static frame without an exception
 ok 4 - bad frame input is clamped to a valid static frame without an exception
   ---
-  duration_ms: 185.958291
+  duration_ms: 164.179333
   type: 'test'
   ...
 # Subtest: switching to reduced motion mid-story cancels and settles immediately
 ok 5 - switching to reduced motion mid-story cancels and settles immediately
   ---
-  duration_ms: 513.868041
+  duration_ms: 488.308458
   type: 'test'
   ...
 # Subtest: missing animation target falls back to the complete final state
 ok 6 - missing animation target falls back to the complete final state
   ---
-  duration_ms: 1179.187709
+  duration_ms: 1199.127791
   type: 'test'
   ...
 # Subtest: replay cannot overlap, keyboard replay works, and completed story has no overlays
 ok 7 - replay cannot overlap, keyboard replay works, and completed story has no overlays
   ---
-  duration_ms: 10323.018833
+  duration_ms: 10337.205292
   type: 'test'
   ...
 # Subtest: 320 and 390 px playback has no horizontal overflow, no cursor and no layout shift
 ok 8 - 320 and 390 px playback has no horizontal overflow, no cursor and no layout shift
   ---
-  duration_ms: 8565.901625
+  duration_ms: 8558.988875
+  type: 'test'
+  ...
+# Subtest: hero rows preserve the exact COPY v3 sender and subject strings
+ok 9 - hero rows preserve the exact COPY v3 sender and subject strings
+  ---
+  duration_ms: 540.8675
+  type: 'test'
+  ...
+# Subtest: mobile envelopes never split the count label in storyboard or live playback
+ok 10 - mobile envelopes never split the count label in storyboard or live playback
+  ---
+  duration_ms: 8573.849291
   type: 'test'
   ...
 # Subtest: zoom rectangles and overlay transforms land on whole CSS pixels
-ok 9 - zoom rectangles and overlay transforms land on whole CSS pixels
+ok 11 - zoom rectangles and overlay transforms land on whole CSS pixels
   ---
-  duration_ms: 209.749042
+  duration_ms: 184.575042
   type: 'test'
   ...
 # Subtest: visibilitychange cancellation has no late mutations and re-enables replay on return (synthetic visibility event)
-ok 10 - visibilitychange cancellation has no late mutations and re-enables replay on return (synthetic visibility event)
+ok 12 - visibilitychange cancellation has no late mutations and re-enables replay on return (synthetic visibility event)
   ---
-  duration_ms: 538.818125
+  duration_ms: 547.851583
   type: 'test'
   ...
 # Subtest: viewport change aborts a running story rather than using stale geometry
-ok 11 - viewport change aborts a running story rather than using stale geometry
+ok 13 - viewport change aborts a running story rather than using stale geometry
   ---
-  duration_ms: 177.898167
+  duration_ms: 199.548125
   type: 'test'
   ...
-# PLAYBACK_TIMING [{"width":1440,"mode":"done","durationMs":5050,"steps":[4,12,11,10,9,8,7,6,5,4],"cls":0},{"width":390,"mode":"done","durationMs":4084,"steps":[4,12,11,10,9,8,7,6,5,4],"cls":0}]
+# PLAYBACK_TIMING [{"width":1440,"mode":"done","durationMs":5065,"steps":[4,12,11,10,9,8,7,6,5,4],"cls":0},{"width":390,"mode":"done","durationMs":4088,"steps":[4,12,11,10,9,8,7,6,5,4],"cls":0}]
 # Subtest: active playback really lands eight envelopes and completes within six seconds
-ok 12 - active playback really lands eight envelopes and completes within six seconds
+ok 14 - active playback really lands eight envelopes and completes within six seconds
   ---
-  duration_ms: 9517.887583
+  duration_ms: 9471.300625
   type: 'test'
   ...
 # Subtest: time the designer reference in an active local renderer, without asserting an unobserved throttling cause
-ok 13 - time the designer reference in an active local renderer, without asserting an unobserved throttling cause # SKIP
+ok 15 - time the designer reference in an active local renderer, without asserting an unobserved throttling cause # SKIP
   ---
-  duration_ms: 0.110791
+  duration_ms: 0.248458
   type: 'test'
   ...
 # Subtest: capture draft storyboard evidence when explicitly requested
-ok 14 - capture draft storyboard evidence when explicitly requested # SKIP
+ok 16 - capture draft storyboard evidence when explicitly requested # SKIP
   ---
-  duration_ms: 0.057083
+  duration_ms: 0.07475
   type: 'test'
   ...
-1..14
-# tests 14
+1..16
+# tests 16
 # suites 0
-# pass 12
+# pass 14
 # fail 0
 # cancelled 0
 # skipped 2
 # todo 0
-# duration_ms 33160.539625
-
---- Command finished with exit code: 0 ---
+# duration_ms 41953.26075

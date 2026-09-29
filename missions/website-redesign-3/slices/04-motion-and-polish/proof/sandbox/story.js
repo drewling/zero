@@ -8,7 +8,10 @@
   const tray = root.querySelector('#replay');
   const q = new URLSearchParams(location.search);
   const hide = n => rows.forEach((row, i) => { row.style.visibility = i < n ? 'hidden' : ''; });
-  const from = { sel: () => innerWidth >= 760 ? rows.find(row => getComputedStyle(row).visibility !== 'hidden') : count, fx: .5 };
+  const from = { sel: () => innerWidth >= 760 ? rows.find(row => getComputedStyle(row).visibility !== 'hidden') : count, fx: .5, get fy() { return innerWidth >= 760 ? .5 : 0; } };
+  // Mobile moves from the top of the digits to blank list space in discrete steps,
+  // never through the label. Desktop keeps the Inbox-to-folder upward arc.
+  const hopLift = () => innerWidth >= 760 ? 70 : -70;
   const destination = { sel: () => [...folder.querySelectorAll('svg')].find(el => el.getClientRects().length), fy: .45 };
   const story = {
     onLoad: true, delay: 700, cursorMinWidth: 760, replay: tray,
@@ -21,10 +24,10 @@
       { cursor: { sel: '.zp-run' }, kind: 'watch', cursorSteps: 7, cursorMs: 380, hold: 350,
         set: () => { label.textContent = 'Working…'; } },
       { cursor: { sel: '.zp-run' }, kind: 'watch', hold: 200,
-        enter: (r, z) => z.hop(r, from, destination, { n: 8, steps: 5, ms: 170, gap: 120, lift: 70,
+        enter: (r, z) => z.hop(r, from, destination, { n: 8, steps: 5, ms: 170, gap: 120, lift: hopLift(),
           onLaunch: i => { rows[i].style.visibility = 'hidden'; },
           onEach: i => { count.textContent = String(11 - i); folder.classList.add('got'); } }),
-        still: (r, z) => { hide(4); count.textContent = '8'; folder.classList.add('got'); z.hopStill(r, from, destination, [.3, .7], 70); } },
+        still: (r, z) => { hide(4); count.textContent = '8'; folder.classList.add('got'); z.hopStill(r, from, destination, [.3, .7], hopLift()); } },
       { cursor: { sel: '.zp-rows li:first-child', fy: 1.35 }, cursorSteps: 5, cursorMs: 220, hold: 0,
         set: () => story.finish() }
     ]

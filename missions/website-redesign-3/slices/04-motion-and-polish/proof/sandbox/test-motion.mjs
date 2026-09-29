@@ -137,6 +137,73 @@ test('320 and 390 px playback has no horizontal overflow, no cursor and no layou
   }
 });
 
+test('hero rows preserve the exact COPY v3 sender and subject strings', async () => {
+  const expected = [
+    'Alex Rivera · Can you approve the quote?',
+    'Priya Sharma · Which date works for you?',
+    'Daniel Kim · Your payment failed',
+    'Sarah Mitchell · Contract changes to review'
+  ];
+  for (const width of [1440, 320, 390]) {
+    const { context, page } = await open('?static', { viewport: { width, height: 1000 } });
+    try {
+      for (const selector of ['#inbox .list li:not(.archive-row)', '#panel .zp-rows li']) {
+        assert.deepEqual(await page.locator(selector).allTextContents(), expected);
+        const clipped = await page.locator(selector).evaluateAll(rows => rows.filter(row => {
+          if (!row.getClientRects().length) return false;
+          const range = document.createRange(); range.selectNodeContents(row);
+          const text = range.getBoundingClientRect(), box = row.getBoundingClientRect();
+          return text.left < box.left || text.right > box.right || text.top < box.top || text.bottom > box.bottom;
+        }).map(row => row.textContent));
+        assert.deepEqual(clipped, [], `full hero strings fit at ${width}px`);
+      }
+    } finally { await context.close(); }
+  }
+});
+
+test('mobile envelopes never split the count label in storyboard or live playback', async () => {
+  for (const width of [320, 390]) {
+    const { context, page } = await open('?frame=3', { viewport: { width, height: 1000 } });
+    try {
+      await page.evaluate(() => {
+        window.labelCollisions = [];
+        window.envelopeSamples = 0;
+        window.checkEnvelopes = () => {
+          const label = document.querySelector('.zp-count > span').getBoundingClientRect();
+          document.querySelectorAll('.fly').forEach(el => {
+            const box = el.getBoundingClientRect();
+            window.envelopeSamples++;
+            if (box.left < label.right && box.right > label.left && box.top < label.bottom && box.bottom > label.top) {
+              window.labelCollisions.push({ envelope: box.toJSON(), label: label.toJSON() });
+            }
+          });
+        };
+        window.checkEnvelopes();
+      });
+      assert.deepEqual(await page.evaluate(() => labelCollisions), [], `storyboard at ${width}px`);
+      // Reload without QA frame mode, sampling every discrete DOM placement.
+      await page.addInitScript(() => {
+        window.labelCollisions = []; window.envelopeSamples = 0;
+        new MutationObserver(() => {
+          const label = document.querySelector('.zp-count > span')?.getBoundingClientRect();
+          if (!label) return;
+          document.querySelectorAll('.fly').forEach(el => {
+            const box = el.getBoundingClientRect(); window.envelopeSamples++;
+            if (box.left < label.right && box.right > label.left && box.top < label.bottom && box.bottom > label.top) {
+              window.labelCollisions.push({ envelope: box.toJSON(), label: label.toJSON() });
+            }
+          });
+        }).observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+      });
+      await page.goto(base);
+      await settled(page);
+      // The sixth position is the arrival and is removed synchronously, before paint.
+      assert.ok(await page.evaluate(() => envelopeSamples >= 40), 'all eight five-visible-position hops were observed');
+      assert.deepEqual(await page.evaluate(() => labelCollisions), [], `live playback at ${width}px`);
+    } finally { await context.close(); }
+  }
+});
+
 test('zoom rectangles and overlay transforms land on whole CSS pixels', async () => {
   const { context, page } = await open('?frame=1');
   try {
