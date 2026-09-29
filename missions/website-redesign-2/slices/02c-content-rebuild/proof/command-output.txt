@@ -1,0 +1,50 @@
+$ node --test landing/test-site.mjs
+TAP version 13
+# Subtest: copy writes the exact install command and announces success
+ok 1 - copy writes the exact install command and announces success
+# Subtest: clipboard denial offers manual recovery and allows retry
+ok 2 - clipboard denial offers manual recovery and allows retry
+# Subtest: clipboard is guarded while pending without blurring focusable control
+ok 3 - clipboard is guarded while pending without blurring focusable control
+# Subtest: unavailable clipboard leaves the optional control hidden
+ok 4 - unavailable clipboard leaves the optional control hidden
+# Subtest: homepage follows the approved visitor-first six-section order
+ok 5 - homepage follows the approved visitor-first six-section order
+# Subtest: retired table, FAQ, motion hooks, and dead implementation assets are absent
+ok 6 - retired table, FAQ, motion hooks, and dead implementation assets are absent
+1..6
+# tests 6
+# pass 6
+# fail 0
+
+$ node --check landing/site.js
+passed
+
+$ bash -n landing/build.sh landing/deploy.sh macapp/install-zero.sh
+automation passed
+
+$ curl route and asset checks against http://127.0.0.1:8877/
+/                                  200
+/privacy.html                      200
+/terms.html                        200
+/site.css                          200
+/site.js                           200
+/assets/pixelify-400.woff2         200
+/assets/pixelify-600.woff2         200
+/assets/geist.woff2                200
+/assets/geist-mono.woff2           200
+/assets/panel-cut.png              200
+/assets/zero-panel.png             200
+/nope                              404
+/install.sh (static-server caveat) 404
+
+$ bash landing/build.sh
+ok  installer parses
+ERROR: Cannot connect to the Docker daemon at unix:///Users/light/.docker/run/docker.sock. Is the docker daemon running?
+exit 1
+
+$ Aside real-browser acceptance
+1440x900: scrollWidth/clientWidth 1440/1440, no horizontal overflow.
+Headings: Only the mail that still needs you.; It asks who’s waiting, not who’s writing.; Check it with your coffee. Then close it.; Nothing is deleted.; What it needs, sends and costs; Install zero.
+Old table and FAQ absent. Portrait app crop and compact requirements line present. Four install steps present. Copy success retained focus and announced status. Dated folder computed folder-drop animation settled at final state.
+True 390x844, 320x700, and reduced-motion emulation were not available in this browser workflow and remain independent-QA gates.
