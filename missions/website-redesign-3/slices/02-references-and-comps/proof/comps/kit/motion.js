@@ -141,6 +141,7 @@
         const to = target(root, f.cursor);
         showCursor(f); setCursorKind(c, f.kind);
         if (at && to) await stepMove(c, at, to, f.cursorSteps || 6, f.cursorMs || 240);
+        else if (to) place(c, to.x, to.y); // the cursor's first appearance: put it there, don't slide in from 0,0
         at = to;
       } else showCursor(f);
       setFrame(root, k, n);

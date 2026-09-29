@@ -4,6 +4,23 @@ Status: **proof only, not approved.** Nothing in `landing/` has changed. Every c
 
 ## Recommendation
 
+> **Owner decision, 22:33Z and 22:36Z: hero B is approved. The rest of the page is not.** The recommendation below (A) is kept as the record of what was proposed. What follows is the B rework the owner's pick required. The whole-page rethink (outline, section objects, copy) is a separate proposal in progress with design-copywriter. Its before evidence is frozen in `baseline-v3/` (commit a196c47).
+>
+> **The risk with B, and the fix.** The original B showed an arrow pointer selecting rows and dragging them into a folder. A visitor would reasonably read that as "I drag my mail into folders", which is manual work zero exists to remove. In the rework, **zero is the only actor on screen:**
+>
+> 1. zero's menu-bar popover opens from its tray icon with `Run zero now`.
+> 2. The button turns to `Working…`, and **zero's watch** appears on that button. It is the only cursor on the page, and it exists only while zero is working.
+> 3. The watch selects the 8 routine rows and drags them into `Auto-Archived 2026-09-29`.
+> 4. The watch disappears and the button reads `Run zero now` again.
+>
+> There is no arrow pointer in any frame, so there's no "you" in the scene. On phones, where no cursor is drawn, `Working…` plus the rows inverting by themselves carries the same meaning. The end state is honest in every mode (live, reduced motion, no JS): 4 kept, 8 in the dated folder, Trash empty.
+>
+> - **Strings.** The only strings added are the zero mark, `Run zero now` and `Working…`, all from COPY v3. The copywriter's provisional count is 532/550.
+> - **Motion.** See `MOTION-SPEC.md` §3.0 (6 frames, about 4.6 s measured at 1440 in Chromium).
+> - **Evidence.** Stills are in `storyboard/hero-b-frame-0..5.jpg` and `hero-b-strip.jpg`. Final shots are `comps/hero-b/hero-b-1440.jpg` and `-390.jpg`.
+>
+> **How B changes the sections.** The hero now shows the whole sort, inbox to folder. The old section 1 (`Stays` / `Archived` windows with the same rows hopping across) repeats it almost frame for frame, so it can't stay as it is. The rethink tests replacing it with something the hero doesn't show, such as opening the dated folder next to zero's Undo, and at least one genuinely shorter outline. It doesn't default to trimming section 1.
+
 **Pick hero A, "the menu-bar roll", and the section set in `comps/sections/`.**
 
 Hero A is the only option that shows where zero actually lives. The tray icon in the menu bar opens zero's popover. `Run zero now` becomes `Working…`, eight envelopes hop into `Auto-Archived 2026-09-29`, and the count settles at **4 things still need you**. It tells the product story in one pass: *click, sort, the mail that needs you stays, nothing goes to Trash*. The headline plate, the proof (the popover) and the action (the install button) read left to right in that order.

@@ -2,7 +2,9 @@
 
 Status: **draft for development-motion@zero**. Nothing here is approved for `landing/`. Implementation waits for main-lead's authorization after owner gate B. Any prototype belongs in slice 04 `proof/sandbox/`.
 
-Reference prototype: `comps/kit/motion.js` (the `Zm` runner) plus `comps/hero-a/index.html`. To serve it, run `python3 -m http.server` from `proof/comps`. The page supports `?frame=N` for a still of frame N and `?static` for the end state.
+**Update 2026-09-29 22:50Z: the owner picked hero B.** Build from §3.0 below. §3 (hero A) and the old B row in §3b are kept only as history. The rest of the page (sections) is **not** approved and is being rethought, so §4 is on hold.
+
+Reference prototype: `comps/kit/motion.js` (the `Zm` runner) plus `comps/hero-b/index.html`. To serve it, run `python3 -m http.server` from `proof/comps`. The page supports `?frame=N` for a still of frame N and `?static` for the end state.
 
 ## 1. Grammar (applies to every motion on the site)
 
@@ -31,7 +33,42 @@ Reference prototype: `comps/kit/motion.js` (the `Zm` runner) plus `comps/hero-a/
 
 Explicitly out: parallax, scroll-jacking, typewriter text, glitch or CRT effects, confetti, springy UI, and motion on body copy or headings. Text never moves.
 
-## 3. Hero storyboard (comp A, "the menu-bar roll", 5 frames, ~5 s)
+## 3.0 Hero storyboard: comp B, "zero drags it" (the owner's pick, 6 frames, ~4.6 s measured)
+
+The owner's constraint is that **zero is the actor**. The hero must never suggest that the visitor drags mail by hand. So:
+
+- **There is no arrow pointer in any frame.** The only cursor is zero's **watch**. It appears *on* the `Working…` button, does the selecting and dragging, and is gone when the button reads `Run zero now` again. Its lifetime equals the `Working…` state. That coupling is what makes it zero's hand and not the visitor's.
+- Opening the popover is zoom rects stepping out from the tray icon, with no click shown. (It's a still-frame story, and zero's menu-bar window being open is enough.)
+- On touch or below 760px there is no cursor at all (the §1 rule). The same frames play, and the `Working…` label plus the rows inverting carry the "zero is doing it" meaning.
+
+Stills: `storyboard/hero-b-frame-0..5.jpg`, strip `storyboard/hero-b-strip.jpg`. Final shots: `comps/hero-b/hero-b-1440.jpg`, `-390.jpg`.
+
+| # | Frame | What moves | Timing |
+|---|---|---|---|
+| 0 | **Cluttered.** Inbox window, 12 rows (4 readable, 8 greeked). The folder `Auto-Archived 2026-09-29` is empty and Trash is on the desktop. zero's popover is closed. No cursor. | nothing | hold 600 ms |
+| 1 | **zero opens.** Zoom rects step from the tray icon to the popover box, and the popover appears: zero mark plus `Run zero now`. | zoom 5 steps | 240 ms, hold 450 |
+| 2 | **zero starts.** The button swaps to `Working…` (paper on ink with an outline). zero's watch appears on the button. | swap (1 step), watch placed (no travel) | hold 420 |
+| 3 | **zero selects.** The watch steps from the button to the first routine row. The 8 routine rows invert one at a time. | watch 6 steps, 8 inverts | 320 ms + 8 × 70 ms, hold 250 |
+| 4 | **zero drags.** Dashed outlines, one per selected row, step together from the rows into the folder in 7 steps as they shrink to icon size. The watch travels with them. The folder inverts as the drop target, the rows go, and the folder fills. Outlines pass *behind* the headline sheet (z-index below it), never over its text. | watch 7 steps, outlines 7 × 80 ms | ~560 ms, hold 260 |
+| 5 | **Done (the HTML default).** The watch is gone. The button reads `Run zero now` again. Inbox holds the 4 rows (`Alex Rivera · Can you approve the quote? · 11h`, `Priya Sharma · Which date works for you? · 13h`, `Daniel Kim · Your payment failed · 1d`, `Sarah Mitchell · Contract changes to review · 1d`). The folder is full and selected. Trash is empty. | none | — |
+
+Layout:
+- At ≥1240px the popover hangs from the tray (the notch points at it), with the Inbox on the right and the headline plate on the left.
+- Below 1240px the stack is headline, then popover, then folder and Trash, then Inbox, then caption. That keeps the button and the drop target together near the top.
+- The stacked Inbox list is `height:auto`, so the final window is 4 rows and not a mostly blank window. That resize happens once, at the end, and only moves the caption below it.
+
+Honesty rules for B:
+- No arrow pointer.
+- The watch only exists during `Working…`.
+- Nothing enters Trash.
+- The final 4 rows are the COPY v3 strings exactly.
+- The only strings are the ones the copywriter counted: zero mark, `Run zero now`, `Working…`, `Inbox`, the rows and ages, the folder, `Trash` and the caption. Provisional count is 532/550.
+
+Measured (Playwright Chromium, live playback to `data-mode=done`): 1440, about 4.6 s. 390, about 3.7 s, with no cursor. There are 0 console errors. Sampled live states are `Run zero now` with no cursor, then `Working…` with the watch, then `Run zero now` with no cursor. No arrow cursor ever appears.
+
+Kit change: `motion.js` now *places* a cursor at its first target when the previous frame had none, instead of sliding it in from 0,0. This affects any story whose first frame has no cursor. A, C and the sections all start with a cursor, so they're unchanged.
+
+## 3. Hero storyboard (comp A, "the menu-bar roll", 5 frames, ~5 s). Superseded by 3.0; kept for history
 
 Each frame can be viewed as a still with `?frame=N`. Screenshots are in `storyboard/`.
 
@@ -51,7 +88,7 @@ Honesty rules for the storyboard:
 
 ### 3b. Alternative hero storyboards (comps B and C, 4 frames each)
 
-These are kept for comparison. The brief recommends A. Stills are `storyboard/hero-b-frame-0..3.jpg`, `hero-c-frame-0..3.jpg` and each `*-strip.jpg`.
+History. The B column below is the **pre-rework** B. The reworked B is §3.0, and its stills now occupy `hero-b-frame-0..5.jpg`. C stills are `hero-c-frame-0..3.jpg`.
 
 | # | B, "the Finder select" | C, "the poster and two windows" |
 |---|---|---|
@@ -60,9 +97,11 @@ These are kept for comparison. The brief recommends A. Stills are `storyboard/he
 | 2 | Dashed drag outlines step from the 8 rows into the folder in 7 steps. The folder highlights as the drop target. | The 8 rows step across as solid blocks, one at a time, and fill the archive slots. |
 | 3 | Final: 4 rows remain, the folder is full and Trash is empty. | Final: Inbox holds 4 rows, the archive holds 8. |
 
-Why A wins: B reads as "you drag mail yourself" (a manual Finder action zero doesn't ask for), and it has no count. C is calm and clear, but it drops the menu-bar tray, which is where zero actually lives, and it pushes both windows below the headline plate at 1440×900.
+Why A was recommended at first: the pre-rework B read as "you drag mail yourself" (a manual Finder action zero doesn't ask for), and it had no count. C is calm and clear, but it drops the menu-bar tray, which is where zero actually lives, and it pushes both windows below the headline plate at 1440×900. The owner chose B. §3.0 removes the manual-drag reading by making zero's popover and watch the only actor. B still has no count, and the Inbox window going from 12 rows to 4 is the proof.
 
 ## 4. Section motion (one beat each, played on first view)
+
+> **On hold (22:50Z).** The owner has not approved the sections. They are being rethought with the copywriter, so do not prototype these beats. Note that the section 1 beat below (rows hopping from Stays to Archived) would replay the new hero B. Whatever replaces section 1 must not repeat the sort.
 
 These are proposals. Only the demo beat is built as motion in `comps/sections/`. The Undo ants are static CSS there, and the other beats are spec only. Each plays once, and its final frame is the HTML default.
 

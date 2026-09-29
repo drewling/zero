@@ -6,10 +6,13 @@
 <title>Hero B · Finder inbox · zero redesign 3 comp (draft)</title>
 <link rel="stylesheet" href="../kit/kit.css">
 <style>
-/* Hero B: "Your inbox is a Finder window." One big Inbox list window is the hero. zero selects the routine mail
-   (the rows invert one by one), then the selection is dragged as outlines into today's dated folder, exactly the way
-   a Mac drags files. What remains is the four emails that need you. No popover and no counter: the list itself is the proof.
-   Strings: only the hero-panel rows, "Inbox", the folder label and Trash (all already counted in COPY v3). */
+/* Hero B (owner's pick, reworked so zero is the actor): "Your inbox is a Finder window."
+   zero's menu-bar popover opens from its tray icon. Run zero now turns to Working…, and only then does a cursor appear:
+   zero's watch, which comes out of the Working… button, selects the routine mail (rows invert one by one) and drags the
+   selection as outlines into today's dated folder the way a Mac drags files. The watch goes back to the button, the button
+   reads Run zero now again and the watch disappears. There is never an arrow pointer, so nobody's hand moves the mail.
+   Strings: the popover's zero mark, Run zero now, Working…, the hero-panel rows and ages, "Inbox", the folder label,
+   Trash and the caption (all in COPY v3, recounted by the copywriter). */
 .hero{position:relative;min-height:calc(100vh - 40px);padding:56px var(--pad) 48px;display:grid;gap:28px;justify-items:center}
 .sheet{position:relative;z-index:3;padding:clamp(24px,3.4vw,48px);width:100%;max-width:640px}
 .sheet h1{font-size:clamp(42px,4.7vw,70px);line-height:.98;margin-bottom:22px}
@@ -42,17 +45,34 @@
 .folder svg{width:80px}
 .trash svg{width:52px}
 svg.px.f-empty{display:none}
-.drop{position:absolute;z-index:37;border:2px dashed var(--ink);pointer-events:none}
+/* drag outlines pass behind the headline sheet (z 3), never across its text, and over the Inbox (same z, later in DOM) */
+.drop{position:absolute;z-index:2;border:2px dashed var(--ink);pointer-events:none}
+
+/* zero's popover: only its head and its run button (no count, no rows: the Inbox window is the proof) */
+.pop{z-index:4;width:100%;max-width:280px;justify-self:end}
+.pop .zp-foot{margin-top:0;border-top:0}
+.zp-run{min-width:9.6em;justify-content:center}
+.zp-run .busy{display:none}
 
 @media (min-width:1240px){
   .hero{display:block;min-height:max(860px,calc(100vh - 40px))}
   .sheet{position:absolute;left:var(--pad);top:88px;width:min(600px,41vw)}
-  #inbox{position:absolute;right:calc(var(--pad) + 40px);top:72px;width:min(600px,42vw)}
-  .hero > .caption{position:absolute;right:calc(var(--pad) + 40px);top:calc(72px + 30px + 26px + 12 * 36px + 22px)}
+  .pop{position:absolute;right:24px;top:53px}
+  #inbox{position:absolute;right:calc(var(--pad) + 40px);top:200px;width:min(600px,42vw)}
+  .hero > .caption{position:absolute;right:calc(var(--pad) + 40px);top:calc(200px + 30px + 26px + 12 * 36px + 18px)}
   .folder{position:absolute;left:calc(var(--pad) + 120px);bottom:64px}
   .trash{position:absolute;right:48px;bottom:36px}
 }
 @media (max-width:1239px){
+  .pop{max-width:600px;justify-self:center;order:1}
+  /* stacked layouts: zero's popover, then the folder and Trash, then the Inbox, so the drop target is in view with the
+     button. The window fits its rows, so the finished inbox is 4 rows, not 4 rows and a blank page. The shrink happens
+     once, at the end, and only moves what is below the Inbox (the caption). */
+  .hero .files{order:2}
+  #inbox{order:3}
+  .hero > .caption{order:4}
+  #inbox .list{height:auto}
+  .pop .zp.notch::before,.pop .zp.notch::after{display:none}
   .hero .files{display:flex;justify-content:space-between;align-items:end;width:100%;max-width:640px}
   .hero > .caption{justify-self:center}
 }
@@ -71,11 +91,18 @@ svg.px.f-empty{display:none}
 .files{display:contents}
 
 /* ---------- earlier frames (lt-K = before frame K) ---------- */
-.lt-3 #inbox li.g{display:grid}
-.lt-3 .folder:not(.got) svg.px.f-full{display:none}
-.lt-3 .folder:not(.got) svg.px.f-empty{display:block}
-.lt-3 .folder:not(.got) .lbl{background:var(--paper);color:var(--ink)}
-.lt-3 .folder:not(.got) svg{filter:none}
+/* 0 closed popover, 1 popover open, 2-4 Working… (select, drag), 5 final: idle again */
+.lt-1 .pop{visibility:hidden}
+.lt-1 .tray{background:var(--paper)!important;color:var(--ink)!important}
+.lt-1 .tray svg{filter:none!important}
+.lt-5:not(.lt-2) .zp-run{background:var(--paper);color:var(--ink);box-shadow:inset 0 0 0 2px var(--ink)}
+.lt-5:not(.lt-2) .zp-run .idle{display:none}
+.lt-5:not(.lt-2) .zp-run .busy{display:inline}
+.lt-5 #inbox li.g{display:grid}
+.lt-5 .folder:not(.got) svg.px.f-full{display:none}
+.lt-5 .folder:not(.got) svg.px.f-empty{display:block}
+.lt-5 .folder:not(.got) .lbl{background:var(--paper);color:var(--ink)}
+.lt-5 .folder:not(.got) svg{filter:none}
 .folder.over svg{filter:invert(1)!important}
 </style>
 </head>
@@ -105,7 +132,7 @@ svg.px.f-empty{display:none}
   <a class="nav-hide" href="https://github.com/drewling/zero">Source</a>
   <a class="install" href="#install">Install</a>
   <span class="spacer"></span>
-  <span class="mi tray" aria-hidden="true"><svg class="px" viewBox="0 0 17 13"><use href="#tray"/></svg></span>
+  <span class="mi tray on" aria-hidden="true"><svg class="px" viewBox="0 0 17 13"><use href="#tray"/></svg></span>
   <span class="mi find" aria-hidden="true"><svg class="px" viewBox="0 0 13 13"><use href="#find"/></svg></span>
 </header>
 
@@ -121,7 +148,14 @@ svg.px.f-empty{display:none}
     <p class="req">Apple Silicon. macOS 26 or later. Gmail only.</p>
   </div>
 
-  <p class="sr-only">Illustration: a Gmail inbox shown as a Mac list window. zero selects eight routine emails and they are dragged into a dated Auto-Archived folder. Four emails that need a reply or action stay. The Trash stays empty.</p>
+  <p class="sr-only">Illustration: zero's menu-bar window shows Run zero now, then Working…. While it works, zero selects eight routine emails in a Gmail inbox shown as a Mac list window and drags them into a dated Auto-Archived folder. Four emails that need a reply or action stay. The Trash stays empty.</p>
+
+  <div class="pop" aria-hidden="true">
+    <div class="zp notch" style="--notch:66px">
+      <div class="zp-head"><span class="zp-mark"><svg class="px" viewBox="0 0 16 15"><use href="#check"/></svg>zero</span><span class="zp-more"><i></i><i></i><i></i></span></div>
+      <div class="zp-foot"><span class="zp-run"><span class="idle">Run zero now</span><span class="busy">Working…</span></span></div>
+    </div>
+  </div>
 
   <div class="win" id="inbox" aria-hidden="true">
     <div class="bar"><span class="box close"></span><span class="t">Inbox</span><span class="box zoom"></span></div>
@@ -170,22 +204,29 @@ svg.px.f-empty{display:none}
     d.style.left = Math.round(b.x + (a.x - w / 2 - b.x) * t) + 'px'; d.style.top = Math.round(b.y + (a.y - h / 2 - b.y) * t) + 'px';
     d.style.width = Math.round(w) + 'px'; d.style.height = Math.round(h) + 'px'; }); };
 
-  Zm.when(root, { onLoad: true, delay: 700, cursorMinWidth: 760, frames: [
-    // 0: a full inbox of 12, the cursor off to the side
-    { cursor: { sel: '#inbox', fx: .2, fy: 1.08 }, set: () => clear() },
-    // 1: zero picks the routine mail: the watch appears and the 8 rows invert one at a time
-    { cursor: { sel: '#inbox li.g', fx: .35, fy: .5 }, kind: 'watch', cursorSteps: 6, cursorMs: 300, hold: 250,
+  // No frame has an arrow pointer. The only cursor is zero's watch, which exists only while the button reads Working….
+  Zm.when(root, { onLoad: true, delay: 600, cursorMinWidth: 760, frames: [
+    // 0: a full inbox of 12, zero's popover closed, no cursor
+    { set: () => clear() },
+    // 1: zero's popover opens from its tray icon, showing Run zero now
+    { hold: 450, enter: (r, z) => z.zoom(r, '.tray', '.zp', { steps: 5, ms: 240 }),
+      still: (r, z) => z.zoom(r, '.tray', '.zp', { still: true, steps: 3 }) },
+    // 2: zero starts: the button reads Working… and zero's watch appears on it
+    { cursor: { sel: '.zp-run', fx: .5, fy: .55 }, kind: 'watch', hold: 420 },
+    // 3: the watch leaves the button and selects the routine mail: the 8 rows invert one at a time
+    { cursor: { sel: '#inbox li.g', fx: .35, fy: .5 }, kind: 'watch', cursorSteps: 6, cursorMs: 320, hold: 250,
       enter: async (r, z) => { for (const li of gs()) { li.classList.add('sel'); await z.wait(70); } },
       still: () => selectAll() },
-    // 2: the selection is dragged: outlines step from the rows to the folder, and the folder highlights as the drop target
-    { cursor: { sel: shownIcon, fx: .6, fy: .5 }, cursorSteps: 7, cursorMs: 560, hold: 120,
+    // 4: the watch drags the selection: outlines step from the rows to the folder, the folder highlights as the drop target
+    { cursor: { sel: shownIcon, fx: .6, fy: .5 }, kind: 'watch', cursorSteps: 7, cursorMs: 560, hold: 260,
       set: () => selectAll(),
       enter: async (r, z) => { const os = outlines(); folder.classList.add('over');
         for (let s = 1; s <= 7; s++) { stepOutlines(os, s / 7); await z.wait(80); }
         os.forEach(o => o.d.remove()); gs().forEach(li => li.style.visibility = 'hidden'); folder.classList.remove('over'); folder.classList.add('got'); },
       still: () => { selectAll(); const os = outlines(); stepOutlines(os, .5); folder.classList.add('over'); } },
-    // 3: final (the HTML default): 4 stay in a quiet window, the folder is full, the Trash is empty
-    { cursor: { sel: '#inbox', fx: .9, fy: 1.06 }, cursorSteps: 4, cursorMs: 200,
+    // 5: final (the HTML default): zero is done, so the watch is gone and the button reads Run zero now again.
+    //    4 stay in a quiet window, the folder is full, the Trash is empty
+    {
       set: () => { gs().forEach(li => { li.classList.remove('sel'); li.style.visibility = ''; }); folder.classList.remove('over'); } }
   ]});
 })();
