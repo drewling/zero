@@ -25,8 +25,8 @@ The user rejected the entire visual design after seeing the live screenshots and
 
 ## Proof/acceptance
 
-- [ ] Ten inspected URLs with dated evidence and useful distinct lessons, not a list of names.
-- [ ] Existing live page audit grounded in screenshots and user feedback.
-- [ ] Viewable distinct replacement comps at desktop and mobile, including an accessible/static state, with direct artifact paths.
-- [ ] Owner-facing recommendation and explicit request for visual choice, handed to `main-lead@zero` through durable queue.
-- [ ] Explicit keep/replace/remove inventory that prevents legacy code from accumulating in implementation.
+- [x] Ten inspected URLs with dated evidence and useful distinct lessons, not a list of names.
+- [x] Existing live page audit grounded in screenshots and user feedback.
+- [x] Viewable distinct replacement comps at desktop and mobile, including an accessible/static state, with direct artifact paths.
+- [x] Owner-facing recommendation and explicit request for visual choice, handed to `main-lead@zero` through durable queue.
+- [x] Explicit keep/replace/remove inventory that prevents legacy code from accumulating in implementation.

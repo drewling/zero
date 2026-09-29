@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>zero · Direction B · One-bit desktop (comp)</title>
+<!-- Proof comp only. Real copy from landing/index.html, real app image, real install command.
+     ?static renders the reduced-motion / static state. The pattern, striped title bars and pixel
+     icons are the subject's own world (the one-bit Mac desktop), authored here as crisp geometry. -->
+<style>
+@font-face{font-family:Pixel;src:url(fonts/pixelify-400.woff2) format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:Pixel;src:url(fonts/pixelify-600.woff2) format('woff2');font-weight:600;font-display:swap}
+@font-face{font-family:Geist;src:url(assets/geist.woff2) format('woff2');font-weight:100 900;font-display:swap}
+@font-face{font-family:GeistMono;src:url(assets/geist-mono.woff2) format('woff2');font-display:swap}
+:root{--k:#000;--w:#fff;--pix:Pixel,monospace;--sans:Geist,system-ui,sans-serif;--mono:GeistMono,ui-monospace,monospace}
+*{box-sizing:border-box}
+html{background:var(--w);color:var(--k);font:400 17px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+body{margin:0;overflow-x:hidden}
+::selection{background:var(--k);color:var(--w)}
+:focus-visible{outline:2px solid var(--k);outline-offset:2px;box-shadow:0 0 0 4px var(--w)}
+a{color:inherit;text-underline-offset:.2em}
+.px{image-rendering:pixelated}
+
+/* the desktop: the classic 50% one-bit pattern, drawn at 2px */
+.desk{position:relative;min-height:880px;background-color:#fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect width='2' height='2' fill='%23000'/%3E%3Crect x='2' y='2' width='2' height='2' fill='%23000'/%3E%3C/svg%3E");overflow:hidden}
+.menubar{position:relative;z-index:5;display:flex;align-items:center;gap:26px;height:40px;padding:0 20px;background:var(--w);border-bottom:2px solid var(--k);font:600 17px/1 var(--pix)}
+.menubar a{text-decoration:none;padding:6px 8px;margin:0 -8px}
+.menubar a:hover{background:var(--k);color:var(--w)}
+.menubar .right{margin-left:auto;display:flex;gap:22px;align-items:center}
+.menubar .tick{display:inline-flex;align-items:center;gap:8px}
+.menubar .tick svg{width:18px;height:18px}
+.menubar .inst{background:var(--k);color:var(--w)!important;padding:6px 12px;margin:0}
+
+/* a window */
+.win{position:absolute;background:var(--w);border:2px solid var(--k);box-shadow:4px 4px 0 var(--k)} /* the one-bit world's own drop shadow */
+.bar{height:30px;display:flex;align-items:center;justify-content:center;border-bottom:2px solid var(--k);background:repeating-linear-gradient(180deg,var(--k) 0 2px,var(--w) 2px 4px);background-clip:content-box;padding:6px 4px;position:relative}
+.bar b{font:600 16px/1 var(--pix);background:var(--w);padding:0 12px;position:relative;top:-1px}
+.bar i{position:absolute;left:12px;top:7px;width:16px;height:16px;border:2px solid var(--k);background:var(--w)}
+
+.hello{left:6%;top:108px;width:min(620px,52%)}
+.hello .body{padding:40px 44px 42px}
+h1{font:600 clamp(2.8rem,5.2vw,4.6rem)/1 var(--pix);letter-spacing:-.01em;margin:0 0 22px;text-wrap:balance}
+.lead{font-size:19px;margin:0 0 30px;max-width:36ch}
+.cta{display:flex;flex-wrap:wrap;gap:14px}
+.btn{display:inline-flex;align-items:center;min-height:46px;padding:0 22px;font:600 17px/1 var(--pix);text-decoration:none;border:2px solid var(--k);border-radius:10px;background:var(--w)}
+.btn.default{box-shadow:0 0 0 2px var(--w),0 0 0 5px var(--k);margin:3px}
+.btn:hover{background:var(--k);color:var(--w)}
+.req{margin:26px 0 0;font:400 14px/1.4 var(--mono)}
+
+/* zero's window: the only colour on the desktop */
+.zero{position:absolute;right:7%;top:70px;width:min(372px,30%);z-index:3}
+.zero img{display:block;width:100%;height:auto;border-radius:12px;box-shadow:4px 4px 0 var(--k);border:2px solid var(--k)}
+.zero figcaption{font:400 13px/1.3 var(--mono);background:var(--w);border:2px solid var(--k);padding:6px 10px;margin-top:12px;display:inline-block}
+
+/* desktop icons */
+.icons{position:absolute;right:calc(7% + min(372px,30%) + 44px);top:120px;display:grid;gap:34px;z-index:2}
+.icon{display:grid;justify-items:center;gap:6px;width:170px;text-align:center}
+.icon svg{width:56px;height:56px}
+.icon span{font:400 13px/1.25 var(--mono);background:var(--w);padding:2px 5px}
+.icon.sel span{background:var(--k);color:var(--w)}
+.trash{position:absolute;right:3%;bottom:34px;z-index:2}
+@media (prefers-reduced-motion:no-preference){
+  html:not(.static) .icon.new{animation:drop 900ms steps(6,end) 700ms both}
+  @keyframes drop{from{transform:translate(260px,-40px);opacity:0}30%{opacity:1}to{transform:none;opacity:1}}
+}
+
+.alert{left:calc(6% + 90px);top:694px;width:min(520px,44%);z-index:4}
+.alert .body{display:flex;gap:18px;padding:20px 24px;align-items:flex-start}
+.alert svg{flex:none;width:40px;height:40px}
+.alert p{margin:0;font-size:16px}
+
+/* downstream: Finder list */
+main{padding:110px 0 40px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 40px}
+h2{font:600 clamp(2.1rem,3.8vw,3.2rem)/1.02 var(--pix);margin:0 0 18px;text-wrap:balance}
+.two{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:64px;align-items:start;margin-bottom:110px}
+.two p{margin:0 0 14px;max-width:42ch}
+.finder{position:relative;border:2px solid var(--k);box-shadow:4px 4px 0 var(--k)}
+.finder .meta{display:flex;justify-content:space-between;padding:6px 14px;border-bottom:2px solid var(--k);font:400 13px/1.4 var(--mono)}
+.finder table{width:100%;border-collapse:collapse;font-size:16px}
+.finder th{font:600 14px/1 var(--pix);text-align:left;padding:10px 14px;border-bottom:1px solid var(--k)}
+.finder td{padding:11px 14px;border-bottom:1px dotted var(--k)}
+.finder td:last-child,.finder th:last-child{text-align:right;font-family:var(--mono);font-size:14px;white-space:nowrap}
+.finder tr.keep td{background:var(--k);color:var(--w)}
+.finder td svg{width:16px;height:16px;vertical-align:-3px;margin-right:10px}
+.finder tr.keep svg rect,.finder tr.keep svg path{stroke:var(--w)}
+.small{font-size:14px;margin-top:14px;max-width:64ch}
+.labelchip{display:inline-block;font:400 15px/1 var(--mono);border:2px solid var(--k);padding:9px 12px;margin:6px 0 10px;background:var(--w)}
+
+.term{border:2px solid var(--k);box-shadow:4px 4px 0 var(--k);background:var(--w)}
+.term .body{padding:26px 28px}
+.cmd{display:flex;gap:14px;align-items:center;background:var(--k);color:var(--w);padding:16px 18px;font:400 16px/1.4 var(--mono)}
+.cmd code{flex:1;overflow-wrap:anywhere;font-size:15px}
+.cmd button{font:600 15px/1 var(--pix);background:var(--w);color:var(--k);border:0;min-height:38px;padding:0 16px;border-radius:8px;cursor:pointer}
+.steps{margin:20px 0 0;padding:0;list-style:none}
+.steps li{padding:12px 0;border-top:1px dotted var(--k)}
+footer{max-width:1180px;margin:0 auto;padding:40px 40px 60px;display:flex;gap:24px;font:400 14px/1.4 var(--mono)}
+footer span{margin-right:auto}
+
+@media (max-width:760px){
+  .desk{min-height:0;padding:26px 16px 36px;display:flex;flex-direction:column;gap:26px}
+  .menubar{margin:-26px -16px 0;gap:16px;font-size:15px;padding:0 14px}
+  .menubar .hide{display:none}
+  .win,.zero{position:relative;left:auto;right:auto;top:auto;width:auto}
+  .hello .body{padding:26px 22px 28px}
+  h1{font-size:2.7rem}
+  .lead{font-size:17px}
+  .zero{width:82%;align-self:center}
+  .icons{position:relative;right:auto;top:auto;grid-auto-flow:column;justify-content:space-around;gap:10px}
+  .trash{position:static;align-self:flex-end}
+  .icon{width:110px}
+  .alert{width:auto}
+  main{padding-top:64px}
+  .wrap{padding:0 18px}
+  .two{grid-template-columns:1fr;gap:26px;margin-bottom:72px}
+  .finder td,.finder th{padding:9px 10px;font-size:14px}
+  .cmd{flex-direction:column;align-items:stretch}
+  .cmd code{white-space:normal;word-break:break-all;font-size:13px}
+  footer{flex-wrap:wrap;padding:32px 18px 48px}
+}
+</style>
+<script>if(/[?&]static/.test(location.search))document.documentElement.classList.add('static')</script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="folder" viewBox="0 0 28 28" shape-rendering="crispEdges"><path d="M2 7h9l2 3h13v14H2z" fill="#fff" stroke="#000" stroke-width="2"/><path d="M2 12h24" stroke="#000" stroke-width="2"/></symbol>
+  <symbol id="trash" viewBox="0 0 28 28" shape-rendering="crispEdges"><path d="M5 7h18M11 7V4h6v3M7 7l1 18h12l1-18" fill="#fff" stroke="#000" stroke-width="2"/><path d="M11 11v10M14 11v10M17 11v10" stroke="#000" stroke-width="2"/></symbol>
+  <symbol id="note" viewBox="0 0 40 40" shape-rendering="crispEdges"><rect x="3" y="3" width="34" height="34" fill="#fff" stroke="#000" stroke-width="3"/><path d="M20 10v14M20 28v3" stroke="#000" stroke-width="4"/></symbol>
+  <symbol id="doc" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="2" y="1" width="12" height="14" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+</svg>
+
+<div class="desk" id="top">
+  <nav class="menubar" aria-label="Main">
+    <a class="tick" href="#top"><svg viewBox="0 0 18 18" aria-hidden="true" shape-rendering="crispEdges"><rect x="1" y="1" width="16" height="16" fill="#000"/><path d="M4 9l3 3 7-7" fill="none" stroke="#fff" stroke-width="2.5"/></svg>zero</a>
+    <a class="hide" href="#sort">How it sorts</a>
+    <a class="hide" href="#before">Before you install</a>
+    <span class="right"><a class="hide" href="https://github.com/drewling/zero">Source</a><a class="inst" href="#install">Install</a></span>
+  </nav>
+
+  <section class="win hello" aria-labelledby="h1">
+    <div class="bar"><i></i><b>zero</b></div>
+    <div class="body">
+      <h1 id="h1">Keep the mail that needs you.</h1>
+      <p class="lead">zero is a Mac menu-bar app for Gmail. It keeps conversations that still need your attention and archives the rest. Archived mail stays in Gmail. You can put it back.</p>
+      <div class="cta"><a class="btn default" href="#install">Install zero for Mac</a><a class="btn" href="/install.sh">Read the installer first</a></div>
+      <p class="req">Needs Apple Silicon Mac · macOS 26 or later · Gmail</p>
+    </div>
+  </section>
+
+  <div class="icons" aria-hidden="true">
+    <div class="icon new sel"><svg><use href="#folder"/></svg><span>🗄️ Auto-Archived 2026-09-29</span></div>
+    <div class="icon"><svg><use href="#folder"/></svg><span>🗄️ Auto-Archived 2026-09-28</span></div>
+  </div>
+  <div class="icon trash" aria-hidden="true"><svg><use href="#trash"/></svg><span>Trash · empty</span></div>
+
+  <figure class="zero" style="margin:0">
+    <img src="panel-cut.png" width="700" height="1057" alt="The zero menu-bar window. Open loops shows 416 things still need you, a list of conversations waiting on you, and a Run zero now button.">
+    <figcaption>The real zero app. Names and subjects are made up.</figcaption>
+  </figure>
+
+  <div class="win alert" role="note">
+    <div class="body"><svg><use href="#note"/></svg><p><strong>Nothing is deleted.</strong> Archived mail goes into a label dated for the day, not the Trash. It stays in All Mail, and search still finds it.</p></div>
+  </div>
+</div>
+
+<main>
+  <div class="wrap two" id="sort">
+    <div>
+      <h2>What stays. What gets archived.</h2>
+      <p>When zero sorts a conversation, it checks it against rules written in plain English. Edit them in Settings. If someone is waiting on you, or something needs action, it stays in your Inbox. The rest is archived.</p>
+      <p>It gets things wrong sometimes. Check your first few runs before you set a schedule.</p>
+    </div>
+    <div>
+      <div class="finder">
+        <div class="bar"><i></i><b>Default rules</b></div>
+        <div class="meta"><span>7 items</span><span>3 stay in Inbox</span></div>
+        <table>
+          <thead><tr><th scope="col">Kind of mail</th><th scope="col">Default rule</th></tr></thead>
+          <tbody>
+            <tr class="keep"><td><svg><use href="#doc"/></svg>Someone is waiting for your reply</td><td>Stays</td></tr>
+            <tr class="keep"><td><svg><use href="#doc"/></svg>A payment has failed</td><td>Stays</td></tr>
+            <tr class="keep"><td><svg><use href="#doc"/></svg>A deadline with a consequence</td><td>Stays</td></tr>
+            <tr><td><svg><use href="#doc"/></svg>A receipt or statement</td><td>Archived</td></tr>
+            <tr><td><svg><use href="#doc"/></svg>A newsletter</td><td>Archived</td></tr>
+            <tr><td><svg><use href="#doc"/></svg>Cold sales email</td><td>Archived</td></tr>
+            <tr><td><svg><use href="#doc"/></svg>You sent the last message</td><td>Archived</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small">These are zero’s default rules. This isn’t a live inbox, and it isn’t a promise. The AI can sort a message wrongly.</p>
+    </div>
+  </div>
+
+  <div class="wrap two" id="install">
+    <div>
+      <h2>Install zero.</h2>
+      <p><strong>Read this first.</strong> zero isn’t notarized by Apple, and the installer may add developer tools to your Mac. Read the script before you run it.</p>
+      <p><a href="/install.sh">Read the installer</a> · <a href="https://github.com/drewling/zero/releases">GitHub Releases</a></p>
+      <span class="labelchip">🗄️ Auto-Archived YYYY-MM-DD</span>
+      <p class="small">To put a run back, open the Undo tab in zero and choose Restore all for that day.</p>
+    </div>
+    <div class="term">
+      <div class="bar"><i></i><b>Terminal</b></div>
+      <div class="body">
+        <div class="cmd"><code>curl -fsSL https://zero.headless.com/install | bash</code><button type="button">Copy</button></div>
+        <p class="small">The installer checks the download’s SHA-256 before it installs.</p>
+        <ol class="steps">
+          <li><strong>Connect Gmail.</strong> Open zero from the menu bar and choose Connect your first inbox.</li>
+          <li><strong>Add your Jev key.</strong> In Settings → Sorting engine, create a key at <a href="https://console.typesafe.ai/keys">TypeSafe</a>, paste it in, and click Save.</li>
+          <li><strong>Run it once.</strong> Choose Run zero now. When you’re happy, set a time in Settings → Daily routine.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</main>
+<footer><span>zero · Free and open source, AGPL-3.0</span><a href="https://github.com/drewling/zero">Source</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a></footer>
+</body>
+</html>
