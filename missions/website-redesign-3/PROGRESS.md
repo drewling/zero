@@ -23,3 +23,7 @@ Copy v3 ready for owner gate A: hero "Clean up your Gmail inbox on your Mac.", 5
 ## 2026-09-29 22:08Z: slice 02 handed back, gates A and B with the owner
 
 Slice 02 done: 14 references (5 animated), three hero comps, one design per section, MOTION-SPEC, title-plate fix (script and visual check), 544 rendered words vs the 549 inventory (ceiling 550). Recommendation: hero A "menu-bar roll", C as the quieter fallback, B not recommended. Brief for the owner: OWNER-GATES-A-B.md, relayed by advisor-lead (Tayo has the live comps) and filed as human@kernel qitem-20260929220710-92821b38. **Build held until the owner answers.** development-motion continues sandbox-only. No deploy.
+
+## 2026-09-29 22:38Z: owner answer, hero B approved, rest of page not approved
+
+Tayo (via advisor-lead): hero B approved (zero as the visible actor, not the user dragging). Copy and sections are NOT approved and need much more consideration. Wants a stronger proposal with concrete before/after, not tweaks. Not urgent. Build stays held. design-lead and design-copywriter asked to rethink story order, each section object and every line, with two genuinely different outlines, extra comparables, and isolated fresh-reader tests of current versus proposed page. Slice 03 is not released.
