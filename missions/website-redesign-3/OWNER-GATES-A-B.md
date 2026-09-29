@@ -8,7 +8,7 @@ Nothing is live. Production is unchanged. This is a proposal to look at, and not
 |---|---|
 | Copy is confusing, zero is just an inbox tool | The headline now says it: **"Clean up your Gmail inbox on your Mac."** Subhead: zero keeps the emails you need to deal with and archives the rest. Undo any archive. Keep using Gmail or Apple Mail. |
 | Hero layout is weak, needs animation | New hero (below) shows the app doing its job in a short stepped 1-bit animation |
-| Title text sits on the stripe lines | Every window title now sits on a white plate that breaks the stripes, like real System 7. An automated check found no text on a stripe or dither at 320, 390 and 1440 px. |
+| Title text sits on the stripe lines | Every window title now sits on a white plate that breaks the stripes, like real System 7. A script check plus a visual review found no text sitting on a stripe or dither at 320, 390 and 1440 px. |
 | The 3 sections are text-left, object-right | Each section now has its own purpose-built object and layout |
 | Find more references | 14 live one-bit references, 5 animated. `/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/02-references-and-comps/proof/refs/references.md` |
 | Too many riddles ("who's waiting...") | Removed. The visible page is about 544 words, down from over 900. Three isolated fresh AI readers, given only the headline and first section, each understood it as a Mac app that cleans up a Gmail inbox (3 of 3 in the final round). |
