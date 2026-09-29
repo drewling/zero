@@ -51,8 +51,8 @@ A visitor understands in five seconds: **zero is a Mac app that cleans up your G
 
 | Seat | Role in this mission | Model |
 |---|---|---|
-| `main.lead` | Owns the mission, dispatch, gates, owner updates | claude-opus-5-5 |
-| `design.lead` | Owns visual direction: references, hero and section comps, motion direction, final design sign-off | claude-opus-5-5 |
+| `main.lead` | Owns the mission, dispatch, gates, owner updates | claude-sonnet-5-5 |
+| `design.lead` | Owns visual direction: references, hero and section comps, motion direction, final design sign-off | claude-sonnet-5-5 |
 | `design.copywriter` (new) | Owns the words: plain positioning, outline, all page copy, the comprehension test | gpt-6.1-sol |
 | `development.implementer` | Builds the structure and static design from approved comps and copy | gpt-6.1-sol |
 | `development.motion` (new) | Builds the motion and interaction layer in parallel, then integrates | gpt-6.1-sol |
