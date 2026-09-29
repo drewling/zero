@@ -1,0 +1,37 @@
+$ node --test landing/test-site.mjs
+6 passed, 0 failed
+
+$ node --check landing/site.js
+passed
+
+$ bash -n landing/build.sh landing/deploy.sh macapp/install-zero.sh
+action passed
+
+$ git diff --check -- landing
+passed
+
+$ scoped legacy absence check
+shipped source has no banned legacy references
+
+$ local static HTTP smoke on 127.0.0.1:8877
+/                                      200
+/privacy.html                          200
+/terms.html                            200
+/site.css                              200
+/site.js                               200
+/assets/pixelify-400.woff2             200
+/assets/pixelify-600.woff2             200
+/assets/geist.woff2                    200
+/assets/geist-mono.woff2               200
+/assets/zero-panel.png                 200
+/install                               404 (expected for Python static server, not nginx)
+/install.sh                            404 (expected for Python static server, not nginx)
+/nope                                  404
+
+$ bash landing/build.sh
+ok  installer parses
+ERROR: Cannot connect to the Docker daemon at unix:///Users/light/.docker/run/docker.sock. Is the docker daemon running?
+exit=1
+
+$ Aside content smoke
+Confirmed the real local page exposes the one-bit hero, native rules table, install command, FAQ, and legal links. Aside could not resize its available viewport controls, so strict 1440/390/320 geometry remains for independent QA.

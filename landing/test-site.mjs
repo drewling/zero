@@ -5,6 +5,7 @@ import test from 'node:test';
 
 const source = readFileSync(new URL('./site.js', import.meta.url), 'utf8');
 const homepage = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const styles = readFileSync(new URL('./site.css', import.meta.url), 'utf8');
 const installCommand = 'curl -fsSL https://zero.headless.com/install | bash';
 
 function page(clipboard) {
@@ -22,9 +23,7 @@ function page(clipboard) {
     'copy-status': { textContent: '' },
   };
   runInNewContext(source, {
-    document: {
-      getElementById: (id) => elements[id],
-    },
+    document: { getElementById: (id) => elements[id] },
     navigator: { clipboard },
   });
   return { button: elements['copy-command'], status: elements['copy-status'] };
@@ -70,25 +69,48 @@ test('unavailable clipboard leaves the optional control hidden', () => {
   assert.equal(button.click, undefined);
 });
 
-test('homepage preserves approved static structure and self-hosts fonts', () => {
-  assert.match(homepage, /id="hero-title"/);
-  assert.match(homepage, /aria-hidden="true"/);
-  assert.match(homepage, /id="install-command"/);
-  assert.match(homepage, /id="copy-command"/);
-  assert.match(homepage, /id="copy-status"/);
+test('homepage preserves the approved one-bit structure and product truth', () => {
+  for (const pattern of [
+    /id="hero-title"/,
+    /class="desktop-hero"/,
+    /class="finder window"/,
+    /class="paper-section content-section"/,
+    /class="terminal-section content-section"/,
+    /id="install-command"/,
+    /id="copy-command"/,
+    /id="copy-status"/,
+    /<table>/,
+    /<details>/,
+    /zero-panel\.png/,
+    /href="\/privacy\.html"/,
+    /href="\/terms\.html"/,
+    /pixelify-400\.woff2/,
+  ]) assert.match(homepage, pattern);
   assert.match(homepage, />Archived</);
-  assert.match(homepage, /<table>/);
-  assert.match(homepage, /<td><span class="status stays">/);
-  assert.doesNotMatch(homepage, /<td class="status/);
-  assert.match(homepage, /class="sort-track" hidden/);
-  assert.match(homepage, /class="rail-wrap" hidden/);
-  assert.match(homepage, /Run the sort again/);
-  assert.match(source, /IntersectionObserver/);
-  assert.match(source, /prefers-reduced-motion/);
-  assert.match(source, /document\.hidden/);
-  assert.match(source, /ResizeObserver/);
-  assert.match(homepage, /archivo-latin\.woff2/);
+  assert.match(homepage, /Nothing is deleted/);
+  assert.match(homepage, /Auto-Archived YYYY-MM-DD/);
+  assert.match(homepage, /curl -fsSL https:\/\/zero\.headless\.com\/install \| bash/);
   assert.doesNotMatch(homepage, /fonts\.googleapis\.com/);
-  assert.match(homepage, /href="\/privacy\.html"/);
-  assert.match(homepage, /href="\/terms\.html"/);
+});
+
+test('legacy motion and departure-board implementation are absent', () => {
+  const combined = `${homepage}\n${styles}\n${source}`;
+  for (const pattern of [
+    /sort-track/,
+    /rail-diagram/,
+    /sorting-board/,
+    /flap-board/,
+    /ticket-section/,
+    /install-band/,
+    /motion-reduced/,
+    /Archivo/,
+    /getContext/,
+    /requestAnimationFrame/,
+    /IntersectionObserver/,
+    /ResizeObserver/,
+    /Run the sort again/,
+    /Show the archive again/,
+  ]) assert.doesNotMatch(combined, pattern);
+  assert.match(source, /navigator\.clipboard/);
+  assert.doesNotMatch(styles, /canvas/);
 });
