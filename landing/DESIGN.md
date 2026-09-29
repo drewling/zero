@@ -55,7 +55,7 @@ The surface is strict black and white with a 50% dither texture behind solid win
 ## Product evidence and claims
 
 - `assets/zero-panel.png` remains the source product screenshot, and `assets/panel-cut.png` is the approved portrait crop used in the hero. The caption states that names and subjects are made up.
-- The rules window is an illustration of zero's default rules, not a live inbox or a guarantee.
+- The two-question window explains the judgment signals that distinguish zero from a simple sender filter. It is an illustration, not a live inbox or a guarantee.
 - Archive remains reversible. Nothing is deleted. Gmail All Mail and the dated recovery label stay explicit.
 - The Jev data path, optional draft provider, Apple Silicon and macOS 26 requirements, unverified Google app warning, ad-hoc signing, and provider billing remain visible.
 - No testimonials, logos, adoption claims, unsupported privacy promises, or fictional product features are added.
@@ -70,16 +70,17 @@ Geist and Geist Mono remain self-hosted for body copy, code, and labels, with th
 
 - The first viewport is a dithered desktop with a large white hero window, the real app window, dated archive folders, and an empty Trash cue.
 - The current dated folder has one authored 900ms stepped drop on load, matching the approved B moment. Reduced-motion users see the settled folder with no animation.
-- Hero copy remains the factual product explanation and the requirements line remains visible near the primary action.
-- The rules section uses a native table inside a Finder-style window. The note is outside the table so the accessibility tree has a clear caption, header row, and body rows.
-- The recovery section uses the factual dated-label chip and a short list explaining undo, Gmail search, and changing rules.
+- The visitor order is hero, judgment, ambient use, reversibility, requirements/data/cost, and install. The page supports the visitor decision path instead of repeating a feature inventory.
+- The hero keeps the compact requirements line near the primary action and the real app screenshot as the only color image.
+- The judgment section uses a two-question window instead of the retired default-rules table. Its copy explains last-message and replied-before signals without presenting them as guarantees.
+- The recovery section uses the dated-label chip and a short list explaining undo, starred-mail protection, and uncertain threads staying in the Inbox.
 - Before-install facts remain a readable paper-colored section. Install instructions use a black Terminal panel with the exact command and clipboard fallback.
-- The FAQ uses native `details` disclosures. The footer retains Source, Privacy, and Terms.
+- The page has no FAQ section because each answer has one home above. The footer retains Source, Privacy, and Terms.
 - At 760px and below, windows become a single readable flow. The dither remains decorative behind panels, the command can wrap or scroll inside its code block, and no content is clipped.
 
 ## Interaction and accessibility
 
-The page is complete in HTML without JavaScript. The only script behavior is optional clipboard support for the install command. The Copy button exposes an aria-disabled pending state with a JS guard so keyboard focus remains on the control, plus manual-copy recovery. Native headings, table semantics, caption, `thead`, `tbody`, links, `details`, and visible copy provide the primary accessibility path.
+The page is complete in HTML without JavaScript. The only script behavior is optional clipboard support for the install command. The Copy button exposes an aria-disabled pending state with a JS guard so keyboard focus remains on the control, plus manual-copy recovery. Native headings, semantic lists, links, and visible copy provide the primary accessibility path.
 
 Focus rings remain visible at 3px against both black and white surfaces. Decorative check, folder, and trash symbols are hidden from assistive technology when their adjacent labels already provide the meaning. There is no Canvas, requestAnimationFrame, IntersectionObserver, layout observer, or motion-specific fallback to maintain.
 

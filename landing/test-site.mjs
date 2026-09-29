@@ -90,41 +90,43 @@ test('unavailable clipboard leaves the optional control hidden', () => {
   assert.equal(button.click, undefined);
 });
 
-test('homepage preserves the approved one-bit structure and product truth', () => {
+test('homepage follows the approved visitor-first six-section order', () => {
   for (const pattern of [
-    /id="hero-title"/,
-    /class="desktop-hero"/,
-    /class="finder window"/,
-    /class="paper-section content-section"/,
-    /class="terminal-section content-section"/,
-    /id="install-command"/,
-    /id="copy-command"/,
-    /id="copy-status"/,
-    /class="hero-req"/,
+    /<title>zero — Only the mail that still needs you\.<\/title>/,
+    /id="decides"[\s\S]*?id="morning"[\s\S]*?id="undo"[\s\S]*?id="before"[\s\S]*?id="install"/,
+    /id="hero-title"[\s\S]*?Only the mail[\s\S]*?needs you\./,
+    /class="hero-req">Apple Silicon · macOS 26 or later · Gmail<\//,
     /assets\/panel-cut\.png/,
-    /<table>/,
-    /<details>/,
-    /zero-panel\.png/,
+    /The real app\. Names and subjects are made up\./,
+    /id="decides"[\s\S]*?It asks who’s[\s\S]*?waiting, not[\s\S]*?who’s writing\./,
+    /class="signals"[\s\S]*?Was the last message yours\?[\s\S]*?Have you ever written to this sender\?/,
+    /id="morning"[\s\S]*?Check it with[\s\S]*?your coffee\.[\s\S]*?Then close it\./,
+    /id="undo"[\s\S]*?Nothing is[\s\S]*?deleted\./,
+    /id="before"[\s\S]*?What it needs, sends and costs/,
+    /id="install"[\s\S]*?Install zero\./,
     /href="\/privacy\.html"/,
     /href="\/terms\.html"/,
     /pixelify-400\.woff2/,
+    /assets\/zero-panel\.png/,
   ]) assert.match(homepage, pattern);
-  assert.match(homepage, />Archived</);
-  assert.match(homepage, /Nothing is deleted/);
-  assert.match(homepage, /Auto-Archived YYYY-MM-DD/);
+  assert.match(homepage, /Across every account you connect/);
+  assert.match(homepage, /Every archive can be undone/);
+  assert.match(homepage, /The zero project runs no server that receives your email/);
+  assert.match(homepage, /zero is free and open source/);
   assert.match(homepage, /curl -fsSL https:\/\/zero\.headless\.com\/install \| bash/);
-  assert.doesNotMatch(homepage, /class="hero-facts"/);
-  assert.match(styles, /\.folder-current\{animation:folder-drop 900ms steps\(6,end\) 700ms both\}/);
-  assert.match(styles, /@media \(prefers-reduced-motion:no-preference\)/);
   const installSteps = homepage.match(/<ol class="install-steps">[\s\S]*?<\/ol>/)?.[0] ?? '';
   assert.equal((installSteps.match(/<li/g) ?? []).length, 4);
   assert.match(installSteps, /<li class="install-step-terminal">[\s\S]*?Run the installer in Terminal\./);
-  assert.doesNotMatch(homepage, /fonts\.googleapis\.com/);
 });
 
-test('legacy motion and departure-board implementation are absent', () => {
+test('retired table, FAQ, motion hooks, and dead implementation assets are absent', () => {
   const combined = `${homepage}\n${styles}\n${source}`;
   for (const pattern of [
+    /class="finder window"/,
+    /class="questions content-section"/,
+    /<table>/,
+    /<details>/,
+    /hero-facts/,
     /sort-track/,
     /rail-diagram/,
     /sorting-board/,
@@ -140,6 +142,9 @@ test('legacy motion and departure-board implementation are absent', () => {
     /Run the sort again/,
     /Show the archive again/,
   ]) assert.doesNotMatch(combined, pattern);
+  assert.match(styles, /\.folder-current\{animation:folder-drop 900ms steps\(6,end\) 700ms both\}/);
+  assert.match(styles, /@media \(prefers-reduced-motion:no-preference\)/);
+  assert.match(styles, /@media \(prefers-reduced-motion:reduce\)/);
   assert.match(source, /navigator\.clipboard/);
   assert.doesNotMatch(styles, /canvas/);
 });
