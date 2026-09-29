@@ -61,7 +61,7 @@ Blank space inside the scene after collapse is deliberate. No-JS and reduced fin
 
 ## Review and acceptance boundary
 
-B strips and reserve notes will be handed to design-lead on this exact sandbox candidate. No B design verdict is implied by the tests, by the historical A verdict, or by owner selection of B's concept. The fixture reuses the existing comp fonts while typography/full-width decisions are still being authored elsewhere.
+At 23:34Z, the source-and-evidence candidate `cbd261f` was sent to both design-lead and main-lead. Design-lead received both strip paths, exact per-breakpoint reserve sizes, observed browser results and the explicit sandbox-only boundary. Main-lead received the candidate SHA, behavioral/performance results and the hold on section motion and integration. Both sends succeeded. No B design verdict is implied by the tests, by the historical A verdict, or by owner selection of B's concept. The fixture reuses the existing comp fonts while typography/full-width decisions are still being authored elsewhere.
 
 The complete landing acceptance workflow has **not been attempted**: main-lead explicitly disallows integration and `landing/` edits before gate B, the real queued assignment and the slice 03 SHA. Destination queue check at 23:03Z returned no pending/in-progress/blocked rows. A sandbox pass is synthetic evidence, not acceptance-aligned project validation. Full-page section motion is still undefined for this seat.
 
