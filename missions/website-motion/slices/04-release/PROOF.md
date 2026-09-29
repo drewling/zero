@@ -1,23 +1,16 @@
-# PROOF — OPR.99.0.2.4 Motion release and live verification
+# Release proof: OPR.99.0.2.4
 
-> **WHO/WHEN:** the impl/QA pair that worked the slice, at slice-close — a slice is NOT done until this file exists and every `SPEC.md` proof-contract item has evidence (mapped 1:1, artifacts under `proof/`). See the `mission-slice-sop` skill + the conventions SSOT (`docs/reference/sdlc-conventions.md` in the repo, `$OPENRIG_HOME/reference/sdlc-conventions.md` on an installed package).
->
-> **HOW (the drop verb, not hand-placement):** put media files under `proof/`, then ATTACH them with `rig proof add OPR.99.0.2.4 --artifact-type qa --verdict PASS --candidate-sha <tip> --money-evidence "<one line>" --evidences "1" --media "screenshot-01.png"` — the drop writes the C1 header the Living Notes DELIVERED pairing joins on. Hand-placing files without a drop leaves the deliverable unpaired and `unverified`.
+Closed by: main-lead@zero. Date: 2026-09-29 02:43Z. Technical release: PASS. Visual acceptance: **REJECTED by owner** at 02:43Z, superseded by replacement mission [OPR.99.0.3](../../../website-redesign-2/SPEC.md).
 
-Closed by: <seat>   Date: <date>   Verdict: <pass | pass-with-residue | ...>
+## Requirement-to-evidence map
 
-## What this proves
+1. **Preflight and rollback.** Fresh native Dokploy and host preflight at 02:33Z found the single-service raw Compose `u2SP2b5035tm1yaHVNcH8`, healthy prior `zero-landing:57deff2`, and recovered host/control plane. Saved the API Compose response and stored Compose to `/Users/light/.jcode/scratch/zero-motion-release-20260929T0233Z/`, and generated server Compose to `/root/zero-motion-backup-20260929T0233Z/docker-compose.yml`. Prior image ID `sha256:fa98f6ddc47c7f65cf04ba5657318bc03adcc746ae3d220f17257c43bdf3287c` remained available. User authorized scoped release at 02:32Z, after earlier infrastructure hold cleared.
+2. **Exact candidate and isolated integration smoke.** Built source candidate commit `0505816f97aa56e7cde4c821100a2b40bf116e86` as amd64 image `zero-landing:0505816`, image ID `sha256:478af7e0fa551d393020880445c84996ec0ffea8049920deba312f0c618cd713`. Tarball SHA-256 `4942b08a09b8d985edb87272f71d673ee06295ea677db950c71640149bc36567`. Isolated Docker/nginx smoke returned 200 for `/`, `/privacy.html`, `/terms.html`, CSS, JS, app image, OG, robots, sitemap and llms. `/install` 302 to the raw GitHub installer; `/install.sh` 302 to the GitHub script view. No installer execution. This closed the local-daemon residue in [independent QA](../03-motion-qa/proof/VERDICT.md).
+3. **Deployment and health.** Updated only `zero-landing` in the native Dokploy raw Compose and triggered its deployment, then observed the new healthy container `7e87ff05a0a1` and public homepage/assets/legal 200. Served homepage, CSS, JS and legal HTML matched the reviewed candidate bytes. Installer redirects and fetched installer shell syntax passed. No other Compose services were changed.
+4. **Live visitor browser.** Aside inspected `https://zero.headless.com/` at a real 1440×900 viewport. The page accessibility snapshot exposed hero and install CTA, sort examples and replay control, recovery rail and button, install steps, FAQ and legal footer. Browser interaction confirmed sort replay, restore/archive button toggle, copy acknowledgement and FAQ expansion without page errors. Live motion frames are preserved at [live-sort-mid.png](proof/live-sort-mid.png) and [live-rail-mid.png](proof/live-rail-mid.png). The browser session could not set a true 390px viewport or reduced-motion preference, so those **live** variants were not directly observed. The independent candidate QA tested true 1440/390/320 Chromium/WebKit, reduced-motion, no-JS/no-Canvas and performance, and live bytes were tied to that candidate. Do not conflate candidate QA with live visual verification of those variants.
 
-<1-3 sentences: the claim the slice made, now demonstrated>
+## Important outcome and rollback
 
-## Artifacts (media in proof/)
+The owner looked at the live site and explicitly rejected the entire **visual design**: the yellow/navy departure-board identity, gigantic typography, black sorting table and spacing. Technical QA and release checks did not establish aesthetic acceptance. The owner requested `/impeccable`, Opus 5.5-led replacement design, and ten high-craft reference sites. [Replacement mission](../../../website-redesign-2/SPEC.md) is design-only pending owner visual approval. Do not redeploy the same motion candidate in response to a stale release message.
 
-Dropped via `rig proof add … --evidences … --media …` (one drop per verdict; media attached, never only hand-listed):
-
-- proof/screenshot-01.png — <what it shows>
-- proof/capture-behavior.gif — <what it shows>
-- proof/command-output.txt — <what it proves>
-
-## Residue / caveats (if any)
-
-<documented residue: what's not covered + where it's tracked>
+If a technical regression appears, restore the saved raw Compose content with the native Dokploy Compose update API and deploy `zero-landing:57deff2`; verify the exact retained prior image ID above, single service, healthy container and public routes. This **does not fix** the owner's visual complaint because that prior image uses the same rejected visual world. Do not roll it back merely on aesthetic grounds without a better direction or explicit owner request.

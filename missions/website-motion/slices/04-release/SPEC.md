@@ -2,7 +2,7 @@
 id: OPR.99.0.2.4
 slice: 04-release
 mission: website-motion
-status: blocked
+status: completed
 stage: wip
 verified: 2026-09-28 against existing Dokploy raw Compose release proof
 created: 2026-09-28
@@ -31,4 +31,4 @@ Publish only the independently QA-approved motion candidate to zero.headless.com
 
 ## Status
 
-Blocked on independent QA PASS. The prior redesign's `zero-landing:57deff2` is only a historical rollback baseline, not a guaranteed current image; re-check before release.
+Released 2026-09-29 02:35Z after independent QA PASS and explicit owner authorization, with exact candidate, isolated Docker/nginx smoke, healthy Dokploy deployment, retained rollback and live browser checks documented in [PROOF.md](PROOF.md). **Technical release passed, but the owner rejected the visual design at 02:43Z.** Replacement visual mission OPR.99.0.3 is active and has not been authorized for build or deployment.
