@@ -1,0 +1,35 @@
+Checked 2026-09-29T21:23:28Z
+cf017b7fde5d8040f105be78a3df70a22417740f86f3da7d2078e2d3a207223a  lib/review_open_loops.py
+cf017b7fde5d8040f105be78a3df70a22417740f86f3da7d2078e2d3a207223a  /Applications/zero.app/Contents/Resources/payload/lib/review_open_loops.py
+Byte-identical: PASS
+2e5081d5da3fdc783025b3955f899c1fa6bf9d9eaa3682e707dd2c009be52afd  lib/keeper_server.py
+2e5081d5da3fdc783025b3955f899c1fa6bf9d9eaa3682e707dd2c009be52afd  /Applications/zero.app/Contents/Resources/payload/lib/keeper_server.py
+Byte-identical: PASS
+327d5b534b28d63b7133bade76cc434173953befd1de54ad453b41ffa5a88f5f  lib/llm.py
+327d5b534b28d63b7133bade76cc434173953befd1de54ad453b41ffa5a88f5f  /Applications/zero.app/Contents/Resources/payload/lib/llm.py
+Byte-identical: PASS
+2b92a45603b6a97a7c142c06655b041d1d62d74766bce9cd3adc6b6f21c38f39  lib/jev.py
+2b92a45603b6a97a7c142c06655b041d1d62d74766bce9cd3adc6b6f21c38f39  /Applications/zero.app/Contents/Resources/payload/lib/jev.py
+Byte-identical: PASS
+c53a859dc2500c0a227316558ac99b4f6d8994f386baf841189bd3330a9eb46c  lib/inbox_zero.py
+c53a859dc2500c0a227316558ac99b4f6d8994f386baf841189bd3330a9eb46c  /Applications/zero.app/Contents/Resources/payload/lib/inbox_zero.py
+Byte-identical: PASS
+491f2e2303e3e1787ebfa27e20c9d9c3f8c90396cf451ce72a4077507314c8ab  keep-policy.md
+491f2e2303e3e1787ebfa27e20c9d9c3f8c90396cf451ce72a4077507314c8ab  /Applications/zero.app/Contents/Resources/payload/keep-policy.md
+Byte-identical: PASS
+ad71dbf7852490efc6ad9b346a5e46f8d46fdbe069265a986566946be78e2866  bin/zero
+ad71dbf7852490efc6ad9b346a5e46f8d46fdbe069265a986566946be78e2866  /Applications/zero.app/Contents/Resources/payload/bin/zero
+Byte-identical: PASS
+  "CFBundleShortVersionString" => "1.7.0"
+  "CFBundleVersion" => "1.7.0"
+  "LSMinimumSystemVersion" => "26.0"
+/Applications/zero.app/Contents/MacOS/zero: Mach-O 64-bit executable arm64
+Executable=/Applications/zero.app/Contents/MacOS/zero
+Identifier=com.drewl.zero
+Format=app bundle with Mach-O thin (arm64)
+CodeDirectory v=20400 size=8999 flags=0x2(adhoc) hashes=275+3 location=embedded
+Signature=adhoc
+Info.plist entries=12
+TeamIdentifier=not set
+Sealed Resources version=2 rules=13 files=68
+Internal requirements count=0 size=12

@@ -1,0 +1,29 @@
+COPY v3 mechanical proof, 2026-09-29 UTC
+Counter: Unicode letter/number tokens, internal apostrophes/dots/hyphens retained. Markdown, arrows and ornamental separators excluded. Repeated hero/demo rows and controls count again.
+primary: 425
+heroPanel: 46
+demoRows: 40
+lastReplyAnnotation: 3
+windowTitles: 8
+extraChrome: 8
+heroMotionChrome: 4
+navigation: 9
+footer: 5
+siteBrand: 1
+visible total: 549
+Word budget 350–550: PASS
+grep -Fin 'open loops' COPY.md: 0 hits
+grep -Fin 'who's waiting' COPY.md: 0 hits
+grep -Fin 'who's writing' COPY.md: 0 hits
+grep -Fin 'who’s waiting' COPY.md: 0 hits
+grep -Fin 'who’s writing' COPY.md: 0 hits
+grep -Fin 'ball is in their court' COPY.md: 0 hits
+grep -Fin 'Check it with your coffee' COPY.md: 0 hits
+grep -Fin 'Two questions' COPY.md: 0 hits
+grep -Fin 'set something aside' COPY.md: 0 hits
+grep -Fin 'agent CLI' COPY.md: 0 hits
+grep -Fin 'Jev model reads each thread' COPY.md: 0 hits
+Accepted cold-reader excerpt unchanged in COPY v3: PASS
+Three distinct successful single-turn Mac/Gmail/inbox readers: PASS
+Six retained research screenshots: PASS
+Required authored proof files exist: PASS

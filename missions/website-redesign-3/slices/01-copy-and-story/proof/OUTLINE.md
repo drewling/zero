@@ -1,6 +1,6 @@
 # OUTLINE: from feature list to visitor decision
 
-Status: **DRAFT v1, 2026-09-29.** Copy slice only. The design lead owns the one-bit composition, section designs and motion storyboard. Owner gate A approves words and order alongside gate B, not this draft commit.
+Status: **DRAFT v2, 2026-09-29.** Aligned with COPY v3 and reviewed for design fit. Copy slice only. The design lead owns the one-bit composition, section designs and motion storyboard. Owner gate A approves words and order alongside gate B, not this proof commit.
 
 ## Visitor and outcome
 
@@ -12,7 +12,7 @@ The owner has already selected the one-bit Mac world. This plan uses its windows
 
 | Order | Visitor question | Standalone heading | What the words must prove | Suggested content role, not a comp |
 |---|---|---|---|---|
-| 1 | What is it? | Clean up your Gmail inbox. | The task in the headline, Mac and reversible archive in the subhead, supported hardware beside the CTA | Hero with the four-row illustrative app panel |
+| 1 | What is it? | Clean up your Gmail inbox on your Mac. | The task in the headline, Mac and reversible archive in the subhead, supported hardware beside the CTA | Hero with the four-row illustrative app panel |
 | 2 | Show me it working | See what stays. See what gets archived. | Familiar concrete messages end up in one of two places | Labeled keep/archive transformation, readable without animation |
 | 3 | How does it know? | Keep mail that needs your reply or action. | A model uses your rules, identifies consequences, and can be wrong | A compact decision example, not a jargon window |
 | 4 | Can I undo it? | Undo an archive. Nothing is deleted. | All Mail plus dated recovery label, restore one or a day, starred and uncertain mail protected | Recovery label/folder moment, a genuine Undo action |
@@ -46,4 +46,4 @@ Source for old outline: committed `landing/index.html` and mission audit. The ol
 - H2s remain meaningful in isolation. Pixel/window craft must not force duplicate short, cryptic titles over striped bars.
 - The disclosure block is not hidden behind an accordion to make the word count look low. Small print must remain readable.
 - Visible word budget is measured in COPY.md. Alternate heroes and planning notes are excluded, rendered panel/controls and navigation are included.
-- Every v1 statement is a draft claim until its source trace is checked. No edit to `landing/`, no deploy and no push from this slice.
+- COPY v3's claims now map to shipped source in `truth-trace.md`. Cold-reader round 3 is 3/3 on the exact hero/subhead/demo excerpt, and grep finds zero banned phrases. No edit to `landing/`, no deploy and no push from this slice. The 549-word authored inventory includes both hero and demo rows, captions, window chrome, navigation and footer. Recount any added/duplicated strings in the actual comps/build.
