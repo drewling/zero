@@ -1,6 +1,6 @@
 # Reader protocol and baseline provenance
 
-Status: baseline evaluation in progress, 2026-09-29. This is a proof-only redesign proposal. Hero B is owner-approved; sections and copy are not. No install, inbox access, deployment or landing edit is part of this test.
+Status: three matched baseline reads complete, 2026-09-29. After reads are waiting for the designer's stable A/B commit, final type and full-bleed layout. This is a proof-only redesign proposal. Hero B is owner-approved; sections and copy are not. No install, inbox access, deployment or landing edit is part of this test.
 
 ## Before sources
 
@@ -16,7 +16,17 @@ Status: baseline evaluation in progress, 2026-09-29. This is a proof-only redesi
 
 `run-isolated-reader.mjs` passes the complete copy and images inline as one user message. Each run has a new UUID, neutral scratch cwd, replacement plain system prompt, no project settings, no slash skills, no auto-memory, no MCP servers, no browser, no tools and no persisted session. Model requested explicitly: `claude-sonnet-5`. The wrapper CLI gets `</dev/null`; the child gets only the one generated stream-json message, then stdin closes. Inline images require that technical input stream, not an interactive chat. Raw JSONL, stderr, answer and metadata are retained. Metadata records exact prompt, source-image hashes, model usage, session IDs and turn count. Reject errors, substitutions, reused session IDs, tool calls or more than one turn.
 
-`run-matched-reader.mjs before 1|2|3` uses identical ordered inputs: two long-page screenshots, six desktop crops, six mobile crops, and the full authored copy. Fresh after readers use the same prompt, model/isolation conditions, two long views and ordered detail crops sufficient to read all sections, with the complete new visible copy. A changed section count need not force duplicated after screenshots to preserve an artificial crop count. Report that input difference explicitly.
+`run-matched-reader.mjs before 1|2|3` uses identical ordered inputs: two long-page screenshots, six desktop crops, six mobile crops, and the full authored copy. Fresh after readers use `run-matched-reader.mjs after-a 1|2|3` and `after-b 1|2|3`. Each frozen `after-{a,b}/` contains `PAGE-TEXT.txt` and `reader-images.json`, an ordered list of relative image paths within that snapshot. Use two long views first (1440 then 390), then desktop crops in page order, then mobile crops in page order. Detail crops must make every section readable. The same fixed prompt, model and isolation conditions apply. A changed section count need not force duplicated after screenshots to preserve an artificial crop count. Report that input difference explicitly.
+
+Do not run on moving designer sources. Record the stable commit and hashes of both source pages, copied assets, full copy and images before launching. Preserve the original screenshots alongside any API-size derivatives. The wrapper rejects an invalid phase/reader, absolute or parent-traversing manifest paths, missing inputs and output prefixes with existing evidence. A repeat uses a new explicit output prefix and retains the previous attempt, not an overwritten run.
+
+## Selection and complete-workflow checks
+
+Evaluate each outline independently before comparing it. Three fresh sessions per outline do not imply that a given session has seen both pages or directly preferred one. The recommendation is the team's qualitative comparison of independently observed category, actor, recovery, tradeoff comprehension and section usefulness, not a fictional paired preference or a significance claim. Document contradictory observations and all product-based reasons to decline. If the evidence is tied, report the tie and select on the declared shorter-story requirement without claiming a reader winner.
+
+Baseline self-reports are job 4/4/4, story 3/3/3, visuals 2/2/2, tradeoff finding 4/3/4, decision 2/2/3. Targets declared before after reads are in `frameworks-and-section-jobs.md`. Retain raw answers and explain changes with specific responses, not only average ratings. Improvements caused solely by removing repeated comp chrome or proof watermarks are input-condition changes, not proof that the new story works better.
+
+Before handback, check the full chosen page through public comp routes, all six viewport widths, final authored text including alternate actor states, correct install-warning anchors, exact command and copy fallback, no-JS and reduced-motion completeness, source-faithful Rules/Undo controls, disclosure coverage, and proof-only packaging. Record each check and its observable result in `acceptance-checklist.md`. Still screenshots test content/layout, not animation quality or classification accuracy. Independent QA receives exact frozen proposal and comp paths, and its findings and fix/recheck responses are retained.
 
 The earlier `readers/before/reader-1.*` is a retained pilot with crops but without the complete stitched page images. It does not count as one of the three matched baseline readers. Two launch attempts failed before calling the model because a hero-crop path contained an extra `shots/`; corrected in the repeatable wrapper, with no model result discarded.
 
