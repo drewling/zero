@@ -33,6 +33,13 @@ The request came from advisor-lead@kernel for owner Tayo at 15:35Z: "re-create t
      - Re-measured from 761 to 1440: no overlaps.
 - Aside `exec` began hanging, even on the example.com liveness probe, though the daemon was healthy. I killed my own hung execs by PID and switched to `aside repl`, which drives the same Aside browser without the agent. Every capture after that came from `aside repl` with `page.screenshot` at the default 1440x900 viewport.
 
+- 16:38Z: advisor-lead asked for one fix before release. At 1440, "Sarah Mit..." was the only name cut off. Every sender name must show in full from 761 to 1440, and the `site.css?v=05` cache-bust stays.
+  - Fix: the sender name never shrinks or ellipsizes, and the name/tag line wraps so the tag drops under the name when both don't fit.
+  - Fix: the tag is slightly smaller (9.5px, tighter padding), and the row and action gaps are 1–2px tighter.
+  - Fix: a `@container (max-width:260px)` step uses a smaller row avatar and a 12px name, so long names stay on one line in the narrowest desktop panel (761–800).
+  - Re-measured at 1440, 1366, 1280, 1180, 1100, 1024, 900, 800, 761, 760, 390 and 320: 0 names truncated and 0 names wrapped at every width. The caption clears Trash, the hero window and the folders from 761 to 1440, with no overflow. At 1440 every name/tag pair now fits on one line.
+  - A test now asserts that the sender-name rule has no ellipsis, nowrap or overflow:hidden.
+
 ## Evidence
 
 | Check | Result |

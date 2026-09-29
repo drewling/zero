@@ -1,0 +1,256 @@
+[
+  {
+    "engine": "Chromium",
+    "viewports": {
+      "320": {
+        "httpStatus": 200,
+        "snapshot": {
+          "clientWidth": 320,
+          "scrollWidth": 320,
+          "panelRect": {
+            "x": 16,
+            "y": 764.484375,
+            "width": 288,
+            "height": 730.4375,
+            "right": 304,
+            "bottom": 1494.921875
+          },
+          "trashRect": {
+            "top": 1684.484375,
+            "bottom": 1743.375
+          },
+          "figCaption": "zero’s real layout, redrawn. Names and subjects are made up.",
+          "srOnly": "Illustration of zero’s Open loops panel: 416 things still need you across 2 Gmail accounts. A “Waiting on you” list shows each conversation’s sender, subject, an Action required or Needs reply tag, its age, and Reply, AI archive and Archive actions. A Run zero now button sits at the bottom.",
+          "focusablesInPanel": 0,
+          "ariaHidden": "true",
+          "isInert": true,
+          "rows": 6,
+          "tags": [
+            "Action required",
+            "Needs reply",
+            "Action required",
+            "Needs reply"
+          ],
+          "runBtnText": "Run zero now",
+          "footText": "Tidies every inbox to only what needs you.",
+          "cssHref": "/site.css?v=05",
+          "overflowingPastViewport": false
+        },
+        "pageErrors": []
+      },
+      "390": {
+        "httpStatus": 200,
+        "snapshot": {
+          "clientWidth": 390,
+          "scrollWidth": 390,
+          "panelRect": {
+            "x": 16,
+            "y": 672,
+            "width": 358,
+            "height": 650.875,
+            "right": 374,
+            "bottom": 1322.875
+          },
+          "trashRect": {
+            "top": 1512.4375,
+            "bottom": 1571.328125
+          },
+          "figCaption": "zero’s real layout, redrawn. Names and subjects are made up.",
+          "srOnly": "Illustration of zero’s Open loops panel: 416 things still need you across 2 Gmail accounts. A “Waiting on you” list shows each conversation’s sender, subject, an Action required or Needs reply tag, its age, and Reply, AI archive and Archive actions. A Run zero now button sits at the bottom.",
+          "focusablesInPanel": 0,
+          "ariaHidden": "true",
+          "isInert": true,
+          "rows": 6,
+          "tags": [
+            "Action required",
+            "Needs reply",
+            "Action required",
+            "Needs reply"
+          ],
+          "runBtnText": "Run zero now",
+          "footText": "Tidies every inbox to only what needs you.",
+          "cssHref": "/site.css?v=05",
+          "overflowingPastViewport": false
+        },
+        "pageErrors": []
+      },
+      "1440": {
+        "httpStatus": 200,
+        "snapshot": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440,
+          "panelRect": {
+            "x": 967.203125,
+            "y": 122,
+            "width": 372,
+            "height": 637.4375,
+            "right": 1339.203125,
+            "bottom": 759.4375
+          },
+          "trashRect": {
+            "top": 845.109375,
+            "bottom": 904
+          },
+          "figCaption": "zero’s real layout, redrawn. Names and subjects are made up.",
+          "srOnly": "Illustration of zero’s Open loops panel: 416 things still need you across 2 Gmail accounts. A “Waiting on you” list shows each conversation’s sender, subject, an Action required or Needs reply tag, its age, and Reply, AI archive and Archive actions. A Run zero now button sits at the bottom.",
+          "focusablesInPanel": 0,
+          "ariaHidden": "true",
+          "isInert": true,
+          "rows": 6,
+          "tags": [
+            "Action required",
+            "Needs reply",
+            "Action required",
+            "Needs reply"
+          ],
+          "runBtnText": "Run zero now",
+          "footText": "Tidies every inbox to only what needs you.",
+          "cssHref": "/site.css?v=05",
+          "overflowingPastViewport": false
+        },
+        "pageErrors": []
+      }
+    },
+    "reducedMotion": {
+      "animationName": "none",
+      "transitionDuration": "0s",
+      "animCount": 0
+    },
+    "noJs": {
+      "panelPresent": true,
+      "rows": 6,
+      "rect": {
+        "width": 372,
+        "height": 637.4375
+      }
+    },
+    "errors": []
+  },
+  {
+    "engine": "WebKit",
+    "viewports": {
+      "320": {
+        "httpStatus": 200,
+        "snapshot": {
+          "clientWidth": 320,
+          "scrollWidth": 320,
+          "panelRect": {
+            "x": 16,
+            "y": 758,
+            "width": 288,
+            "height": 719,
+            "right": 304,
+            "bottom": 1477
+          },
+          "trashRect": {
+            "top": 1663,
+            "bottom": 1721
+          },
+          "figCaption": "zero’s real layout, redrawn. Names and subjects are made up.",
+          "srOnly": "Illustration of zero’s Open loops panel: 416 things still need you across 2 Gmail accounts. A “Waiting on you” list shows each conversation’s sender, subject, an Action required or Needs reply tag, its age, and Reply, AI archive and Archive actions. A Run zero now button sits at the bottom.",
+          "focusablesInPanel": 0,
+          "ariaHidden": "true",
+          "isInert": true,
+          "rows": 6,
+          "tags": [
+            "Action required",
+            "Needs reply",
+            "Action required",
+            "Needs reply"
+          ],
+          "runBtnText": "Run zero now",
+          "footText": "Tidies every inbox to only what needs you.",
+          "cssHref": "/site.css?v=05",
+          "overflowingPastViewport": false
+        },
+        "pageErrors": []
+      },
+      "390": {
+        "httpStatus": 200,
+        "snapshot": {
+          "clientWidth": 390,
+          "scrollWidth": 390,
+          "panelRect": {
+            "x": 16,
+            "y": 667,
+            "width": 358,
+            "height": 643,
+            "right": 374,
+            "bottom": 1310
+          },
+          "trashRect": {
+            "top": 1496,
+            "bottom": 1554
+          },
+          "figCaption": "zero’s real layout, redrawn. Names and subjects are made up.",
+          "srOnly": "Illustration of zero’s Open loops panel: 416 things still need you across 2 Gmail accounts. A “Waiting on you” list shows each conversation’s sender, subject, an Action required or Needs reply tag, its age, and Reply, AI archive and Archive actions. A Run zero now button sits at the bottom.",
+          "focusablesInPanel": 0,
+          "ariaHidden": "true",
+          "isInert": true,
+          "rows": 6,
+          "tags": [
+            "Action required",
+            "Needs reply",
+            "Action required",
+            "Needs reply"
+          ],
+          "runBtnText": "Run zero now",
+          "footText": "Tidies every inbox to only what needs you.",
+          "cssHref": "/site.css?v=05",
+          "overflowingPastViewport": false
+        },
+        "pageErrors": []
+      },
+      "1440": {
+        "httpStatus": 200,
+        "snapshot": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440,
+          "panelRect": {
+            "x": 967.203125,
+            "y": 122,
+            "width": 372,
+            "height": 631,
+            "right": 1339.203125,
+            "bottom": 753
+          },
+          "trashRect": {
+            "top": 846,
+            "bottom": 904
+          },
+          "figCaption": "zero’s real layout, redrawn. Names and subjects are made up.",
+          "srOnly": "Illustration of zero’s Open loops panel: 416 things still need you across 2 Gmail accounts. A “Waiting on you” list shows each conversation’s sender, subject, an Action required or Needs reply tag, its age, and Reply, AI archive and Archive actions. A Run zero now button sits at the bottom.",
+          "focusablesInPanel": 0,
+          "ariaHidden": "true",
+          "isInert": true,
+          "rows": 6,
+          "tags": [
+            "Action required",
+            "Needs reply",
+            "Action required",
+            "Needs reply"
+          ],
+          "runBtnText": "Run zero now",
+          "footText": "Tidies every inbox to only what needs you.",
+          "cssHref": "/site.css?v=05",
+          "overflowingPastViewport": false
+        },
+        "pageErrors": []
+      }
+    },
+    "reducedMotion": {
+      "animationName": "none",
+      "transitionDuration": "0s",
+      "animCount": 0
+    },
+    "noJs": {
+      "panelPresent": true,
+      "rows": 6,
+      "rect": {
+        "width": 372,
+        "height": 631
+      }
+    },
+    "errors": []
+  }
+]

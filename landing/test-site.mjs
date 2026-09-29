@@ -196,4 +196,8 @@ test('hero panel is a faithful, decorative one-bit redraw of the real Open loops
   assert.deepEqual([...new Set(hexes)], ['#3d3d3d'], 'only the neutral secondary-ink grey');
   assert.doesNotMatch(zpCss, /\b(rgb|rgba|hsl|hsla|oklch|lab)\(/i);
   assert.doesNotMatch(zpCss, /animation|transition/);
+  // Sender names show in full at every width (advisor, 16:38Z): no ellipsis/nowrap on the name.
+  const nameRules = zpCss.split('\n').filter((line) => /\.zp-line b\{/.test(line)).join('\n');
+  assert.ok(nameRules, 'sender name rule present');
+  assert.doesNotMatch(nameRules, /ellipsis|nowrap|overflow:hidden/);
 });
