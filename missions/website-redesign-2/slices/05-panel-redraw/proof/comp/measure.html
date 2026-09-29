@@ -1,0 +1,25 @@
+<!doctype html><meta charset="utf-8"><title>measure</title>
+<style>body{margin:0;padding:12px;font:13px/1.4 monospace}pre{white-space:pre-wrap}iframe{border:1px solid #000;display:block;margin-top:8px}</style>
+<pre id="out">measuring…</pre>
+<div id="frames"></div>
+<script>
+const src=new URLSearchParams(location.search).get('src')||'live.html';
+const widths=[1440,390,320],lines=[];let done=0;
+const hit=(a,b)=>a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom;
+for(const w of widths){
+  const f=document.createElement('iframe');f.width=w;f.height=w>800?900:1400;f.src=src;
+  document.getElementById('frames').appendChild(f);
+  f.onload=()=>setTimeout(()=>{
+    const d=f.contentDocument,de=d.documentElement,zp=d.querySelector('.zp'),fig=d.querySelector('.app-window');
+    let past=0,clipped=0,ell=0;
+    for(const e of zp.querySelectorAll('*')){const r=e.getBoundingClientRect();if(r.width&&r.right>de.clientWidth+.5)past++;
+      if(e.children.length===0&&e.textContent.trim()&&e.scrollWidth>e.clientWidth+1){getComputedStyle(e).textOverflow==='ellipsis'?ell++:clipped++}}
+    const R=s=>d.querySelector(s)?.getBoundingClientRect();
+    const figR=fig.getBoundingClientRect(),overl=['.hero-window','.desktop-files','.trash-cue'].filter(s=>R(s)&&hit(figR,R(s)));
+    const foc=zp.querySelectorAll('a,button,input,[tabindex],[contenteditable]').length;
+    const sr=fig.querySelector('.sr-only')?.textContent.trim().length||0;
+    lines.push(`w${w}: scrollWidth ${de.scrollWidth}/${de.clientWidth} · panel past right edge ${past} · clipped-text ${clipped} · ellipsized ${ell} · figure overlaps [${overl.join(',')||'none'}] · panel ${Math.round(zp.getBoundingClientRect().width)}x${Math.round(zp.getBoundingClientRect().height)} · focusables-in-panel ${foc} · inert ${zp.inert} · aria-hidden ${zp.getAttribute('aria-hidden')} · sr-summary chars ${sr} · img tags in hero ${d.querySelectorAll('.desktop-hero img').length} · fonts ${d.fonts.status}`);
+    if(++done===widths.length){lines.sort((a,b)=>parseInt(b.slice(1))-parseInt(a.slice(1)));document.getElementById('out').textContent=lines.join('\n');document.title='measured'}
+  },1200);
+}
+</script>

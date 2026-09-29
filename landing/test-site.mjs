@@ -96,8 +96,8 @@ test('homepage follows the approved visitor-first six-section order', () => {
     /id="decides"[\s\S]*?id="morning"[\s\S]*?id="undo"[\s\S]*?id="before"[\s\S]*?id="install"/,
     /id="hero-title"[\s\S]*?Only the mail[\s\S]*?needs you\./,
     /class="hero-req">Apple Silicon · macOS 26 or later · Gmail<\//,
-    /assets\/panel-cut\.png/,
-    /The real app\. Names and subjects are made up\./,
+    /<div class="zp" aria-hidden="true" inert>/,
+    /zero’s real layout, redrawn\. Names and subjects are made up\./,
     /id="decides"[\s\S]*?It asks who’s[\s\S]*?waiting, not[\s\S]*?who’s writing\./,
     /class="signals"[\s\S]*?Was the last message yours\?[\s\S]*?Have you ever written to this sender\?/,
     /id="morning"[\s\S]*?Check it with[\s\S]*?your coffee\.[\s\S]*?Then close it\./,
@@ -147,4 +147,53 @@ test('retired table, FAQ, motion hooks, and dead implementation assets are absen
   assert.match(styles, /@media \(prefers-reduced-motion:reduce\)/);
   assert.match(source, /navigator\.clipboard/);
   assert.doesNotMatch(styles, /canvas/);
+});
+
+test('hero panel is a faithful, decorative one-bit redraw of the real Open loops panel', () => {
+  const panel = homepage.match(/<figure class="app-window">[\s\S]*?<\/figure>/)?.[0] ?? '';
+  assert.ok(panel, 'hero figure present');
+  // Replaces the dark raster crop; the source screenshot stays as og:image evidence only.
+  assert.doesNotMatch(homepage, /panel-cut\.png/);
+  assert.doesNotMatch(panel, /<img\b/);
+  assert.match(homepage, /og:image" content="https:\/\/zero\.headless\.com\/assets\/zero-panel\.png"/);
+  // Real app structure (macapp/Sources/PanelView.swift, KeeperModel.swift Tab titles).
+  for (const pattern of [
+    /zp-mark[\s\S]*?zero</,
+    /zp-av zp-ta">TA<b>99\+<\/b>/,
+    /zp-av zp-li">LI<b>25<\/b>/,
+    /zp-tabs"><span class="zp-on">Open loops<\/span><span>Accounts<\/span><span>Undo<\/span><span>Settings<\/span>/,
+    /<strong>416<\/strong>\s*<span class="zp-need">things still need you<\/span>/,
+    /Across 2 accounts\. Tap any to open it in Gmail\./,
+    /class="zp-label">Waiting on you</,
+    /Action required/,
+    /Needs reply/,
+    /Tidies every inbox to only what needs you\./,
+    /class="zp-run">[\s\S]*?Run zero now/,
+  ]) assert.match(panel, pattern);
+  const rows = panel.match(/<ul class="zp-rows">[\s\S]*?<\/ul>/)?.[0] ?? '';
+  const items = rows.match(/<li>[\s\S]*?<\/li>/g) ?? [];
+  assert.equal(items.length, 6);
+  for (const row of items) {
+    assert.match(row, /class="zp-who"[\s\S]*?<b>[^<]+<\/b>[\s\S]*?class="zp-subj">[^<]+</, 'sender + subject');
+    assert.match(row, /class="zp-age">(\d+[mhdw]|now)</, 'age uses relTime units');
+    assert.match(row, /#zp-reply[\s\S]*?#zp-spark[\s\S]*?#zp-archive/, 'Reply, AI archive, Archive in app order');
+  }
+  // Only tags that exist as default categories (lib/review_open_loops.py).
+  const tags = [...rows.matchAll(/<svg><use href="#zp-(?:bolt|mail)"\/><\/svg>([^<]+)<\/em>/g)].map((m) => m[1]);
+  assert.deepEqual([...new Set(tags)].sort(), ['Action required', 'Needs reply']);
+  // Decorative: hidden from AT, inert, nothing focusable; an sr-only summary carries the meaning.
+  assert.match(panel, /<div class="zp" aria-hidden="true" inert>/);
+  // The panel's markup depends on new CSS; a versioned href stops a heuristically cached site.css
+  // from rendering the new markup unstyled for returning visitors (nginx sends no Cache-Control).
+  assert.match(homepage, /<link rel="stylesheet" href="\/site\.css\?v=[\w.-]+">/);
+  assert.doesNotMatch(panel, /<(a|button|input|select|textarea)\b|tabindex=/);
+  assert.match(panel, /<p class="sr-only">Illustration of zero’s Open loops panel: [^<]{80,}<\/p>/);
+  assert.match(panel, /<figcaption>zero’s real layout, redrawn\. Names and subjects are made up\.<\/figcaption>/);
+  // One-bit: the redraw introduces no hue.
+  const zpCss = styles.split('\n').filter((line) => /\.zp/.test(line)).join('\n');
+  assert.ok(zpCss.length > 500);
+  const hexes = [...zpCss.matchAll(/#[0-9a-f]{3,8}\b/gi)].map((m) => m[0].toLowerCase());
+  assert.deepEqual([...new Set(hexes)], ['#3d3d3d'], 'only the neutral secondary-ink grey');
+  assert.doesNotMatch(zpCss, /\b(rgb|rgba|hsl|hsla|oklch|lab)\(/i);
+  assert.doesNotMatch(zpCss, /animation|transition/);
 });

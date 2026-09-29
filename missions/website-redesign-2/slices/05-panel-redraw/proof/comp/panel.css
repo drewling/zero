@@ -1,0 +1,73 @@
+/* zero panel redraw: the real Open loops panel, in the one-bit site language. */
+.app-window .zp{container-type:inline-size}
+.zp{position:relative;display:block;background:var(--white);color:var(--ink);border:var(--line);box-shadow:4px 4px 0 var(--black);font:400 13px/1.3 var(--sans);user-select:none}
+.zp svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.zp .zp-fill{fill:currentColor;stroke:none}
+.zp-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.zp-head{display:flex;align-items:center;gap:10px;padding:10px 12px 9px 14px;border-bottom:var(--line)}
+.zp-mark{display:flex;align-items:center;gap:8px;margin-right:auto;font:600 18px/1 var(--pixel)}
+.zp-dots{display:flex;gap:12px}
+.zp-av{position:relative;display:inline-grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--black);font:600 11px/1 var(--sans);letter-spacing:.02em}
+.zp-ta{background:var(--black);color:var(--white)}
+.zp-li{background:var(--white);color:var(--black)}
+.zp-av b{position:absolute;right:-9px;top:-9px;min-width:17px;padding:2px 3px;border:1.5px solid var(--black);border-radius:9px;background:var(--white);color:var(--black);font:600 9px/1 var(--mono);text-align:center}
+.zp-more{display:flex;gap:3px;padding:0 2px 0 6px}
+.zp-more i{width:4px;height:4px;background:var(--black)}
+.zp-tabs{display:grid;grid-template-columns:repeat(4,auto);justify-content:space-between;margin:10px 12px 0;padding:3px;border:var(--line);font:600 13px/1 var(--pixel)}
+.zp-tabs span{padding:7px 8px;text-align:center;white-space:nowrap}
+.zp-tabs .zp-on{background:var(--black);color:var(--white)}
+.zp-count{display:grid;justify-items:center;gap:3px;padding:18px 12px 14px;text-align:center}
+.zp-count strong{font:600 54px/1 var(--pixel);letter-spacing:-.02em}
+.zp-need{font-weight:600;font-size:15px}
+.zp-across{font-size:12px;color:#3d3d3d}
+.zp-label{margin:0;padding:0 14px 6px;font:600 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.zp-rows{list-style:none;margin:0;padding:0}
+.zp-rows li{display:flex;align-items:center;gap:8px;padding:9px 10px 9px 12px}
+.zp-who{display:grid;gap:2px;flex:1;min-width:0}
+.zp-line{display:flex;align-items:center;gap:6px;min-width:0}
+.zp-line b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.zp-subj{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:#3d3d3d}
+.zp-tag{display:inline-flex;align-items:center;gap:3px;flex:none;padding:2px 6px 2px 4px;border:1.5px solid var(--black);border-radius:5px;font:600 10px/1.1 var(--sans);font-style:normal;white-space:nowrap}
+.zp-tag svg{width:11px;height:11px;stroke-width:2.2}
+.zp-act{background:var(--black);color:var(--white)}
+.zp-chev{width:11px!important;height:11px!important;opacity:.5}
+.zp-age{min-width:22px;font:400 11px/1 var(--mono);text-align:right}
+.zp-acts{display:flex;gap:6px}
+.zp-foot{display:flex;align-items:center;gap:10px;padding:10px 10px 10px 14px;border-top:var(--line);font-size:11.5px;line-height:1.3}
+.zp-foot>span:first-child{flex:1;min-width:0}
+.zp-run{display:inline-flex;align-items:center;gap:6px;flex:none;padding:9px 12px;border-radius:8px;background:var(--black);color:var(--white);font:600 14px/1 var(--pixel);white-space:nowrap}
+.zp-run svg{width:13px;height:13px}
+.app-window .sr-only{position:absolute}
+
+/* Direction A: site-native Finder list (square window, dotted rules). */
+.zp-a .zp-rows li{border-top:1px dotted var(--black)}
+.zp-a .zp-rows li:first-child{border-top:var(--line)}
+
+/* Direction B: menu-bar popover (rounded, notch, card rows like the app). */
+.zp-b{border-radius:14px;margin-top:10px}
+.zp-b:before,.zp-b:after{content:"";position:absolute;right:68px;width:0;height:0;border:10px solid transparent;border-top:0}
+.zp-b:before{top:-12px;border-bottom:12px solid var(--black)}
+.zp-b:after{top:-8px;right:70px;border-width:0 8px 10px;border-bottom-color:var(--white)}
+.zp-b .zp-tabs{border-radius:9px}
+.zp-b .zp-tabs .zp-on{border-radius:6px}
+.zp-b .zp-rows{display:grid;gap:5px;padding:0 8px}
+.zp-b .zp-rows li{border:1.5px solid var(--black);border-radius:9px;padding:8px 8px 8px 10px}
+.zp-b .zp-foot{margin-top:8px}
+
+/* Narrow panels (390/320 phones): keep every row on one line. */
+@container (max-width:360px){
+  .zp-head{padding-inline:10px}
+  .zp-dots{gap:10px}
+  .zp-tabs{margin-inline:8px;font-size:11.5px}
+  .zp-tabs span{padding:6px 5px}
+  .zp-count strong{font-size:46px}
+  .zp-rows li{gap:6px;padding-inline:8px}
+  .zp-b .zp-rows{padding:0 6px}
+  .zp-chev{display:none}
+  .zp-acts{gap:4px}
+  .zp svg{width:13px;height:13px}
+  .zp-line{flex-wrap:wrap;row-gap:3px}
+  .zp-foot{flex-wrap:wrap;justify-content:flex-end}
+  .zp-foot>span:first-child{flex-basis:100%}
+}
+@media (max-width:760px){.app-window{width:100%}}

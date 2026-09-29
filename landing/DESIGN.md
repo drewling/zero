@@ -50,11 +50,18 @@ components:
 
 The page is a small desktop assembled from windows, folders, a dated archive label, and an empty Trash. It makes zero's mechanism legible at a glance: the visitor sees a message that needs attention, learns which kinds stay in Inbox, sees that archived mail remains recoverable, then gets the real requirements and install command. The visual world is a replacement, not a polish pass over the old departure-board system.
 
-The surface is strict black and white with a 50% dither texture behind solid windows. Striped title bars, pixel display type, Finder-style rules, and Terminal-style install instructions establish the Macintosh reference without pretending the page is an actual operating system. The real app screenshot is the only color image.
+The surface is strict black and white with a 50% dither texture behind solid windows. Striped title bars, pixel display type, Finder-style rules, and Terminal-style install instructions establish the Macintosh reference without pretending the page is an actual operating system. The hero panel is zero's real Open loops panel redrawn in the same one-bit language, so the page carries no color image.
 
 ## Product evidence and claims
 
-- `assets/zero-panel.png` remains the source product screenshot, and `assets/panel-cut.png` is the approved portrait crop used in the hero. The caption states that names and subjects are made up.
+- `assets/zero-panel.png` remains the source product screenshot and the og:image. The hero does not show it. Instead, the hero is an HTML/CSS redraw of the same Open loops panel, and every element comes from `macapp/Sources/PanelView.swift`:
+  - the wordmark, account badges with inbox counts, and More
+  - the Open loops, Accounts, Undo and Settings tabs
+  - the count, "things still need you" and "Across N accounts. Tap any to open it in Gmail."
+  - the Waiting on you rows, each with sender, subject, a Needs reply or Action required tag, a preview chevron, the age, and the Reply, AI archive and Archive actions
+  - the footer line and **Run zero now**
+
+  The redraw adds no features. The caption reads "zero's real layout, redrawn. Names and subjects are made up." The retired raster crop `panel-cut.png` has been deleted.
 - The two-question window explains the judgment signals that distinguish zero from a simple sender filter. It is an illustration, not a live inbox or a guarantee.
 - Archive remains reversible. Nothing is deleted. Gmail All Mail and the dated recovery label stay explicit.
 - The Jev data path, optional draft provider, Apple Silicon and macOS 26 requirements, unverified Google app warning, ad-hoc signing, and provider billing remain visible.
@@ -64,14 +71,15 @@ The surface is strict black and white with a 50% dither texture behind solid win
 
 Pixelify Sans is self-hosted for the display voice. The implementation keeps the official Pixelify files and SIL Open Font License notice in `assets/pixelify-400.woff2`, `assets/pixelify-600.woff2`, and `assets/OFL-pixelify.txt`. The files were sourced from the approved comp font inventory at `missions/website-redesign-2/slices/01-research-direction/proof/comps/fonts/`.
 
-Geist and Geist Mono remain self-hosted for body copy, code, and labels, with their existing OFL notice. Archivo and its license file are removed because the approved world no longer uses them. There are no Google Fonts requests. The source product image remains byte-identical; the portrait crop is the approved crop-only derivative used by the B comp.
+Geist and Geist Mono remain self-hosted for body copy, code, and labels, with their existing OFL notice. Archivo and its license file are removed because the approved world no longer uses them. There are no Google Fonts requests. The source product image remains byte-identical. The hero redraw uses no raster, only HTML text and a small inline SVG icon sprite with one stroke weight.
 
 ## Layout and responsive rules
 
 - The first viewport is a dithered desktop with a large white hero window, the real app window, dated archive folders, and an empty Trash cue.
 - The current dated folder has one authored 900ms stepped drop on load, matching the approved B moment. Reduced-motion users see the settled folder with no animation.
 - The visitor order is hero, judgment, ambient use, reversibility, requirements/data/cost, and install. The page supports the visitor decision path instead of repeating a feature inventory.
-- The hero keeps the compact requirements line near the primary action and the real app screenshot as the only color image.
+- The hero keeps the compact requirements line near the primary action. The app panel is a one-bit popover with a notch, and its rows are drawn as the app's rounded cards. Inside the panel, the colored pills become outlined (Needs reply) and inverted (Action required) tags. The blue count becomes the Pixelify display numeral, and **Run zero now** becomes the site's black button. Below 360px of panel width, tags wrap under the sender and the chevron is dropped, so nothing overflows.
+- The panel is decorative. It is `aria-hidden` and `inert`, so none of its drawn controls can be focused. An sr-only summary beside it gives assistive technology the same content in one sentence. The panel has no motion, so reduced motion needs no special case.
 - The judgment section uses a two-question window instead of the retired default-rules table. Its copy explains last-message and replied-before signals without presenting them as guarantees.
 - The recovery section uses the dated-label chip and a short list explaining undo, starred-mail protection, and uncertain threads staying in the Inbox.
 - Before-install facts remain a readable paper-colored section. Install instructions use a black Terminal panel with the exact command and clipboard fallback.
@@ -86,6 +94,6 @@ Focus rings remain visible at 3px against both black and white surfaces. Decorat
 
 ## Build and deployment constraints
 
-The page remains static HTML, CSS, JavaScript, nginx, and Docker. `landing/build.sh` validates the homepage, legal routes, install redirects, CSS, JS, Pixelify and Geist assets, the source product image and approved portrait crop, 404 behavior, and the returned installer script. `node --test landing/test-site.mjs` covers clipboard behavior, structure, product truth, install-step count, compact hero requirements, and absence of the replaced motion implementation.
+The page remains static HTML, CSS, JavaScript, nginx, and Docker. `landing/build.sh` validates the homepage, legal routes, install redirects, CSS, JS, Pixelify and Geist assets, the source product image, 404 behavior, and the returned installer script. `node --test landing/test-site.mjs` covers clipboard behavior, structure, product truth, install-step count, compact hero requirements, and absence of the replaced motion implementation.
 
 Deployment is outside this slice. Dokploy currently serves a raw Compose service pinned to an image, so `autoDeploy=true` is not evidence of Git commit deployment. Do not deploy from the landing build slice. If the local Docker daemon is unavailable, record that build and `/install` smoke evidence is blocked and leave release preflight to the lead.

@@ -1,0 +1,9 @@
+<!doctype html><meta charset="utf-8"><title>phones</title>
+<style>body{margin:0;padding:16px;display:flex;gap:24px;align-items:flex-start;font:12px monospace;background:#ddd}iframe{border:1px solid #000;background:#fff;display:block}</style>
+<body>
+<div><p id="l1"></p><iframe id="a" width="390" height="1100"></iframe></div>
+<div><p id="l2"></p><iframe id="b" width="320" height="1100"></iframe></div>
+<script>
+const v=new URLSearchParams(location.search).get('v')||'a';
+for(const [id,l] of [['a','l1'],['b','l2']]){const f=document.getElementById(id);f.src=v==='live'?'live.html':'dir-'+v+'.html';f.onload=()=>{const d=f.contentDocument,w=f.contentWindow;const p=d.querySelector('.app-window');p.scrollIntoView();let past=0;for(const e of d.querySelectorAll('.zp *')){const r=e.getBoundingClientRect();if(r.width&&r.right>d.documentElement.clientWidth+.5)past++}document.getElementById(l).textContent=`dir-${v} ${f.width}: scrollWidth ${d.documentElement.scrollWidth} · panel past right edge ${past}`}}
+</script>
