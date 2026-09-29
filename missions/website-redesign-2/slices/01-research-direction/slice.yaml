@@ -1,0 +1,8 @@
+schema: openrig.slice/v0alpha1
+kind: slice
+composition:
+  mission: ../../mission.yaml
+  slice_markdown:
+    spec: SPEC.md
+    progress: PROGRESS.md
+    proof: PROOF.md
