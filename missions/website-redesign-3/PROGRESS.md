@@ -27,3 +27,7 @@ Slice 02 done: 14 references (5 animated), three hero comps, one design per sect
 ## 2026-09-29 22:38Z: owner answer, hero B approved, rest of page not approved
 
 Tayo (via advisor-lead): hero B approved (zero as the visible actor, not the user dragging). Copy and sections are NOT approved and need much more consideration. Wants a stronger proposal with concrete before/after, not tweaks. Not urgent. Build stays held. design-lead and design-copywriter asked to rethink story order, each section object and every line, with two genuinely different outlines, extra comparables, and isolated fresh-reader tests of current versus proposed page. Slice 03 is not released.
+
+## 2026-09-29 23:03Z: more owner feedback folded into the rethink
+
+Tayo (via advisor-lead): still confusing and hard to read, not enough animation, heading font too hard to read, wants a holistic pass and a full-width layout. Suggests adversarial review, funnel thinking and /impeccable. Dispatched to design-lead and design-copywriter: 2 or 3 heading font options against the current one, full-width edge-to-edge layout tested from 320 to 2560, per-section stepped animation, /funnels and /impeccable passes recorded, isolated reader test of proposal vs baseline. review-qa is queued as the adversarial reviewer (sceptical stranger, then design critic) once the proposal exists. Build held. Slice 03 not released.
