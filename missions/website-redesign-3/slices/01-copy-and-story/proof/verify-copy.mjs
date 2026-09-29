@@ -54,6 +54,8 @@ if (process.argv.includes('--cold-reader')) {
     }
   }
   console.log('## Concerns carried into the rest of the page\n\nReaders consistently asked about errors, email access/data flow, undo scope and costs. The later sections already answer these with editable rules and a model-mistake warning, starred/uncertain protection, individual/day restore, explicit sorting/draft data disclosure, and own-provider costs. We do not put every concern into the hero. This test stops at the first demonstration, as the SPEC requests. V3 only shortens later sections and adds illustration strings outside the tested excerpt. Later independent QA must repeat the test on the built page.\n');
+  // A piped stdout can still have queued report bytes after console.log.
+  await new Promise(resolve => process.stdout.write('', resolve));
   process.exit(0);
 }
 

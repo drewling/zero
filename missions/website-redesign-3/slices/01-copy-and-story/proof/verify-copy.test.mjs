@@ -49,6 +49,20 @@ test('cold-reader public output reproduces the committed verbatim record', t => 
   assert.equal(result.stdout.trim(), fs.readFileSync(path.join(proof, 'cold-reader.md'), 'utf8').trim());
 });
 
+test('large cold-reader reports flush every verbatim answer before successful exit', t => {
+  const tail = 'END-OF-LARGE-READER-ANSWER';
+  const result = runFixture(t, dir => {
+    const file = path.join(dir, 'cold-reader-r3-3.json');
+    const reader = JSON.parse(fs.readFileSync(file, 'utf8'));
+    reader.result += '\n' + 'retained evidence '.repeat(15000) + tail;
+    fs.writeFileSync(file, JSON.stringify(reader));
+  }, ['--cold-reader']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(result.stdout.includes(tail), 'Successful CLI exit must not truncate the long final answer');
+  assert.ok(result.stdout.trimEnd().endsWith('Later independent QA must repeat the test on the built page.'),
+    'The complete report must include its final limitations paragraph');
+});
+
 test('over-budget copy fails rather than treating authored count as advisory', t => {
   rejects(t, dir => changeCopy(dir, '<!-- PAGE-COPY-END -->', 'extra extra extra\n<!-- PAGE-COPY-END -->'), /Word budget failed: 552/);
 });
