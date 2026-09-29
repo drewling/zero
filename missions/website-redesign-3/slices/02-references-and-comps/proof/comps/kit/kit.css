@@ -132,7 +132,8 @@ svg.px{display:block;shape-rendering:crispEdges;image-rendering:pixelated}
 .zr{position:absolute;z-index:35;border:2px solid var(--ink);pointer-events:none;display:none}
 .ghost{position:absolute;z-index:35;border:2px dashed var(--ink);background:transparent;pointer-events:none;display:none}
 .ants{outline:2px dashed var(--ink);outline-offset:2px}
-@media (prefers-reduced-motion:no-preference){.ants{animation:ants .4s steps(2) infinite}}
+/* marching ants: finite. 6 cycles x 400 ms = 2.4 s, then it rests as a still dashed selection (nothing loops forever) */
+@media (prefers-reduced-motion:no-preference){.ants{animation:ants .4s steps(2) 6}}
 @keyframes ants{to{outline-offset:4px}}
 
 /* Pixelify's fi ligature draws "first" as "Arst" (a live-site bug today). Pixel type never ligates.

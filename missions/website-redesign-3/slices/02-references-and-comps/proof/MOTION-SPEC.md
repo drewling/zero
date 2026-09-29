@@ -12,7 +12,7 @@ Reference prototype: `comps/kit/motion.js` (the `Zm` runner) plus `comps/hero-a/
 | **Pixel-snapped.** Animated elements land on whole CSS pixels (`Math.round`). | Half-pixel positions blur the 1-bit edges and the dither. |
 | **The HTML default is the final frame.** The page ships showing the finished state. JS adds `lt-K` ("before frame K") classes to rewind, then plays forward, removing them. | With no JS, a JS error or reduced motion, the page shows the same finished, truthful state. There's no flash of an unfinished state and no layout shift. |
 | **Reduced motion = final frame, no playback.** `prefers-reduced-motion: reduce` renders `?static`. Marching ants stop too. | WCAG 2.3.3. Also, the final frame is a full explanation on its own. |
-| **Plays once.** Hero on load (700 ms delay), sections on first intersection (`IntersectionObserver`, threshold ~0.4). No loops except the ants. | Looping motion competes with reading. |
+| **Plays once, nothing loops forever.** Hero on load (700 ms delay), sections on first intersection (`IntersectionObserver`, threshold ~0.4). Even the ants are finite (6 cycles, 2.4 s, then a still dashed outline). | Looping motion competes with reading. |
 | **No layout movement.** Motion happens on absolutely positioned overlays (cursor, zoom rects, flying envelopes) or on content whose box does not change size (the counter uses `tabular-nums`, rows hide in place inside a fixed-height list). | CLS 0 and nothing jumps under a reader's eyes. |
 | **The cursor is desktop-only.** Draw it only at >= 760 px and with a fine pointer (`(pointer: fine)`). On touch, the same frames play without the cursor. | A fake arrow on a phone reads as a bug. |
 | **Timing budget.** Each step 30-80 ms, each beat <= 600 ms, a whole sequence <= 6 s. | Retro feel comes from few, visible steps, not from length. |
@@ -27,7 +27,7 @@ Reference prototype: `comps/kit/motion.js` (the `Zm` runner) plus `comps/hero-a/
 | **Envelope hop** | A 1-bit envelope icon lifts from a row and hops along a 5-point stepped arc into the dated folder `Auto-Archived 2026-09-29`. The row disappears the moment its envelope leaves. The folder icon switches to `folder-full` on the first arrival. | `Zm.hop(root, from, to, {n, steps, ms, gap, lift, onEach})` | 5 steps / 170 ms per envelope, 120 ms gap |
 | **Stepped counter** | The popover count decrements by 1 as each envelope lands (12 → 4). No rolling digits and no tween. | `onEach` in `hop` | 1 step per envelope |
 | **Invert flash** | A clicked control shows paper-on-ink for one step (80 ms). | CSS `.pressed` | 1 step |
-| **Marching ants** | 2px dashed outline cycling offset, for the "you are here" selection (e.g., the one row being undone). Only one ants element on screen at a time. | CSS `.ants` (`steps(2)`, 400 ms, infinite) | stopped under reduced motion |
+| **Marching ants** | 2px dashed outline cycling offset, for the "you are here" selection (e.g., the one row being undone). Only one ants element on screen at a time. | CSS `.ants` (`steps(2)`, 400 ms, **6 iterations**) | 2.4 s then still. Stopped under reduced motion |
 
 Explicitly out: parallax, scroll-jacking, typewriter text, glitch or CRT effects, confetti, springy UI, and motion on body copy or headings. Text never moves.
 
@@ -70,8 +70,20 @@ These are proposals and are built in the section comps (`comps/sections/`). Each
 - Performance: animate `transform` only on overlays, and never animate the dither background.
 - Tests to write: no-JS render equals the final frame (pixel diff). Reduced motion equals `?static`. There's no CLS during playback. At 320 and 390 px the sequence plays without the cursor and nothing overflows.
 
-## 6. Open questions for development-motion
+## 6. Decisions (settled with development-motion, 21:45Z)
 
-1. Should the hero replay when the user clicks the tray icon? My proposal: yes, as the only replay trigger, with no autoplay loop.
-2. Should the envelope count be 8 at every width? At under 760 px the Inbox window is hidden, so the envelopes launch from the counter. Check whether that still reads.
-3. Can the ants be done with pure CSS `outline-offset` stepping in Safari 26 without jitter? The kit does this, but it's unverified on Safari.
+1. **Replay.** The only trigger is a real keyboard-accessible `<button>` (the menu-bar tray item, with an accessible name like "Replay the illustration"). Repeat presses are ignored while a story plays. There is no replay under reduced motion. The kit does not have this yet, so slice 04 builds it.
+2. **Eight archives at every width.** This keeps the 12 → 4 arithmetic intact. At under 760 px the envelopes launch from the counter. Whether that reads is **a visual question to test in the sandbox, not yet validated**.
+3. **Safari ants.** Still unverified. If `outline-offset` stepping jitters in Safari 26, fall back to a stepped `background-position` on a 2px dashed border image.
+4. **Finite ants.** 6 cycles, then still. Slice 04's "nothing loops forever" wins.
+
+## 7. Known gaps in the comp runner (for slice 04, found by development-motion's inspection)
+
+| Gap | Status in `kit/motion.js` |
+|---|---|
+| The static and reduced-motion paths injected a cursor that is absent from the no-JS HTML | **Fixed.** `?static` and reduced motion now add nothing to the DOM. |
+| No fine-pointer gate on the cursor | **Fixed.** Live playback draws the cursor only with `(pointer: fine)` and >= 760 px. `?frame=N` forces it on, for captures only. |
+| Zoom rects used fractional positions | **Fixed.** Now `Math.round`ed. |
+| No error-to-final path | **Fixed.** Any throw mid-story removes the overlays and applies the final frame. |
+| No cancellation (e.g., the tab goes hidden or the user replays mid-story) | Open. Slice 04: use an `AbortController` per story, and on `visibilitychange` jump to the final frame. |
+| Archived rows use `display:none`, so the Inbox window shrinks as it plays (CLS inside the window) | Open. Slice 04: keep fixed row slots and blank the row in place (`visibility:hidden`), or give the list a fixed height. In the comp the window is absolutely positioned, so the page doesn't shift, but the window itself does. |

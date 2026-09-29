@@ -10,6 +10,7 @@
 (function () {
   const q = new URLSearchParams(location.search);
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = matchMedia('(pointer: fine)').matches;
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const $ = (root, s) => (typeof s === 'function' ? s(root) : typeof s === 'string' ? root.querySelector(s) : s);
 
@@ -42,8 +43,8 @@
       const t = i / (steps + 1), d = document.createElement('div');
       d.className = 'zr';
       Object.assign(d.style, {
-        display: 'block', left: a.x + (b.x - a.x) * t + 'px', top: a.y + (b.y - a.y) * t + 'px',
-        width: a.w + (b.w - a.w) * t + 'px', height: a.h + (b.h - a.h) * t + 'px'
+        display: 'block', left: Math.round(a.x + (b.x - a.x) * t) + 'px', top: Math.round(a.y + (b.y - a.y) * t) + 'px',
+        width: Math.round(a.w + (b.w - a.w) * t) + 'px', height: Math.round(a.h + (b.h - a.h) * t) + 'px'
       });
       root.appendChild(d); rects.push(d);
       if (!still) { await wait(ms / steps); if (i > 2) rects[i - 3].remove(); }
@@ -98,12 +99,20 @@
   async function play(root, story) {
     const frames = story.frames, n = frames.length;
     const fq = q.get('frame');
-    const wide = () => !story.cursorMinWidth || innerWidth >= story.cursorMinWidth;
+    // ?frame=N forces the cursor on for storyboard captures; live playback needs a fine pointer and a wide viewport
+    const wide = () => (fine || fq !== null) && (!story.cursorMinWidth || innerWidth >= story.cursorMinWidth);
+
+    if (q.has('static') || (reduce && fq === null)) {
+      // the final frame is the no-JS HTML: add nothing (no cursor, no overlays)
+      setFrame(root, n - 1, n);
+      root.dataset.mode = 'static';
+      return;
+    }
     const c = cursor(root);
     const showCursor = f => { c.style.display = f.cursor && wide() ? 'block' : 'none'; };
     const putCursor = f => { const p = f.cursor && target(root, f.cursor); if (p) place(c, p.x, p.y); setCursorKind(c, f.kind); };
 
-    if (fq !== null || q.has('static') || reduce) {
+    if (fq !== null) {
       const k = fq !== null ? Math.max(0, Math.min(n - 1, +fq)) : n - 1;
       const f = frames[k];
       setFrame(root, k, n); showCursor(f); putCursor(f);
@@ -113,6 +122,14 @@
       root.dataset.mode = fq !== null ? 'frame' : 'static';
       return;
     }
+    // any error mid-story jumps to the final frame (the no-JS state) instead of leaving a half-played scene
+    const finish = () => {
+      root.querySelectorAll(':scope > .zr, :scope > .fly').forEach(e => e.remove());
+      c.remove(); setFrame(root, n - 1, n);
+      for (const f of frames) if (f.set) try { f.set(root, api); } catch (_) {}
+      root.dataset.mode = 'done';
+    };
+    try {
     root.dataset.mode = 'play';
     setFrame(root, 0, n); if (frames[0].set) frames[0].set(root, api);
     showCursor(frames[0]); putCursor(frames[0]);
@@ -132,6 +149,7 @@
       await wait(f.hold ?? 300);
     }
     root.dataset.mode = 'done';
+    } catch (err) { console.error('Zm story failed, showing final frame', err); finish(); }
   }
 
   /* start when the element first enters the viewport (sections), or on load (heroes) */
