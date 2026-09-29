@@ -1,0 +1,804 @@
+[
+  {
+    "engine": "chromium",
+    "width": 1440,
+    "snapshot": {
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "scrollHeight": 4384
+      },
+      "headings": [
+        "Only the mail that still needs you.",
+        "It asks who’s waiting, not who’s writing.",
+        "Check it with your coffee. Then close it.",
+        "Nothing is deleted.",
+        "What it needs, sends and costs",
+        "Install zero."
+      ],
+      "hero": {
+        "x": 0,
+        "y": 40,
+        "width": 1440,
+        "height": 880,
+        "right": 1440,
+        "bottom": 920
+      },
+      "heroWindow": {
+        "x": 86.4,
+        "y": 110,
+        "width": 620,
+        "height": 598.4,
+        "right": 706.4,
+        "bottom": 708.4
+      },
+      "app": {
+        "x": 967.2,
+        "y": 110,
+        "width": 372,
+        "height": 621.5,
+        "right": 1339.2,
+        "bottom": 731.5
+      },
+      "requirements": "Apple Silicon · macOS 26 or later · Gmail",
+      "img": [
+        {
+          "src": "/assets/panel-cut.png",
+          "alt": "zero’s Open loops panel lists conversations waiting on you across two Gmail accounts, with Accounts, Undo and Settings tabs.",
+          "complete": true,
+          "naturalWidth": 700,
+          "naturalHeight": 1057,
+          "rect": {
+            "x": 967.2,
+            "y": 110,
+            "width": 372,
+            "height": 559.7,
+            "right": 1339.2,
+            "bottom": 669.7
+          }
+        }
+      ],
+      "installSteps": [
+        "Run the installer in Terminal. Read this first. zero isn’t notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the script. curl -fsSL https://zero.headless.com/install | bash Copy It checks the download’s SHA-256 and signature before installing. Or download it from GitHub Releases.",
+        "Connect Gmail. Open zero from the menu bar and choose Connect your first inbox. Add more in Accounts.",
+        "Add your Jev key. In Settings → Sorting engine, choose Get a key, create one at TypeSafe, paste it in and click Save.",
+        "Run it once. Choose Run zero now and look at what stayed and what was archived."
+      ],
+      "installCommand": "curl -fsSL https://zero.headless.com/install | bash",
+      "warning": "Read this first. zero isn’t notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the script.",
+      "facts": [
+        {
+          "heading": "Your Mac",
+          "body": "Your Mac Apple Silicon with macOS 26 Tahoe or later. The installer stops on anything else."
+        },
+        {
+          "heading": "Gmail",
+          "body": "Gmail You sign in with Google in your browser. zero never sees your password. Google may warn that zero is unverified. It hasn’t finished Google’s review."
+        },
+        {
+          "heading": "Your mail",
+          "body": "Your mail zero runs on your Mac. To sort a thread, it sends Jev the sender, subject, a short preview, your rules and what it has learned from you. The zero project runs no server that receives your email. Privacy policy."
+        },
+        {
+          "heading": "Replies",
+          "body": "Replies Optional. Tap Reply and your agent CLI, Claude Code by default, drafts one. The thread goes to that provider. Nothing is sent until you click Send reply."
+        },
+        {
+          "heading": "Cost",
+          "body": "Cost zero is free and open source. Sorting needs your own TypeSafe Jev key, billed by TypeSafe. Drafts are billed to your agent CLI’s account."
+        }
+      ],
+      "tables": 0,
+      "faq": 0,
+      "canvas": 0,
+      "landmarks": {
+        "main": 1,
+        "nav": [
+          "Main navigation",
+          "Footer navigation"
+        ],
+        "skip": true,
+        "h1": 1
+      },
+      "folderAnimation": {
+        "name": "folder-drop",
+        "duration": "0.9s",
+        "delay": "0.7s",
+        "opacity": "1",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)"
+      },
+      "offenders": [],
+      "badText": []
+    },
+    "errors": []
+  },
+  {
+    "engine": "chromium",
+    "width": 390,
+    "snapshot": {
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "scrollHeight": 5963
+      },
+      "headings": [
+        "Only the mail that still needs you.",
+        "It asks who’s waiting, not who’s writing.",
+        "Check it with your coffee. Then close it.",
+        "Nothing is deleted.",
+        "What it needs, sends and costs",
+        "Install zero."
+      ],
+      "hero": {
+        "x": 0,
+        "y": 40,
+        "width": 390,
+        "height": 1345.7,
+        "right": 390,
+        "bottom": 1385.7
+      },
+      "heroWindow": {
+        "x": 16,
+        "y": 66,
+        "width": 358,
+        "height": 568,
+        "right": 374,
+        "bottom": 634
+      },
+      "app": {
+        "x": 48.2,
+        "y": 660,
+        "width": 293.5,
+        "height": 503,
+        "right": 341.8,
+        "bottom": 1163
+      },
+      "requirements": "Apple Silicon · macOS 26 or later · Gmail",
+      "img": [
+        {
+          "src": "/assets/panel-cut.png",
+          "alt": "zero’s Open loops panel lists conversations waiting on you across two Gmail accounts, with Accounts, Undo and Settings tabs.",
+          "complete": true,
+          "naturalWidth": 700,
+          "naturalHeight": 1057,
+          "rect": {
+            "x": 48.2,
+            "y": 660,
+            "width": 293.5,
+            "height": 441.2,
+            "right": 341.8,
+            "bottom": 1101.2
+          }
+        }
+      ],
+      "installSteps": [
+        "Run the installer in Terminal. Read this first. zero isn’t notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the script. curl -fsSL https://zero.headless.com/install | bash Copy It checks the download’s SHA-256 and signature before installing. Or download it from GitHub Releases.",
+        "Connect Gmail. Open zero from the menu bar and choose Connect your first inbox. Add more in Accounts.",
+        "Add your Jev key. In Settings → Sorting engine, choose Get a key, create one at TypeSafe, paste it in and click Save.",
+        "Run it once. Choose Run zero now and look at what stayed and what was archived."
+      ],
+      "installCommand": "curl -fsSL https://zero.headless.com/install | bash",
+      "warning": "Read this first. zero isn’t notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the script.",
+      "facts": [
+        {
+          "heading": "Your Mac",
+          "body": "Your Mac Apple Silicon with macOS 26 Tahoe or later. The installer stops on anything else."
+        },
+        {
+          "heading": "Gmail",
+          "body": "Gmail You sign in with Google in your browser. zero never sees your password. Google may warn that zero is unverified. It hasn’t finished Google’s review."
+        },
+        {
+          "heading": "Your mail",
+          "body": "Your mail zero runs on your Mac. To sort a thread, it sends Jev the sender, subject, a short preview, your rules and what it has learned from you. The zero project runs no server that receives your email. Privacy policy."
+        },
+        {
+          "heading": "Replies",
+          "body": "Replies Optional. Tap Reply and your agent CLI, Claude Code by default, drafts one. The thread goes to that provider. Nothing is sent until you click Send reply."
+        },
+        {
+          "heading": "Cost",
+          "body": "Cost zero is free and open source. Sorting needs your own TypeSafe Jev key, billed by TypeSafe. Drafts are billed to your agent CLI’s account."
+        }
+      ],
+      "tables": 0,
+      "faq": 0,
+      "canvas": 0,
+      "landmarks": {
+        "main": 1,
+        "nav": [
+          "Main navigation",
+          "Footer navigation"
+        ],
+        "skip": true,
+        "h1": 1
+      },
+      "folderAnimation": {
+        "name": "folder-drop",
+        "duration": "0.9s",
+        "delay": "0.7s",
+        "opacity": "1",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)"
+      },
+      "offenders": [],
+      "badText": []
+    },
+    "errors": []
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "snapshot": {
+      "viewport": {
+        "width": 320,
+        "height": 700,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "scrollHeight": 6524
+      },
+      "headings": [
+        "Only the mail that still needs you.",
+        "It asks who’s waiting, not who’s writing.",
+        "Check it with your coffee. Then close it.",
+        "Nothing is deleted.",
+        "What it needs, sends and costs",
+        "Install zero."
+      ],
+      "hero": {
+        "x": 0,
+        "y": 40,
+        "width": 320,
+        "height": 1351.5,
+        "right": 320,
+        "bottom": 1391.5
+      },
+      "heroWindow": {
+        "x": 16,
+        "y": 66,
+        "width": 288,
+        "height": 660.5,
+        "right": 304,
+        "bottom": 726.5
+      },
+      "app": {
+        "x": 41.9,
+        "y": 752.5,
+        "width": 236.2,
+        "height": 416.3,
+        "right": 278.1,
+        "bottom": 1168.8
+      },
+      "requirements": "Apple Silicon · macOS 26 or later · Gmail",
+      "img": [
+        {
+          "src": "/assets/panel-cut.png",
+          "alt": "zero’s Open loops panel lists conversations waiting on you across two Gmail accounts, with Accounts, Undo and Settings tabs.",
+          "complete": true,
+          "naturalWidth": 700,
+          "naturalHeight": 1057,
+          "rect": {
+            "x": 41.9,
+            "y": 752.5,
+            "width": 236.2,
+            "height": 354.5,
+            "right": 278.1,
+            "bottom": 1107
+          }
+        }
+      ],
+      "installSteps": [
+        "Run the installer in Terminal. Read this first. zero isn’t notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the script. curl -fsSL https://zero.headless.com/install | bash Copy It checks the download’s SHA-256 and signature before installing. Or download it from GitHub Releases.",
+        "Connect Gmail. Open zero from the menu bar and choose Connect your first inbox. Add more in Accounts.",
+        "Add your Jev key. In Settings → Sorting engine, choose Get a key, create one at TypeSafe, paste it in and click Save.",
+        "Run it once. Choose Run zero now and look at what stayed and what was archived."
+      ],
+      "installCommand": "curl -fsSL https://zero.headless.com/install | bash",
+      "warning": "Read this first. zero isn’t notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the script.",
+      "facts": [
+        {
+          "heading": "Your Mac",
+          "body": "Your Mac Apple Silicon with macOS 26 Tahoe or later. The installer stops on anything else."
+        },
+        {
+          "heading": "Gmail",
+          "body": "Gmail You sign in with Google in your browser. zero never sees your password. Google may warn that zero is unverified. It hasn’t finished Google’s review."
+        },
+        {
+          "heading": "Your mail",
+          "body": "Your mail zero runs on your Mac. To sort a thread, it sends Jev the sender, subject, a short preview, your rules and what it has learned from you. The zero project runs no server that receives your email. Privacy policy."
+        },
+        {
+          "heading": "Replies",
+          "body": "Replies Optional. Tap Reply and your agent CLI, Claude Code by default, drafts one. The thread goes to that provider. Nothing is sent until you click Send reply."
+        },
+        {
+          "heading": "Cost",
+          "body": "Cost zero is free and open source. Sorting needs your own TypeSafe Jev key, billed by TypeSafe. Drafts are billed to your agent CLI’s account."
+        }
+      ],
+      "tables": 0,
+      "faq": 0,
+      "canvas": 0,
+      "landmarks": {
+        "main": 1,
+        "nav": [
+          "Main navigation",
+          "Footer navigation"
+        ],
+        "skip": true,
+        "h1": 1
+      },
+      "folderAnimation": {
+        "name": "folder-drop",
+        "duration": "0.9s",
+        "delay": "0.7s",
+        "opacity": "1",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)"
+      },
+      "offenders": [],
+      "badText": []
+    },
+    "errors": []
+  },
+  {
+    "engine": "chromium",
+    "reducedMotion": {
+      "prefers": true,
+      "name": "none",
+      "duration": "0s",
+      "delay": "0s",
+      "opacity": "1",
+      "transform": "none",
+      "animations": []
+    },
+    "errors": []
+  },
+  {
+    "engine": "chromium",
+    "nojs": {
+      "h1": "Only the mail that still needs you.",
+      "headings": [
+        "Only the mail that still needs you.",
+        "It asks who’s waiting, not who’s writing.",
+        "Check it with your coffee. Then close it.",
+        "Nothing is deleted.",
+        "What it needs, sends and costs",
+        "Install zero."
+      ],
+      "steps": 4,
+      "command": "curl -fsSL https://zero.headless.com/install | bash",
+      "copyHidden": true,
+      "imageLoaded": true
+    }
+  },
+  {
+    "engine": "chromium",
+    "copy": {
+      "success": {
+        "before": {
+          "active": "copy-command",
+          "outline": "solid"
+        },
+        "after": {
+          "active": "copy-command",
+          "status": "Copied. Paste it into Terminal when you’re ready.",
+          "button": "Copy again",
+          "clipboardWritePayload": "curl -fsSL https://zero.headless.com/install | bash"
+        }
+      },
+      "denial": {
+        "before": "copy-command",
+        "after": {
+          "active": "copy-command",
+          "status": "Couldn’t copy. Select the command above and copy it manually.",
+          "button": "Copy"
+        }
+      }
+    }
+  },
+  {
+    "engine": "webkit",
+    "width": 1440,
+    "snapshot": {
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "scrollHeight": 4358
+      },
+      "headings": [
+        "Only the mail that still needs you.",
+        "It asks who’s waiting, not who’s writing.",
+        "Check it with your coffee. Then close it.",
+        "Nothing is deleted.",
+        "What it needs, sends and costs",
+        "Install zero."
+      ],
+      "hero": {
+        "x": 0,
+        "y": 40,
+        "width": 1440,
+        "height": 880,
+        "right": 1440,
+        "bottom": 920
+      },
+      "heroWindow": {
+        "x": 86.4,
+        "y": 110,
+        "width": 620,
+        "height": 593,
+        "right": 706.4,
+        "bottom": 703
+      },
+      "app": {
+        "x": 967.2,
+        "y": 110,
+        "width": 372,
+        "height": 619.7,
+        "right": 1339.2,
+        "bottom": 729.7
+      },
+      "requirements": "Apple Silicon · macOS 26 or later · Gmail",
+      "img": [
+        {
+          "src": "/assets/panel-cut.png",
+          "alt": "zero’s Open loops panel lists conversations waiting on you across two Gmail accounts, with Accounts, Undo and Settings tabs.",
+          "complete": true,
+          "naturalWidth": 700,
+          "naturalHeight": 1057,
+          "rect": {
+            "x": 967.2,
+            "y": 110,
+            "width": 372,
+            "height": 559.7,
+            "right": 1339.2,
+            "bottom": 669.7
+          }
+        }
+      ],
+      "installSteps": [
+        "Run the installer in Terminal. Read this first. zero isn’t notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the script. curl -fsSL https://zero.headless.com/install | bash Copy It checks the download’s SHA-256 and signature before installing. Or download it from GitHub Releases.",
+        "Connect Gmail. Open zero from the menu bar and choose Connect your first inbox. Add more in Accounts.",
+        "Add your Jev key. In Settings → Sorting engine, choose Get a key, create one at TypeSafe, paste it in and click Save.",
+        "Run it once. Choose Run zero now and look at what stayed and what was archived."
+      ],
+      "installCommand": "curl -fsSL https://zero.headless.com/install | bash",
+      "warning": "Read this first. zero isn’t notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the script.",
+      "facts": [
+        {
+          "heading": "Your Mac",
+          "body": "Your Mac Apple Silicon with macOS 26 Tahoe or later. The installer stops on anything else."
+        },
+        {
+          "heading": "Gmail",
+          "body": "Gmail You sign in with Google in your browser. zero never sees your password. Google may warn that zero is unverified. It hasn’t finished Google’s review."
+        },
+        {
+          "heading": "Your mail",
+          "body": "Your mail zero runs on your Mac. To sort a thread, it sends Jev the sender, subject, a short preview, your rules and what it has learned from you. The zero project runs no server that receives your email. Privacy policy."
+        },
+        {
+          "heading": "Replies",
+          "body": "Replies Optional. Tap Reply and your agent CLI, Claude Code by default, drafts one. The thread goes to that provider. Nothing is sent until you click Send reply."
+        },
+        {
+          "heading": "Cost",
+          "body": "Cost zero is free and open source. Sorting needs your own TypeSafe Jev key, billed by TypeSafe. Drafts are billed to your agent CLI’s account."
+        }
+      ],
+      "tables": 0,
+      "faq": 0,
+      "canvas": 0,
+      "landmarks": {
+        "main": 1,
+        "nav": [
+          "Main navigation",
+          "Footer navigation"
+        ],
+        "skip": true,
+        "h1": 1
+      },
+      "folderAnimation": {
+        "name": "folder-drop",
+        "duration": "0.9s",
+        "delay": "0.7s",
+        "opacity": "1",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)"
+      },
+      "offenders": [],
+      "badText": []
+    },
+    "errors": []
+  },
+  {
+    "engine": "webkit",
+    "width": 390,
+    "snapshot": {
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "scrollHeight": 5890
+      },
+      "headings": [
+        "Only the mail that still needs you.",
+        "It asks who’s waiting, not who’s writing.",
+        "Check it with your coffee. Then close it.",
+        "Nothing is deleted.",
+        "What it needs, sends and costs",
+        "Install zero."
+      ],
+      "hero": {
+        "x": 0,
+        "y": 40,
+        "width": 390,
+        "height": 1336.2,
+        "right": 390,
+        "bottom": 1376.2
+      },
+      "heroWindow": {
+        "x": 16,
+        "y": 66,
+        "width": 358,
+        "height": 563,
+        "right": 374,
+        "bottom": 629
+      },
+      "app": {
+        "x": 48.2,
+        "y": 655,
+        "width": 293.5,
+        "height": 501.2,
+        "right": 341.8,
+        "bottom": 1156.2
+      },
+      "requirements": "Apple Silicon · macOS 26 or later · Gmail",
+      "img": [
+        {
+          "src": "/assets/panel-cut.png",
+          "alt": "zero’s Open loops panel lists conversations waiting on you across two Gmail accounts, with Accounts, Undo and Settings tabs.",
+          "complete": true,
+          "naturalWidth": 700,
+          "naturalHeight": 1057,
+          "rect": {
+            "x": 48.2,
+            "y": 655,
+            "width": 293.5,
+            "height": 441.2,
+            "right": 341.8,
+            "bottom": 1096.2
+          }
+        }
+      ],
+      "installSteps": [
+        "Run the installer in Terminal. Read this first. zero isn’t notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the script. curl -fsSL https://zero.headless.com/install | bash Copy It checks the download’s SHA-256 and signature before installing. Or download it from GitHub Releases.",
+        "Connect Gmail. Open zero from the menu bar and choose Connect your first inbox. Add more in Accounts.",
+        "Add your Jev key. In Settings → Sorting engine, choose Get a key, create one at TypeSafe, paste it in and click Save.",
+        "Run it once. Choose Run zero now and look at what stayed and what was archived."
+      ],
+      "installCommand": "curl -fsSL https://zero.headless.com/install | bash",
+      "warning": "Read this first. zero isn’t notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the script.",
+      "facts": [
+        {
+          "heading": "Your Mac",
+          "body": "Your Mac Apple Silicon with macOS 26 Tahoe or later. The installer stops on anything else."
+        },
+        {
+          "heading": "Gmail",
+          "body": "Gmail You sign in with Google in your browser. zero never sees your password. Google may warn that zero is unverified. It hasn’t finished Google’s review."
+        },
+        {
+          "heading": "Your mail",
+          "body": "Your mail zero runs on your Mac. To sort a thread, it sends Jev the sender, subject, a short preview, your rules and what it has learned from you. The zero project runs no server that receives your email. Privacy policy."
+        },
+        {
+          "heading": "Replies",
+          "body": "Replies Optional. Tap Reply and your agent CLI, Claude Code by default, drafts one. The thread goes to that provider. Nothing is sent until you click Send reply."
+        },
+        {
+          "heading": "Cost",
+          "body": "Cost zero is free and open source. Sorting needs your own TypeSafe Jev key, billed by TypeSafe. Drafts are billed to your agent CLI’s account."
+        }
+      ],
+      "tables": 0,
+      "faq": 0,
+      "canvas": 0,
+      "landmarks": {
+        "main": 1,
+        "nav": [
+          "Main navigation",
+          "Footer navigation"
+        ],
+        "skip": true,
+        "h1": 1
+      },
+      "folderAnimation": {
+        "name": "folder-drop",
+        "duration": "0.9s",
+        "delay": "0.7s",
+        "opacity": "1",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)"
+      },
+      "offenders": [],
+      "badText": []
+    },
+    "errors": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "snapshot": {
+      "viewport": {
+        "width": 320,
+        "height": 700,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "scrollHeight": 6434
+      },
+      "headings": [
+        "Only the mail that still needs you.",
+        "It asks who’s waiting, not who’s writing.",
+        "Check it with your coffee. Then close it.",
+        "Nothing is deleted.",
+        "What it needs, sends and costs",
+        "Install zero."
+      ],
+      "hero": {
+        "x": 0,
+        "y": 40,
+        "width": 320,
+        "height": 1340.5,
+        "right": 320,
+        "bottom": 1380.5
+      },
+      "heroWindow": {
+        "x": 16,
+        "y": 66,
+        "width": 288,
+        "height": 654,
+        "right": 304,
+        "bottom": 720
+      },
+      "app": {
+        "x": 41.9,
+        "y": 746,
+        "width": 236.2,
+        "height": 414.5,
+        "right": 278.1,
+        "bottom": 1160.5
+      },
+      "requirements": "Apple Silicon · macOS 26 or later · Gmail",
+      "img": [
+        {
+          "src": "/assets/panel-cut.png",
+          "alt": "zero’s Open loops panel lists conversations waiting on you across two Gmail accounts, with Accounts, Undo and Settings tabs.",
+          "complete": true,
+          "naturalWidth": 700,
+          "naturalHeight": 1057,
+          "rect": {
+            "x": 41.9,
+            "y": 746,
+            "width": 236.2,
+            "height": 354.5,
+            "right": 278.1,
+            "bottom": 1100.5
+          }
+        }
+      ],
+      "installSteps": [
+        "Run the installer in Terminal. Read this first. zero isn’t notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the script. curl -fsSL https://zero.headless.com/install | bash Copy It checks the download’s SHA-256 and signature before installing. Or download it from GitHub Releases.",
+        "Connect Gmail. Open zero from the menu bar and choose Connect your first inbox. Add more in Accounts.",
+        "Add your Jev key. In Settings → Sorting engine, choose Get a key, create one at TypeSafe, paste it in and click Save.",
+        "Run it once. Choose Run zero now and look at what stayed and what was archived."
+      ],
+      "installCommand": "curl -fsSL https://zero.headless.com/install | bash",
+      "warning": "Read this first. zero isn’t notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. Read the script.",
+      "facts": [
+        {
+          "heading": "Your Mac",
+          "body": "Your Mac Apple Silicon with macOS 26 Tahoe or later. The installer stops on anything else."
+        },
+        {
+          "heading": "Gmail",
+          "body": "Gmail You sign in with Google in your browser. zero never sees your password. Google may warn that zero is unverified. It hasn’t finished Google’s review."
+        },
+        {
+          "heading": "Your mail",
+          "body": "Your mail zero runs on your Mac. To sort a thread, it sends Jev the sender, subject, a short preview, your rules and what it has learned from you. The zero project runs no server that receives your email. Privacy policy."
+        },
+        {
+          "heading": "Replies",
+          "body": "Replies Optional. Tap Reply and your agent CLI, Claude Code by default, drafts one. The thread goes to that provider. Nothing is sent until you click Send reply."
+        },
+        {
+          "heading": "Cost",
+          "body": "Cost zero is free and open source. Sorting needs your own TypeSafe Jev key, billed by TypeSafe. Drafts are billed to your agent CLI’s account."
+        }
+      ],
+      "tables": 0,
+      "faq": 0,
+      "canvas": 0,
+      "landmarks": {
+        "main": 1,
+        "nav": [
+          "Main navigation",
+          "Footer navigation"
+        ],
+        "skip": true,
+        "h1": 1
+      },
+      "folderAnimation": {
+        "name": "folder-drop",
+        "duration": "0.9s",
+        "delay": "0.7s",
+        "opacity": "1",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)"
+      },
+      "offenders": [],
+      "badText": []
+    },
+    "errors": []
+  },
+  {
+    "engine": "webkit",
+    "reducedMotion": {
+      "prefers": true,
+      "name": "none",
+      "duration": "0s",
+      "delay": "0s",
+      "opacity": "1",
+      "transform": "none",
+      "animations": []
+    },
+    "errors": []
+  },
+  {
+    "engine": "webkit",
+    "nojs": {
+      "h1": "Only the mail that still needs you.",
+      "headings": [
+        "Only the mail that still needs you.",
+        "It asks who’s waiting, not who’s writing.",
+        "Check it with your coffee. Then close it.",
+        "Nothing is deleted.",
+        "What it needs, sends and costs",
+        "Install zero."
+      ],
+      "steps": 4,
+      "command": "curl -fsSL https://zero.headless.com/install | bash",
+      "copyHidden": true,
+      "imageLoaded": true
+    }
+  },
+  {
+    "engine": "webkit",
+    "copy": {
+      "success": {
+        "before": {
+          "active": "copy-command",
+          "outline": "solid"
+        },
+        "after": {
+          "active": "copy-command",
+          "status": "Copied. Paste it into Terminal when you’re ready.",
+          "button": "Copy again",
+          "clipboardWritePayload": "curl -fsSL https://zero.headless.com/install | bash"
+        }
+      },
+      "denial": {
+        "before": "copy-command",
+        "after": {
+          "active": "copy-command",
+          "status": "Couldn’t copy. Select the command above and copy it manually.",
+          "button": "Copy"
+        }
+      }
+    }
+  }
+]
