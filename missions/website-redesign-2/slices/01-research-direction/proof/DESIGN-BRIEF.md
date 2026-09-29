@@ -4,15 +4,17 @@ Owner-facing. design-lead@zero, 2026-09-29. Proof only: nothing in `landing/` ch
 
 ## 1. What is wrong with the live page (critique)
 
-The evidence is the owner's rejection ("trash") plus the live captures at `~/.jcode/scratch/zero-live-sort-mid.png` and `zero-live-rail-mid.png` (2880×1800, 2026-09-28). The rules-section and recovery-rail frames are reproduced at half size as `evidence/live-sort.jpg` and `evidence/live-rail.jpg`.
+The evidence is the owner's rejection ("trash"), two live Aside frames and the live source:
+- The frames are `~/.jcode/scratch/zero-live-sort-mid.png` and `zero-live-rail-mid.png` (2880×1800, 2026-09-29 02:42 UTC). They are reproduced at half size as `evidence/live-sort.jpg` (the rules section) and `evidence/live-rail.jpg` (recovery and the start of Before you install).
+- The source is `landing/index.html` and `site.css` at `69f15d2`. Hero claims rest on the markup, because there is no committed hero frame.
 
 1. **A costume, not a world.** Signal yellow, enamel navy, split-flap letters and ticket stock say "airport", but zero is a quiet menu-bar utility. None of the references that feel premium (atlas items 1, 7 and 8) dress a product as a different object.
 2. **Everything shouts.** The heavy condensed caps sit at the same weight on every section ("WHAT STAYS. WHAT GETS ARCHIVED.", "NOTHING IS DELETED.", "BEFORE YOU INSTALL"), so there is no hierarchy between the promise and the small print. The yellow field under navy caps reads as a warning sign.
 3. **The product is small and dark on a loud field.** The real app is the best asset the page has, yet it competes with a black board panel of the same darkness in the next section. Linear and Things make the real UI the largest element on screen.
 4. **Two dark slabs on yellow.** The rules board and the app image are both near-black rectangles with drop shadows, so the page reads as heavy blocks and not as a sequence.
 5. **The motion is a mechanism, not a meaning.** Canvas sort tracks, a rail diagram with seven navy pills and "illustration · same 7 · none deleted", a replay button and a boarding reveal all need explaining. The rail frame (`live-rail.jpg`) is a big empty yellow area with a tiny diagram and a caption that reads as debug text.
-6. **Type costumes.** Mono is used as texture ("illustration · same 7") rather than for data, and the tracked "K E E P · T H E · M A I L" letter grid is `aria-hidden` duplication.
-7. **The install warning looks like an alarm.** The non-notarized disclosure is true and must stay, but it deserves the calm, first-class treatment of Raycast and Tailscale, not a hazard band.
+6. **Type costumes.** Mono is used as texture ("illustration · same 7") rather than for data. The hero headline is a split-flap tile board (`.flap-board`, one `span.tile` per letter, a separate desktop and mobile copy, both `aria-hidden`), and the real `h1` is `sr-only`. The loudest thing on the page is decoration that assistive tech cannot see.
+7. **The install warning inherits the costume.** The non-notarized disclosure is true and must stay. On the live page it is a signal-yellow outlined box inside a dark ink install band (`.warning` inside `.install-band`), which is the same airport language again. It deserves the calm, first-class treatment of Raycast and Tailscale.
 
 ## 2. Three directions (all use the real copy, the real app image and the real install command)
 
@@ -82,7 +84,14 @@ It is the category default, and the owner already rejected a dark-board look. It
 
 ## 3. What stays true in every direction
 
-- The copy is carried verbatim from `landing/index.html`: hero, lede, requirements, default rules and their disclaimer, "It gets things wrong sometimes", Nothing is deleted, the label format `🗄️ Auto-Archived YYYY-MM-DD`, Undo and Restore all, Settings → Rules, the not-notarized warning, SHA-256, the Jev key and TypeSafe link, and the AGPL footer. **Before you install** and the FAQ are not comped, but they carry over unchanged (see `replacement-inventory.md`).
+- The copy is carried from `landing/index.html`: hero, lede, requirements, default rules and their disclaimer, "It gets things wrong sometimes", Nothing is deleted, the label format `🗄️ Auto-Archived YYYY-MM-DD`, Undo and Restore all, Settings → Rules, the not-notarized warning, SHA-256, the three install steps, the Jev key and TypeSafe link, and the AGPL footer.
+- A sentence-level diff against the landing page (run 03:24Z) found only these new or reworded lines. Each rests on a product fact:
+  - **B:** "Archived mail goes into a label dated for the day, not the Trash. It stays in All Mail, and search still finds it." zero adds a label and never calls Gmail trash or delete (checked by grep of `lib/*.py`).
+  - **C:** "It lives in your menu bar. Open it when you want to see what still needs you. Tap any conversation to open it in Gmail." The last sentence echoes the panel's own "Tap any to open it in Gmail".
+  - **C:** "zero removes Gmail's Inbox label and adds a label with that day's date." This is shortened from the landing's "adds a recovery label".
+  - UI chrome such as window titles ("Default rules", "Terminal") and the "7 items · 3 stay in Inbox" Finder bar.
+  - The same diff caught two abridged install steps (a missing "choose Get a key" and "Look at what stayed and what was archived"). Both were restored in the comps after the `shots/` were captured, so the install shots show the older, shorter steps.
+- **Before you install** and the FAQ are not comped, but they carry over unchanged (see `replacement-inventory.md`).
 - The app image is the real `zero-panel.png`, cropped to the popover with rounded corners by crop and alpha only (`comps/panel-cut.png`). It is not retouched, and the caption "Names and subjects are made up" stays.
 - Illustrative values are labelled:
   - The 07:30 in A is labelled "at a time you set". In C, "Tue 29 Sep 07:30" is only the scene's menu-bar clock.
@@ -92,7 +101,7 @@ It is the category default, and the owner already rejected a dark-board look. It
 
 ## 4. The decision needed from the owner
 
-Choose **A, B or C** (or "A with B's folders", since the dated-folder idea can move into A's recovery section). Also say whether any headline copy may change, because all three comps keep the current words. Once a direction is approved, slice 02 rebuilds `landing/` from scratch per `replacement-inventory.md`. There will be no overlay on the departure-board code.
+Choose **A, B or C** (or "A with B's folders", since the dated-folder idea can move into A's recovery section). Also say whether any headline copy may change, because all three comps keep the current headline and section titles. Once a direction is approved, slice 02 rebuilds `landing/` from scratch per `replacement-inventory.md`. There will be no overlay on the departure-board code.
 
 ## 5. Method limits, stated honestly
 

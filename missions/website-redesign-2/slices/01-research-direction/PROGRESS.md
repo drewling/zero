@@ -7,3 +7,4 @@
 - Built comps A, B and C plus a phones harness. Did two Aside capture passes, and fixes after the first covered light-band strength, wrapping the install code on mobile and icon rendering in B.
 - Wrote `proof/DESIGN-BRIEF.md` (critique, the directions, the recommendation and the owner decision).
 - Status: **awaiting owner choice** (A, B or C). Slice 02 (rebuild) must not start until the owner approves a direction.
+- 03:25Z: Accuracy pass after the handoff. The critique now rests on source-checked claims (flap board, sr-only h1, warning box), and the 390 iframe and static shots were all viewed. A sentence diff restored two abridged install steps in the comps (the shots predate this). New comp lines are listed in DESIGN-BRIEF §3.
