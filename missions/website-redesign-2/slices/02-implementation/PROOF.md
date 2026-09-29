@@ -41,6 +41,10 @@ Mission: `OPR.99.0.3.2` / `website-redesign-2`
 
 Aside opened the real local page and confirmed the one-bit hero, native rules table, install command, FAQ, legal links, and no mutation. Its available browser object did not expose viewport resizing, so 1440/390/320 scroll-width and clipping evidence is intentionally delegated to independent QA. No browser console or page error was reported in the content smoke.
 
+The follow-up real-page interaction smoke exercised the first FAQ disclosure and the install Copy button. The FAQ exposed the required statement that Google sign-in tokens are stored on the Mac. Copy changed the button to `Copy again` and announced `Copied. Paste it into Terminal when you’re ready.` The browser accessibility snapshot exposed the native table with caption and eight rows, the FAQ disclosure, the install command, legal links, and the expected keyboard-focusable controls. No form was submitted. Aside could not provide a console error stream or true viewport resizing, so those claims remain outside this proof.
+
+The explicit source/integration matrix also observed: the app image SHA-256 stayed `cfc92f3926d69b134cab2c092b8c70b9df7b205e7b44158ddffa3ec717eb2686` before and after; one stylesheet, one script, and one script event listener remain; all five shipped binary assets are referenced by page, stylesheet, or smoke packaging checks; both font license files are present; key page content is delivered in the HTML source without JavaScript; and the local public server returned 200 for the homepage, legal pages, CSS, JS, all four fonts, and the app image, with `/nope` returning 404.
+
 `bash landing/build.sh` parsed the installer, then stopped at the Docker daemon connection:
 
 ```text
