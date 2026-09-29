@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>zero — Only the mail that still needs you.</title>
+  <meta name="description" content="zero is a Mac menu-bar app for Gmail. Across every account you connect, it keeps the conversations that still need something from you and archives the rest. Every archive can be undone.">
+  <!-- PROOF COMP for slice 02b. Content/structure proposal only, on the approved B stylesheet.
+       Served from this directory: /site.css, /site.js and /assets are symlinks into landing/. -->
+  <link rel="stylesheet" href="/site.css">
+  <script src="/site.js" defer></script>
+  <style>
+    /* Comp-only additions. The builder should fold these into site.css, not keep an inline block. */
+    .signals{margin:0;padding:0;list-style:none;border-top:var(--line)}
+    .signals li{padding:16px 18px;border-bottom:1px dotted var(--black)}
+    .signals strong{display:block;font:600 17px/1.3 var(--pixel);margin-bottom:6px}
+    .signals span{font-size:16px}
+    .section-copy p + p{margin-top:14px}
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="menubar">
+    <div class="menu-brand"><a href="#top" aria-label="zero home"><span class="check" aria-hidden="true">✓</span> zero</a></div>
+    <nav aria-label="Main navigation">
+      <a class="menu-hide-small" href="#decides">How it decides</a>
+      <a class="menu-hide-small" href="#undo">Undo</a>
+      <a class="menu-hide-small" href="#before">Before you install</a>
+      <a class="menu-source" href="https://github.com/drewling/zero">Source <span aria-hidden="true">↗</span></a>
+      <a class="menu-install" href="#install">Install</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <!-- 1. The one job -->
+    <section class="desktop-hero" id="top" aria-labelledby="hero-title">
+      <div class="window hero-window">
+        <div class="window-bar"><span class="window-control" aria-hidden="true"></span><span>zero</span></div>
+        <div class="window-body">
+          <h1 id="hero-title">Only the mail<br>that still<br>needs you.</h1>
+          <p class="hero-lede">zero is a Mac menu-bar app for Gmail. Across every account you connect, it keeps the conversations that still need something from you and archives the rest. Every archive can be undone.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#install">Install zero for Mac</a>
+            <a class="button" href="/install.sh">Read the installer first</a>
+          </div>
+          <p class="hero-req">Apple Silicon · macOS 26 or later · Gmail</p>
+        </div>
+      </div>
+
+      <figure class="app-window">
+        <img src="assets/panel-cut.png" width="700" height="1057" alt="zero’s Open loops panel lists conversations waiting on you across two Gmail accounts, with Accounts, Undo and Settings tabs.">
+        <figcaption>The real app. Names and subjects are made up.</figcaption>
+      </figure>
+
+      <div class="desktop-files" aria-hidden="true">
+        <div class="folder folder-current"><span class="folder-icon"></span><span class="file-label file-selected">🗄️ Auto-Archived<br>2026-09-29</span></div>
+        <div class="folder"><span class="folder-icon"></span><span class="file-label">🗄️ Auto-Archived<br>2026-09-28</span></div>
+      </div>
+      <div class="trash-cue" aria-hidden="true"><span class="trash-icon"></span><span class="file-label">Trash · empty</span></div>
+    </section>
+
+    <!-- 2. The differentiator: judgment, not filters -->
+    <section class="content-section" id="decides" aria-labelledby="decides-title">
+      <div class="section-grid">
+        <div class="section-copy">
+          <h2 id="decides-title">It asks who’s<br>waiting, not<br>who’s writing.</h2>
+          <p>Cold email comes with a real person’s name on it, so a filter that asks “is this a human?” lets it through. zero looks at your own history instead.</p>
+          <p>TypeSafe’s Jev model reads each thread against your rules, written in plain English. It keeps a person awaiting your answer, a direct question, a failed payment, a legal matter or a real deadline. Receipts, newsletters, notifications and sales pitches are archived. Edit the rules in <strong>Settings → Rules</strong>.</p>
+          <p>It will sometimes be wrong. Check your first few runs.</p>
+        </div>
+        <div class="window">
+          <div class="window-bar"><span class="window-control" aria-hidden="true"></span><span>Two questions</span></div>
+          <ul class="signals">
+            <li><strong>Was the last message yours?</strong><span>The ball is in their court. Archived.</span></li>
+            <li><strong>Have you ever written to this sender?</strong><span>Jev weighs it. A stranger who is selling was never an open loop.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Ambient use -->
+    <section class="content-section" id="morning" aria-labelledby="morning-title">
+      <div class="section-grid">
+        <div class="section-copy">
+          <h2 id="morning-title">Check it with<br>your coffee.<br>Then close it.</h2>
+        </div>
+        <div class="section-copy">
+          <p>Your mail apps stay as they are. zero lives in the menu bar. Choose <strong>Run zero now</strong> and <strong>Open loops</strong> lists what’s waiting on you across all your accounts. Tap one to open it in Gmail.</p>
+          <p>Set something aside and zero can learn to handle mail like it next time.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Reversibility: the single home for "nothing is deleted" -->
+    <section class="content-section recovery-section" id="undo" aria-labelledby="undo-title">
+      <div class="section-grid">
+        <div class="section-copy">
+          <h2 id="undo-title">Nothing is<br>deleted.</h2>
+          <p>Archiving removes Gmail’s Inbox label and adds one dated for that day. The mail stays in All Mail, and search still finds it.</p>
+          <span class="label-chip">🗄️ Auto-Archived 2026-09-29</span>
+        </div>
+        <ul class="recovery-list">
+          <li><strong>Undo a day</strong><span>Open <strong>Undo</strong> and choose <strong>Restore all</strong>, or put back one email.</span></li>
+          <li><strong>Starred mail</strong><span>Never touched.</span></li>
+          <li><strong>No answer</strong><span>If Jev can’t decide, the thread stays in your Inbox.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 5. Requirements, data, cost: each fact once -->
+    <section class="paper-section content-section" id="before" aria-labelledby="before-title">
+      <div class="section-inner">
+        <h2 id="before-title">What it needs, sends and costs</h2>
+        <div class="facts-table">
+          <div class="fact"><h3>Your Mac</h3><p>Apple Silicon with macOS 26 Tahoe or later.</p><p>The installer stops on anything else.</p></div>
+          <div class="fact"><h3>Gmail</h3><p>You sign in with Google in your browser. zero never sees your password.</p><p>Google may warn that zero is unverified. It hasn’t finished Google’s review.</p></div>
+          <div class="fact"><h3>Your mail</h3><p>zero runs on your Mac. To sort a thread, it sends Jev the sender, subject, a short preview and your rules.</p><p>The zero project runs no server that receives your email. <a href="/privacy.html">Privacy policy</a>.</p></div>
+          <div class="fact"><h3>Replies</h3><p>Optional. Tap <strong>Reply</strong> and your agent CLI, Claude Code by default, drafts one. The thread goes to that provider.</p><p>Nothing is sent until you click <strong>Send reply</strong>.</p></div>
+          <div class="fact"><h3>Cost</h3><p>zero is free and open source. Sorting needs your own TypeSafe Jev key, billed by TypeSafe.</p><p>Drafts are billed to your agent CLI’s account.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Install -->
+    <section class="terminal-section content-section" id="install" aria-labelledby="install-title">
+      <div class="section-grid install-grid">
+        <div class="section-copy install-copy"><h2 id="install-title">Install zero.</h2></div>
+        <div class="terminal window">
+          <div class="window-bar"><span class="window-control" aria-hidden="true"></span><span>Terminal</span></div>
+          <div class="terminal-body">
+            <ol class="install-steps">
+              <li class="install-step-terminal">
+                <strong>Run the installer in Terminal.</strong>
+                <p class="warning"><strong>Read this first.</strong> zero isn’t notarized by Apple. The installer may add Homebrew, Python, Node, the Google Workspace CLI and Claude Code. <a href="/install.sh">Read the script</a>.</p>
+                <div class="command-row"><code id="install-command">curl -fsSL https://zero.headless.com/install | bash</code><button id="copy-command" type="button" hidden>Copy</button></div>
+                <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
+                <p class="fine-print">It checks the download’s SHA-256 and signature before installing. Or download it from <a href="https://github.com/drewling/zero/releases">GitHub Releases</a>.</p>
+              </li>
+              <li><strong>Connect Gmail.</strong> Open zero from the menu bar and choose <strong>Connect your first inbox</strong>. Add more in <strong>Accounts</strong>.</li>
+              <li><strong>Add your Jev key.</strong> In <strong>Settings → Sorting engine</strong>, choose <strong>Get a key</strong>, create one at <a href="https://console.typesafe.ai/keys">TypeSafe</a>, paste it in and click <strong>Save</strong>.</li>
+              <li><strong>Run it once.</strong> Choose <strong>Run zero now</strong> and look at what stayed and what was archived.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><span>zero · AGPL-3.0</span><nav aria-label="Footer navigation"><a href="https://github.com/drewling/zero">Source</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a></nav></footer>
+</body>
+</html>

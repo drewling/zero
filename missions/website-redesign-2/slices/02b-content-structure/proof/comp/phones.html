@@ -1,0 +1,8 @@
+<!doctype html><meta charset="utf-8"><title>02b comp at 390</title>
+<style>body{margin:0;background:#222;display:flex;gap:24px;padding:24px;font:12px monospace;color:#ccc}figure{margin:0}iframe{width:390px;height:844px;border:0;background:#fff;border-radius:18px}</style>
+<figure><iframe src="index.html"></iframe><figcaption></figcaption></figure>
+<figure><iframe src="index.html#decides"></iframe><figcaption></figcaption></figure>
+<figure><iframe src="index.html#before"></iframe><figcaption></figcaption></figure>
+<script>
+addEventListener('load',()=>setTimeout(()=>document.querySelectorAll('iframe').forEach(f=>{const d=f.contentDocument,w=d.documentElement.clientWidth;const past=[...d.querySelectorAll('body *')].filter(e=>{if(e.closest('[aria-hidden="true"]'))return false;const r=e.getBoundingClientRect(),cs=getComputedStyle(e);return r.width&&cs.visibility!=='hidden'&&r.right>w+1}).length;f.nextElementSibling.textContent=`${f.getAttribute('src')} · 390 iframe · scrollWidth ${d.documentElement.scrollWidth} · past right edge ${past}`}),800));
+</script>
