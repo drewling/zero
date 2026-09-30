@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url';
 const root = path.dirname(fileURLToPath(import.meta.url));
 const repo = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
 const sha = execFileSync('git', ['rev-parse', process.argv[2] || 'cdfee91'], { encoding: 'utf8' }).trim();
+const tightened = process.argv[3] === 'after-b-tightened';
+if (process.argv[3] && !tightened) throw new Error('Only after-b-tightened is an additional freeze phase');
 const comps = 'missions/website-redesign-3/slices/02-references-and-comps/proof/comps';
 const require = createRequire(execFileSync('npm', ['root', '-g'], { encoding: 'utf8' }).trim() + '/');
 const { chromium } = require('playwright');
@@ -15,8 +17,9 @@ const readGit = file => execFileSync('git', ['show', `${sha}:${file}`], { cwd: r
 const files = execFileSync('git', ['ls-tree', '-r', '--name-only', sha, comps], { encoding: 'utf8', cwd: repo }).trim().split('\n');
 const browser = await chromium.launch();
 try {
-  for (const outline of ['a', 'b']) {
-    const phase = path.join(root, `after-${outline}`);
+  for (const outline of tightened ? ['b'] : ['a', 'b']) {
+    const phaseName = tightened ? 'after-b-tightened' : `after-${outline}`;
+    const phase = path.join(root, phaseName);
     if (fs.existsSync(phase)) throw new Error(`Do not overwrite frozen evidence: ${phase}`);
     fs.mkdirSync(phase);
     const hashes = {};
@@ -36,6 +39,10 @@ try {
       const response = await page.goto(`http://127.0.0.1:8941/page-${outline}/?static`);
       const served = Buffer.from(await response.body());
       if (hash(served) !== hashes[`source/page-${outline}/index.html`].sha256) throw new Error('Served page differs from frozen Git source');
+      for (const [file, evidence] of Object.entries(hashes).filter(([file]) => file.startsWith('source/kit/'))) {
+        const result = await ctx.request.get(`http://127.0.0.1:8941/${file.slice('source/'.length)}`);
+        if (!result.ok() || hash(await result.body()) !== evidence.sha256) throw new Error(`Served asset differs from frozen Git: ${file}`);
+      }
       await page.evaluate(() => document.fonts.ready);
       const extraction = await page.evaluate(() => {
         const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT), nodes = [];
@@ -46,15 +53,35 @@ try {
       textNodes = extraction.nodes; layouts[width] = extraction;
       await ctx.close();
     }
-    const text = textNodes.join('\n') + '\n';
+    const clipboardStates = [];
+    if (tightened) {
+      const selectedFile = 'missions/website-redesign-3/slices/01-copy-and-story/proof/rethink/SELECTED-B-COPY.md';
+      saveGit(selectedFile, path.join(phase, 'SELECTED-B-COPY.md'));
+      const selected = readGit(selectedFile).toString();
+      const expected = selected.split('<!-- CLIPBOARD-COPY-START -->')[1].split('<!-- CLIPBOARD-COPY-END -->')[0].split('\n').map(s => s.trim()).filter(Boolean);
+      for (const mode of ['success', 'denied']) {
+        const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });
+        await ctx.addInitScript(mode => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => {
+          if (mode === 'denied') throw new DOMException('Denied', 'NotAllowedError');
+        } } }), mode);
+        const page = await ctx.newPage(); await page.goto('http://127.0.0.1:8941/page-b/?static');
+        await page.locator('#copy').click();
+        await page.waitForFunction(() => document.querySelector('[role="status"],[aria-live="polite"]')?.textContent.trim());
+        const status = await page.locator('[role="status"],[aria-live="polite"]').first().textContent();
+        clipboardStates.push(status.trim()); await ctx.close();
+      }
+      if (JSON.stringify(clipboardStates) !== JSON.stringify(expected)) throw new Error('Rendered clipboard states differ from counted copy');
+    }
+    const text = [...textNodes, ...clipboardStates].join('\n') + '\n';
     const count = (text.replace(/’/g, "'").match(/[\p{L}\p{N}]+(?:['.-][\p{L}\p{N}]+)*/gu) || []).length;
-    if (count !== (outline === 'a' ? 474 : 544)) throw new Error(`Unexpected full authored count ${outline}: ${count}`);
+    if (count !== (tightened ? 549 : outline === 'a' ? 474 : 544)) throw new Error(`Unexpected full authored count ${outline}: ${count}`);
     fs.writeFileSync(path.join(phase, 'PAGE-TEXT.txt'), text);
     fs.writeFileSync(path.join(phase, 'layout.json'), JSON.stringify(layouts, null, 2) + '\n');
     fs.writeFileSync(path.join(phase, 'freeze.json'), JSON.stringify({ commit: sha, frozenAt: new Date().toISOString(), sourceHashes: hashes, textSha256: hash(text), authoredWords: count,
       exclusions: ['author-only draft flag', 'screen-reader-only hero description duplicates illustrated content', 'SVG, scripts, styles and document title'],
-      includes: ['one header and footer', 'all hero states including Working…', 'hidden mobile subjects', 'all editor lines even if clipped', 'object dates, row ages, fictional addresses and labels'] }, null, 2) + '\n');
+      clipboardStates,
+      includes: ['one header and footer', 'all hero states including Working…', 'hidden mobile subjects', 'all editor lines even if clipped', 'object dates, row ages, fictional addresses and labels', ...(tightened ? ['all clipboard statuses observed through success/denial fault paths'] : [])] }, null, 2) + '\n');
     execFileSync('python3', [path.join(root, 'prepare-reader-images.py'), phase], { stdio: 'inherit' });
-    console.log(`Frozen after-${outline}: ${count} authored words, ${sha}`);
+    console.log(`Frozen ${phaseName}: ${count} authored words, ${sha}`);
   }
 } finally { await browser.close(); }
