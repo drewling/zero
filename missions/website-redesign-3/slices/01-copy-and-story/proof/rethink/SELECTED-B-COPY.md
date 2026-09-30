@@ -1,6 +1,6 @@
 # Owner-selected B: tightened risk-first copy
 
-DRAFT4, 2026-09-30. Owner chose page B at00:58Z. Preserve its risk-first order: approved hero, Before you install, Rules, Undo, Terminal. Keep A archived and unchanged, do not import its recovery-first story. The frozen nine-reader evidence remains at4683a80. This revised B needs fresh provenance, readers and independent QA.
+DRAFT5, 2026-09-30 02:07Z. Owner chose page B at00:58Z. Preserve its risk-first order: approved hero, Before you install, Rules, Undo, Terminal. Keep A archived, no recovery-first story import. Previous Draft4 is frozen at50bf121,549 runtime words, with three fresh matched reads and independent QA atdf6632d. Readiness is unchanged. Design lead authorized this post-QA privacy correction. COPY-B below now authors550 words with the unchanged104-word hero; final rendered recount and applicable rechecks remain pending. Removing hero Trash is not authorized yet.
 
 Build COPY-B below, with approved hero104, existing shared OBJECT-COPY56 and exact RULES-B-COPY110 from `SECTION-COPY.md`. Add the two alternate clipboard strings below. No sixth row or extra object labels without recounting. Canonical legal/installer destinations replace root-relative links, no visitor labels added.
 
@@ -10,11 +10,11 @@ The recipient rows come first and together: Sorting data and Optional drafts, th
 
 ### Before you install.
 
-Read connected Gmail in Gmail or Apple Mail.
-
-**Sorting data.** **Sent to TypeSafe (Jev):** sender, subject, a preview of up to 160 characters, whether you sent the latest message and whether you've replied to that sender before, your rules and learned preferences. **No zero server receives your email.** [Privacy policy](https://zero.headless.com/privacy.html).
+**Sorting data.** **Sent to TypeSafe (Jev):** sender, subject, a preview of up to 160 characters, whether you sent the latest message and whether you've replied to that sender before, your rules and learned preferences. [Privacy policy](https://zero.headless.com/privacy.html).
 
 **Optional drafts.** Draft replies with Claude Code or another installed AI coding tool, using its account and billing. **Sent to your coding tool's provider:** thread previews, sent-mail samples, writing preferences and saved profile context. Review before **Send reply**. Drafts never send automatically.
+
+**TypeSafe receives sorting data. Your tool's provider receives draft data. Neither goes to zero's servers.**
 
 **Sorting cost.** Your Jev key, billed by TypeSafe. Jev 1.13: $0.042 per million input tokens, outputs free (checked 30 Sep 2026). [Current pricing](https://docs.typesafe.ai/models). Free, open-source app (AGPL-3.0).
 
@@ -51,9 +51,9 @@ Copy manually: press Command-C.
 
 These alternate statuses count even before they appear. Show and politely announce them. Denied write selects the exact command without moving copy-button focus. Without clipboard support hide the optional button but keep manual command selection usable. No new retry labels without a count.
 
-## Pending privacy follow-up, NOT applied to COPY-B
+## Applied authoring correction, pending rendered re-freeze
 
-Requested by main/design lead after two of three tightened-B readers flagged the reassurance. Preserve the QA object at `50bf121`. Apply this patch only in the authorized post-QA batch, then recount the generated page and recheck comprehension. This marker is a proposed patch, not a second full COPY-B source.
+Requested by main/design lead after two of three tightened-B readers flagged the reassurance. QA atdf6632d has reported, and design lead authorized applying the correction at02:05Z. The exact words are now in COPY-B. Previous50bf121 inputs remain immutable. The patch record below is historical rationale, not another build block.
 
 <!-- PRIVACY-FOLLOWUP-START -->
 
@@ -65,9 +65,9 @@ Replace only `No zero server receives your email.` with:
 
 <!-- PRIVACY-FOLLOWUP-END -->
 
-Keep both recipient-first rows and every disclosed field unchanged. Keep this as its own accessible plate, preferably after the two recipient rows so “Your tool” refers to the immediately adjacent optional coding-tool disclosure. Optional drafts remain optional. Do not merge the plate with the cost row or present it as a local-only assurance.
+Both recipient-first rows and every disclosed field remain unchanged. Render the new paragraph as its own full-width accessible outlined plate after the two recipient rows, so “Your tool” refers to the adjacent optional coding-tool disclosure. Optional drafts remain optional. Do not merge with cost or present a local-only assurance.
 
-Budget: remove eight lede words and replace six privacy words with fifteen, net **+1**. Candidate count verified with the normal counter: hero104 + COPY-B275 + objects56 + Rules110 + clipboard5 = **550**. Frozen COPY-B remains **549**. The viewing-client fact remains in the approved hero, so deleting the lede does not remove the Gmail-only/client disclosure. Cost, installer, policy and hero are unchanged.
+Budget: remove eight lede words and replace six privacy words with fifteen, net **+1**. Count verified with the normal counter: hero104 + COPY-B275 + objects56 + Rules110 + clipboard5 = **550**. Frozen Draft4 remains549. Viewing-client fact remains in the approved hero, so deleting the lede does not remove Gmail-only/client disclosure. Cost, installer, policy and hero are unchanged. If owner approves deleting the hero's one-word Trash label, the expected total is549, but it must be observed and recounted after designer applies it.
 
 Source trace: direct TypeSafe endpoint `lib/jev.py:8,33`, sorting payload `lib/review_open_loops.py:974–998`, installed-tool dispatch `lib/llm.py:22–55,76–87`, optional draft context `lib/keeper_server.py:1288–1400`, local zero service `macapp/Sources/main.swift:100–110` and `lib/keeper_server.py:2646–2652`. This names the two disclosed outbound paths and zero's server boundary, not a promise about provider retention, training, billing or all network traffic. Candidate authoring is verified. Final rendered placement, 550-word inventory and a fresh comprehension check remain pending.
 
@@ -85,4 +85,4 @@ No automatic daily promise is added to B. The approved **Run zero now** is an im
 - Recovery now explicitly says searchable, retaining dated label, All Mail, individual/day controls and nothing deleted.
 - Optional drafts remain separate account/billing/data context with review and explicit manual send. No daily schedule or automatic-send claim appears.
 
-Repeatable count: `SELECTED_COPY=<absolute path to SELECTED-B-COPY.md> node count-section-drafts.mjs`. Fresh regression01:11Z passes24/24, including selected-state, missing-marker and over-budget fixtures. Authored count checked with the same Unicode tokenizer as Draft3: hero104 + COPY-B274 + shared objects56 + Rules110 + clipboard states5 = **549**, one spare word. The source check also confirms complete sorting/draft fields and no automatic-run promise in marked visitor copy. Final rendered fidelity, three fresh tightened-B readers, independent frozen-B QA and fair-fix rechecks are pending. Production remains held.
+Repeatable count: `SELECTED_COPY=<absolute path to SELECTED-B-COPY.md> node count-section-drafts.mjs`. Draft5 authoring550 is verified; prior50bf121 runtime549 remains the reader/QA object. Source checks retain complete fields and no automatic-run promise. No readiness improvement is claimed. New rendered fidelity/count, applicable comprehension and QA fair-fix rechecks remain pending. Production held.
