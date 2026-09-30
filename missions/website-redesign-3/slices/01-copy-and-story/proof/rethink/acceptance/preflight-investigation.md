@@ -12,6 +12,8 @@ Status: preflight only, not a stable-SHA acceptance record. Final designer freez
 - The issue is therefore intermittent on the checked surface. These later passes do not establish a root cause, do not show that it was fixed, and do not erase the earlier failed preflight.
 - The bounded sequential whole-page repeat at 01:39Z returned **145 PASS / 1 FAIL**, exit **1**, with the same page-B blob before and after. No RETRY lines were reported. The remaining failure was `page-b Copy command has a visible focus ring :: none 3px`. Both B clipboard success and denial contexts passed with the exact command and expected announced statuses. This narrows the remaining observation to the separate keyboard/focus context but does not establish whether its script delivery, button visibility or focus-visible behavior caused the failure. The exact failure and raw log path were sent to the designer at 01:41Z. A final frozen repeat is still required.
 
+- At 01:43Z a three-context reproduction of the same B keyboard sequence passed 3/3: all 16 document-order stops, Copy visible, focused and `:focus-visible`, `solid 3px` outline, both scripts 200, no resource or runtime errors. This does not prove the earlier context was healthy. It is evidence against calling the CSS deterministically broken, and the designer is instrumenting the whole-page keyboard context before the final freeze. The raw script and results are retained as `focus-boundary.mjs` and `focus-boundary.log`.
+
 Raw whole-page logs remain in:
 
 - `/Users/light/.jcode/scratch/zero-tightened-preflight-chromium-1790731599/pages-chromium.log`
