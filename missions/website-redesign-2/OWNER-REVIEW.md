@@ -18,7 +18,7 @@ The new page cuts visible copy from **901 to 608 words** and follows a visitor's
 
 The independent [QA proof](slices/03-independent-qa/proof/PROOF.md) includes matching WebKit captures at all three true viewports and the requirement-by-requirement browser checks. No horizontal overflow or geometry offenders were found. Reduced-motion, no-JS, keyboard Copy focus on success and denial, four install steps, and asset routes passed within the stated scope.
 
-**Local Docker/nginx preflight now passed:** After QA, Docker Desktop came up. An isolated archive of the exact candidate built a `linux/amd64` image locally; the container was healthy, served homepage bytes identical to the reviewed source, returned `/install` and `/install.sh` 302 to the intended installer targets, served static/legal assets, and returned a parsable shell script when following `/install`. [Preflight evidence](slices/04-release/PREFLIGHT.md). No production action occurred.
+**Local Docker/nginx preflight now passed:** After QA, Docker Desktop came up. An isolated archive of the exact candidate built a `linux/amd64` image locally; the container was healthy, served homepage bytes identical to the reviewed source, returned `/install` and `/install.sh` 302 to the intended installer targets, served static/legal assets, and returned a parsable shell script when following `/install`. Preflight evidence. No production action occurred.
 
 **Remaining limits:** The local result is not a production deploy or a check of the live host/proxy. QA used an instrumented clipboard adapter for success and denial, with a separate real browser success path in builder proof. VoiceOver/axe and formal performance scores were not measured. No claim of those checks passing is made.
 

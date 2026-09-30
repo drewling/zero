@@ -65,7 +65,7 @@ A visitor understands in five seconds: **zero is a Mac app that cleans up your G
 3. [03 Build structure](slices/03-build-structure/SPEC.md), implementer. The approved copy and comps, rebuilt cleanly in `landing/`, including the title-bar fix.
 4. [04 Motion and polish](slices/04-motion-and-polish/SPEC.md), motion engineer. It prototypes from gate B in a sandbox while 03 builds, then integrates on top of the 03 SHA. The design lead does a polish pass and signs off.
 5. [05 Independent QA](slices/05-independent-qa/SPEC.md), QA. Checks the exact SHA against gates A and B, runs the functional, a11y and responsive checks, and repeats the cold-reader test on the built page.
-6. [06 Release](slices/06-release/SPEC.md), main lead. Only after QA PASS and an explicit owner go. Live verification and a rollback path.
+6. [06 Release](slices/06-release/SPEC.md), main lead. Only after QA PASS and an explicit owner go. Live verification.
 
 ## Done means
 
