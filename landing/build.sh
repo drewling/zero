@@ -61,16 +61,12 @@ check "site.css" \
   "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/site.css")" "200"
 check "site.js" \
   "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/site.js")" "200"
-check "Pixelify 400 font" \
-  "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/assets/pixelify-400.woff2")" "200"
-check "Pixelify 600 font" \
-  "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/assets/pixelify-600.woff2")" "200"
+check "ChicagoFLF font" \
+  "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/assets/chicagoflf.woff2")" "200"
 check "Geist font" \
   "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/assets/geist.woff2")" "200"
 check "Geist Mono font" \
   "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/assets/geist-mono.woff2")" "200"
-check "panel image" \
-  "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/assets/zero-panel.png")" "200"
 check "unknown path 404s" \
   "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/nope")" "404"
 

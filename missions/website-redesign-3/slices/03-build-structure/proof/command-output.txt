@@ -1,0 +1,51 @@
+# Focused check output
+
+Date: 2026-09-30
+Candidate: working tree before commit
+
+## Static contract tests
+
+```
+node --test landing/test-site.mjs
+# tests 7
+# pass 7
+# fail 0
+```
+
+The seven passing tests cover page B metadata and section order, approved disclosures and recovery copy, exact installer command, compact requirements line and one folder-drop target, clipboard pending focus contract, reduced/static motion safety and prohibited APIs, self-contained assets and legal routes, and semantic accessibility structure.
+
+## Shell and asset checks
+
+```
+bash -n landing/build.sh
+# build.sh syntax: ok
+```
+
+The obsolete Pixelify and `zero-panel.png` assets were removed. The production asset set is ChicagoFLF, Geist, Geist Mono, the two page CSS files, and the two interaction scripts. No production source references mission paths or parent-directory comp assets.
+
+## Banned phrase lint
+
+The slice 01 ban list was checked against `landing/index.html`, `landing/site.css`, `landing/site.js`, and `landing/assets`. All banned explanatory phrases returned 0 hits except `open loops`, which returned 2 hits as the product's literal UI tab label in the illustrative redraw. The explanatory prose contains none of the banned phrases.
+
+## Real local public interface
+
+The approved Aside read-only check opened `http://127.0.0.1:8877/` and observed:
+
+- title: `zero — Clean up your Gmail inbox on your Mac.`
+- desktop viewport: 1440 x 900, `scrollWidth=1440`, `clientWidth=1440`, no horizontal overflow
+- visible headings: hero, Before you install, Choose what needs to stay, Restore archived mail, Ready to install
+- exact installer command is present and reachable in the rendered page
+- `?static` opens successfully, preserves the command and disclosures, and has zero animated elements in the observed static state
+- decorative hero content is exposed as an illustration summary, while product-drawn controls remain noninteractive
+
+Aside's local session did not expose a true viewport-resize or reduced-motion emulation control. 390/320 geometry and reduced-motion are therefore explicitly left for independent QA, not claimed from this check.
+
+## Route and container limitations
+
+Local SimpleHTTP served `/`, legal pages, robots, sitemap, llms, and 404 as expected. `/install` and `/install.sh` returned 404 under SimpleHTTP because redirect behavior is provided by nginx, not the static server. `bash landing/build.sh` parsed the installer, then stopped before Docker build with:
+
+```
+ERROR: Cannot connect to the Docker daemon at unix:///Users/light/.docker/run/docker.sock. Is the docker daemon running?
+```
+
+Docker build, nginx route smoke, and `/install` redirect verification remain release-gate checks for the lead. No deploy or push was performed.

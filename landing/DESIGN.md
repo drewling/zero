@@ -4,15 +4,13 @@ description: A one-bit Macintosh desktop landing page for a Mac menu-bar utility
 colors:
   paper: "#ffffff"
   ink: "#000000"
-  soft-ink: "#1a1a1a"
   dither: "#000000"
   panel: "#ffffff"
-  inverse: "#000000"
 typography:
   display:
-    fontFamily: "Pixelify Sans, monospace"
+    fontFamily: "Geist, system-ui, sans-serif"
     fontSize: "clamp(40px, 6vw, 88px)"
-    fontWeight: 600
+    fontWeight: 700
     lineHeight: .94
     letterSpacing: "-0.03em"
   body:
@@ -23,6 +21,8 @@ typography:
     fontFamily: "Geist Mono, monospace"
     fontSize: "15px"
     lineHeight: 1.5
+  ui:
+    fontFamily: "ChicagoFLF, Geist, system-ui, sans-serif"
 rounded:
   window: "0"
   button: "0"
@@ -40,7 +40,7 @@ components:
     backgroundColor: "{colors.panel}"
     borderBottom: "2px solid {colors.ink}"
   terminal:
-    backgroundColor: "{colors.inverse}"
+    backgroundColor: "{colors.ink}"
     textColor: "{colors.paper}"
 ---
 
@@ -48,52 +48,41 @@ components:
 
 **Creative North Star: “One-bit Macintosh desktop.”**
 
-The page is a small desktop assembled from windows, folders, a dated archive label, and an empty Trash. It makes zero's mechanism legible at a glance: the visitor sees a message that needs attention, learns which kinds stay in Inbox, sees that archived mail remains recoverable, then gets the real requirements and install command. The visual world is a replacement, not a polish pass over the old departure-board system.
+The page is a small desktop assembled from windows, folders, a dated archive label, and an empty Trash. It makes zero's mechanism legible at a glance: the visitor sees a message that needs attention, learns which kinds stay in Inbox, sees that archived mail remains recoverable, then gets the real requirements and install command. The visual world is a replacement, not a polish pass over the previous departure-board system.
 
-The surface is strict black and white with a 50% dither texture behind solid windows. Striped title bars, pixel display type, Finder-style rules, and Terminal-style install instructions establish the Macintosh reference without pretending the page is an actual operating system. The hero panel is zero's real Open loops panel redrawn in the same one-bit language, so the page carries no color image.
+The surface is strict black and white with a dither texture behind solid windows. Striped title bars, Chicago UI labels, Geist headings, Finder-style rules, and Terminal-style install instructions establish the Macintosh reference without pretending the page is an actual operating system. The hero product window is an HTML/CSS redraw of zero's real Open loops panel, so the page carries no product screenshot dependency.
 
 ## Product evidence and claims
 
-- `assets/zero-panel.png` remains the source product screenshot and the og:image. The hero does not show it. Instead, the hero is an HTML/CSS redraw of the same Open loops panel, and every element comes from `macapp/Sources/PanelView.swift`:
-  - the wordmark, account badges with inbox counts, and More
-  - the Open loops, Accounts, Undo and Settings tabs
-  - the count, "things still need you" and "Across N accounts. Tap any to open it in Gmail."
-  - the Waiting on you rows, each with sender, subject, a Needs reply or Action required tag, a preview chevron, the age, and the Reply, AI archive and Archive actions
-  - the footer line and **Run zero now**
-
-  The redraw adds no features. The caption reads "zero's real layout, redrawn. Names and subjects are made up." The retired raster crop `panel-cut.png` has been deleted.
-- The two-question window explains the judgment signals that distinguish zero from a simple sender filter. It is an illustration, not a live inbox or a guarantee.
-- Archive remains reversible. Nothing is deleted. Gmail All Mail and the dated recovery label stay explicit.
+- The hero redraw shows the product's Open loops state, account badges, tabs, count, waiting-on-you rows, action labels, recovery affordance, and Run zero now control. It adds no product features. Names and subjects are explicitly made up.
+- Archive remains reversible. Nothing is deleted. Gmail All Mail and the dated recovery label stay explicit, with a six-step CSS-only folder drop for the newly dated archive folder.
 - The Jev data path, optional draft provider, Apple Silicon and macOS 26 requirements, unverified Google app warning, ad-hoc signing, and provider billing remain visible.
 - No testimonials, logos, adoption claims, unsupported privacy promises, or fictional product features are added.
 
 ## Typography and assets
 
-Pixelify Sans is self-hosted for the display voice. The implementation keeps the official Pixelify files and SIL Open Font License notice in `assets/pixelify-400.woff2`, `assets/pixelify-600.woff2`, and `assets/OFL-pixelify.txt`. The files were sourced from the approved comp font inventory at `missions/website-redesign-2/slices/01-research-direction/proof/comps/fonts/`.
+Geist is self-hosted for headings and body copy. Geist Mono is self-hosted for the terminal command and code labels. ChicagoFLF is self-hosted for short UI labels, window titles, tabs, buttons, and the footer. The Chicago font file is retained with the existing `OFL.txt` notice. There are no Google Fonts requests and no product screenshot asset in the production page. Pixelify and its license file were removed because the approved B direction does not use them.
 
-Geist and Geist Mono remain self-hosted for body copy, code, and labels, with their existing OFL notice. Archivo and its license file are removed because the approved world no longer uses them. There are no Google Fonts requests. The source product image remains byte-identical. The hero redraw uses no raster, only HTML text and a small inline SVG icon sprite with one stroke weight.
+The production bundle is self-contained under `landing/`. CSS, JavaScript, fonts, and markup do not reference mission proof paths or parent directories.
 
 ## Layout and responsive rules
 
 - The first viewport is a dithered desktop with a large white hero window, the real app window, dated archive folders, and an empty Trash cue.
-- The current dated folder has one authored 900ms stepped drop on load, matching the approved B moment. Reduced-motion users see the settled folder with no animation.
+- The current dated folder uses one authored `900ms steps(6, end) 700ms both` drop on load. `?static` and reduced-motion users see the settled folder with no animation.
 - The visitor order is hero, judgment, ambient use, reversibility, requirements/data/cost, and install. The page supports the visitor decision path instead of repeating a feature inventory.
-- The hero keeps the compact requirements line near the primary action. The app panel is a one-bit popover with a notch, and its rows are drawn as the app's rounded cards. Inside the panel, the colored pills become outlined (Needs reply) and inverted (Action required) tags. The blue count becomes the Pixelify display numeral, and **Run zero now** becomes the site's black button. Below 360px of panel width, tags wrap under the sender and the chevron is dropped, so nothing overflows.
-- The panel is decorative. It is `aria-hidden` and `inert`, so none of its drawn controls can be focused. An sr-only summary beside it gives assistive technology the same content in one sentence. The panel has no motion, so reduced motion needs no special case.
-- The judgment section uses a two-question window instead of the retired default-rules table. Its copy explains last-message and replied-before signals without presenting them as guarantees.
-- The recovery section uses the dated-label chip and a short list explaining undo, starred-mail protection, and uncertain threads staying in the Inbox.
+- The hero keeps one compact requirements line near the primary action. The app panel is a one-bit popover with a notch, and its rows are drawn as the app's rounded cards.
+- The panel is decorative and inert. Its visible content is accompanied by an accessible summary. No drawn controls can be focused.
 - Before-install facts remain a readable paper-colored section. Install instructions use a black Terminal panel with the exact command and clipboard fallback.
-- The page has no FAQ section because each answer has one home above. The footer retains Source, Privacy, and Terms.
-- At 760px and below, windows become a single readable flow. The dither remains decorative behind panels, the command can wrap or scroll inside its code block, and no content is clipped.
+- At 760px and below, windows become a single readable flow. The command can wrap or scroll inside its code block, and the page reserves no fixed-width content that can create horizontal overflow.
 
 ## Interaction and accessibility
 
-The page is complete in HTML without JavaScript. The only script behavior is optional clipboard support for the install command. The Copy button exposes an aria-disabled pending state with a JS guard so keyboard focus remains on the control, plus manual-copy recovery. Native headings, semantic lists, links, and visible copy provide the primary accessibility path.
+The page is complete in HTML without JavaScript. Optional scripts provide the folder-drop animation and clipboard support only. The Copy button uses an `aria-disabled` pending state plus a JavaScript guard instead of native `disabled`, so keyboard focus remains on the control on both clipboard success and denial. Manual-copy recovery is always visible.
 
-Focus rings remain visible at 3px against both black and white surfaces. Decorative check, folder, and trash symbols are hidden from assistive technology when their adjacent labels already provide the meaning. There is no Canvas, requestAnimationFrame, IntersectionObserver, layout observer, or motion-specific fallback to maintain.
+Focus rings remain visible at 3px against both black and white surfaces. Decorative symbols are hidden from assistive technology when adjacent labels provide the meaning. There is no Canvas, layout observer, scroll-jacking, audio, or pointer-reactive effect.
 
 ## Build and deployment constraints
 
-The page remains static HTML, CSS, JavaScript, nginx, and Docker. `landing/build.sh` validates the homepage, legal routes, install redirects, CSS, JS, Pixelify and Geist assets, the source product image, 404 behavior, and the returned installer script. `node --test landing/test-site.mjs` covers clipboard behavior, structure, product truth, install-step count, compact hero requirements, and absence of the replaced motion implementation.
+`node --test landing/test-site.mjs` covers the page B metadata and section order, approved disclosure and recovery copy, exact install command, four semantic install steps, compact hero requirements, folder-drop timing and reduced/static fallbacks, pending clipboard focus behavior, motion safety, accessibility structure, and self-contained assets. `landing/build.sh` validates the homepage, legal routes, install redirects, CSS, JS, ChicagoFLF and Geist assets, 404 behavior, and the returned installer script.
 
-Deployment is outside this slice. Dokploy currently serves a raw Compose service pinned to an image, so `autoDeploy=true` is not evidence of Git commit deployment. Do not deploy from the landing build slice. If the local Docker daemon is unavailable, record that build and `/install` smoke evidence is blocked and leave release preflight to the lead.
+Docker and nginx smoke are release-gate checks because `/install` and `/install.sh` are redirects in the container. Deployment is outside this slice. Dokploy currently serves a raw Compose service pinned to an image, so `autoDeploy=true` is not evidence of Git commit deployment. If the local Docker daemon is unavailable, record the build and redirect smoke as blocked and leave release preflight to the lead.
