@@ -301,6 +301,63 @@ ICONS = {
 #..............................#
  ##############################
 """,
+# 15x14 tray with an up arrow: the per-email restore control in zero's Undo tab
+# (SF Symbol tray.and.arrow.up, help text "Put this email back in the inbox")
+"restore": """
+       #
+      ###
+     #####
+    ## # ##
+       #
+       #
+       #
+#      #      #
+#             #
+#             #
+#####     #####
+#...#######...#
+#.............#
+###############
+""",
+# disclosure triangles for an Undo batch: collapsed (points right) and expanded (points down)
+"chev": """
+#
+##
+###
+####
+###
+##
+#
+""",
+"chevd": """
+#######
+ #####
+  ###
+   #
+""",
+# System 7 scroll-bar arrows (11x9)
+"sb-up": """
+     #
+    #.#
+   #...#
+  #.....#
+ #.......#
+####...####
+   #...#
+   #...#
+   #####
+""",
+"sb-down": """
+   #####
+   #...#
+   #...#
+####...####
+ #.......#
+  #.....#
+   #...#
+    #.#
+     #
+""",
 }
 
 

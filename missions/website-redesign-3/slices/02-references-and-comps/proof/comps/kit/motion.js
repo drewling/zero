@@ -108,7 +108,8 @@
       root.dataset.mode = 'static';
       return;
     }
-    const c = cursor(root);
+    // only stories that have a cursor frame get a cursor element (section stories add no stray DOM)
+    const c = frames.some(f => f.cursor) ? cursor(root) : { style: {}, remove() {}, querySelector: () => ({ setAttribute() {} }), classList: { toggle() {} } };
     const showCursor = f => { c.style.display = f.cursor && wide() ? 'block' : 'none'; };
     const putCursor = f => { const p = f.cursor && target(root, f.cursor); if (p) place(c, p.x, p.y); setCursorKind(c, f.kind); };
 
@@ -153,16 +154,42 @@
     } catch (err) { console.error('Zm story failed, showing final frame', err); finish(); }
   }
 
-  /* start when the element first enters the viewport (sections), or on load (heroes) */
+  /* start when the element first enters the viewport (sections), or on load (heroes).
+     Sections are ARMED (put on frame 0) while still below the fold, then PLAYED once 35% of the element, or 35% of
+     the viewport, is visible. So a visitor never sees the final frame snap back to frame 0. */
   function when(root, story) {
     if (story.onLoad || q.has('frame') || q.has('static') || reduce || !('IntersectionObserver' in window)) {
       return play(root, story);
     }
+    let armed = false, started = false;
+    // put an armed story straight onto its final frame (the no-JS HTML), without playing it
+    const settle = mode => { started = true; io.disconnect(); pre.disconnect(); const n = story.frames.length;
+      setFrame(root, n - 1, n); for (const f of story.frames) if (f.set) try { f.set(root, api); } catch (_) {}
+      root.dataset.mode = mode; };
+    const arm = () => { if (armed || started) return; armed = true;
+      setFrame(root, 0, story.frames.length); if (story.frames[0].set) story.frames[0].set(root, api); root.dataset.mode = 'armed'; };
+    // first sighting: if the element is already on screen (an anchor jump such as the hero's Install link, a reload
+    // mid-page, a fast fling), it stays on its final frame and never plays, so nothing the visitor is reading vanishes.
+    const pre = new IntersectionObserver(es => {
+      const e = es.find(x => x.isIntersecting); if (!e) return;
+      pre.disconnect();
+      if (e.boundingClientRect.top < innerHeight) { started = true; io.disconnect(); root.dataset.mode = 'seen'; return; }
+      arm();
+    },
+      { rootMargin: '0px 0px 30% 0px', threshold: 0 });
     const io = new IntersectionObserver(es => {
-      if (es.some(e => e.isIntersecting)) { io.disconnect(); play(root, story); }
-    }, { threshold: .35 });
+      if (!armed || started || !es.some(e => e.isIntersecting && (e.intersectionRatio >= .35 || e.intersectionRect.height >= innerHeight * .35))) return;
+      // arrived by an in-page link (the hero's Install CTA, the menu bar): the visitor came to read, so show it final
+      if (performance.now() - jumpedAt < 1200) return settle('seen');
+      io.disconnect(); pre.disconnect(); started = true; play(root, story);
+    }, { threshold: [0, .1, .2, .35, .5] });
+    pre.observe(root);
     io.observe(root);
   }
+  let jumpedAt = -1e9;
+  const markJump = () => { jumpedAt = performance.now(); };
+  addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href^="#"]'); if (a) markJump(); }, true);
+  addEventListener('hashchange', markJump);
 
   window.Zm = { play, when, api };
 })();

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heading type options · zero redesign 3 (proof)</title>
+<style>
+/* Four heading treatments, same real headlines (hero B + SECTION-COPY Draft2 + one long stress line), same labels.
+   Only the heading/label face changes. Body stays Geist 17px so the comparison isolates the heading voice. */
+@font-face{font-family:"Pixelify Sans";src:url(../kit/pixelify-600.woff2) format("woff2");font-weight:600;font-display:block}
+@font-face{font-family:ChicagoFLF;src:url(../kit/chicagoflf.woff2) format("woff2");font-weight:400;font-display:block}
+@font-face{font-family:"Geist Pixel";src:url(../kit/geist-pixel.woff2) format("woff2");font-weight:400;font-display:block}
+@font-face{font-family:Geist;src:url(../kit/geist.woff2) format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:"Geist Mono";src:url(../kit/geist-mono.woff2) format("woff2");font-weight:100 900;font-display:block}
+*{box-sizing:border-box;font-variant-ligatures:none!important}
+html{background:#fff;color:#000;font:400 17px/1.55 Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0}
+.top{padding:20px clamp(16px,4vw,64px);border-bottom:2px solid #000;font:500 13px/1.4 "Geist Mono",monospace}
+.opt{padding:clamp(24px,4vw,56px) clamp(16px,4vw,64px);border-bottom:2px solid #000}
+.opt>header{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline;margin-bottom:22px;font:500 13px/1.4 "Geist Mono",monospace}
+.opt>header b{font:600 15px/1.2 "Geist Mono",monospace;padding:3px 8px;background:#000;color:#fff}
+.hd{margin:0;text-wrap:balance;line-height:1.02}
+.h1{font-size:clamp(34px,4.7vw,70px);max-width:15ch;margin-bottom:16px}
+.h2{font-size:clamp(28px,3.4vw,48px);max-width:22ch;margin:26px 0 10px}
+.body{max-width:62ch}
+.labels{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.labels span{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border:2px solid #000;border-radius:9px}
+.labels span.inv{background:#000;color:#fff}
+.small{margin-top:16px;display:flex;flex-wrap:wrap;gap:6px 24px}
+.small span{font-size:16px}
+/* the four candidates */
+.p0 .hd,.p0 .labels,.p0 .small{font-family:"Pixelify Sans";font-weight:600;letter-spacing:-.01em}
+.t1 .hd,.t1 .labels,.t1 .small{font-family:ChicagoFLF;font-weight:400;letter-spacing:0}
+.t2 .hd,.t2 .labels,.t2 .small{font-family:"Geist Pixel";font-weight:400;font-variation-settings:"ELSH" 1;letter-spacing:0}
+.t3 .hd{font-family:Geist;font-weight:700;letter-spacing:-.03em}
+.t3 .labels,.t3 .small{font-family:ChicagoFLF;font-weight:400}
+.t3 .h1{max-width:16ch}
+</style>
+</head>
+<body>
+<p class="top">Proof specimen. Heading options for the whole page, set on the real hero B headline and the Draft2 section headings. Body is unchanged Geist in every row. Ligatures are off everywhere (the <code>fi</code> check is in <code>type/README.md</code>).</p>
+
+<section class="opt p0" data-opt="P0">
+  <header><b>P0 · now</b><span>Pixelify Sans 600 · headings, window titles, buttons</span></header>
+  <h1 class="hd h1">Clean up your Gmail inbox on your Mac.</h1>
+  <p class="body">zero is a Mac app that keeps the emails you need to deal with and archives the rest. Undo any archive. Keep using Gmail or Apple Mail.</p>
+  <h2 class="hd h2">See what went into the archive.</h2>
+  <h2 class="hd h2">Keep mail that needs your reply or action.</h2>
+  <div class="labels"><span class="inv">Run zero now</span><span>Install zero for Mac</span><span>Restore all</span><span>Copy command</span></div>
+  <div class="small"><span>Before you install.</span><span>Choose what needs to stay.</span><span>Install when you're ready.</span><span>first · fixed · file</span></div>
+</section>
+
+<section class="opt t1" data-opt="T1">
+  <header><b>T1 · Chicago</b><span>ChicagoFLF (public domain, a revival of Susan Kare's System 7 Chicago) · every pixel role</span></header>
+  <h1 class="hd h1">Clean up your Gmail inbox on your Mac.</h1>
+  <p class="body">zero is a Mac app that keeps the emails you need to deal with and archives the rest. Undo any archive. Keep using Gmail or Apple Mail.</p>
+  <h2 class="hd h2">See what went into the archive.</h2>
+  <h2 class="hd h2">Keep mail that needs your reply or action.</h2>
+  <div class="labels"><span class="inv">Run zero now</span><span>Install zero for Mac</span><span>Restore all</span><span>Copy command</span></div>
+  <div class="small"><span>Before you install.</span><span>Choose what needs to stay.</span><span>Install when you're ready.</span><span>first · fixed · file</span></div>
+</section>
+
+<section class="opt t2" data-opt="T2">
+  <header><b>T2 · Geist Pixel</b><span>Geist Pixel Square (OFL, Vercel) · every pixel role · shares Geist body's skeleton</span></header>
+  <h1 class="hd h1">Clean up your Gmail inbox on your Mac.</h1>
+  <p class="body">zero is a Mac app that keeps the emails you need to deal with and archives the rest. Undo any archive. Keep using Gmail or Apple Mail.</p>
+  <h2 class="hd h2">See what went into the archive.</h2>
+  <h2 class="hd h2">Keep mail that needs your reply or action.</h2>
+  <div class="labels"><span class="inv">Run zero now</span><span>Install zero for Mac</span><span>Restore all</span><span>Copy command</span></div>
+  <div class="small"><span>Before you install.</span><span>Choose what needs to stay.</span><span>Install when you're ready.</span><span>first · fixed · file</span></div>
+</section>
+
+<section class="opt t3" data-opt="T3">
+  <header><b>T3 · split</b><span>Geist 700 for headings · ChicagoFLF only for short UI labels (titles, buttons, menu bar)</span></header>
+  <h1 class="hd h1">Clean up your Gmail inbox on your Mac.</h1>
+  <p class="body">zero is a Mac app that keeps the emails you need to deal with and archives the rest. Undo any archive. Keep using Gmail or Apple Mail.</p>
+  <h2 class="hd h2">See what went into the archive.</h2>
+  <h2 class="hd h2">Keep mail that needs your reply or action.</h2>
+  <div class="labels"><span class="inv">Run zero now</span><span>Install zero for Mac</span><span>Restore all</span><span>Copy command</span></div>
+  <div class="small"><span>Before you install.</span><span>Choose what needs to stay.</span><span>Install when you're ready.</span><span>first · fixed · file</span></div>
+</section>
+</body>
+</html>
