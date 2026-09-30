@@ -10,6 +10,7 @@ if (!out) throw new Error('Pass an output JSON path');
 if (fs.existsSync(out)) throw new Error('Do not overwrite public-edge evidence');
 const sourceCommit = execFileSync('git', ['rev-parse', process.env.SOURCE_SHA || 'cdfee91'], { encoding: 'utf8' }).trim();
 const outlines = process.env.OUTLINE === 'b' ? ['b'] : ['a', 'b'];
+const base = process.env.BASE || 'http://127.0.0.1:8941';
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const checkedDestinations = [];
 const browser = await chromium.launch();
@@ -23,7 +24,7 @@ try {
     page.on('response', r => { if (r.status() >= 400) resources.push({ url: r.url(), status: r.status() }); });
     page.on('requestfailed', r => resources.push({ url: r.url(), failure: r.failure()?.errorText }));
     page.on('pageerror', e => errors.push(e.message));
-    const served = await page.goto(`http://127.0.0.1:8941/page-${outline}/?static`); await page.evaluate(() => document.fonts.ready);
+    const served = await page.goto(`${base}/page-${outline}/?static`); await page.evaluate(() => document.fonts.ready);
     const source = execFileSync('git', ['show', `${sourceCommit}:missions/website-redesign-3/slices/02-references-and-comps/proof/comps/page-${outline}/index.html`]);
     if (hash(source) !== hash(await served.body())) throw new Error('Served public page differs from requested source commit');
     rec(!resources.length && !errors.length, `${outline}: loaded assets and script status`, { resources, errors });
@@ -36,7 +37,7 @@ try {
       const target = page.locator(link.href); rec(await target.count() === 1, `${outline}: target ${link.href}`, link.text);
     }
     for (const route of [...new Set(links.map(l => l.href).filter(h => h.startsWith('/')))]) {
-      const response = await ctx.request.get(`http://127.0.0.1:8941${route}`);
+      const response = await ctx.request.get(`${base}${route}`);
       rec(response.ok(), `${outline}: proof-server linked route ${route}`, response.status());
     }
     if (process.env.OUTLINE === 'b') {
@@ -70,7 +71,7 @@ try {
       });
       pg.on('requestfailed', r => health.resources.push({ url: r.url(), failure: r.failure()?.errorText }));
       pg.on('pageerror', e => health.errors.push(e.message));
-      await pg.goto(`http://127.0.0.1:8941/page-${outline}/?static`);
+      await pg.goto(`${base}/page-${outline}/?static`);
       const copy = pg.locator('#copy');
       if (mode !== 'unavailable') {
         await copy.focus(); await pg.keyboard.press(mode === 'success' ? 'Enter' : 'Space');
@@ -87,7 +88,7 @@ try {
     await ctx.close();
   }
 } finally { await browser.close(); }
-fs.writeFileSync(out, JSON.stringify({ sourceCommit, checkedAt: new Date().toISOString(), checkedDestinations, scope: 'Public local comp interfaces and linked canonical URLs, readonly HTTP only. Clipboard fault injection tests environmental success/denial/unavailability without installer execution.', records,
+fs.writeFileSync(out, JSON.stringify({ sourceCommit, proofOrigin: base, checkedAt: new Date().toISOString(), checkedDestinations, scope: 'Public local comp interfaces and linked canonical URLs, readonly HTTP only. Clipboard fault injection tests environmental success/denial/unavailability without installer execution.', records,
   pass: records.filter(r => r.ok).length, fail: records.filter(r => !r.ok).length }, null, 2) + '\n');
 for (const row of records) console.log(`${row.ok ? 'PASS' : 'FAIL'} ${row.name}: ${JSON.stringify(row.observed)}`);
 console.log(`${records.filter(r => r.ok).length} PASS, ${records.filter(r => !r.ok).length} FAIL`);

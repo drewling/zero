@@ -1,0 +1,140 @@
+{
+  "commit": "50bf1213e06975ba8897400ef57ac8f1c2e07cfb",
+  "frozenAt": "2026-09-30T01:46:01.623Z",
+  "sourceHashes": {
+    "source/kit/OFL-geist-pixel.txt": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/OFL-geist-pixel.txt",
+      "sha256": "bdf815a5ea761ebeb599674fc4583fb392b4b037dc85ec6bb51f676392a15ced",
+      "bytes": 4408
+    },
+    "source/kit/boxes.js": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/boxes.js",
+      "sha256": "c832cff9681e7c37d748d6472828aafd81b2d9ab5b1fe5e64723dcce43d79a81",
+      "bytes": 433
+    },
+    "source/kit/build-pages.py": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/build-pages.py",
+      "sha256": "6ba0d45b8660678ce75e5b2c0a0344b2935c444f09dd6eab99b2f88b8339b276",
+      "bytes": 13767
+    },
+    "source/kit/chicagoflf.woff2": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/chicagoflf.woff2",
+      "sha256": "5d25dcec1f8984c5e0aed398a7c90be8de86bb4f9bcfed4e7e1e2c3c13b7e742",
+      "bytes": 11008
+    },
+    "source/kit/frame.html": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/frame.html",
+      "sha256": "34e550d0b4f0dae553ba0bf60d385d60d1a648efe8f103233f8869ba79ab631e",
+      "bytes": 646
+    },
+    "source/kit/geist-mono.woff2": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/geist-mono.woff2",
+      "sha256": "f15c3728c8aa7ea099eebd044e2bea6e628446a41fb4f55c81a2390721efd12f",
+      "bytes": 33648
+    },
+    "source/kit/geist-pixel.woff2": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/geist-pixel.woff2",
+      "sha256": "433ced53fa0a69d1c21ebbc211951abd39319eab2548cb922761d17705305217",
+      "bytes": 26420
+    },
+    "source/kit/geist.woff2": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/geist.woff2",
+      "sha256": "350d5a196b06c1135ec5ae3aca12933ba34000b5a1a4463c3b3e7b76ed07c77a",
+      "bytes": 32348
+    },
+    "source/kit/icons.py": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/icons.py",
+      "sha256": "b6a9e16a18e7e348dc8ad802379e48d0af72596b0375ff978ea498c239c9f182",
+      "bytes": 8799
+    },
+    "source/kit/icons.svg": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/icons.svg",
+      "sha256": "793b3e6dc7ed92c8d4151ab5589f76d2c498abaaad6804cdcfd89b2db9861cae",
+      "bytes": 15964
+    },
+    "source/kit/inject.py": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/inject.py",
+      "sha256": "b2a3ee8bc8f413c4a082ee77545a59416c7a243ed9a13f01089f209944e18a43",
+      "bytes": 1292
+    },
+    "source/kit/kit.css": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/kit.css",
+      "sha256": "b7bbf83a99ebdb255409f388637f4edb8a5a312b8cb3d6213199cf1f7729c194",
+      "bytes": 11200
+    },
+    "source/kit/motion.js": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/motion.js",
+      "sha256": "14699a92c76ec8c754cc1c28f5881c92704ba98455396b5837c53570aceff052",
+      "bytes": 10908
+    },
+    "source/kit/page.css": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/page.css",
+      "sha256": "7190a4efd737545dd350e682d32b8a766066e193b2c585d93d97cb72317a6303",
+      "bytes": 14003
+    },
+    "source/kit/pixelify-400.woff2": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/pixelify-400.woff2",
+      "sha256": "560bd8902c7780fd98980368f7de217c4f765075981eec3df8ba51e43a3c48e1",
+      "bytes": 7664
+    },
+    "source/kit/pixelify-600.woff2": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/pixelify-600.woff2",
+      "sha256": "4061cfa6a7a69dd480532e44d4c63bd908cc650ab7365b316fb5f3b43949fc48",
+      "bytes": 8272
+    },
+    "source/kit/sections.js": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/kit/sections.js",
+      "sha256": "16f5eb6d03c58d72ebef4fbe4224b2b9877a349c615f974c52d1921a3decc74e",
+      "bytes": 4568
+    },
+    "source/page-b/index.html": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/page-b/index.html",
+      "sha256": "599989a7d15a7c8fae781b5f1a3574ac50582a4f9599caf81d8a7af5359e7677",
+      "bytes": 39890
+    },
+    "original/full-320.jpg": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/page-b/shots/full-320.jpg",
+      "sha256": "b2b01088e02c19437a6dc7b6f345b475a6faa2e6371d129cc5c7346af3aa9d93",
+      "bytes": 1179919
+    },
+    "original/full-390.jpg": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/page-b/shots/full-390.jpg",
+      "sha256": "a7047bb085124eb0e9ec53646eece7576c0928fd35c556c8eb1e72d3492cb0a1",
+      "bytes": 1233112
+    },
+    "original/full-1440.jpg": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/page-b/shots/full-1440.jpg",
+      "sha256": "e5cb61b48d62992b62d21658dba798fb2cb9e0a29f86419dd0b6dfac6d167682",
+      "bytes": 830948
+    },
+    "original/full-1920.jpg": {
+      "source": "missions/website-redesign-3/slices/02-references-and-comps/proof/comps/page-b/shots/full-1920.jpg",
+      "sha256": "3718c2a31e87d84f914b2d005d140e5f6b0c2590cde2f4dc621d355e244da30a",
+      "bytes": 1179751
+    },
+    "SELECTED-B-COPY.md": {
+      "source": "missions/website-redesign-3/slices/01-copy-and-story/proof/rethink/SELECTED-B-COPY.md",
+      "sha256": "8aeb0641f65fb3a440700ada067a049de2e55abd2dc36ddd0fa51b3b5f7c162e",
+      "bytes": 6080
+    }
+  },
+  "textSha256": "17e54cb72a83ed12e43eb4b3241e94b3eaa0e748a8dce0157d87d87a7a649f8a",
+  "authoredWords": 549,
+  "exclusions": [
+    "author-only draft flag",
+    "screen-reader-only hero description duplicates illustrated content",
+    "SVG, scripts, styles and document title"
+  ],
+  "clipboardStates": [
+    "Copied",
+    "Copy manually: press Command-C."
+  ],
+  "includes": [
+    "one header and footer",
+    "all hero states including Working…",
+    "hidden mobile subjects",
+    "all editor lines even if clipped",
+    "object dates, row ages, fictional addresses and labels",
+    "all clipboard statuses observed through success/denial fault paths"
+  ]
+}

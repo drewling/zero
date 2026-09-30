@@ -1,0 +1,143 @@
+/* zero redesign 3, comp kit. One-bit Macintosh, executed properly.
+   Rule 1: text never sits on a line or dither. Every label, title and caption has its own white (or black) plate.
+   Rule 2: the default CSS is the final frame. Motion only ever describes earlier frames (see motion.js). */
+@font-face{font-family:"Pixelify Sans";src:url(pixelify-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Pixelify Sans";src:url(pixelify-600.woff2) format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:Geist;src:url(geist.woff2) format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Geist Mono";src:url(geist-mono.woff2) format("woff2");font-weight:100 900;font-display:swap}
+
+:root{
+  --ink:#000;--paper:#fff;--line:2px solid var(--ink);
+  --pixel:"Pixelify Sans",ui-monospace,monospace;--sans:Geist,system-ui,sans-serif;--mono:"Geist Mono",ui-monospace,monospace;
+  /* 50% checker on a 2px grid: the System 6 desktop, doubled */
+  --dither:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect width='2' height='2'/%3E%3Crect x='2' y='2' width='2' height='2'/%3E%3C/svg%3E");
+  /* 25% dither: one ink pixel in four, for quieter fields */
+  --dither-25:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect width='2' height='2'/%3E%3C/svg%3E");
+  --shadow:3px 3px 0 var(--ink);
+  --pad:clamp(16px,5vw,72px);
+}
+*{box-sizing:border-box}
+html{background:var(--paper);color:var(--ink);font:400 17px/1.55 var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{margin:0;overflow-x:hidden;position:relative}
+::selection{background:var(--ink);color:var(--paper)}
+a{color:inherit;text-decoration-thickness:2px;text-underline-offset:.2em}
+a:hover{background:var(--ink);color:var(--paper);text-decoration:none}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px;box-shadow:0 0 0 6px var(--paper)}
+h1,h2,h3{font-family:var(--pixel);font-weight:600;letter-spacing:-.01em;line-height:1;text-wrap:balance;margin:0}
+p{margin:0}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.draft-flag{position:fixed;left:8px;bottom:8px;z-index:99;padding:3px 8px;background:var(--ink);color:var(--paper);font:600 12px/1.3 var(--mono);pointer-events:none}
+svg.px{display:block;shape-rendering:crispEdges;image-rendering:pixelated}
+
+/* ---------- menu bar (the site header) ---------- */
+.menubar{position:relative;z-index:30;height:40px;display:flex;align-items:center;gap:4px;padding:0 12px;background:var(--paper);border-bottom:var(--line);font:600 16px/1 var(--pixel)}
+.menubar a,.menubar .mi{display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;text-decoration:none;white-space:nowrap}
+.menubar a:hover,.menubar .mi.on{background:var(--ink);color:var(--paper)}
+.menubar a:hover svg.px,.menubar .mi.on svg.px{filter:invert(1)}
+.menubar .brand svg{width:18px;height:17px}
+.menubar .spacer{flex:1}
+.menubar .install{background:var(--ink);color:var(--paper);margin-left:8px}
+.menubar .install:hover{outline:2px solid var(--ink);outline-offset:-6px;box-shadow:inset 0 0 0 4px var(--paper)}
+.menubar .tray svg{width:26px;height:20px}
+.menubar .find svg{width:17px;height:17px}
+.menubar .clock{font-weight:400;font-variant-numeric:tabular-nums}
+@media (max-width:900px){.menubar .nav-hide{display:none}}
+@media (max-width:420px){.menubar{padding:0 4px}.menubar .clock{display:none}.menubar a,.menubar .mi{padding:0 9px}}
+
+/* ---------- desktop ---------- */
+.desktop{position:relative;background:var(--paper) var(--dither) repeat;image-rendering:pixelated}
+.desktop-quiet{background-image:var(--dither-25)}
+
+/* ---------- windows ---------- */
+.win{position:relative;background:var(--paper);border:var(--line);box-shadow:var(--shadow)}
+.bar{position:relative;height:30px;display:flex;align-items:center;justify-content:center;border-bottom:var(--line);font:600 16px/1 var(--pixel);user-select:none}
+.bar::before{content:"";position:absolute;inset:5px 4px;background:repeating-linear-gradient(180deg,var(--ink) 0 2px,transparent 2px 4px)}
+/* the fix: the title sits on a white plate that breaks the stripes, like System 7 */
+.bar .t{position:relative;padding:0 10px;background:var(--paper);white-space:nowrap}
+.bar .box{position:absolute;top:6px;width:18px;height:18px;border:2px solid var(--ink);background:var(--paper);box-shadow:0 0 0 3px var(--paper)}
+.bar .close{left:12px}
+.bar .zoom{right:12px}
+.bar .zoom::after{content:"";position:absolute;left:1px;top:1px;width:8px;height:8px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink)}
+/* an inactive (background) window: no stripes and no boxes, exactly as System 7 draws it */
+.win.inactive .bar::before,.win.inactive .bar .box{display:none}
+.win.inactive .bar .t{color:#000}
+.win.dark{background:var(--ink);color:var(--paper)}
+.win.dark .bar{background:var(--paper);color:var(--ink)}
+
+/* ---------- buttons (System 7 push buttons) ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 20px;border:2px solid var(--ink);border-radius:10px;background:var(--paper);color:var(--ink);font:600 17px/1 var(--pixel);text-decoration:none;white-space:nowrap;cursor:pointer}
+/* author display rules beat the UA's [hidden]; keep hidden controls hidden (Copy ships hidden until the clipboard is usable) */
+[hidden]{display:none!important}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.btn:active{background:var(--ink);color:var(--paper)}
+/* default button: the thick outer ring */
+.btn.default{margin:5px;box-shadow:0 0 0 3px var(--paper),0 0 0 6px var(--ink);border-radius:9px}
+.textlink{display:inline-flex;align-items:center;min-height:24px;font:600 16px/1.3 var(--pixel)} /* standalone link: WCAG 2.5.8 24px target */
+
+/* ---------- desktop icons ---------- */
+.icon{display:grid;justify-items:center;gap:6px;width:150px;text-align:center}
+.icon svg{width:64px;height:auto}
+.icon .lbl{padding:1px 6px;background:var(--paper);font:500 13px/1.35 var(--mono);white-space:nowrap}
+.icon.sel .lbl{background:var(--ink);color:var(--paper)}
+.icon.sel svg{filter:invert(1)}
+.icon.sel.keep svg{filter:none}
+
+/* ---------- plates: every text block on a textured field sits on one ---------- */
+.plate{background:var(--paper);border:var(--line);box-shadow:var(--shadow);padding:20px 24px}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border:1.5px solid var(--ink);border-radius:5px;font:600 11px/1.1 var(--sans);white-space:nowrap}
+.tag.inv{background:var(--ink);color:var(--paper)}
+.caption{display:inline-block;padding:5px 10px;background:var(--paper);border:var(--line);font:400 13px/1.35 var(--mono)}
+
+/* ---------- the zero popover (from macapp/Sources/PanelView.swift, shortened per COPY v3) ---------- */
+.zp{position:relative;width:100%;background:var(--paper);border:var(--line);border-radius:14px;box-shadow:var(--shadow);font:400 13px/1.3 var(--sans);user-select:none;container-type:inline-size}
+.zp.notch::before,.zp.notch::after{content:"";position:absolute;width:0;height:0;border-style:solid;border-color:transparent}
+.zp.notch::before{top:-13px;right:var(--notch,64px);border-width:0 11px 13px;border-bottom-color:var(--ink)}
+.zp.notch::after{top:-9px;right:calc(var(--notch,64px) + 3px);border-width:0 8px 10px;border-bottom-color:var(--paper)}
+.zp-head{display:flex;align-items:center;gap:10px;padding:10px 12px 9px 14px;border-bottom:var(--line)}
+.zp-mark{display:flex;align-items:center;gap:8px;margin-right:auto;font:600 18px/1 var(--pixel)}
+.zp-mark svg{width:17px;height:16px}
+.av{position:relative;display:inline-grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--ink);font:600 11px/1 var(--sans)}
+.av.a{background:var(--ink);color:var(--paper)}
+.av b{position:absolute;right:-8px;top:-8px;min-width:16px;padding:2px 3px;border:1.5px solid var(--ink);border-radius:9px;background:var(--paper);color:var(--ink);font:600 9px/1 var(--mono);text-align:center}
+.zp-dots{display:flex;gap:12px}
+.zp-more{display:flex;gap:3px;padding-left:4px}.zp-more i{width:4px;height:4px;background:var(--ink)}
+.zp-count{display:grid;justify-items:center;gap:3px;padding:16px 12px 12px;text-align:center}
+.zp-count strong{font:600 60px/1 var(--pixel);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.zp-need{font-weight:600;font-size:15px}
+.zp-across{font-size:12px}
+.zp-label{padding:0 14px 6px;font:600 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.zp-rows{list-style:none;margin:0;padding:0 8px;display:grid;gap:6px}
+.zp-rows li{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid var(--ink);border-radius:9px}
+.zp-who{display:grid;gap:3px;flex:1;min-width:0}
+.zp-line{display:flex;flex-wrap:wrap;align-items:center;gap:3px 6px}
+.zp-line b{font-weight:600}
+.zp-subj{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zp-age{font:400 11px/1 var(--mono);font-variant-numeric:tabular-nums}
+.zp-foot{display:flex;justify-content:flex-end;margin-top:10px;padding:10px;border-top:var(--line)}
+.zp-run{display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border-radius:8px;background:var(--ink);color:var(--paper);font:600 14px/1 var(--pixel)}
+@container (max-width:330px){.zp-count strong{font-size:48px}.zp-rows li{padding:7px 8px}.zp .av{width:24px;height:24px;font-size:9.5px}}
+
+/* ---------- mail list (a Finder-style list of fictional mail) ---------- */
+.list{list-style:none;margin:0;padding:0}
+.list li{display:grid;grid-template-columns:22px 9.5em 1fr;align-items:center;gap:10px;height:34px;padding:0 12px;border-bottom:1px solid var(--ink);font-size:14px;white-space:nowrap}
+.list li:last-child{border-bottom:0}
+.list li svg{width:20px;height:14px}
+.list .from{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.list .sub{overflow:hidden;text-overflow:ellipsis}
+.list li.sel{background:var(--ink);color:var(--paper)}
+.list li.sel svg{filter:invert(1)}
+.note{font:500 12px/1 var(--mono);padding:2px 5px;border:1.5px solid currentColor;margin-left:6px}
+
+/* ---------- cursor + motion helpers ---------- */
+.cursor{position:absolute;left:0;top:0;z-index:40;width:22px;height:34px;pointer-events:none}
+.cursor svg{width:100%;height:100%}
+.zr{position:absolute;z-index:35;border:2px solid var(--ink);pointer-events:none;display:none}
+.ghost{position:absolute;z-index:35;border:2px dashed var(--ink);background:transparent;pointer-events:none;display:none}
+.ants{outline:2px dashed var(--ink);outline-offset:2px}
+/* marching ants: finite. 6 cycles x 400 ms = 2.4 s, then it rests as a still dashed selection (nothing loops forever) */
+@media (prefers-reduced-motion:no-preference){.ants{animation:ants .4s steps(2) 6}}
+@keyframes ants{to{outline-offset:4px}}
+
+/* Pixelify's fi ligature draws "first" as "Arst" (a live-site bug today). Pixel type never ligates.
+   Every `font` shorthand resets font-variant-ligatures, so this one property is !important. */
+*{font-variant-ligatures:none!important}

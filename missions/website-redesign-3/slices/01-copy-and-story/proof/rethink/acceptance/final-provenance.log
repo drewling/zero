@@ -1,0 +1,14 @@
+PASS frozen source, Git, text and runtime549: 23 assets
+PASS before reader1: unique one-turn no-tool requested-model, 14 hashed images
+PASS before reader2: unique one-turn no-tool requested-model, 14 hashed images
+PASS before reader3: unique one-turn no-tool requested-model, 14 hashed images
+PASS after-a reader1: unique one-turn no-tool requested-model, 10 hashed images
+PASS after-a reader2: unique one-turn no-tool requested-model, 10 hashed images
+PASS after-a reader3: unique one-turn no-tool requested-model, 10 hashed images
+PASS after-b reader1: unique one-turn no-tool requested-model, 12 hashed images
+PASS after-b reader2: unique one-turn no-tool requested-model, 12 hashed images
+PASS after-b reader3: unique one-turn no-tool requested-model, 12 hashed images
+PASS after-b-tightened reader1: unique one-turn no-tool requested-model, 12 hashed images
+PASS after-b-tightened reader2: unique one-turn no-tool requested-model, 12 hashed images
+PASS after-b-tightened reader3: unique one-turn no-tool requested-model, 12 hashed images
+PASS 12 unique reader sessions

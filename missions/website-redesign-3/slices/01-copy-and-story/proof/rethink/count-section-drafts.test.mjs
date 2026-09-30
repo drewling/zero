@@ -14,12 +14,27 @@ test('selected B count includes all clipboard states and preserves frozen A/B', 
   assert.equal(run.status, 0, run.stderr);
   const report = JSON.parse(run.stdout.slice(0, run.stdout.indexOf('\n]\n') + 2));
   assert.deepEqual(report.map(row => ({ outline: row.outline, states: row.clipboardStateWords, total: row.authoredTotal })),
-    [{ outline: 'B', states: 5, total: 549 }]);
+    [{ outline: 'B', states: 5, total: 550 }]);
+});
+
+test('frozen Draft4 stays 549 while Draft5 names both recipients in its own paragraph', () => {
+  const run = spawnSync(process.execPath, [path.join(root, 'count-section-drafts.mjs')], {
+    encoding: 'utf8', env: { ...process.env, SELECTED_COPY: path.join(root, 'after-b-tightened/SELECTED-B-COPY.md') },
+  });
+  assert.equal(run.status, 0, run.stderr);
+  const report = JSON.parse(run.stdout.slice(0, run.stdout.indexOf('\n]\n') + 2));
+  assert.equal(report[0].authoredTotal, 549);
+  const copy = fs.readFileSync(path.join(root, 'SELECTED-B-COPY.md'), 'utf8')
+    .split('<!-- COPY-B-START -->')[1].split('<!-- COPY-B-END -->')[0];
+  assert.match(copy, /\n\n\*\*TypeSafe receives sorting data\. Your tool's provider receives draft data\. Neither goes to zero's servers\.\*\*\n\n/);
+  assert.doesNotMatch(copy, /No zero server receives your email|Read connected Gmail in Gmail or Apple Mail/);
+  assert.ok(copy.indexOf('**Optional drafts.') < copy.indexOf('**TypeSafe receives'));
+  assert.ok(copy.indexOf('**TypeSafe receives') < copy.indexOf('**Sorting cost.'));
 });
 
 for (const [name, mutate, error] of [
   ['missing selected clipboard marker fails', text => text.replace('<!-- CLIPBOARD-COPY-START -->', '<!-- REMOVED -->'), /Missing or duplicate CLIPBOARD-COPY marker/],
-  ['two added selected B words exceed the ceiling', text => text.replace('<!-- COPY-B-END -->', 'extra extra\n<!-- COPY-B-END -->'), /B: authored draft outside 350–550: 551/],
+  ['one added selected B word exceeds the ceiling', text => text.replace('<!-- COPY-B-END -->', 'extra\n<!-- COPY-B-END -->'), /B: authored draft outside 350–550: 551/],
 ]) {
   test(name, t => {
     const dir = fs.mkdtempSync(path.join(process.env.JCODE_SCRATCH_DIR, 'zero-selected-count-'));
