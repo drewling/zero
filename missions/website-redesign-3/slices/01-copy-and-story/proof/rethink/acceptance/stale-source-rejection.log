@@ -1,0 +1,11 @@
+Staging freeze at /Users/light/.jcode/scratch/zero-freeze-after-b-tightened-3yPWmu. A failure retains this attempt, not a reader-ready snapshot.
+[stderr] file:///Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/01-copy-and-story/proof/rethink/freeze-stable-pages.mjs:43
+[stderr]       if (hash(served) !== hashes[`source/page-${outline}/index.html`].sha256) throw new Error('Served page differs from frozen Git source');
+[stderr]                                                                                      ^
+[stderr]
+[stderr] Error: Served page differs from frozen Git source
+[stderr]     at file:///Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/01-copy-and-story/proof/rethink/freeze-stable-pages.mjs:43:86
+[stderr]
+[stderr] Node.js v22.16.0
+
+--- Command finished with exit code: 1 ---

@@ -19,9 +19,11 @@ const browser = await chromium.launch();
 try {
   for (const outline of tightened ? ['b'] : ['a', 'b']) {
     const phaseName = tightened ? 'after-b-tightened' : `after-${outline}`;
-    const phase = path.join(root, phaseName);
-    if (fs.existsSync(phase)) throw new Error(`Do not overwrite frozen evidence: ${phase}`);
-    fs.mkdirSync(phase);
+    const destination = path.join(root, phaseName);
+    if (fs.existsSync(destination)) throw new Error(`Do not overwrite frozen evidence: ${destination}`);
+    if (!process.env.JCODE_SCRATCH_DIR) throw new Error('JCODE_SCRATCH_DIR required for staged freeze');
+    const phase = fs.mkdtempSync(path.join(process.env.JCODE_SCRATCH_DIR, `zero-freeze-${phaseName}-`));
+    console.log(`Staging freeze at ${phase}. A failure retains this attempt, not a reader-ready snapshot.`);
     const hashes = {};
     const saveGit = (file, destination) => {
       const bytes = readGit(file); fs.mkdirSync(path.dirname(destination), { recursive: true }); fs.writeFileSync(destination, bytes);
@@ -82,6 +84,7 @@ try {
       clipboardStates,
       includes: ['one header and footer', 'all hero states including Working…', 'hidden mobile subjects', 'all editor lines even if clipped', 'object dates, row ages, fictional addresses and labels', ...(tightened ? ['all clipboard statuses observed through success/denial fault paths'] : [])] }, null, 2) + '\n');
     execFileSync('python3', [path.join(root, 'prepare-reader-images.py'), phase], { stdio: 'inherit' });
+    fs.renameSync(phase, destination);
     console.log(`Frozen ${phaseName}: ${count} authored words, ${sha}`);
   }
 } finally { await browser.close(); }
