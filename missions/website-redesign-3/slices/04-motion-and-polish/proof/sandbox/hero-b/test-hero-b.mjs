@@ -25,7 +25,7 @@ test.before(async () => {
     try {
       const path = resolve(repo, '.' + decodeURIComponent(new URL(req.url, 'http://localhost').pathname));
       if (!path.startsWith(repo + '/')) throw new Error('outside test root');
-      const bytes = await readFile(path);
+      const bytes = await readFile(process.env.RUNNER_BASELINE === '1' && path === resolve(here, '../motion.js') ? resolve(here, '../sections/reference/pre-sections-runner.js') : path);
       res.writeHead(200, { 'Content-Type': ({ '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.woff2': 'font/woff2' })[extname(path)] || 'application/octet-stream' });
       res.end(bytes);
     } catch { res.writeHead(404); res.end('Not found'); }
@@ -190,7 +190,17 @@ test('B active playback observes each selection and simultaneous drag, correct a
         new MutationObserver(observe).observe(document, { childList: true, subtree: true, attributes: true });
       });
       await page.goto(base); await settle(page); await assertFinal(page);
-      assert.deepEqual(await page.screenshot({ fullPage: true }), staticPixels, `played end differs from static at ${width}px`);
+      const playedPixels = await page.screenshot({ fullPage: true });
+      if (!playedPixels.equals(staticPixels)) {
+        await mkdir(resolve(here, 'evidence'), { recursive: true });
+        await writeFile(resolve(here, `evidence/parity-${width}-static.png`), staticPixels);
+        await writeFile(resolve(here, `evidence/parity-${width}-played.png`), playedPixels);
+        await page.waitForTimeout(300);
+        const late = await page.screenshot({fullPage:true});
+        await writeFile(resolve(here, `evidence/parity-${width}-late.png`), late);
+        console.log('PARITY_LATE', JSON.stringify({width, equalAfter300ms:late.equals(staticPixels)}));
+      }
+      assert.ok(playedPixels.equals(staticPixels), `played end differs from static at ${width}px, see evidence/parity-${width}-*.png`);
       const result = await page.evaluate(() => ({ width: innerWidth, durationMs: controller.durationMs, cls: window.cls, shifts: window.shifts, samples, violations }));
       assert.deepEqual([...new Set(result.violations)], []);
       for (let selected = 1; selected <= 8; selected++) assert.ok(result.samples.some(sample => sample.frame === 3 && sample.selected === selected));

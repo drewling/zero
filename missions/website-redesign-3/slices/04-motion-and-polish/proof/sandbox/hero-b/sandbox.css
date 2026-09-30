@@ -8,7 +8,8 @@ body{position:relative}
 .sheet{position:relative;z-index:3;width:100%;max-width:640px;padding:24px}
 .sheet h1{font-size:40px;line-height:44px;height:176px;margin-bottom:16px}
 .sheet p{font-size:16px;line-height:26px;height:130px;margin:0;max-width:50ch}
-.pop{position:relative;z-index:4;width:100%;max-width:600px}
+/* Keep the rounded actor on the same layer before, during and after watch playback. */
+.pop{position:relative;z-index:4;width:100%;max-width:600px;transform:translateZ(0)}
 .pop .zp-head{height:48px}
 .pop .zp-foot{margin-top:0;border-top:0}
 .zp-run{width:160px;height:36px;flex-shrink:0;justify-content:center;border:0;cursor:pointer}

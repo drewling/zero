@@ -1,0 +1,62 @@
+TAP version 13
+# Subtest: S4: reduced preference mid-reveal cancels to full final with no late DOM mutations
+not ok 1 - S4: reduced preference mid-reveal cancels to full final with no late DOM mutations
+  ---
+  duration_ms: 1308.132583
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:119:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        balloon: 1,
+        cmd: 'curl -fsSL https://zero.headless.com/install | bash',
+        lines: 13,
+        overlays: 0,
+        peek: 1,
+    +   rows: 0,
+    -   rows: 5,
+        stepping: 0,
+        tab: 'Settings',
+        undo: 5
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    undo: 5
+    peek: 1
+    balloon: 1
+    rows: 5
+    lines: 13
+    tab: 'Settings'
+    cmd: 'curl -fsSL https://zero.headless.com/install | bash'
+    stepping: 0
+    overlays: 0
+  actual:
+    undo: 5
+    peek: 1
+    balloon: 1
+    rows: 0
+    lines: 13
+    tab: 'Settings'
+    cmd: 'curl -fsSL https://zero.headless.com/install | bash'
+    stepping: 0
+    overlays: 0
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:123:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1827.055208

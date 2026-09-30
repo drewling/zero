@@ -1,0 +1,32 @@
+TAP version 13
+# Subtest: S2: first-sight hash and real in-page link arrivals stay final, never rewind
+not ok 1 - S2: first-sight hash and real in-page link arrivals stay final, never rewind
+  ---
+  duration_ms: 560.958375
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:77:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    'play' !== 'seen'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'seen'
+  actual: 'play'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:81:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 885.246208

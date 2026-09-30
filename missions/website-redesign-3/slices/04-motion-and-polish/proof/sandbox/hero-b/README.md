@@ -47,6 +47,10 @@ Four readable rows use fixed normal-flow slots. During clutter, discrete transfo
 
 The shared `../motion.js` measures live source/destination geometry. B-specific choices live in `story.js`; fixture fonts, widths and row placement live in `sandbox.css`. The font/container variation check is a compatibility probe, not permission to change the approved typography or composition.
 
+## Follow-on section consumer verification
+
+The shared runner now also serves the separate [selected page B section sandbox](../sections/README.md). The hero and page remain separate fixtures, not an integrated landing. Both complete hero consumer suites were rerun after the observer/finalizer changes. A two-pixel rounded actor-corner mismatch also reproduced with the exact prior runner. Keeping `.pop` on a stable compositor layer restored strict byte-identical played/static/no-JS/reduced end pixels without altering reserved geometry or allowing a tolerance. See [the follow-on requirement mapping and final engine logs](../sections/evidence/VERIFICATION.md). Historical evidence below is retained, not silently rewritten.
+
 ## Evidence and limits
 
 See `evidence/VERIFICATION.md`, engine logs and full-resolution six-column strips. These are **synthetic fixture checks in real browser engines**, not integrated landing acceptance or Safari 26 certification. Visibility cancellation uses a synthetic hidden-document event. WebKit lacks independent Layout Instability measurements. Sections, real browser tab throttling, full-page accessibility/performance, actual build/hosting/CSP and the exact slice 03 integration SHA remain outside this prototype. Main-lead must authorize those later boundaries.

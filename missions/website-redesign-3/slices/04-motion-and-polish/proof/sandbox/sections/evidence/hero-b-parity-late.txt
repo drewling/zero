@@ -1,0 +1,29 @@
+TAP version 13
+# PARITY_LATE {"width":1440,"equalAfter300ms":false}
+# Subtest: B active playback observes each selection and simultaneous drag, correct actor, empty Trash and zero CLS
+not ok 1 - B active playback observes each selection and simultaneous drag, correct actor, empty Trash and zero CLS
+  ---
+  duration_ms: 20795.287708
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/hero-b/test-hero-b.mjs:148:1'
+  failureType: 'testCodeFailure'
+  error: 'played end differs from static at 1440px, see evidence/parity-1440-*.png'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/hero-b/test-hero-b.mjs:203:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 26326.538042

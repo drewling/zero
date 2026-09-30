@@ -5,10 +5,6 @@
   const q = new URLSearchParams(location.search);
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   const fine = matchMedia('(pointer: fine)');
-  let jumpedAt = -1e9;
-  const markJump = () => { jumpedAt = performance.now(); };
-  addEventListener('click', e => { if (e.target.closest?.('a[href^="#"]')) markJump(); }, true);
-  addEventListener('hashchange', markJump);
   const controllers = new WeakMap();
   const pick = (root, s) => typeof s === 'function' ? s(root) : typeof s === 'string' ? root.querySelector(s) : s;
   const aborted = signal => { if (signal?.aborted) throw new DOMException('Playback cancelled', 'AbortError'); };
@@ -132,7 +128,7 @@
     }
     function finish(mode) {
       clearTimeout(deadline); clean(); setFrame(root, n - 1, n);
-      try { (story.finish || frames[n - 1].set)?.(root, helpers(), mode); } catch (e) { c.error = e; mode = 'error'; }
+      try { (story.finish || frames[n - 1].set)?.(root, helpers()); } catch (e) { c.error = e; mode = 'error'; }
       root.dataset.mode = mode;
       if (c.startedAt) { c.durationMs = Math.round(performance.now() - c.startedAt); root.dataset.durationMs = c.durationMs; }
       updateReplay();
@@ -199,7 +195,7 @@
           finish('done');
         } catch (e) {
           if (e.name !== 'AbortError') c.error = e;
-          if (e.name !== 'AbortError' || root.dataset.mode !== 'cancelled') finish(e.name === 'AbortError' ? 'cancelled' : 'error');
+          finish(e.name === 'AbortError' ? 'cancelled' : 'error');
         }
       })().finally(() => { c.pending = null; updateReplay(); });
       return c.pending;
@@ -207,34 +203,7 @@
     c.observe = () => {
       if (story.onLoad || q.has('frame') || q.has('static') || reduce.matches) c.start();
       else if (!('IntersectionObserver' in window)) finish('static');
-      else {
-        let armed = false, started = false;
-        const settle = () => { started = true; observer.disconnect(); finish('seen'); };
-        const arm = () => {
-          if (armed || started) return;
-          try {
-            armed = true; setFrame(root, 0, n); frames[0].set?.(root, helpers()); root.dataset.mode = 'armed';
-          } catch (e) { c.error = e; started = true; observer.disconnect(); finish('error'); }
-        };
-        const pre = new IntersectionObserver(entries => {
-          const e = entries.find(e => e.isIntersecting); if (!e || started) return;
-          pre.disconnect();
-          if (e.boundingClientRect.top < innerHeight) settle();
-          else arm();
-        }, { rootMargin: '0px 0px 30% 0px', threshold: 0 });
-        const play = new IntersectionObserver(entries => {
-          if (!armed || started || !entries.some(e => e.isIntersecting && (e.intersectionRatio >= .35 || e.intersectionRect.height >= innerHeight * .35))) return;
-          if (performance.now() - jumpedAt < 1200) settle();
-          else { started = true; c.start(); }
-        }, { threshold: [0, .1, .2, .35, .5] });
-        observer = { disconnect() { pre.disconnect(); play.disconnect(); } };
-        const box = root.getBoundingClientRect();
-        let hash;
-        try { hash = document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (_) {}
-        if (hash && (hash === root || hash.contains(root) || root.contains(hash))) settle();
-        else if (box.top < innerHeight && box.bottom > 0) settle();
-        else { pre.observe(root); play.observe(root); }
-      }
+      else { observer = new IntersectionObserver(entries => { if (entries.some(e => e.isIntersecting && e.intersectionRatio >= .4)) c.start(); }, { threshold: .4 }); observer.observe(root); }
     };
     controllers.set(root, c);
     return c;

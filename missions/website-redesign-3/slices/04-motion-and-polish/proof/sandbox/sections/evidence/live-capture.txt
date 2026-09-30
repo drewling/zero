@@ -1,0 +1,18 @@
+TAP version 13
+# LIVE_TERMINAL_CAPTURE {"width":390,"visibleGlyphsBeforeScreenshot":4}
+# LIVE_TERMINAL_CAPTURE {"width":1440,"visibleGlyphsBeforeScreenshot":4}
+# Subtest: S7: bounded mobile/desktop visual proof of all three frames plus reduced end state
+ok 1 - S7: bounded mobile/desktop visual proof of all three frames plus reduced end state
+  ---
+  duration_ms: 15083.266042
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 15739.304

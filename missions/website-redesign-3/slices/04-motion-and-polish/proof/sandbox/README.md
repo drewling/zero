@@ -1,8 +1,8 @@
 # Motion sandbox, redesign 3
 
-**Current selected prototype: [hero B](hero-b/README.md), against `d0a5685` §3.0.** It lives at `hero-b/index.html` and uses the shared runner with a six-frame Finder drag story. The material below documents the historical five-frame A fixture, which remains for regression coverage, not as the selected hero.
+**Current selected prototypes: [hero B](hero-b/README.md), against `d0a5685` §3.0, and [page B section beats](sections/README.md), against `e58ff8f` §4.2.** Hero B lives at `hero-b/index.html` and uses the shared runner with a six-frame Finder drag story. Sections live at `sections/index.html`, a frozen copied page with static hero context. They are not yet integrated together or into `landing/`. The material below documents the historical five-frame A fixture, which remains for regression coverage, not as the selected hero.
 
-Sandbox-only prototype for OPR.99.0.4.4, authorized by main-lead at 21:42Z on 2026-09-29. This is not slice completion, an approved hero, integration, independent QA, or a release candidate. No `landing/` files were edited and no queue row was claimed.
+Sandbox-only prototype for OPR.99.0.4.4, authorized by main-lead at 21:42Z on 2026-09-29. This is not slice completion, an approved implementation, integration, independent QA, or a release candidate. No `landing/` files were edited and no queue row was claimed.
 
 ## Source and scope
 
@@ -62,6 +62,6 @@ Verification results and dated artifacts are recorded in `evidence/`. Frame-stri
 ## Remaining boundaries
 
 - Design-lead judged the historical A counter-launch as archiving and confirmed its two corrections at 22:28Z. Owner subsequently selected B. B's sandbox strips have their own review boundary.
-- This prototype does not implement the full section designs, a finite ants sample, or the optional Terminal reveal. Safari 26 ants jitter and its fallback remain unverified. The settled spec requires six cycles, then still, and no motion under reduced preferences.
+- The historical A fixture does not implement the selected page B sections. The new `sections/` fixture prototypes Get Info, Rules, Undo and Terminal, but uses provisional copy and is not the final landing. Safari 26 ants jitter and its fallback remain unverified. The settled spec requires six cycles, then still, and no motion under reduced preferences.
 - No Lighthouse 03/04 comparison exists yet because slice 03 and integration have not been authorized. Build/test checks on `landing/`, production font policy, and the actual approved hero must be verified on the later exact integration SHA.
 - Integration remains blocked on gate B, the real queued assignment, and the slice 03 SHA. This commit must not be deployed or treated as the QA handoff.

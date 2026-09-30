@@ -1,0 +1,152 @@
+TAP version 13
+# Subtest: S1: selected B final markup retains 13 Rules lines, 5+cut Undo rows, exact command and static no-JS/reduced parity
+not ok 1 - S1: selected B final markup retains 13 Rules lines, 5+cut Undo rows, exact command and static no-JS/reduced parity
+  ---
+  duration_ms: 1161.820792
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:63:1'
+  failureType: 'testCodeFailure'
+  error: "browserContext.newPage: Protocol error (Console.enable): 'Console' domain was not found"
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    open (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:37:30)
+    async TestContext.<anonymous> (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:66:15)
+  ...
+# Subtest: S2: first-sight hash and real in-page link arrivals stay final, never rewind
+not ok 2 - S2: first-sight hash and real in-page link arrivals stay final, never rewind
+  ---
+  duration_ms: 174.748625
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:77:1'
+  failureType: 'testCodeFailure'
+  error: "browserContext.newPage: Protocol error (Console.enable): 'Console' domain was not found"
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    open (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:37:30)
+    async TestContext.<anonymous> (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:79:15)
+  ...
+# Subtest: S3: reader scroll plays every beat once, observes authored intermediate states, zero overflow/CLS and complete final
+not ok 3 - S3: reader scroll plays every beat once, observes authored intermediate states, zero overflow/CLS and complete final
+  ---
+  duration_ms: 166.699166
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:91:1'
+  failureType: 'testCodeFailure'
+  error: "browserContext.newPage: Protocol error (Console.enable): 'Console' domain was not found"
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    open (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:37:30)
+    async TestContext.<anonymous> (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:93:15)
+  ...
+# Subtest: S4: reduced preference mid-reveal cancels to full final with no late DOM mutations
+not ok 4 - S4: reduced preference mid-reveal cancels to full final with no late DOM mutations
+  ---
+  duration_ms: 155.674625
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:124:1'
+  failureType: 'testCodeFailure'
+  error: "browserContext.newPage: Protocol error (Console.enable): 'Console' domain was not found"
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    open (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:37:30)
+    async TestContext.<anonymous> (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:126:15)
+  ...
+# Subtest: S5: Copy success/denial/no API, keyboard focus and announced status, selectable command
+not ok 5 - S5: Copy success/denial/no API, keyboard focus and announced status, selectable command
+  ---
+  duration_ms: 175.826417
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:133:1'
+  failureType: 'testCodeFailure'
+  error: "browserContext.newPage: Protocol error (Console.enable): 'Console' domain was not found"
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    open (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:37:30)
+    async TestContext.<anonymous> (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:135:15)
+  ...
+# Subtest: S6: missing IntersectionObserver and story errors leave complete final, no overlays
+not ok 6 - S6: missing IntersectionObserver and story errors leave complete final, no overlays
+  ---
+  duration_ms: 180.836959
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:150:1'
+  failureType: 'testCodeFailure'
+  error: "browserContext.newPage: Protocol error (Console.enable): 'Console' domain was not found"
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    open (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:37:30)
+    async TestContext.<anonymous> (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:151:11)
+  ...
+# Subtest: S7: bounded mobile/desktop visual proof of all three frames plus reduced end state
+ok 7 - S7: bounded mobile/desktop visual proof of all three frames plus reduced end state # SKIP
+  ---
+  duration_ms: 0.1935
+  type: 'test'
+  ...
+# Subtest: S8: synthetic visibility interruption settles every story without late writes
+not ok 8 - S8: synthetic visibility interruption settles every story without late writes
+  ---
+  duration_ms: 176.757209
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:164:1'
+  failureType: 'testCodeFailure'
+  error: "browserContext.newPage: Protocol error (Console.enable): 'Console' domain was not found"
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    open (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:37:30)
+    async TestContext.<anonymous> (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:166:13)
+  ...
+# Subtest: S9: denial during typing selects the whole command and preserves it, repeat activation is ignored
+not ok 9 - S9: denial during typing selects the whole command and preserves it, repeat activation is ignored
+  ---
+  duration_ms: 165.960125
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:172:1'
+  failureType: 'testCodeFailure'
+  error: "browserContext.newPage: Protocol error (Console.enable): 'Console' domain was not found"
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    open (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:37:30)
+    async TestContext.<anonymous> (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:173:11)
+  ...
+# Subtest: S10: real headless Chromium clipboard API copies the exact command through keyboard activation
+ok 10 - S10: real headless Chromium clipboard API copies the exact command through keyboard activation # SKIP
+  ---
+  duration_ms: 0.358459
+  type: 'test'
+  ...
+# Subtest: S11: actual keyboard order, readable Rules policy, visible focus and finite blink
+not ok 11 - S11: actual keyboard order, readable Rules policy, visible focus and finite blink
+  ---
+  duration_ms: 166.212542
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:185:1'
+  failureType: 'testCodeFailure'
+  error: "browserContext.newPage: Protocol error (Console.enable): 'Console' domain was not found"
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    open (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:37:30)
+    async TestContext.<anonymous> (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:186:11)
+  ...
+# Subtest: S12: resizing an active scene cancels safely, and ledger beats accept changed row counts/words
+not ok 12 - S12: resizing an active scene cancels safely, and ledger beats accept changed row counts/words
+  ---
+  duration_ms: 195.055292
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:195:1'
+  failureType: 'testCodeFailure'
+  error: "browserContext.newPage: Protocol error (Console.enable): 'Console' domain was not found"
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    open (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:37:30)
+    async TestContext.<anonymous> (/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:196:11)
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 0
+# fail 10
+# cancelled 0
+# skipped 2
+# todo 0
+# duration_ms 2931.002792

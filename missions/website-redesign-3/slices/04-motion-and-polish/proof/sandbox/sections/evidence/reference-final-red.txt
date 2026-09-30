@@ -1,0 +1,106 @@
+TAP version 13
+# Subtest: S4: reduced preference mid-reveal cancels to full final with no late DOM mutations
+not ok 1 - S4: reduced preference mid-reveal cancels to full final with no late DOM mutations
+  ---
+  duration_ms: 1115.915208
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:124:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        balloon: 1,
+        cmd: 'curl -fsSL https://zero.headless.com/install | bash',
+        lines: 13,
+        overlays: 0,
+        peek: 1,
+    +   rows: 0,
+    -   rows: 5,
+        stepping: 0,
+        tab: 'Settings',
+        undo: 5
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    undo: 5
+    peek: 1
+    balloon: 1
+    rows: 5
+    lines: 13
+    tab: 'Settings'
+    cmd: 'curl -fsSL https://zero.headless.com/install | bash'
+    stepping: 0
+    overlays: 0
+  actual:
+    undo: 5
+    peek: 1
+    balloon: 1
+    rows: 0
+    lines: 13
+    tab: 'Settings'
+    cmd: 'curl -fsSL https://zero.headless.com/install | bash'
+    stepping: 0
+    overlays: 0
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:128:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: S5: Copy success/denial/no API, keyboard focus and announced status, selectable command
+not ok 2 - S5: Copy success/denial/no API, keyboard focus and announced status, selectable command
+  ---
+  duration_ms: 622.364708
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:133:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:138:38)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: S9: denial during typing selects the whole command and preserves it, repeat activation is ignored
+not ok 3 - S9: denial during typing selects the whole command and preserves it, repeat activation is ignored
+  ---
+  duration_ms: 2350.487083
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:172:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    2 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:175:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 0
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4401.241625

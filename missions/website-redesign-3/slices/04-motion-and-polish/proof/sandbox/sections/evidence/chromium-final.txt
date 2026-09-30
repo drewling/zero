@@ -1,0 +1,89 @@
+TAP version 13
+# Subtest: S1: selected B final markup retains 13 Rules lines, 5+cut Undo rows, exact command and static no-JS/reduced parity
+ok 1 - S1: selected B final markup retains 13 Rules lines, 5+cut Undo rows, exact command and static no-JS/reduced parity
+  ---
+  duration_ms: 24860.984125
+  type: 'test'
+  ...
+# Subtest: S2: first-sight hash and real in-page link arrivals stay final, never rewind
+ok 2 - S2: first-sight hash and real in-page link arrivals stay final, never rewind
+  ---
+  duration_ms: 7326.787708
+  type: 'test'
+  ...
+# SECTION_TIMING {"width":320,"durations":[["install",1296],["rules-win",1381],["undo-win",1244],["term",1019]],"cls":0}
+# SECTION_TIMING {"width":390,"durations":[["install",1293],["rules-win",1369],["undo-win",1244],["term",1015]],"cls":0}
+# SECTION_TIMING {"width":760,"durations":[["install",1296],["rules-win",1375],["undo-win",1245],["term",1020]],"cls":0}
+# SECTION_TIMING {"width":1440,"durations":[["install",1297],["rules-win",1377],["undo-win",1244],["term",1017]],"cls":0}
+# SECTION_TIMING {"width":2560,"durations":[["install",1297],["rules-win",1367],["undo-win",1235],["term",1013]],"cls":0}
+# Subtest: S3: reader scroll plays every beat once, observes authored intermediate states, zero overflow/CLS and complete final
+ok 3 - S3: reader scroll plays every beat once, observes authored intermediate states, zero overflow/CLS and complete final
+  ---
+  duration_ms: 51737.310292
+  type: 'test'
+  ...
+# Subtest: S4: reduced preference mid-reveal cancels to full final with no late DOM mutations
+ok 4 - S4: reduced preference mid-reveal cancels to full final with no late DOM mutations
+  ---
+  duration_ms: 10631.139708
+  type: 'test'
+  ...
+# Subtest: S5: Copy success/denial/no API, keyboard focus and announced status, selectable command
+ok 5 - S5: Copy success/denial/no API, keyboard focus and announced status, selectable command
+  ---
+  duration_ms: 453.397875
+  type: 'test'
+  ...
+# Subtest: S6: missing IntersectionObserver and story errors leave complete final, no overlays
+ok 6 - S6: missing IntersectionObserver and story errors leave complete final, no overlays
+  ---
+  duration_ms: 654.934875
+  type: 'test'
+  ...
+# LIVE_TERMINAL_CAPTURE {"width":390,"visibleGlyphsBeforeScreenshot":4}
+# LIVE_TERMINAL_CAPTURE {"width":1440,"visibleGlyphsBeforeScreenshot":4}
+# Subtest: S7: bounded mobile/desktop visual proof of all three frames plus reduced end state
+ok 7 - S7: bounded mobile/desktop visual proof of all three frames plus reduced end state
+  ---
+  duration_ms: 7649.411
+  type: 'test'
+  ...
+# Subtest: S8: synthetic visibility interruption settles every story without late writes
+ok 8 - S8: synthetic visibility interruption settles every story without late writes
+  ---
+  duration_ms: 10422.33
+  type: 'test'
+  ...
+# Subtest: S9: denial during typing selects the whole command and preserves it, repeat activation is ignored
+ok 9 - S9: denial during typing selects the whole command and preserves it, repeat activation is ignored
+  ---
+  duration_ms: 3370.407
+  type: 'test'
+  ...
+# Subtest: S10: real headless Chromium clipboard API copies the exact command through keyboard activation
+ok 10 - S10: real headless Chromium clipboard API copies the exact command through keyboard activation
+  ---
+  duration_ms: 95.31675
+  type: 'test'
+  ...
+# Subtest: S11: actual keyboard order, readable Rules policy, visible focus and finite blink
+ok 11 - S11: actual keyboard order, readable Rules policy, visible focus and finite blink
+  ---
+  duration_ms: 101.210666
+  type: 'test'
+  ...
+# Subtest: S12: resizing an active scene cancels safely, and ledger beats accept changed row counts/words
+ok 12 - S12: resizing an active scene cancels safely, and ledger beats accept changed row counts/words
+  ---
+  duration_ms: 767.5515
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 123344.474166
