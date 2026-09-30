@@ -157,3 +157,51 @@ Fresh `bash landing/build.sh zero-landing-qa2` from current HEAD: **all 13 of th
 
 ### Outstanding
 Main-lead indicated a second commit is coming with "stronger motion" — a third recheck pass will be needed once that lands, in particular to re-verify no new overflow/CLS/final-frame regressions are introduced by the new motion.
+
+---
+
+## Third recheck pass — SHA `4175a32ca3f02a93ba62d8b0f68f50cfc0094647`
+
+**Commit under test:** `4175a32` "Add stronger finite landing motion" (Tayo Onabule). Confirmed current HEAD at recheck time, working tree clean.
+
+**Verdict: PASS.** All of main-lead's acceptance criteria met independently in both Chromium and WebKit. One residual (non-blocking) note on a pre-existing test-suite flake, not a product regression.
+
+Diff touches: `landing/assets/motion.js` (CTA/scroll observer race fix), `landing/assets/page.css`, `landing/assets/sections.js`, `landing/site.css`, `landing/site.js`, `landing/test-motion.mjs` (new), `landing/test-site.mjs`.
+
+### 1. CTA-click observer race (design-lead's Finding 2)
+Independently reproduced the original bug against `18a1b86` first (confirmed real, using design-lead's exact repro script against the threaded `serve.py` server — my first attempt via `python3 -m http.server` had failed to reproduce it, traced to that server's shallow default backlog interfering with the exact Chromium IntersectionObserver batch-delivery timing the bug depends on).
+
+Root cause confirmed by reading the diff: `motion.js`'s `pre` observer could call `arm()` (rewinding to frame 0) after the `play` observer had already fired and found `armed === false`, with no mechanism to recover. The fix adds a `scrollend`-triggered safety net that re-checks visibility and replays `play`'s settle-or-start logic once scrolling settles, plus a direct `jumpedAt` check in `pre`'s own callback.
+
+Re-tested against `4175a32` with main-lead's exact matrix (CTA click at 300ms and 6000ms after load, End key, at 1440px and 390px, both engines): **12/12 clean** (11/12 on first pass; the one failure was the same known `ERR_CONNECTION_RESET` `http.server`-flakiness pattern, confirmed non-product by rerunning that exact case 6/6 clean). No stuck `armed` state, no leftover `lt-*` classes, 0 leftover overlay sprites, command code visible, in every case.
+
+### 2. Overflow at every beat
+scrollWidth vs innerWidth at 320/390/768/1440px, at 0/800/1600ms, JS-on and no-JS, both engines: **32/32 clean**, no overflow at any width/timestamp/mode combination.
+
+### 3. Final-frame equality
+Computed-geometry comparison (excluding `#copy`'s intentional progressive-enhancement reveal, as established in the prior recheck) across no-JS / reduced-motion / `?static` / settled-JS-on-after-full-scroll: **identical in both engines**.
+
+### 4. Reduced-motion: no leftover overlays/sprites
+Scrolled the full page under `reducedMotion: 'reduce'` in both engines, checked `document.querySelectorAll('[data-zm-overlay]').length` afterward: **0 in both engines**.
+
+### 5. Terminal: exactly one command copy
+Reran `test-terminal.mjs` (unchanged file, still valid) against the new commit, pointed at the reliable threaded server: **3/3 runs clean, 2/2 subtests each** (Chromium + WebKit).
+
+### 6. No console errors
+Captured `console` (error-level) and `pageerror` events across all CTA-click/End-key interaction variants above: **zero real console errors** in the actual product flows (the one incidental `ERR_CONNECTION_RESET` was the test harness's own HTTP server dropping a connection under load, not a page-level JS error).
+
+### 7. CLS
+- **Chromium: CLS = 0** across JS-on, reduced-motion, and `?static` (genuine `PerformanceObserver` measurement).
+- **WebKit:** as noted in the prior recheck, this WebKit build's `PerformanceObserver.supportedEntryTypes` does not include `layout-shift` at all — not measurable directly. Final-frame geometry equality (section 3) stands as the substitute evidence: identical final layout means no shift is possible by construction.
+
+### 8. Docker / `/install` / OG tags
+Fresh `bash landing/build.sh zero-landing-qa3`: **13/13 smoke checks pass**. Independently verified against a running container: `/install` and `/install.sh` both 302 to the correct external URL, clean nginx logs. OG image (`assets/og-image.png`) confirmed served 200, actual PNG dimensions **1200×630**, matching the declared `og:image:width`/`og:image:height` meta tags exactly.
+
+### Residual note (non-blocking, per main-lead's guidance on synthetic-harness edge cases)
+`test-terminal.mjs` has a **pre-existing** Chromium-only flake, roughly 5-10% of runs, independent of this commit: `page.waitForFunction` on `#term.dataset.mode` occasionally times out at 5s during the test's own synthetic wheel-scroll setup sequence. Confirmed this flake exists identically against the **prior** commit `18a1b86` (1/12 runs failed there too, same error signature), so `4175a32` neither introduced nor fixed it. Did not find any real user-facing path where the page itself gets stuck; all direct product-interaction testing (CTA click, End key, real scroll) passed reliably. Flagging as a test-suite robustness item, not a release blocker.
+
+### Cleanup (this pass)
+- Static servers on ports 8951/8952/8953 killed, confirmed via `lsof`.
+- Docker images `zero-landing-qa3` (and earlier scratch `zero-landing-qa2` already removed in prior pass) confirmed absent via `docker images`.
+- Scratch repro directories (`/tmp/repro`, `/tmp/repro2`, `/tmp/qa3`, `/tmp/prior-landing`, `/tmp/prior-check`) cleaned up.
+- No dangling containers or listeners left from this pass.
