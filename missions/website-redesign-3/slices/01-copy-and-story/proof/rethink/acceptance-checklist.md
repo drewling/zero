@@ -1,5 +1,7 @@
 # Whole-page acceptance ledger
 
+**Final status at 03:00Z:** the historical Draft5/pending-Draft6 rows below are superseded by [the final requirement-to-observation map](FINAL-REQUIREMENT-MAP.md) and [final handback](FINAL-COPY-HANDBACK.md). Final1ad99b3 observes550 words, saved per-check Chromium148/0 and WebKit144/0, proof36/36, public15/1 externalGitHub429, and whole41/43 concurrent landing expectations. Main-lead accepted the durable copy handoff and stood down further checks/edits. No production acceptance or general human-reader improvement claim.
+
 Updated2026-09-30 02:39Z. **Observed Draft5 object65463b8:550 runtime words, own Chromium148/0, WebKit144/0, public16/0; independent QA pass2 at72f3424.** Three fresh matched model readers correctly name both outbound recipients and no zero-server recipient. Readiness2/3/3 versus prior2/2/3 is mixed, not a broad win. Owner approved B at02:30Z, explicitly keeps Trash, accepts Gmail/Apple Mail as a known reader note, keeps scheduling unsaid and installer unchanged. Only a cost-volume line is authorized inside the cost row. **Draft6 copy3088502: same27-word row, same550 author total, all other COPY-B bytes unchanged. Final generated object and QA pending.** A archived39aa729, no production edits/deploy.
 
 ## Requirements mapped to observed acceptance
