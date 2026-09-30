@@ -1,0 +1,226 @@
+TAP version 13
+# Subtest: unavailable clipboard cannot pass when section script did not load
+ok 1 - unavailable clipboard cannot pass when section script did not load
+  ---
+  duration_ms: 2.324
+  type: 'test'
+  ...
+# Subtest: any resource failure or runtime error fails a clipboard fault context
+ok 2 - any resource failure or runtime error fails a clipboard fault context
+  ---
+  duration_ms: 0.741542
+  type: 'test'
+  ...
+# Subtest: completed unavailable state keeps the exact command selectable
+ok 3 - completed unavailable state keeps the exact command selectable
+  ---
+  duration_ms: 2.140583
+  type: 'test'
+  ...
+# Subtest: success requires the exact clipboard content, announced success and retained focus
+ok 4 - success requires the exact clipboard content, announced success and retained focus
+  ---
+  duration_ms: 0.26225
+  type: 'test'
+  ...
+# Subtest: denial requires exact selection, announced fallback and retained focus
+ok 5 - denial requires exact selection, announced fallback and retained focus
+  ---
+  duration_ms: 0.133792
+  type: 'test'
+  ...
+# Subtest: selected B count includes all clipboard states and preserves frozen A/B
+ok 6 - selected B count includes all clipboard states and preserves frozen A/B
+  ---
+  duration_ms: 135.224542
+  type: 'test'
+  ...
+# Subtest: frozen Draft4 stays 549 while the selected copy names both recipients in its own paragraph
+ok 7 - frozen Draft4 stays 549 while the selected copy names both recipients in its own paragraph
+  ---
+  duration_ms: 91.683833
+  type: 'test'
+  ...
+# Subtest: owner cost follow-up stays in the cost row and preserves tariff, billing, date and license
+ok 8 - owner cost follow-up stays in the cost row and preserves tariff, billing, date and license
+  ---
+  duration_ms: 1.5465
+  type: 'test'
+  ...
+# Subtest: missing selected clipboard marker fails
+ok 9 - missing selected clipboard marker fails
+  ---
+  duration_ms: 133.893834
+  type: 'test'
+  ...
+# Subtest: one added selected B word exceeds the ceiling
+ok 10 - one added selected B word exceeds the ceiling
+  ---
+  duration_ms: 228.989375
+  type: 'test'
+  ...
+# Subtest: authored count CLI includes the complete Rules object and extra app-icon label
+ok 11 - authored count CLI includes the complete Rules object and extra app-icon label
+  ---
+  duration_ms: 162.094041
+  type: 'test'
+  ...
+# Subtest: B policy excerpt is contiguous source text, not an edited middle-bullet omission
+ok 12 - B policy excerpt is contiguous source text, not an edited middle-bullet omission
+  ---
+  duration_ms: 2.438708
+  type: 'test'
+  ...
+# Subtest: extra Rules words fail the total budget
+ok 13 - extra Rules words fail the total budget
+  ---
+  duration_ms: 242.022458
+  type: 'test'
+  ...
+# Subtest: missing Rules text fails rather than being silently uncounted
+ok 14 - missing Rules text fails rather than being silently uncounted
+  ---
+  duration_ms: 289.577917
+  type: 'test'
+  ...
+# Subtest: cost-only freeze requires unchanged 550-word hero state: missing
+ok 15 - cost-only freeze requires unchanged 550-word hero state: missing
+  ---
+  duration_ms: 350.256459
+  type: 'test'
+  ...
+# Subtest: cost-only freeze requires unchanged 550-word hero state: 549
+ok 16 - cost-only freeze requires unchanged 550-word hero state: 549
+  ---
+  duration_ms: 401.346583
+  type: 'test'
+  ...
+# Subtest: cost-only freeze requires unchanged 550-word hero state: 551
+ok 17 - cost-only freeze requires unchanged 550-word hero state: 551
+  ---
+  duration_ms: 562.793917
+  type: 'test'
+  ...
+# Subtest: privacy freeze rejects unspecified or invalid exact word expectation: missing
+ok 18 - privacy freeze rejects unspecified or invalid exact word expectation: missing
+  ---
+  duration_ms: 290.180458
+  type: 'test'
+  ...
+# Subtest: privacy freeze rejects unspecified or invalid exact word expectation: 551
+ok 19 - privacy freeze rejects unspecified or invalid exact word expectation: 551
+  ---
+  duration_ms: 248.81725
+  type: 'test'
+  ...
+# Subtest: privacy freeze rejects unspecified or invalid exact word expectation: 548
+ok 20 - privacy freeze rejects unspecified or invalid exact word expectation: 548
+  ---
+  duration_ms: 408.638666
+  type: 'test'
+  ...
+# Subtest: privacy freeze rejects unspecified or invalid exact word expectation: 549oops
+ok 21 - privacy freeze rejects unspecified or invalid exact word expectation: 549oops
+  ---
+  duration_ms: 713.324625
+  type: 'test'
+  ...
+# Subtest: privacy reader accepts the named phase but cannot launch without its immutable inputs
+ok 22 - privacy reader accepts the named phase but cannot launch without its immutable inputs
+  ---
+  duration_ms: 249.501
+  type: 'test'
+  ...
+# Subtest: reader guard after-b-tightened 1 never launches on absent or invalid evidence
+ok 23 - reader guard after-b-tightened 1 never launches on absent or invalid evidence
+  ---
+  duration_ms: 134.263291
+  type: 'test'
+  ...
+# Subtest: reader guard after-b-tightened 4 never launches on absent or invalid evidence
+ok 24 - reader guard after-b-tightened 4 never launches on absent or invalid evidence
+  ---
+  duration_ms: 122.486542
+  type: 'test'
+  ...
+# Subtest: reader guard ../after-b-tightened 1 never launches on absent or invalid evidence
+ok 25 - reader guard ../after-b-tightened 1 never launches on absent or invalid evidence
+  ---
+  duration_ms: 140.934667
+  type: 'test'
+  ...
+# Subtest: public verifier refuses to overwrite retained evidence before opening browser
+ok 26 - public verifier refuses to overwrite retained evidence before opening browser
+  ---
+  duration_ms: 2239.03425
+  type: 'test'
+  ...
+# Subtest: public verifier accepts the complete authored package and measured inventory
+ok 27 - public verifier accepts the complete authored package and measured inventory
+  ---
+  duration_ms: 1681.977208
+  type: 'test'
+  ...
+# Subtest: cold-reader public output reproduces the committed verbatim record
+ok 28 - cold-reader public output reproduces the committed verbatim record
+  ---
+  duration_ms: 1396.480292
+  type: 'test'
+  ...
+# Subtest: large cold-reader reports flush every verbatim answer before successful exit
+ok 29 - large cold-reader reports flush every verbatim answer before successful exit
+  ---
+  duration_ms: 786.943583
+  type: 'test'
+  ...
+# Subtest: over-budget copy fails rather than treating authored count as advisory
+ok 30 - over-budget copy fails rather than treating authored count as advisory
+  ---
+  duration_ms: 659.068
+  type: 'test'
+  ...
+# Subtest: case-insensitive banned wording fails even outside visible-copy markers
+ok 31 - case-insensitive banned wording fails even outside visible-copy markers
+  ---
+  duration_ms: 1053.64925
+  type: 'test'
+  ...
+# Subtest: a final-copy change in the tested excerpt invalidates reader reuse
+ok 32 - a final-copy change in the tested excerpt invalidates reader reuse
+  ---
+  duration_ms: 1217.196375
+  type: 'test'
+  ...
+# Subtest: duplicate reader sessions fail despite matching category keywords
+ok 33 - duplicate reader sessions fail despite matching category keywords
+  ---
+  duration_ms: 1345.064417
+  type: 'test'
+  ...
+# Subtest: a failed reader call cannot pass from keywords alone
+ok 34 - a failed reader call cannot pass from keywords alone
+  ---
+  duration_ms: 1133.046542
+  type: 'test'
+  ...
+# Subtest: missing disclosure evidence fails the whole package check
+ok 35 - missing disclosure evidence fails the whole package check
+  ---
+  duration_ms: 874.135208
+  type: 'test'
+  ...
+# Subtest: wrong screenshot dimensions fail even with a valid PNG signature
+ok 36 - wrong screenshot dimensions fail even with a valid PNG signature
+  ---
+  duration_ms: 772.893958
+  type: 'test'
+  ...
+1..36
+# tests 36
+# suites 0
+# pass 36
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11385.350166

@@ -1,0 +1,98 @@
+[
+  {
+    "path": "shots/full-1440.jpg",
+    "source": "original/full-1440.jpg",
+    "operation": "full page",
+    "width": 1440,
+    "height": 3841,
+    "sha256": "f9872396dce589b55a87866c12a199e0e862e4c220810e2234a653f21bf1cc48"
+  },
+  {
+    "path": "shots/full-390.jpg",
+    "source": "original/full-390.jpg",
+    "operation": "full page; resized to max dimension 7000",
+    "width": 505,
+    "height": 7000,
+    "sha256": "b6e92512da227e5e42f78ac608aad1cd7be25c6ad9b800ea9430a0880181b730"
+  },
+  {
+    "path": "shots/hero-1440.jpg",
+    "source": "original/full-1440.jpg",
+    "operation": "section crop at pixel top 40, bottom 900",
+    "width": 1440,
+    "height": 860,
+    "sha256": "d5e7aa016d121af85e55d78ff28f4861f2edae75972e977a73a76a49dd78e981"
+  },
+  {
+    "path": "shots/install-1440.jpg",
+    "source": "original/full-1440.jpg",
+    "operation": "section crop at pixel top 900, bottom 1975",
+    "width": 1440,
+    "height": 1075,
+    "sha256": "3cd19dcf41c89a95a18600d0f6650b833fda0ba215181a8d4443208186e3bef0"
+  },
+  {
+    "path": "shots/how-band-1440.jpg",
+    "source": "original/full-1440.jpg",
+    "operation": "section crop at pixel top 1975, bottom 2706",
+    "width": 1440,
+    "height": 731,
+    "sha256": "79a8e00fd594af767e84df576b1e82055552bedf8128e12c74b410eafb9191b2"
+  },
+  {
+    "path": "shots/undo-1440.jpg",
+    "source": "original/full-1440.jpg",
+    "operation": "section crop at pixel top 2706, bottom 3391",
+    "width": 1440,
+    "height": 685,
+    "sha256": "91a7657875bc56b82144df9416dd0c5e772a15e39e3f86b01aa145848ab1b4dd"
+  },
+  {
+    "path": "shots/command-1440.jpg",
+    "source": "original/full-1440.jpg",
+    "operation": "section crop at pixel top 3391, bottom 3752",
+    "width": 1440,
+    "height": 361,
+    "sha256": "72e5ea8f605c4cbd6b89fbfaa92a25b104f017a781e9913a13de19ef85f32469"
+  },
+  {
+    "path": "shots/hero-390.jpg",
+    "source": "original/full-390.jpg",
+    "operation": "section crop at pixel top 80, bottom 2124",
+    "width": 780,
+    "height": 2044,
+    "sha256": "5e416aabffe8f56fe00e9d065c657f9303b02816916ae9c37d1ee423d78e97b8"
+  },
+  {
+    "path": "shots/install-390.jpg",
+    "source": "original/full-390.jpg",
+    "operation": "section crop at pixel top 2124, bottom 5584",
+    "width": 780,
+    "height": 3460,
+    "sha256": "2ba8054c5a277c3799f7ae9d1e189db35ffe0c93e76f559547569cfd297b1061"
+  },
+  {
+    "path": "shots/how-band-390.jpg",
+    "source": "original/full-390.jpg",
+    "operation": "section crop at pixel top 5584, bottom 7893",
+    "width": 780,
+    "height": 2309,
+    "sha256": "253f6af54a369bade107f9ffe5d52d263fb2e87fe44df0ca0373d9c62259c939"
+  },
+  {
+    "path": "shots/undo-390.jpg",
+    "source": "original/full-390.jpg",
+    "operation": "section crop at pixel top 7893, bottom 9645",
+    "width": 780,
+    "height": 1752,
+    "sha256": "4220b955477ec55eae2bed7112f4ed35146d45a7260028e023c6f4c12fccfef9"
+  },
+  {
+    "path": "shots/command-390.jpg",
+    "source": "original/full-390.jpg",
+    "operation": "section crop at pixel top 9645, bottom 10547",
+    "width": 780,
+    "height": 902,
+    "sha256": "5f8af9a0e6e2df980bf1b2fb3a9ab3119440d65ece94593c82ecf16ca615aeeb"
+  }
+]

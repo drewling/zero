@@ -9,10 +9,12 @@ const repo = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: '
 const sha = execFileSync('git', ['rev-parse', process.argv[2] || 'cdfee91'], { encoding: 'utf8' }).trim();
 const followup = process.argv[3];
 const privacy = followup === 'after-b-privacy';
-const tightened = followup === 'after-b-tightened' || privacy;
-if (followup && !tightened) throw new Error('Only after-b-tightened or after-b-privacy is an additional freeze phase');
+const cost = followup === 'after-b-cost';
+const tightened = followup === 'after-b-tightened' || privacy || cost;
+if (followup && !tightened) throw new Error('Only after-b-tightened, after-b-privacy or after-b-cost is an additional freeze phase');
 if (privacy && !['549', '550'].includes(process.env.EXPECTED_WORDS)) throw new Error('after-b-privacy requires EXPECTED_WORDS=549 or 550, chosen from the approved hero state');
-const expectedWords = privacy ? Number(process.env.EXPECTED_WORDS) : tightened ? 549 : null;
+if (cost && process.env.EXPECTED_WORDS !== '550') throw new Error('after-b-cost requires EXPECTED_WORDS=550');
+const expectedWords = privacy || cost ? Number(process.env.EXPECTED_WORDS) : tightened ? 549 : null;
 const base = process.env.BASE || 'http://127.0.0.1:8941';
 const comps = 'missions/website-redesign-3/slices/02-references-and-comps/proof/comps';
 const require = createRequire(execFileSync('npm', ['root', '-g'], { encoding: 'utf8' }).trim() + '/');

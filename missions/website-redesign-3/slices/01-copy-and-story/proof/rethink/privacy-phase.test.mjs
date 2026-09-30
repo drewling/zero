@@ -6,6 +6,17 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root = path.dirname(fileURLToPath(import.meta.url));
 
+for (const expected of ['', '549', '551']) {
+  test(`cost-only freeze requires unchanged 550-word hero state: ${expected || 'missing'}`, () => {
+    const run = spawnSync(process.execPath, [path.join(root, 'freeze-stable-pages.mjs'), 'HEAD', 'after-b-cost'], {
+      encoding: 'utf8', env: { ...process.env, EXPECTED_WORDS: expected },
+    });
+    assert.notEqual(run.status, 0);
+    assert.match(run.stderr, /after-b-cost requires EXPECTED_WORDS=550/);
+    assert.doesNotMatch(run.stdout, /Staging freeze|Frozen /);
+  });
+}
+
 for (const expected of ['', '551', '548', '549oops']) {
   test(`privacy freeze rejects unspecified or invalid exact word expectation: ${expected || 'missing'}`, () => {
     const run = spawnSync(process.execPath, [path.join(root, 'freeze-stable-pages.mjs'), 'HEAD', 'after-b-privacy'], {
