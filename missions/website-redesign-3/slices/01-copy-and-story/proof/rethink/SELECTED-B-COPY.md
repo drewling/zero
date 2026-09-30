@@ -1,6 +1,6 @@
 # Owner-selected B: tightened risk-first copy
 
-DRAFT5, 2026-09-30 02:07Z. Owner chose page B at00:58Z. Preserve its risk-first order: approved hero, Before you install, Rules, Undo, Terminal. Keep A archived, no recovery-first story import. Previous Draft4 is frozen at50bf121,549 runtime words, with three fresh matched reads and independent QA atdf6632d. Readiness is unchanged. Design lead authorized this post-QA privacy correction. COPY-B below now authors550 words with the unchanged104-word hero; final rendered recount and applicable rechecks remain pending. Removing hero Trash is not authorized yet.
+DRAFT6, 2026-09-30 02:34Z. Owner approved tightened page B at65463b8 at02:30Z, including unchanged hero and Trash. The only authorized follow-up is one plain cost-volume line inside Sorting cost. No other visitor copy changes. Draft5 remains frozen at65463b8,550 observed authored words, Chromium148/0 and WebKit144/0, independent QA pass2 and three matched reads. New cost row stays27 words, total550. Final generated cost-row fidelity/recount and QA check remain pending.
 
 Build COPY-B below, with approved hero104, existing shared OBJECT-COPY56 and exact RULES-B-COPY110 from `SECTION-COPY.md`. Add the two alternate clipboard strings below. No sixth row or extra object labels without recounting. Canonical legal/installer destinations replace root-relative links, no visitor labels added.
 
@@ -16,7 +16,7 @@ The recipient rows come first and together: Sorting data and Optional drafts, th
 
 **TypeSafe receives sorting data. Your tool's provider receives draft data. Neither goes to zero's servers.**
 
-**Sorting cost.** Your Jev key, billed by TypeSafe. Jev 1.13: $0.042 per million input tokens, outputs free (checked 30 Sep 2026). [Current pricing](https://docs.typesafe.ai/models). Free, open-source app (AGPL-3.0).
+**Sorting cost.** TypeSafe-billed Jev key. Cost depends on how many emails you sort. Jev 1.13: $0.042/million input tokens, outputs free (2026-09-30). [Pricing](https://docs.typesafe.ai/models). Free, open-source app (AGPL-3.0).
 
 **Google sign-in.** Connect Gmail through Google in your browser. zero never sees your password. Google may show an unverified-app warning because zero hasn't completed its app review.
 
@@ -67,9 +67,13 @@ Replace only `No zero server receives your email.` with:
 
 Both recipient-first rows and every disclosed field remain unchanged. Render the new paragraph as its own full-width accessible outlined plate after the two recipient rows, so “Your tool” refers to the adjacent optional coding-tool disclosure. Optional drafts remain optional. Do not merge with cost or present a local-only assurance.
 
-Budget: remove eight lede words and replace six privacy words with fifteen, net **+1**. Count verified with the normal counter: hero104 + COPY-B275 + objects56 + Rules110 + clipboard5 = **550**. Frozen Draft4 remains549. Viewing-client fact remains in the approved hero, so deleting the lede does not remove Gmail-only/client disclosure. Cost, installer, policy and hero are unchanged. If owner approves deleting the hero's one-word Trash label, the expected total is549, but it must be observed and recounted after designer applies it.
+Budget: remove eight lede words and replace six privacy words with fifteen, net **+1**. Draft5 runtime observed550 at65463b8. Draft6 keeps the cost row27 words and the same total: hero104 + COPY-B275 + objects56 + Rules110 + clipboard5 = **550**. Frozen Draft4 remains549. Owner approved retaining Trash and accepts the Gmail/Apple Mail reader note without changing approved hero or other prose. All sorting/draft fields and installer disclosures remain unchanged.
 
-Source trace: direct TypeSafe endpoint `lib/jev.py:8,33`, sorting payload `lib/review_open_loops.py:974–998`, installed-tool dispatch `lib/llm.py:22–55,76–87`, optional draft context `lib/keeper_server.py:1288–1400`, local zero service `macapp/Sources/main.swift:100–110` and `lib/keeper_server.py:2646–2652`. This names the two disclosed outbound paths and zero's server boundary, not a promise about provider retention, training, billing or all network traffic. Candidate authoring is verified. Final rendered placement, 550-word inventory and a fresh comprehension check remain pending.
+Source trace: direct TypeSafe endpoint `lib/jev.py:8,33`, sorting payload `lib/review_open_loops.py:974–998`, installed-tool dispatch `lib/llm.py:22–55,76–87`, optional draft context `lib/keeper_server.py:1288–1400`, local zero service `macapp/Sources/main.swift:100–110` and `lib/keeper_server.py:2646–2652`. This names the two disclosed outbound paths and zero's server boundary, not a promise about provider retention, training, billing or all network traffic. Draft5 rendered placement/count and narrow recipient comprehension are verified in `PRIVACY-B-READERS.md`. Overall readiness remains mixed, not solved.
+
+## Owner-authorized cost follow-up,02:30Z
+
+Only the27-word Sorting cost row changes. Add the exact plain sentence **Cost depends on how many emails you sort.** Pay for it inside the row by compacting the billing phrase, writing the same per-million tariff as `$0.042/million`, dating it `2026-09-30`, and shortening the link label to Pricing. Preserve Jev1.13, input-token unit, free outputs, TypeSafe billing/key and free/open-source/AGPL app. No monthly figure or worked example: no measured source-backed inbox token counts were supplied. `lib/jev.py:28–34,67–95` covers inference/key use, `lib/review_open_loops.py:974–998` shows per-thread inputs, and `schedule-and-price-evidence.md` retains the dated provider tariff. Number of emails is a cost factor, not an exclusive determinant or linear monthly guarantee. Same total550, all other COPY-B bytes unchanged by regression check.
 
 ### Owner-visible schedule note, not visitor copy
 
@@ -85,4 +89,4 @@ No automatic daily promise is added to B. The approved **Run zero now** is an im
 - Recovery now explicitly says searchable, retaining dated label, All Mail, individual/day controls and nothing deleted.
 - Optional drafts remain separate account/billing/data context with review and explicit manual send. No daily schedule or automatic-send claim appears.
 
-Repeatable count: `SELECTED_COPY=<absolute path to SELECTED-B-COPY.md> node count-section-drafts.mjs`. Draft5 authoring550 is verified; prior50bf121 runtime549 remains the reader/QA object. Source checks retain complete fields and no automatic-run promise. No readiness improvement is claimed. New rendered fidelity/count, applicable comprehension and QA fair-fix rechecks remain pending. Production held.
+Repeatable count: `SELECTED_COPY=<absolute path to SELECTED-B-COPY.md> node count-section-drafts.mjs`. Draft6 cost-row authoring550 is verified; Draft5 runtime550 and matched reader observations remain frozen at65463b8. Source checks retain complete fields and no automatic-run promise. Only the new cost row needs generated fidelity/count and independent QA confirmation. Production held.

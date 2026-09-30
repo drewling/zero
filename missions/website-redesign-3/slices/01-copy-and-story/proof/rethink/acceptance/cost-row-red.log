@@ -1,0 +1,86 @@
+TAP version 13
+# Subtest: selected B count includes all clipboard states and preserves frozen A/B
+ok 1 - selected B count includes all clipboard states and preserves frozen A/B
+  ---
+  duration_ms: 40.203083
+  type: 'test'
+  ...
+# Subtest: frozen Draft4 stays 549 while the selected copy names both recipients in its own paragraph
+ok 2 - frozen Draft4 stays 549 while the selected copy names both recipients in its own paragraph
+  ---
+  duration_ms: 38.513208
+  type: 'test'
+  ...
+# Subtest: owner cost follow-up stays in the cost row and preserves tariff, billing, date and license
+not ok 3 - owner cost follow-up stays in the cost row and preserves tariff, billing, date and license
+  ---
+  duration_ms: 0.710125
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/01-copy-and-story/proof/rethink/count-section-drafts.test.mjs:35:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + '**Sorting cost.** Your Jev key, billed by TypeSafe. Jev 1.13: $0.042 per million input tokens, outputs free (checked 30 Sep 2026). [Current pricing](https://docs.typesafe.ai/models). Free, open-source app (AGPL-3.0).'
+    - '**Sorting cost.** TypeSafe-billed Jev key. Cost depends on how many emails you sort. Jev 1.13: $0.042/million input tokens, outputs free (2026-09-30). [Pricing](https://docs.typesafe.ai/models). Free, open-source app (AGPL-3.0).'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '**Sorting cost.** TypeSafe-billed Jev key. Cost depends on how many emails you sort. Jev 1.13: $0.042/million input tokens, outputs free (2026-09-30). [Pricing](https://docs.typesafe.ai/models). Free, open-source app (AGPL-3.0).'
+  actual: '**Sorting cost.** Your Jev key, billed by TypeSafe. Jev 1.13: $0.042 per million input tokens, outputs free (checked 30 Sep 2026). [Current pricing](https://docs.typesafe.ai/models). Free, open-source app (AGPL-3.0).'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/01-copy-and-story/proof/rethink/count-section-drafts.test.mjs:39:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: missing selected clipboard marker fails
+ok 4 - missing selected clipboard marker fails
+  ---
+  duration_ms: 41.398708
+  type: 'test'
+  ...
+# Subtest: one added selected B word exceeds the ceiling
+ok 5 - one added selected B word exceeds the ceiling
+  ---
+  duration_ms: 45.243958
+  type: 'test'
+  ...
+# Subtest: authored count CLI includes the complete Rules object and extra app-icon label
+ok 6 - authored count CLI includes the complete Rules object and extra app-icon label
+  ---
+  duration_ms: 45.021125
+  type: 'test'
+  ...
+# Subtest: B policy excerpt is contiguous source text, not an edited middle-bullet omission
+ok 7 - B policy excerpt is contiguous source text, not an edited middle-bullet omission
+  ---
+  duration_ms: 0.948625
+  type: 'test'
+  ...
+# Subtest: extra Rules words fail the total budget
+ok 8 - extra Rules words fail the total budget
+  ---
+  duration_ms: 42.793791
+  type: 'test'
+  ...
+# Subtest: missing Rules text fails rather than being silently uncounted
+ok 9 - missing Rules text fails rather than being silently uncounted
+  ---
+  duration_ms: 43.19975
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 8
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 353.551917

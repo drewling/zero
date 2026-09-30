@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: selected B count includes all clipboard states and preserves frozen A/B
+ok 1 - selected B count includes all clipboard states and preserves frozen A/B
+  ---
+  duration_ms: 118.294166
+  type: 'test'
+  ...
+# Subtest: frozen Draft4 stays 549 while the selected copy names both recipients in its own paragraph
+ok 2 - frozen Draft4 stays 549 while the selected copy names both recipients in its own paragraph
+  ---
+  duration_ms: 98.354875
+  type: 'test'
+  ...
+# Subtest: owner cost follow-up stays in the cost row and preserves tariff, billing, date and license
+ok 3 - owner cost follow-up stays in the cost row and preserves tariff, billing, date and license
+  ---
+  duration_ms: 0.810208
+  type: 'test'
+  ...
+# Subtest: missing selected clipboard marker fails
+ok 4 - missing selected clipboard marker fails
+  ---
+  duration_ms: 357.543708
+  type: 'test'
+  ...
+# Subtest: one added selected B word exceeds the ceiling
+ok 5 - one added selected B word exceeds the ceiling
+  ---
+  duration_ms: 962.506542
+  type: 'test'
+  ...
+# Subtest: authored count CLI includes the complete Rules object and extra app-icon label
+ok 6 - authored count CLI includes the complete Rules object and extra app-icon label
+  ---
+  duration_ms: 790.754375
+  type: 'test'
+  ...
+# Subtest: B policy excerpt is contiguous source text, not an edited middle-bullet omission
+ok 7 - B policy excerpt is contiguous source text, not an edited middle-bullet omission
+  ---
+  duration_ms: 20.659333
+  type: 'test'
+  ...
+# Subtest: extra Rules words fail the total budget
+ok 8 - extra Rules words fail the total budget
+  ---
+  duration_ms: 884.416625
+  type: 'test'
+  ...
+# Subtest: missing Rules text fails rather than being silently uncounted
+ok 9 - missing Rules text fails rather than being silently uncounted
+  ---
+  duration_ms: 406.654875
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3785.0065

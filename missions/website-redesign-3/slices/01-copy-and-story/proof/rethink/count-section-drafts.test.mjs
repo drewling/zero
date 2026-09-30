@@ -17,7 +17,7 @@ test('selected B count includes all clipboard states and preserves frozen A/B', 
     [{ outline: 'B', states: 5, total: 550 }]);
 });
 
-test('frozen Draft4 stays 549 while Draft5 names both recipients in its own paragraph', () => {
+test('frozen Draft4 stays 549 while the selected copy names both recipients in its own paragraph', () => {
   const run = spawnSync(process.execPath, [path.join(root, 'count-section-drafts.mjs')], {
     encoding: 'utf8', env: { ...process.env, SELECTED_COPY: path.join(root, 'after-b-tightened/SELECTED-B-COPY.md') },
   });
@@ -30,6 +30,16 @@ test('frozen Draft4 stays 549 while Draft5 names both recipients in its own para
   assert.doesNotMatch(copy, /No zero server receives your email|Read connected Gmail in Gmail or Apple Mail/);
   assert.ok(copy.indexOf('**Optional drafts.') < copy.indexOf('**TypeSafe receives'));
   assert.ok(copy.indexOf('**TypeSafe receives') < copy.indexOf('**Sorting cost.'));
+});
+
+test('owner cost follow-up stays in the cost row and preserves tariff, billing, date and license', () => {
+  const text = fs.readFileSync(path.join(root, 'SELECTED-B-COPY.md'), 'utf8');
+  const copy = text.split('<!-- COPY-B-START -->')[1].split('<!-- COPY-B-END -->')[0];
+  const row = copy.split('\n').find(line => line.startsWith('**Sorting cost.'));
+  assert.equal(row, '**Sorting cost.** TypeSafe-billed Jev key. Cost depends on how many emails you sort. Jev 1.13: $0.042/million input tokens, outputs free (2026-09-30). [Pricing](https://docs.typesafe.ai/models). Free, open-source app (AGPL-3.0).');
+  const previous = fs.readFileSync(path.join(root, 'after-b-privacy/SELECTED-B-COPY.md'), 'utf8')
+    .split('<!-- COPY-B-START -->')[1].split('<!-- COPY-B-END -->')[0];
+  assert.equal(copy.replace(row, 'COST ROW'), previous.replace(previous.split('\n').find(line => line.startsWith('**Sorting cost.')), 'COST ROW'), 'Only the Sorting cost row may change');
 });
 
 for (const [name, mutate, error] of [
