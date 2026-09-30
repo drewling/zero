@@ -6,7 +6,7 @@ approved hero cannot drift. Two changes only: the menu bar's "How it works" link
 it pointed at is cut in both outlines) and the page-level heading face comes from page.css (option T3).
 Section words are Draft3 (slices/01-copy-and-story/proof/rethink/SECTION-COPY.md @ 496d985): the COPY-A / COPY-B,
 OBJECT-COPY and RULES-B-COPY blocks. Page B's own section words (owner's choice, 00:58Z) are parsed from the
-copywriter's counted DRAFT5 COPY-B block in SELECTED-B-COPY.md (@ dcaabd6, which adds the zero-server boundary line and drops the ledger lede), not retyped. Page A is archived on Draft3.
+copywriter's counted DRAFT6 COPY-B block in SELECTED-B-COPY.md (@ 3088502: Draft5's zero-server boundary line and dropped ledger lede, plus the owner-authorized cost-volume sentence in Sorting cost), not retyped. Page A is archived on Draft3.
 The acceptance script checks the rendered words against those blocks.
 Run from proof/comps:  python3 kit/build-pages.py && python3 kit/inject.py"""
 import re
@@ -15,7 +15,7 @@ from pathlib import Path
 comps = Path(__file__).resolve().parent.parent
 hero_src = (comps / "hero-b" / "index.html").read_text()
 copy_src = (comps.parents[2] / "01-copy-and-story" / "proof" / "rethink" / "SECTION-COPY.md").read_text()
-# page B (owner's choice, 00:58Z) is built from the copywriter's counted DRAFT5 block; page A stays on Draft3 (archived)
+# page B (owner's choice 00:58Z, approved 02:30Z) is built from the copywriter's counted DRAFT6 block; page A stays on Draft3 (archived)
 copy_b_src = (comps.parents[2] / "01-copy-and-story" / "proof" / "rethink" / "SELECTED-B-COPY.md").read_text()
 
 
@@ -251,7 +251,7 @@ for name, label, sections in [("page-a", "A · recovery-first", A_sections), ("p
 {chr(10).join(sections)}
 </main>
 {FOOTER}
-<p class="draft-flag">DRAFT comp · page {label} · {"Draft5 (owner-selected B)" if name == "page-b" else "Draft3"} · not approved</p>
+<p class="draft-flag">DRAFT comp · page {label} · {"Draft6 (owner-approved B) · not the live site" if name == "page-b" else "Draft3 · not approved"}</p>
 
 <script src="../kit/motion.js"></script>
 <!-- hero B story, verbatim -->

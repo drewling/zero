@@ -1,4 +1,5 @@
-PASS page-a 320 no horizontal overflow
+chromium: 148 PASS, 0 FAIL
+al overflow
 PASS page-a 320 every text stays inside its section
 PASS page-a 320 no clipped text
 PASS page-a 320 body text >= 16px :: min 17
@@ -52,7 +53,7 @@ PASS page-a 390 scrolling: every beat played to done :: {"page.page-a":"done","u
 PASS page-a 390 section beats were armed before playing (not snapped from final) :: undo-win,install,term
 PASS page-a 390 after playback == final frame
 PASS page-a 390 playback without page errors
-PASS page-a 390 section beats cause no layout shift :: sections 0.0004 [{"v":0.00018816085984488763,"t":9242,"src":"command"},{"v":0.00018816085984488763,"t":9506,"src":"command"}]
+PASS page-a 390 section beats cause no layout shift :: sections 0.0004 [{"v":0.00018816085984488763,"t":9228,"src":"command"},{"v":0.00018816085984488763,"t":9489,"src":"command"}]
 INFO page-a 390 total CLS incl. hero 0.0287 [["0.0031","drop+drop+drop"],["0.0042","drop+drop+drop+drop"],["0.0057","drop+drop+drop+drop+drop"],["0.0064","drop+drop+drop+drop+drop"],["0.0048","drop+drop+drop+drop+drop"],["0.0019","drop+drop+drop+drop+drop"],["0.0022","hero"],["0.0002","command"],["0.0002","command"]]
 PASS page-a 1440 no-JS == final frame
 PASS page-a 1440 no-JS shows no Copy button (it can't work without JS)
@@ -62,7 +63,7 @@ PASS page-a 1440 scrolling: every beat played to done :: {"page.page-a":"done","
 PASS page-a 1440 section beats were armed before playing (not snapped from final) :: page-a,undo-win,install,term
 PASS page-a 1440 after playback == final frame
 PASS page-a 1440 playback without page errors
-PASS page-a 1440 section beats cause no layout shift :: sections 0.0001 [{"v":0.00006950244877400549,"t":7668,"src":"command"}]
+PASS page-a 1440 section beats cause no layout shift :: sections 0.0001 [{"v":0.00006950244877400549,"t":7628,"src":"command"}]
 INFO page-a 1440 total CLS incl. hero 0.0357 [["0.0088","drop+drop+drop+drop+drop"],["0.0057","drop+drop+drop+drop+drop"],["0.0033","drop+drop+drop+drop+drop"],["0.0020","drop+drop+drop+drop+drop"],["0.0010","drop+drop+drop+drop+drop"],["0.0004","drop+drop+drop+drop+drop"],["0.0145","hero+hero+hero"],["0.0001","command"]]
 PASS page-a Install CTA lands on the ledger, which stays readable :: {"mode":"seen","rows":5,"top":0}
 PASS page-a direct load on #install: the ledger is readable at once and never rewinds :: {"mode":"seen","rows":5}
@@ -84,7 +85,7 @@ PASS page-b 390 no horizontal overflow
 PASS page-b 390 every text stays inside its section
 PASS page-b 390 no clipped text
 PASS page-b 390 body text >= 16px :: min 17
-PASS page-b 390 prose runs <= 75 characters per line (median, real rendered lines; max <= 82) :: {"median":36,"max":44}
+PASS page-b 390 prose runs <= 75 characters per line (median, real rendered lines; max <= 82) :: {"median":37,"max":44}
 PASS page-b 390 ledger rows leave no empty grid cell
 PASS page-b 390 no page errors
 PASS page-b 768 no horizontal overflow
@@ -98,25 +99,25 @@ PASS page-b 1440 no horizontal overflow
 PASS page-b 1440 every text stays inside its section
 PASS page-b 1440 no clipped text
 PASS page-b 1440 body text >= 16px :: min 17
-PASS page-b 1440 prose runs <= 75 characters per line (median, real rendered lines; max <= 82) :: {"median":51,"max":67}
+PASS page-b 1440 prose runs <= 75 characters per line (median, real rendered lines; max <= 82) :: {"median":50,"max":67}
 PASS page-b 1440 ledger rows leave no empty grid cell
 PASS page-b no root-relative links (they 404 off the live site)
 PASS page-b 1440 no page errors
-PASS page-b rendered section words == copywriter's counted blocks (DRAFT5 COPY-B + shared, 441 words)
+PASS page-b rendered section words == copywriter's counted blocks (DRAFT6 COPY-B + shared, 441 words)
 PASS page-b hero text == approved hero B
 PASS page-b ledger: the two outgoing-data rows lead as one pair with recipients named on their own line, the zero-server boundary is its own full-width statement under them, then cost :: {"order":["Sorting data.","Optional drafts.","Sorting cost.","Google sign-in.","Installer."],"out":["Sorting data.","Optional drafts."],"sameBand":true,"leads":[{"t":"Sent to TypeSafe (Jev):","block":true,"ownLine":true},{"t":"Sent to your coding tool’s provider:","block":true,"ownLine":true}],"bound":{"t":"TypeSafe receives sorting data. Your tool’s provider receives draft data. Neither goes to zero’s servers.","statement":true,"between":true,"fullWidth":true,"plain":true},"oldLine":false}
 PASS page-b 1920 no horizontal overflow
 PASS page-b 1920 every text stays inside its section
 PASS page-b 1920 no clipped text
 PASS page-b 1920 body text >= 16px :: min 18
-PASS page-b 1920 prose runs <= 75 characters per line (median, real rendered lines; max <= 82) :: {"median":65,"max":69}
+PASS page-b 1920 prose runs <= 75 characters per line (median, real rendered lines; max <= 82) :: {"median":65,"max":68}
 PASS page-b 1920 ledger rows leave no empty grid cell
 PASS page-b 1920 no page errors
 PASS page-b 2560 no horizontal overflow
 PASS page-b 2560 every text stays inside its section
 PASS page-b 2560 no clipped text
 PASS page-b 2560 body text >= 16px :: min 18
-PASS page-b 2560 prose runs <= 75 characters per line (median, real rendered lines; max <= 82) :: {"median":67,"max":71}
+PASS page-b 2560 prose runs <= 75 characters per line (median, real rendered lines; max <= 82) :: {"median":66,"max":71}
 PASS page-b 2560 ledger rows leave no empty grid cell
 PASS page-b 2560 no page errors
 PASS page-b ?static is the complete final frame :: {"lt":0,"stepping":0,"undoRows":5,"balloon":true,"ledgerRows":5,"info":true,"rulesLines":13,"rulesTab":"Settings","cmd":"curl -fsSL https://zero.headless.com/install | bash","zr":0}
@@ -128,7 +129,7 @@ PASS page-b 390 scrolling: every beat played to done :: {"page.page-b":"done","i
 PASS page-b 390 section beats were armed before playing (not snapped from final) :: install,rules-win,undo-win,term
 PASS page-b 390 after playback == final frame
 PASS page-b 390 playback without page errors
-PASS page-b 390 section beats cause no layout shift :: sections 0.0004 [{"v":0.00018816085984488763,"t":10816,"src":"command"},{"v":0.00018816085984488763,"t":11084,"src":"command"}]
+PASS page-b 390 section beats cause no layout shift :: sections 0.0004 [{"v":0.00018816085984488763,"t":11517,"src":"command"},{"v":0.00018816085984488763,"t":11779,"src":"command"}]
 INFO page-b 390 total CLS incl. hero 0.0287 [["0.0031","drop+drop+drop"],["0.0042","drop+drop+drop+drop"],["0.0057","drop+drop+drop+drop+drop"],["0.0064","drop+drop+drop+drop+drop"],["0.0048","drop+drop+drop+drop+drop"],["0.0019","drop+drop+drop+drop+drop"],["0.0022","hero"],["0.0002","command"],["0.0002","command"]]
 PASS page-b 1440 no-JS == final frame
 PASS page-b 1440 no-JS shows no Copy button (it can't work without JS)
@@ -138,13 +139,13 @@ PASS page-b 1440 scrolling: every beat played to done :: {"page.page-b":"done","
 PASS page-b 1440 section beats were armed before playing (not snapped from final) :: page-b,install,rules-win,undo-win,term
 PASS page-b 1440 after playback == final frame
 PASS page-b 1440 playback without page errors
-PASS page-b 1440 section beats cause no layout shift :: sections 0.0001 [{"v":0.00006950244877400549,"t":8966,"src":"command"}]
+PASS page-b 1440 section beats cause no layout shift :: sections 0.0001 [{"v":0.00006950244877400549,"t":9126,"src":"command"}]
 INFO page-b 1440 total CLS incl. hero 0.0357 [["0.0088","drop+drop+drop+drop+drop"],["0.0057","drop+drop+drop+drop+drop"],["0.0033","drop+drop+drop+drop+drop"],["0.0020","drop+drop+drop+drop+drop"],["0.0010","drop+drop+drop+drop+drop"],["0.0004","drop+drop+drop+drop+drop"],["0.0145","hero+hero+hero"],["0.0001","command"]]
 PASS page-b Install CTA lands on the ledger, which stays readable :: {"mode":"seen","rows":5,"top":0}
 PASS page-b direct load on #install: the ledger is readable at once and never rewinds :: {"mode":"seen","rows":5}
 PASS page-b scroll before the first observer callback still plays the ledger beat to done :: {"mode":"done","y":630,"rows":6}
 PASS page-b Reduce Motion turned on mid-visit settles every beat on its final frame :: ledger was play; {"rows":5,"lt":0,"modes":["static"]}
-PASS page-b keyboard order = document order, 16 stops incl. Copy command, none in illustrations :: {"zm":true,"term":"static","copyShown":true,"dropped":[]} zero > How it works > Undo > Before you install > Source > Install > Install zero for Mac > Read the installer first > Privacy policy > Current pricing > Jev key > GitHub Releases > Copy command > Source > Privacy > Terms
+PASS page-b keyboard order = document order, 16 stops incl. Copy command, none in illustrations :: {"zm":true,"term":"static","copyShown":true,"dropped":[]} zero > How it works > Undo > Before you install > Source > Install > Install zero for Mac > Read the installer first > Privacy policy > Pricing > Jev key > GitHub Releases > Copy command > Source > Privacy > Terms
 PASS page-b Copy command has a visible focus ring (reached by Tab) :: {"ring":{"style":"solid 3px","focusVisible":true},"zm":true,"term":"static","copyShown":true,"dropped":[]}
 PASS page-b Rules policy text is exposed to assistive tech
 PASS page-b Copy granted: visible, polite live status, focus stays on the button :: {"text":"Copied","live":"polite","role":"status","visible":true,"focus":"copy","selected":"","copied":"curl -fsSL https://zero.headless.com/install | bash","dropped":[]}

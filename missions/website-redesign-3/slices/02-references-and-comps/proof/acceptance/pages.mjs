@@ -1,7 +1,7 @@
 // Acceptance pass for the whole-page comps (page-a, page-b): real engines, real emulation, real captures.
 // Run: COPY_MD=<SECTION-COPY.md> COPY_B_MD=<SELECTED-B-COPY.md> OUT=<dir> ENGINE=chromium|webkit node pages.mjs
 //   (comp server on 127.0.0.1:8941). Page A (archived) checks against Draft3 COPY-A. Page B checks against the
-//   owner-selected DRAFT5 COPY-B in COPY_B_MD, plus Draft3's shared OBJECT-COPY and RULES-B-COPY.
+//   owner-selected DRAFT6 COPY-B in COPY_B_MD, plus Draft3's shared OBJECT-COPY and RULES-B-COPY.
 // Checks: horizontal overflow and text escaping its section at 320-2560; no-JS and reduced-motion end states
 // equal the ?static final frame; scroll-triggered beats play to done; layout shift while they play (Chromium);
 // an anchor jump leaves the target section final; keyboard reaches only real links and the Copy button, in order;
@@ -112,7 +112,7 @@ for (const p of pages) {
     if (w === 1440) {
       const got = bag(words(await pg.evaluate(sectionText))), want = bag(expected[p]);
       const dd = diff(got, want);
-      rec(!dd.length, `${p} rendered section words == copywriter's counted blocks (${p === 'page-b' ? 'DRAFT5 COPY-B + ' : 'Draft3 COPY-A + '}shared, ${expected[p].length} words)`, dd.join(' '));
+      rec(!dd.length, `${p} rendered section words == copywriter's counted blocks (${p === 'page-b' ? 'DRAFT6 COPY-B + ' : 'Draft3 COPY-A + '}shared, ${expected[p].length} words)`, dd.join(' '));
       rec((await pg.evaluate(heroText)) === HERO, `${p} hero text == approved hero B`);
       if (p === 'page-b') {
         // the trust fix: recipient rows first and together, each recipient named in real text on its own line, then
