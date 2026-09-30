@@ -74,3 +74,60 @@ The Undo and Settings/Rules objects are zero's real UI chrome carrying real acce
 - Both engines' acceptance suites reproduce clean at the exact counts design-lead reported (146/0 Chromium, 142/0 WebKit). No discrepancy found.
 
 No `landing/` files touched. No fixes applied. Findings only.
+
+---
+
+## Pass 2 — independent re-check of follow-up SHA `65463b8` (2026-09-30)
+
+**Object reviewed:** `65463b8` ("Render Draft5 privacy boundary, port motion race fix, update proposal for re-check"), one follow-up commit on top of the still-unchanged freeze `50bf121`. This is a lighter confirmation pass against design-lead's specific re-check list, not a full redo of pass 1's 11 checks + 11 findings.
+
+**First, confirmed the freeze itself is untouched:** `git diff 50bf121..65463b8 -- comps/page-a comps/hero-b` is empty. The frozen hero and archived page A are byte-identical to what I reviewed in pass 1. Only `page-b`, `kit/motion.js`/`page.css`/`build-pages.py`/`sections.js`, the acceptance suite, the proposal page, docs, and evidence artifacts changed.
+
+### Re-check 1 — Draft5 privacy boundary: rendered, correct, not dithered ✅
+Read the raw `page-b/index.html` diff directly. Confirmed:
+- Old line **"No zero server receives your email."** is fully absent from the markup (`grep` for the exact string returns nothing) — not just visually hidden.
+- New line renders as its own `<p class="bound">` between the two outgoing-data rows (`Sorting data.`, `Optional drafts.`) and the `Sorting cost.` row, exactly as claimed — confirmed by DOM order in the HTML source, not just the acceptance suite's own assertion.
+- CSS (`.ledger-b .info .bound`) sits on `var(--paper)` (solid white), bordered top/bottom, **no `--dither-25` background** — checked directly against the file's own dither-background declarations used elsewhere (`.ledger-b .info .row.out`), confirming the boundary statement is deliberately kept off the dither pattern, consistent with the one-bit "text on flat paper only" rule I verified in pass 1.
+- Visually re-confirmed with my own fresh screenshots at 1440 and 390 (`proof/shots-pass2/pass2-ledger-{1440,390}.png`): the statement renders as a solid bordered box, full width of the info window at both sizes, directly under the recipient pair and above cost — matches the proposal page's own screenshot and description.
+- Full-width claim independently true at both captured widths (box spans the whole `.info` window at 1440 and the single-column layout at 390 — no truncation, no overflow).
+
+### Re-check 2 — Ledger lede line removed, no dangling layout gap ✅
+Confirmed the `<p>Read connected Gmail in Gmail or Apple Mail.</p>` line is deleted from the `#install` section's `.txt` block (the new grid class `no-lede` is on the section, though I found no distinct CSS rule keyed to `no-lede` — the removal works because `.ledger .txt` is a 2-column grid and simply drops the second grid item without leaving a visible gap, which I visually confirmed in both screenshots: no empty box, no orphaned whitespace under the heading). Word budget claim (550/550, hero unchanged at 104) is consistent with `SELECTED-B-COPY.md`'s own accounting, which I did not independently recount word-by-word (out of scope for this lighter pass) but which the acceptance suite's own rendered-word-count assertion (part of the 148/144 rerun below) independently checks and passed.
+
+### Re-check 3 — Motion race fix: present, logic matches the described fix ✅
+Read the actual `kit/motion.js` diff line by line (not just trusted the changelog description). Confirmed the described change is real:
+- `arm()` now calls `io.observe(root)` itself (previously `io.observe` was called unconditionally at the end of the setup function, before arming) — this closes the race where the play-observer could fire before the section had a chance to decide "already visible at first sight."
+- Initial-sight decision is now made **synchronously**, before any observer is attached, using `getBoundingClientRect()` + a `location.hash` anchor-target check, replacing the old async-only `pre` IntersectionObserver-based decision. This directly matches design-lead's description ("io.observe only after arm, sync initial-sight check").
+- A `started` guard was added to the `pre` observer callback to prevent a stale pre-observer delivery from re-triggering after the section has already been marked `seen`.
+- This is a real, comprehensible fix for the described race, not just a description with no matching code change.
+
+### Re-check 4 — New acceptance test 5b2 validates the actual race scenario ✅
+Read the new `pages.mjs` test block directly: it scrolls the target ledger section into view via a `DOMContentLoaded` listener injected *before* `motion.js` runs (so the scroll can race the observer's first callback), then asserts the section reaches `data-mode="done"` (fully played, not skipped/stuck armed) with all rows visible. This is a legitimate regression test for the exact race described, not a superficial pass-through check.
+
+### Re-check 5 — Proposal page (`comps/proposal/index.html`): scores table, Trash mock, evidence numbers all accurate ✅
+Read the file directly (not just design-lead's description):
+- `#readers` section has the 3×3 reader score table (rejected baseline / old B / tightened B, R1-R3), matches `TIGHTENED-B-READERS.md`'s numbers I independently reviewed in pass 1's addendum check.
+- `#trash` section is headed **"Review-qa's one finding: the hero's Trash"** — correctly attributes the finding to me, includes a `trash-keep` (as-approved) vs `trash-drop` (proposed removal) side-by-side mock, and explicitly labels it **"mock, not built"** / "The mock removes the icon in a live browser. It isn't built into the page." I confirmed this is true: the Trash icon fix is genuinely **not** present in the actual `page-b/index.html` (see Re-check 6) — the proposal page is honestly describing a mockup for Tayo's decision, not silently shipping the fix while claiming it's still open.
+- `#evidence` table states "Chromium 148/0, WebKit 144/0" for the privacy-fix commit — matches my own independent rerun exactly (see Re-check 7).
+
+### Re-check 6 — Trash owner-gate: confirmed genuinely still unfixed ✅
+Independently grepped the actual rendered `page-b/index.html` and `kit/page.css`/inline styles for `f-full`/`f-empty` (the folder's stateful empty/full swap mechanism I found in pass 1). Confirmed: the folder icon (`Auto-Archived` label) still has both `f-full` and `f-empty` SVG variants with CSS-driven visibility swap (`.lt-5 .folder:not(.got) svg.px.f-full{display:none}` / `f-empty{display:block}`). The Trash icon (line 190) still has **only one static `<svg>`**, no `f-full`/`f-empty` classes, no swap logic — unchanged from pass 1. This is a genuine owner-gated hold, not a silent fix mislabeled as pending. Matches design-lead's own framing ("OWNER GATE, unchanged, awaiting Tayo via main-lead").
+
+### Re-check 7 — Acceptance suite independently reproduces 148/0 and 144/0 ✅
+Reran from scratch on `65463b8` (fresh comp server on port 8944 via `serve.py`, not reused from pass 1):
+- **Chromium: 148 PASS, 0 FAIL** — matches design-lead's claim exactly. Confirmed zero `FAIL` lines in the raw log (`grep -c "^FAIL"` → 0), not just trusting the summary line. New test 5b2 (`scroll before the first observer callback still plays the ledger beat to done`) passed for both `page-a` and `page-b`, including the `page-b` case with 6 visible rows (the new privacy-boundary paragraph counted as a row).
+- **WebKit** (pinned build `webkit-2336`, same as pass 1): **144 PASS, 0 FAIL** — matches exactly, same zero-FAIL raw-log confirmation.
+- Logs: `proof/acceptance-pass2/pages-{chromium,webkit}-pass2-independent.log`.
+
+## Pass 2 summary for design-lead
+
+All 6 re-check items independently verified true, with fresh evidence (not reused from pass 1 or trusted from the addendum message):
+1. Draft5 privacy boundary — rendered correctly, full-width, not dithered, old line genuinely gone.
+2. Ledger lede removal — clean, no layout gap.
+3. Motion race fix — real code change matching the described fix, not just a changelog entry.
+4. New regression test (5b2) — a legitimate test of the actual race, not superficial.
+5. Proposal page — accurate, honestly labels the Trash mock as "not built," correctly attributes the finding to review-qa.
+6. Trash owner-gate — confirmed genuinely untouched, correctly still deferred to Tayo, not silently patched around.
+7. Acceptance — 148/0 Chromium, 144/0 WebKit independently reproduced, zero hidden FAILs.
+
+**No new findings from this re-check.** The one open item from pass 1 (hero Trash icon) remains correctly unresolved and owner-gated — this commit does not attempt to fix it, only proposes a mock for Tayo's decision, which is the right scope. Page A and hero-B remain untouched. No `landing/` files touched. No fixes applied by this seat.
