@@ -1,6 +1,8 @@
 # Whole-page acceptance ledger
 
-Updated2026-09-30 00:53Z. Tested freeze: designer `cdfee91`, authoring `496d985`. A is the working recommendation, not a reader winner or approved page. This ledger separates observed checks from pending final-result acceptance. See `acceptance/` logs and reports, `after-findings.md`, and immutable `after-a/`/`after-b/` inputs.
+Updated2026-09-30 01:12Z. Original tested freeze: designer `cdfee91`, authoring `496d985`. Owner selected risk-first B at00:58Z, superseding the earlier A recommendation. A is archived at designer `39aa729`. Tightened B authored549/source trace and regression24/24 are verified, final served freeze and readers are not. Designer reports corrected structural/clipboard/canonical-link checks137/0 Chromium and133/0 WebKit at39aa729, not this seat's independent final acceptance. Original rows below describe historical observations until explicitly replaced by new B evidence.
+
+Final B requires rendered549 parity, actual <=75-character lines across six widths, canonical destination/asset checks, announced success and denied/unavailable clipboard recovery, no-JS/reduced-motion completeness, three fresh isolated reads and exact-SHA independent QA. No schedule promise is added to visitor copy. Existing schedule settings do not install the LaunchAgent. This ledger separates observed checks from pending final-result acceptance. See `acceptance/`, `after-findings.md`, immutable `after-a/`/`after-b/` and `SELECTED-B-COPY.md`.
 
 | Requirement | Observable check and failure signal | Evidence / result |
 |---|---|---|

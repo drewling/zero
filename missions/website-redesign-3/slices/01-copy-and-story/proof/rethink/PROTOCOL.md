@@ -2,6 +2,10 @@
 
 Status: all nine matched reads complete, updated2026-09-30. Three baseline sessions and three fresh sessions per stable outline retain raw input/session evidence. A/B source frozen at `cdfee91`, copy `496d985`, 10 ordered A images and12 B images versus14 baseline images. All nine have unique IDs, requested `claude-sonnet-5`, one turn and zero tools. Results are mixed, not an overall win (`after-findings.md`). This is a proof-only redesign proposal. Hero B is owner-approved; sections and copy are not. No install, inbox access, deployment or landing edit is part of this test. Post-reader revisions must receive new provenance and cannot overwrite these phases.
 
+## Owner-selected tightened B follow-up
+
+Owner chose risk-first B at00:58Z. A stays archived and the nine original reads remain unchanged. Use a separate `after-b-tightened/` snapshot and `readers/after-b-tightened/` outputs, with three new IDs and the identical fixed prompt/model/isolation. Freeze the final designer commit and all rendered words, including the five clipboard-state words, before launching. Count target549 includes approved hero104, primary274, shared objects56, Rules110 and clipboard5. Compare recipient/price comprehension with both baseline and original B, preserving disagreements and remaining refusal reasons. Final capture/hash and read results are pending, not recorded as passes.
+
 ## Before sources
 
 - Rejected comp: designer's frozen `../../../02-references-and-comps/proof/baseline-v3/`, commit `a196c47`, recorded source `2d6d725`. Its full-page images stack hero B and the standalone section comp, not a single implemented page. Both repeated navigation bars and draft labels are visible in the pictures. Do not mistake these capture artifacts for intended production content.

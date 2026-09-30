@@ -1,8 +1,20 @@
 # Zero: whole-page rethink proposal
 
-**WORK IN PROGRESS, ready for independent QA but not owner handback.** Updated 2026-09-30 00:44Z. Hero B alone is approved. This proposal replaces the rejected six-chapter story rather than polishing it. Copy, section objects, heading type, full-width layout and motion remain proposed. No `landing/` edit, push, installer execution or deployment is authorized or performed.
+**WORK IN PROGRESS, not ready for final QA or owner handback.** Updated 2026-09-30 01:12Z. Owner selected **page B, risk first**, at00:58Z. Hero B alone remains approved. A is archived at designer fix commit `39aa729`; no A story is being ported into B. Tightened B copy, section objects, heading type, full-width layout and motion still need the new exact freeze, readers and independent adversarial review. No `landing/` edit, push, installer execution or deployment is authorized or performed.
 
-Owner's latest feedback is incorporated: easier headings, edge-to-edge sections, more purposeful one-bit animation, funnels/impeccable content thinking and independent adversarial review. Both complete alternatives have now been read. A is the working shorter-story recommendation, not a model-voted or overall comprehension winner. Fair fixes and independent QA remain pending; mixed results are retained below.
+Owner's latest feedback is incorporated: easier headings, edge-to-edge sections, purposeful one-bit animation and independent adversarial review. Both original alternatives were read under equal conditions. The earlier A recommendation is superseded by the owner's B decision, not by a new reader win. Mixed original results remain below.
+
+## Three-line owner summary
+
+- B keeps its risk-first order and approved hero, cutting the repeated Stays/Archived demonstration.
+- Tightened B names both external data recipients and puts the dated Jev token price before sign-in and installation, without removing disclosure fields.
+- The type/layout/object/clipboard/link fixes are proposed and being verified on a new B freeze. No automatic daily promise, production build or deployment is included.
+
+## Selected B changes after the original reads
+
+Build source: [SELECTED-B-COPY.md](SELECTED-B-COPY.md), not the superseded A exploration. B's ledger now orders Sorting data, Optional drafts, Sorting cost, Google sign-in and Installer. Real bold recipient leads form an adjacent pair, and the no-zero-server fact is visually distinct. Jev1.13's $0.042 per million input tokens, outputs free, is dated30Sep2026 and linked to the provider, not a permanent or per-inbox estimate. The rest of B still proceeds through source-faithful Rules, readable Undo and Terminal. Shared illustration strings and complete policy text remain unchanged.
+
+Authored total **549** includes all five clipboard-state words, leaving one spare word. The final served inventory and fresh readers are still pending. Designer reports structural/clipboard/canonical-link fixes at `39aa729` with Chromium137/0 and WebKit133/0, but those reports are not this seat's independent acceptance of the new B copy.
 
 ## Evidence already in hand
 
@@ -37,7 +49,7 @@ The real problems are repeated persuasion and an unclear transition from a simpl
 
 **Joint choice, 22:59Z:** design lead and copywriter will make both runnable whole-page alternatives, not default to A. Design lean is A with a continuous-desktop rhythm, but this is a pre-test preference, not the recommendation. Both have one menu bar, the same approved hero words and equal proof-label conditions. A/B are outlines, not alternative heroes.
 
-## Old versus new section words
+## Old versus original tested section words
 
 The full literal drafts, marked visitor-copy blocks, window text and all counts are in [SECTION-COPY.md](SECTION-COPY.md). The comparisons below keep the old prose visible, not merely the new heading.
 
@@ -110,7 +122,7 @@ Frozen before/after screenshot pairs now show the actual merged `cdfee91` altern
 | Sort proof | [duplicate Stays/Archived](before/sections/shots/demo-1440.jpg) | Cut: [A full](after-a/shots/full-1440.jpg), [B full](after-b/shots/full-1440.jpg) show no second demo | No replacement duplicate lesson |
 | Decision policy | [Rules text card](before/sections/shots/decisions-1440.jpg) | [A recovery](after-a/shots/undo-1440.jpg), [B Rules desktop](after-b/shots/how-band-1440.jpg), [B Rules mobile](after-b/shots/how-band-390.jpg) | B wrap fix and independent reading critique |
 | Recovery | [greeked Undo](before/sections/shots/undo-1440.jpg) | [A desktop](after-a/shots/undo-1440.jpg), [A mobile](after-a/shots/undo-390.jpg), [B desktop](after-b/shots/undo-1440.jpg): readable fictional rows | Partial-view salience and temporal restore purpose |
-| Tradeoffs | [Info wall](before/sections/shots/before-1440.jpg), [mobile](before/sections/shots/before-390.jpg) | [A desktop](after-a/shots/install-1440.jpg), [A mobile](after-a/shots/install-390.jpg), [B desktop](after-b/shots/install-1440.jpg): compact decision ledger | Still confusing recipients/cost, structurally revise selected A |
+| Tradeoffs | [Info wall](before/sections/shots/before-1440.jpg), [mobile](before/sections/shots/before-390.jpg) | [A desktop](after-a/shots/install-1440.jpg), [A mobile](after-a/shots/install-390.jpg), [B desktop](after-b/shots/install-1440.jpg): compact decision ledger | Still confusing recipients/cost in this frozen version, structurally revise selected B |
 | Acquisition | [old install](before/sections/shots/install-1440.jpg) | [A desktop](after-a/shots/command-1440.jpg), [A mobile](after-a/shots/command-390.jpg): Terminal after ledger | Clipboard edge recovery and canonical route fixes |
 
 ## Type, layout and motion: old versus new
@@ -129,13 +141,15 @@ Frozen before/after screenshot pairs now show the actual merged `cdfee91` altern
 
 Three fresh matched readers per stable outline are complete. A: job4/4/4, story4/3/3, visuals3/3/2, find tradeoffs3/4/3, decide2/3/2. B: job4/4/4, story3/3/3, visuals3/3/3, find tradeoffs3/3/3, decide2/2/3. All six identify app/AI action following a menu-bar trigger and describe individual/day recovery. All six still question pricing and vendor/data boundaries. Story improves only for one A reader, visual usefulness improves modestly, data/cost finding does not improve, readiness is unchanged. These are diagnostic model samples, not humans or conversion statistics.
 
-**Working recommendation: A's four-block recovery-first story.** A is 70 words shorter and B's extra Rules chapter produces no observed story/decision advantage, although B has more consistently useful visual scores. This is the team's evidence-informed shorter-story selection, not fictional paired votes. [Full answers, score table, contradictory findings and input limits](after-findings.md) remain available.
+**Current selection: owner's risk-first B decision at00:58Z.** The earlier team recommendation favored A's shorter story, not fictional paired votes or a comprehension winner. Preserve that original evidence: A was70 words shorter, and B had more consistently useful visual scores without a demonstrated story/decision advantage. Owner preference, rather than a new test result, selects B. [Full answers, score table, contradictory findings and input limits](after-findings.md) remain available.
 
-**Owner-visible product-story correction proposed, not automatically approved:** readers infer manual-only operation. Source allows scheduled runs only when zero's launch agent has been installed and successfully loaded (`bin/zero:169–229`); time/days in **Settings → Daily routine** update an existing agent but do not install it (`lib/keeper_server.py:1890–1897,2523–2527`). Preserve approved hero **Run zero now → Working…** as a true immediate-run example. Propose the minimal conditional sentence beside A's run intro, not a new daily-default promise. Tayo should decide whether this belongs on the page. [Exact conditions, prerequisites and every manual-only implication](schedule-and-price-evidence.md). A's new data wording must name TypeSafe as an external recipient. The authoritative [current model page](https://docs.typesafe.ai/models), fetched00:39Z, lists Jev1.13 at $0.042 per million input tokens, outputs free; `lib/jev.py:34` uses its moving `jev-latest` alias. A dated unit price answers a concrete cost question without inventing a per-inbox/month bill. All disclosure fields, own-key billing and optional drafts stay.
+**Owner-visible product-story option, outside visitor copy:** readers infer or question manual-only operation. Scheduled runs require zero's launch agent installed and loaded by `bin/zero schedule` (`bin/zero:169–229`). **Settings → Daily routine** edits an existing agent and does not create one (`lib/keeper_server.py:1890–1897,2523–2527`). Approved **Run zero now → Working…** remains a true immediate-run example, not an exclusive-mode claim. No automatic daily promise or conditional schedule sentence is added to B. The alternative, requiring an owner decision and recount, is: “Scheduled runs need zero's launch agent installed and loaded. Set time and days in Settings → Daily routine.” [Exact conditions, prerequisites and implication audit](schedule-and-price-evidence.md).
+
+B's revised data rows name TypeSafe and the coding tool's provider explicitly. The authoritative [current model page](https://docs.typesafe.ai/models), fetched00:39Z, lists Jev1.13 at $0.042 per million input tokens, outputs free. `lib/jev.py:34` uses moving alias `jev-latest`. The dated unit price is not a lifetime or per-inbox/month guarantee. All disclosure fields, own-key billing and optional drafts stay.
 
 ## Adversarial review and responses
 
-Exact review boundary: this proposal plus `after-findings.md`, immutable `after-a/` and `after-b/` reader snapshots at `cdfee91`, and independently observed acceptance logs/edge failures. Main lead requires corrected legal/installer links before the actual QA handoff. Review QA will receive the corrected runnable freeze and original matched-test provenance for separate skeptical-stranger/design-critic passes. Findings, rationale and observed rechecks remain owed. This self-authored proposal is not independent approval.
+Design lead owns the actual **B-only** QA handoff after one stable commit, with exact runnable paths, this proposal, new B inputs/readers and original matched provenance. Original snapshots `after-a/` and `after-b/` at `cdfee91` remain comparators, not the final review object. Canonical link and clipboard fixes precede handoff. Two independent skeptical-stranger/design-critic passes, findings, responses and observed fair-fix rechecks remain owed. This self-authored proposal is not independent approval.
 
 ## What is cut, and what is not
 
@@ -147,10 +161,10 @@ Requirement re-audit at23:25Z added semantic/accessibility-API and keyboard/focu
 
 ## Readiness ledger
 
-Complete: before captures, three raw baseline critiques, comparable structure research, joint two-outline selection, both bounded copy drafts, old-line audit, source disclosure trace, recorded funnels/impeccable changes. Current full authored inventories independently frozen from served source: A474 and B544, including all proposed Rules text, alternate hero state, extra zero app-icon label and hidden mobile subjects. Frozen word inventory matches authored Draft3; all material disclosure facts remain. B has six spare words. Planned accessible copy messages add five alternate-state words (Copied; Copy manually: press Command-C.), so further B additions require a new count or an explicit rival-only frozen version.
+Original tested full inventories: A474 and B544, independently frozen at `cdfee91`, with Draft3 policy/objects and all hero states. These remain historical input counts. **Selected tightened B549** = hero104 + primary274 + shared objects56 + Rules110 + clipboard states5. One spare word. [Selected copy](SELECTED-B-COPY.md) and updated [truth trace](truth-trace.md) cover the changed lines. Served final inventory still pending.
 
 [Whole-workflow acceptance ledger](acceptance-checklist.md) maps every remaining requirement to an observable check, with unverified paths explicitly pending. Latest regression rerun at 23:47Z: 21/21 checks passed (17 historical copy/landing/report checks plus 4 Draft3 count/source-fidelity/negative-fixture checks). The larger run exposed intermittent historical report truncation at 23:38Z: forced CLI exit discarded queued stdout. Fix `50e0141` drains the output before exit. Its large-final-answer test failed before the fix, then passed; eight consecutive actual CLI pipe captures also reproduced the complete committed report. Reader CLI rejects invalid reader IDs, missing after snapshots and overwriting existing baseline results before any model call. Fresh precommit regression at00:56Z passes21/21 and58 current local Markdown evidence links resolve. These are packaging/regression checks, not acceptance of the new page.
 
-Complete: stable merged A/B, exact authored inventories, original/derivative freeze, six new matched readers, independently observed six-width overflow/clip/no-JS/reduced/playback checks and working A selection. Pending: source-grounded scheduling/vendor/price improvements, actual prose measure fix, three proof-server legal/installer routes, accessible clipboard failure paths, independent adversarial findings/responses, final motion/type consolidation and one viewable handback.
+Complete: original merged A/B, immutable inventories/captures, six new matched readers, independent original browser checks, owner B selection, source-grounded B549 words and changed-line trace. Fresh regression01:11Z **24/24** passes, including three selected-B count/state/missing-marker/over-budget checks that failed before the CLI mode was implemented. Pending: tightened B freeze, independent actual-line/link/clipboard rechecks, three fresh B readers, adversarial findings/responses and one viewable handback. A stays archived, schedule option stays outside visitor copy.
 
 One consolidated presentation will be built by design lead at `slices/02-references-and-comps/proof/comps/proposal/index.html`, quoting this Markdown for story/copy/reader evidence. It is not yet an owner-ready page.

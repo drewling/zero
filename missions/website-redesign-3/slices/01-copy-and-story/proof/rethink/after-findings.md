@@ -2,6 +2,8 @@
 
 Observed 2026-09-30 00:37–00:38Z. Both outline inputs are frozen from designer commit `cdfee91`, copy `496d985`. Three fresh independent one-turn sessions per outline used the same prompt/model/isolation as the baseline. All six answers, raw JSONL and input/session metadata remain under `readers/after-a/` and `readers/after-b/`. Original images and readable derivatives remain under `after-a/` and `after-b/`.
 
+**Selection update01:12Z:** owner chose risk-first B at00:58Z. The original A recommendation below is retained as the historical pre-decision judgment, not a current build instruction. A is archived. Tightened B copy at `SELECTED-B-COPY.md` needs a new freeze and three fresh reads, which cannot inherit these original results.
+
 ## Scores: mixed results, not an overall win
 
 | Input | Reader | Job | Story | Visuals | Finding safety/data/requirements/cost | Decide |

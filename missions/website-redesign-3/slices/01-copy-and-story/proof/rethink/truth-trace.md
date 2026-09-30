@@ -1,6 +1,6 @@
 # Truth trace for the two rethink drafts
 
-2026-09-29. Applies to `SECTION-COPY.md` Draft3's marked A/B blocks and the approved hero. This is an authoring/source check, not verification of the still-being-built full-width comps. After comp swap, every row must be checked against its rendered location. The detailed prior source trace remains `../truth-trace.md`; this file maps rewritten words rather than treating old wording as a constraint.
+Updated2026-09-30 01:04Z. Historical A/B rows below retain `SECTION-COPY.md` Draft3 and approved hero provenance. **Owner-selected B now uses `SELECTED-B-COPY.md` Draft4**, with a complete changed-line retrace below. Source/authoring verification is not final rendered acceptance. Frozen Draft3 render inventories passed at `cdfee91`; tightened B rendering remains pending. Detailed prior source trace remains `../truth-trace.md`.
 
 | Requirement / truth | A location | B location | Source and scoped conclusion |
 |---|---|---|---|
@@ -37,8 +37,33 @@
 | Privacy/Terms destinations | Sorting-data inline privacy + footer links | Same | `/privacy.html`, `/terms.html` remain unchanged legal pages, no legal rewrite in this slice. |
 | Honest examples, no owner mail exposed | Approved hero caption + readable Undo facsimile caption | Same, plus faithful Rules illustration | Five visible fictional archived rows/address/ages in an eight-item batch with a scrollbar, not a measured customer result or real screenshot. No live inbox read needed. |
 
+## Selected B Draft4 changed-line retrace
+
+Owner chose risk-first B at00:58Z (`qitem-20260930005833-05ef6df1`). Only B is being tightened; A and original reader evidence stay archived. New author total: hero104 + prose274 + shared objects56 + Rules110 + alternate copy statuses5 = **549**. The Rules excerpt and every sorting/draft field remain intact.
+
+| Changed visitor line | Source / verification | Truth preserved or limitation |
+|---|---|---|
+| Read connected Gmail in Gmail or Apple Mail | `PRODUCT.md:31–34,74`, `PanelView.swift:490–492` | Gmail account viewing, not Apple Mail accounts or other providers. |
+| Sent to TypeSafe (Jev), complete field list | `review_open_loops.py:640,691,974–998`; direct endpoint `jev.py:8,33` | Sender, subject, <=160-character preview, last-message-owner signal, previously-replied-to-sender signal, rules, conditional learned preferences. No field cut. |
+| No zero server receives your email, separately bold | `main.swift:100–110`, `keeper_server.py:2646–2652`, direct TypeSafe endpoint | Retained disclosure explicitly paired with outbound TypeSafe recipient, not a promise that nothing leaves the Mac. |
+| Optional drafts via installed tool, its account/billing; Sent to your coding tool's provider | `llm.py:2–12,22–55,76–87`; `keeper_server.py:1288–1400`; `landing/terms.html:73` | Existing tool context/billing and full previews/samples/preferences/profile list retained. Supported tool compatibility, not universal arbitrary CLI support. |
+| Review before Send reply; Drafts never send automatically | `PanelView.swift:2587`, `keeper_server.py:1268–1270,1412–1445` | Explicit send action in optional UI drafting workflow. Not a claim about every opt-in legacy script. |
+| Your Jev key, billed by TypeSafe | `jev.py:28–34,67–95`, `PanelView.swift:1618–1637`, terms73 | Personal inference key/cost remains primary, not zero subscription or free sorting. |
+| Jev1.13 at$0.042/M input tokens, outputs free, checked30Sep2026 | `https://docs.typesafe.ai/models`, native fetch2026-09-30 00:39Z, and `lib/jev.py:34` | Dated/versioned provider tariff. Moving `jev-latest` currently resolves1.13. No per-inbox/month or permanent-rate promise. Arithmetic/source in `schedule-and-price-evidence.md`. |
+| Free, open-source app (AGPL-3.0) | LICENSE1–9,635–642; terms67,81 | Free app distinguished from billed inference; no removed license fact. |
+| Google browser sign-in/password/app-review warning | `OnboardingView.swift:104–120`; OAuth/gws path `keeper_server.py:1502–1558` | All disclosures retained despite shorter wording; no bypass instruction. |
+| Installer: non-notarized and conditional dependencies | `macapp/build.sh:122–127`, `macapp/install-zero.sh:94–156` | Homebrew/Python/Node/gws remain conditional. Claude added only if no supported tool installed. No unsigned/tiny-footprint guarantee. |
+| Use Run zero now; starred untouched, uncertain inbox, AI mistakes | `PanelView.swift:2941–2947`, `review_open_loops.py:152–155,1070–1099` | Immediate sorting example remains true. Does not say only manual. No schedule promise added. |
+| Searchable All Mail, dated label, individual/day restore | `inbox_zero.py:225–238`, `review_open_loops.py:1785–1793`, `PanelView.swift:1017–1175` | Restores exact recovery truth, explicitly adds searchability. No delete and no invented Finder/Gmail Restore controls. |
+| Canonical public privacy/terms/installer routes | `landing/nginx.conf:28–33`, unchanged legal pages; designer39aa729 reports read-only public statuses | Root-relative proof404 defect is fixed in designer build; independent final GET/redirect checks remain pending. Labels/command unchanged. |
+| Copied / Copy manually: press Command-C. | Public fault checks exposed silent handler. Designer39aa729 supplies shared status/selection implementation | Five authored state words included even before visible. Real denial/unavailable/focus/selection recheck still required, not verified by wording. |
+
+### Schedule proposal intentionally outside page B
+
+Daily routine time/day settings do not create an agent. `bin/zero:169–229` must install and successfully load it. `keeper_server.py:1890–1897` returns without an existing plist, and schedule save reload errors are non-fatal. No daily/default/always-on wording enters COPY-B. The approved hero Run/Working states stay untouched. Optional exact conditional wording remains owner-visible in `SELECTED-B-COPY.md` and `schedule-and-price-evidence.md`, with a new count required if approved. Original reader manual-only inference remains a diagnostic limitation, not a false product assertion adopted into the copy.
+
 ## Boundary status
 
-- Complete source/authoring map for material mission boundaries. B's exact proposed Rules object is now counted at 110 words and matches a contiguous source excerpt. Both final rendered-source inventories still await stable designer output.
+- Historical Draft3 material map matches frozen `cdfee91` inventories A474/B544, including exact110-word Rules excerpt. Tightened B retains all material fields, with new recipient grouping/rate/statuses as traced below. Its final rendering has not yet been observed.
 - No landing edit, push, release, Gatekeeper override, installer execution, Gmail permission grant, archive/restore/send or real inbox screenshot occurred in this pass.
 - “Said once” means one canonical material explanation. Approved hero promises, real UI labels and legal navigation remain, but repeated feature paragraphs and repeated demo examples are cut. Literal repeated-word removal would conflict with the approved hero and source-faithful controls, so this interpretation is disclosed rather than hidden.

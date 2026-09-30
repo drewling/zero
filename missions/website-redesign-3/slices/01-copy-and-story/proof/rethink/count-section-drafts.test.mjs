@@ -7,6 +7,33 @@ import { spawnSync } from 'node:child_process';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 
+test('selected B count includes all clipboard states and preserves frozen A/B', () => {
+  const run = spawnSync(process.execPath, [path.join(root, 'count-section-drafts.mjs')], {
+    encoding: 'utf8', env: { ...process.env, SELECTED_COPY: path.join(root, 'SELECTED-B-COPY.md') },
+  });
+  assert.equal(run.status, 0, run.stderr);
+  const report = JSON.parse(run.stdout.slice(0, run.stdout.indexOf('\n]\n') + 2));
+  assert.deepEqual(report.map(row => ({ outline: row.outline, states: row.clipboardStateWords, total: row.authoredTotal })),
+    [{ outline: 'B', states: 5, total: 549 }]);
+});
+
+for (const [name, mutate, error] of [
+  ['missing selected clipboard marker fails', text => text.replace('<!-- CLIPBOARD-COPY-START -->', '<!-- REMOVED -->'), /Missing or duplicate CLIPBOARD-COPY marker/],
+  ['two added selected B words exceed the ceiling', text => text.replace('<!-- COPY-B-END -->', 'extra extra\n<!-- COPY-B-END -->'), /B: authored draft outside 350–550: 551/],
+]) {
+  test(name, t => {
+    const dir = fs.mkdtempSync(path.join(process.env.JCODE_SCRATCH_DIR, 'zero-selected-count-'));
+    t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+    const selected = path.join(dir, 'selected.md');
+    fs.writeFileSync(selected, mutate(fs.readFileSync(path.join(root, 'SELECTED-B-COPY.md'), 'utf8')));
+    const run = spawnSync(process.execPath, [path.join(root, 'count-section-drafts.mjs')], {
+      encoding: 'utf8', env: { ...process.env, SELECTED_COPY: selected },
+    });
+    assert.notEqual(run.status, 0);
+    assert.match(run.stderr, error);
+  });
+}
+
 test('authored count CLI includes the complete Rules object and extra app-icon label', () => {
   const run = spawnSync(process.execPath, [path.join(root, 'count-section-drafts.mjs')], { encoding: 'utf8' });
   assert.equal(run.status, 0, run.stderr);
