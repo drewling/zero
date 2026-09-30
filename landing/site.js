@@ -18,6 +18,11 @@
     folder.classList.remove('got', 'over', 'sel');
   };
   const selectAll = () => routine().forEach((row) => row.classList.add('sel'));
+  const pulse = async (element, z, ms) => {
+    if (!element) return;
+    element.classList.add('pressed');
+    try { await z.wait(ms); } finally { element.classList.remove('pressed'); }
+  };
   const story = {
     onLoad: true,
     delay: 600,
@@ -32,7 +37,8 @@
         enter: (r, z) => z.zoom(r, '.tray', '.zp', { steps: 5, ms: 240 }),
         still: (r, z) => z.zoom(r, '.tray', '.zp', { steps: 3, still: true }),
       },
-      { cursor: { sel: '.zp-run', fx: .5, fy: .55 }, kind: 'watch', hold: 420 },
+      { cursor: { sel: '.zp-run', fx: .5, fy: .55 }, kind: 'watch', hold: 420,
+        enter: (r, z) => pulse(r.querySelector('.zp-run'), z, 80) },
       {
         cursor: source,
         kind: 'watch',
@@ -55,6 +61,9 @@
           routine().forEach((row) => { row.style.visibility = 'hidden'; });
           folder.classList.remove('over');
           folder.classList.add('got', 'sel');
+          await pulse(folder, z, 80);
+          await z.wait(80);
+          await pulse(folder, z, 80);
         },
         still: (r, z) => {
           folder.classList.add('over');

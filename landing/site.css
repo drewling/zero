@@ -83,6 +83,10 @@ svg.px.f-empty{display:none}
 .lt-5 .folder:not(.got) .lbl{background:var(--paper);color:var(--ink)}
 .lt-5 .folder:not(.got) svg{filter:none}
 .folder.over svg{filter:invert(1)!important}
+.pressed{background:var(--ink)!important;color:var(--paper)!important}
+.pressed svg{filter:invert(1)!important}
+.folder.pressed .lbl{background:var(--ink)!important;color:var(--paper)!important}
+#term.lt-1{visibility:hidden}
 
 /* Copy remains keyboard focusable while a clipboard write is pending. */
 #term .btn[aria-disabled="true"]{cursor:wait;opacity:.7}

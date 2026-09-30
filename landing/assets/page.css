@@ -226,6 +226,7 @@ footer svg{width:16px;height:15px;filter:invert(1)}
 .undo-obj.lt-1 .scroller{visibility:hidden}
 .undo-obj.lt-1 .chevd,.undo-obj:not(.lt-1) .chevr{display:none}
 .undo-obj.lt-2 .balloon{visibility:hidden}
+.undo-obj.balloon-wait .balloon{visibility:hidden}
 .undo-obj.lt-2 .ub.hot{background:var(--paper)}.undo-obj.lt-2 .ub.hot svg{filter:none}
 /* Ledger: 0 icon selected, window closed · 1 zoom from the icon · 2 rows step in (final) */
 .ledger.lt-2 .info{visibility:hidden}

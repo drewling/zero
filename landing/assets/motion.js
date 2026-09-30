@@ -215,6 +215,15 @@
           if (armed || started) return;
           try {
             armed = true; setFrame(root, 0, n); frames[0].set?.(root, helpers()); root.dataset.mode = 'armed';
+            // Safety net: play() can deliver before arm() in the same batch and never refire.
+            // Re-apply play()'s rule once scrolling settles so an armed root never stays rewound.
+            const net = () => setTimeout(() => {
+              if (started || !armed) return;
+              const b = root.getBoundingClientRect(), vis = Math.min(b.bottom, innerHeight) - Math.max(b.top, 0);
+              if (vis <= 0 || (vis < b.height * .35 && vis < innerHeight * .35)) return;
+              if (performance.now() - jumpedAt < 1200) settle(); else { started = true; observer.disconnect(); c.start(); }
+            }, 150);
+            addEventListener('scrollend', net, { passive: true }); net();
           } catch (e) { c.error = e; started = true; observer.disconnect(); finish('error'); }
         };
         const pre = new IntersectionObserver(entries => {
@@ -222,6 +231,7 @@
           pre.disconnect();
           // First delivery can follow a reader scroll. That arrival is not initial sight.
           if (e.boundingClientRect.top < innerHeight && scrollY === initialScrollY) settle();
+          else if (performance.now() - jumpedAt < 1200) settle();
           else arm();
         }, { rootMargin: '0px 0px 30% 0px', threshold: 0 });
         const play = new IntersectionObserver(entries => {

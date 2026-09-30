@@ -81,7 +81,17 @@ test('motion is bounded, reduced-motion safe, and has no prohibited rendering AP
   assert.match(story, /maxMs/);
   assert.match(motion, /prefers-reduced-motion: reduce/);
   assert.match(motion, /q\.has\('static'\)/);
+  assert.match(motion, /scrollend/);
+  assert.match(motion, /performance\.now\(\) - jumpedAt < 1200/);
   assert.match(sections, /Copy manually: press Command-C\./);
+  assert.match(story, /pulse\(r\.querySelector\('\.zp-run'\), z, 80\)/);
+  assert.match(story, /await pulse\(folder, z, 80\)/);
+  assert.match(sections, /reveal\(rows, z, 90\)/);
+  assert.match(sections, /classList\.add\('ants'\)/);
+  assert.match(sections, /cursorSteps: 6, cursorMs: 300/);
+  assert.match(sections, /n \+= 4/);
+  assert.match(sections, /await z\.zoom\(r, '\.p', r, \{ steps: 5, ms: 240 \}\)/);
+  assert.match(styles, /\.pressed\{background:var\(--ink\)!important;color:var\(--paper\)!important\}/);
   for (const source of [homepage, styles, motion, sections, story]) {
     assert.doesNotMatch(source, /getContext\s*\(|ResizeObserver|AudioContext|scrollTo\s*\(/);
   }
