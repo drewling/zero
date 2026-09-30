@@ -63,8 +63,8 @@ PASS page-a 1440 playback without page errors
 PASS page-a Install CTA lands on the ledger, which stays readable :: {"mode":"seen","rows":5,"top":0}
 PASS page-a direct load on #install: the ledger is readable at once and never rewinds :: {"mode":"seen","rows":5}
 PASS page-a Reduce Motion turned on mid-visit settles every beat on its final frame :: ledger was seen; {"rows":5,"lt":0,"modes":["seen"]}
-PASS page-a keyboard order = document order, 16 stops, none in illustrations :: zero > How it works > Undo > Before you install > Source > Install > Install zero for Mac > Read the installer first > Privacy policy > TypeSafe pricing > Jev key > GitHub Releases > Copy command > Source > Privacy > Terms
-PASS page-a Copy command has a visible focus ring :: solid 3px
+PASS page-a keyboard order = document order, 16 stops incl. Copy command, none in illustrations :: {"zm":true,"term":"static","copyShown":true,"dropped":[]} zero > How it works > Undo > Before you install > Source > Install > Install zero for Mac > Read the installer first > Privacy policy > TypeSafe pricing > Jev key > GitHub Releases > Copy command > Source > Privacy > Terms
+PASS page-a Copy command has a visible focus ring (reached by Tab) :: {"ring":{"style":"solid 3px","focusVisible":true},"zm":true,"term":"static","copyShown":true,"dropped":[]}
 PASS page-a Copy granted: visible, polite live status, focus stays on the button :: {"text":"Copied","live":"polite","role":"status","visible":true,"focus":"copy","selected":"","copied":"curl -fsSL https://zero.headless.com/install | bash","dropped":[]}
 PASS page-a Copy denied: visible, polite live status, command selected, focus stays on the button :: {"text":"Copy manually: press Command-C.","live":"polite","role":"status","visible":true,"focus":"copy","selected":"curl -fsSL https://zero.headless.com/install | bash","copied":null,"dropped":[]}
 PASS page-a Copy: no clipboard API hides the button and leaves the command selectable (scripts loaded) :: ran=true dropped=0 shown=false user-select=undefined
@@ -134,8 +134,8 @@ PASS page-b 1440 playback without page errors
 PASS page-b Install CTA lands on the ledger, which stays readable :: {"mode":"seen","rows":5,"top":0}
 PASS page-b direct load on #install: the ledger is readable at once and never rewinds :: {"mode":"seen","rows":5}
 PASS page-b Reduce Motion turned on mid-visit settles every beat on its final frame :: ledger was play; {"rows":5,"lt":0,"modes":["static"]}
-PASS page-b keyboard order = document order, 16 stops, none in illustrations :: zero > How it works > Undo > Before you install > Source > Install > Install zero for Mac > Read the installer first > Privacy policy > Current pricing > Jev key > GitHub Releases > Copy command > Source > Privacy > Terms
-PASS page-b Copy command has a visible focus ring :: solid 3px
+PASS page-b keyboard order = document order, 16 stops incl. Copy command, none in illustrations :: {"zm":true,"term":"static","copyShown":true,"dropped":[]} zero > How it works > Undo > Before you install > Source > Install > Install zero for Mac > Read the installer first > Privacy policy > Current pricing > Jev key > GitHub Releases > Copy command > Source > Privacy > Terms
+PASS page-b Copy command has a visible focus ring (reached by Tab) :: {"ring":{"style":"solid 3px","focusVisible":true},"zm":true,"term":"static","copyShown":true,"dropped":[]}
 PASS page-b Rules policy text is exposed to assistive tech
 PASS page-b Copy granted: visible, polite live status, focus stays on the button :: {"text":"Copied","live":"polite","role":"status","visible":true,"focus":"copy","selected":"","copied":"curl -fsSL https://zero.headless.com/install | bash","dropped":[]}
 PASS page-b Copy denied: visible, polite live status, command selected, focus stays on the button :: {"text":"Copy manually: press Command-C.","live":"polite","role":"status","visible":true,"focus":"copy","selected":"curl -fsSL https://zero.headless.com/install | bash","copied":null,"dropped":[]}

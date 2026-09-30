@@ -228,20 +228,35 @@ for (const p of pages) {
     await ctx.close(); }
 
   // 6 · keyboard: only real links and the Copy button take focus; illustration controls never do
-  { const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } }); const pg = await ctx.newPage();
-    await pg.goto(`${BASE}/${p}/?static`);
+  // Copy command is only in the tab order once sections.js has run, so script health is part of the result
+  for (let attempt = 1; attempt <= 2; attempt++) {
+  { const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } }); const pg = await ctx.newPage(); const dropped = [];
+    pg.on('requestfailed', r => dropped.push(r.url()));
+    await pg.goto(`${BASE}/${p}/?static`, { waitUntil: 'load' });
+    await pg.waitForFunction(() => window.Zm && document.querySelector('#term[data-mode]'), null, { timeout: 3000 }).catch(() => {});
+    if (dropped.length && attempt === 1) { fs.appendFileSync(log, `RETRY ${p} keyboard: server dropped ${dropped.join(' ')}\n`); await ctx.close(); continue; }
+    const health = await pg.evaluate(() => ({ zm: !!window.Zm, term: document.querySelector('#term')?.dataset.mode || null,
+      copyShown: document.getElementById('copy').getClientRects().length > 0 }));
     const want = await pg.evaluate(() => [...document.querySelectorAll('a[href], button')].filter(e => e.getClientRects().length).map(e => e.textContent.trim()));
     const got = [];
     for (let i = 0; i < want.length + 2; i++) { await pg.keyboard.press(ENGINE === 'webkit' ? 'Alt+Tab' : 'Tab');
       const t = await pg.evaluate(() => { const a = document.activeElement; return a && a !== document.body ? (a.textContent.trim() || a.tagName) + (a.closest('figure') ? ' [in illustration]' : '') : null; });
       if (t === null || got.includes(t) && got[0] === t) break; got.push(t); }
-    rec(JSON.stringify(got.slice(0, want.length)) === JSON.stringify(want) && !got.some(t => /illustration/.test(t)), `${p} keyboard order = document order, ${want.length} stops, none in illustrations`, got.join(' > '));
-    const ring = await pg.evaluate(() => { const c = document.getElementById('copy'); c.focus(); const s = getComputedStyle(c); return s.outlineStyle + ' ' + s.outlineWidth; });
-    rec(/solid 3px/.test(ring), `${p} Copy command has a visible focus ring`, ring);
+    rec(health.zm && !dropped.length && want.includes('Copy command') && JSON.stringify(got.slice(0, want.length)) === JSON.stringify(want) && !got.some(t => /illustration/.test(t)),
+      `${p} keyboard order = document order, ${want.length} stops incl. Copy command, none in illustrations`, `${JSON.stringify({ ...health, dropped })} ${got.join(' > ')}`);
+    // the ring as a keyboard user gets it: Tab onto Copy command (so :focus-visible applies), then read the style
+    await pg.evaluate(() => document.activeElement?.blur());
+    let ring = null;
+    for (let i = 0; i < want.length + 1; i++) { await pg.keyboard.press(ENGINE === 'webkit' ? 'Alt+Tab' : 'Tab');
+      ring = await pg.evaluate(() => { const a = document.activeElement; if (a?.id !== 'copy') return null;
+        const s = getComputedStyle(a); return { style: s.outlineStyle + ' ' + s.outlineWidth, focusVisible: a.matches(':focus-visible') }; });
+      if (ring) break; }
+    rec(!!ring && /solid 3px/.test(ring.style) && ring.focusVisible, `${p} Copy command has a visible focus ring (reached by Tab)`, JSON.stringify({ ring, ...health, dropped }));
     // the Rules policy is real text in the accessibility tree (not an aria-hidden picture)
     const ax = await pg.evaluate(() => { const pre = document.querySelector('.editor pre'); return pre ? !pre.closest('[aria-hidden="true"]') : null; });
     if (p === 'page-b') rec(ax === true, `${p} Rules policy text is exposed to assistive tech`);
     await ctx.close(); }
+  break; }
 
   // 7 · Copy command: success, denial and no clipboard API, each with visible, announced, recoverable state.
   // The clipboard itself is stubbed (both engines), so this checks the page's handling, not the OS clipboard.
