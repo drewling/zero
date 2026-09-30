@@ -16,6 +16,31 @@ Build source: [SELECTED-B-COPY.md](SELECTED-B-COPY.md), not the superseded A exp
 
 Authored total **549** includes all five clipboard-state words, leaving one spare word. The final served inventory and fresh readers are still pending. Designer reports structural/clipboard/canonical-link fixes at `39aa729` with Chromium137/0 and WebKit133/0, but those reports are not this seat's independent acceptance of the new B copy.
 
+## Selected B: literal changes from the tested B
+
+This table compares the original tested B at `cdfee91` with the selected copy in `85dfe6f`. It is an authoring comparison, not a claim that new readers have understood it better. All original raw results remain available.
+
+| Page element | Tested B before | Tightened B proposal | Reason / preserved boundary |
+|---|---|---|---|
+| Story order | Hero, Before you install, Rules, Undo, Terminal | Same risk-first order | Owner chose B. No A recovery-first material is ported in. |
+| Hero | Approved words and Run zero now → Working… | Unchanged | No automatic daily-run promise, new counts or invented actions. |
+| Ledger order | Google sign-in, Sorting data, Sorting cost, Optional drafts, Installer | Sorting data, Optional drafts, Sorting cost, Google sign-in, Installer | Both outbound recipients lead together, cost immediately follows. Not five equally weighted prose cards. |
+| Viewing context | “Read your connected Gmail in Gmail or Apple Mail.” | “Read connected Gmail in Gmail or Apple Mail.” | Same Gmail-only viewing truth, less filler. |
+| Sorting recipient | “TypeSafe's Jev model receives” before the field list | Bold “Sent to TypeSafe (Jev):” before the same complete field list | Make the receiving company findable. Sender, subject, <=160-character preview, both reply signals, rules and preferences all remain. |
+| zero server | “No zero server receives your email.” in the data paragraph | Same sentence, separately emphasized beneath the recipient | Not a claim that no email leaves the Mac. |
+| Draft recipient | “Claude Code, or another AI coding tool you already use, can draft replies using its account and billing. Its provider receives” the context list | “Draft replies with Claude Code or another installed AI coding tool, using its account and billing. Sent to your coding tool's provider:” the same context list | Keep the second provider explicit, with full previews/samples/preferences/profile disclosure. Review before Send reply and no automatic send remain. |
+| Sorting cost | “Bring your own Jev key, billed by TypeSafe. See TypeSafe pricing. The app is free and open source under AGPL-3.0.” | “Your Jev key, billed by TypeSafe. Jev 1.13: $0.042 per million input tokens, outputs free (checked 30 Sep 2026). Current pricing. Free, open-source app (AGPL-3.0).” | Dated provider unit price, not a per-inbox/month or permanent-price promise. Free app still distinguished from paid inference. |
+| Sign-in warning | “You may see an unverified-app warning because zero hasn't completed Google's app review.” | “Google may show an unverified-app warning because zero hasn't completed its app review.” | Browser Google sign-in/no-password/incomplete review remain. No bypass advice. |
+| Installer footprint | “The installer may add Homebrew, Python, Node and the Google Workspace CLI. It adds Claude Code if no supported coding tool is installed.” | “May add Homebrew, Python, Node and Google Workspace CLI. Claude Code is added only if no supported coding tool is installed.” | Same conditional dependencies. “zero is not notarized by Apple” remains before the command. |
+| Rules introduction | “Run zero from its menu bar to sort connected Gmail accounts. AI applies your rules. Starred mail stays untouched. Uncertain threads stay in your inbox. Check your first runs: the model can make mistakes.” | “Use Run zero now to sort connected Gmail. AI applies your rules. Starred mail stays untouched. Uncertain threads stay in your inbox. Check your first runs: AI can make mistakes.” | Exact approved action name, same fallibility and safety boundaries. Faithful110-word Settings editor stays unchanged. |
+| Recovery | “In zero's Undo tab, restore one email or a day's archives with Restore all. Nothing is deleted. Find archived mail in Gmail's All Mail under a dated recovery label.” | “In zero's Undo tab, restore one email or a day's archives with Restore all. Nothing is deleted. Archived mail stays searchable in Gmail's All Mail under a dated recovery label.” | Makes searchability explicit without inventing a restore control or retention guarantee. Same56-word fictional object inventory. |
+| Terminal setup | “Open zero, connect Gmail, then add your Jev key in Settings → Sorting engine. Or download from GitHub Releases.” | “Open zero, connect Gmail and add your Jev key in Settings → Sorting engine. Or download from GitHub Releases.” | Exact command, setup, key and release routes unchanged. Warnings stay before acquisition. |
+| Clipboard states | No announced success or usable denial fallback | “Copied” / “Copy manually: press Command-C.” | Five alternate-state words counted. Selection/focus/unavailable behavior still needs final independent observation. |
+| Public legal / installer links | Root-relative proof routes return404 | Absolute canonical privacy, terms and installer-reading URLs | Read-only final HTTP and redirect checks pending. Installer is not executed. |
+| Full authored budget | 544, no clipboard-state strings | 549, all clipboard states included | Primary274 unchanged in total, shared objects56 and Rules110 retained, one spare word. Source trace covers every changed assertion. |
+
+The full new literal section paragraphs and statuses are in [SELECTED-B-COPY.md](SELECTED-B-COPY.md). Source-faithful editor and illustration words remain in [SECTION-COPY.md](SECTION-COPY.md). Every new visible label or alternate state needs a recount. The optional conditional schedule sentence appears only in owner notes and is excluded from visitor copy.
+
 ## Evidence already in hand
 
 - Rejected v3 comp frozen by design lead at `a196c47`, source `2d6d725`. Local before snapshot, complete authored text and image inputs committed in `e9d5088`.
