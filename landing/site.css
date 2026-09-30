@@ -84,14 +84,6 @@ svg.px.f-empty{display:none}
 .lt-5 .folder:not(.got) svg{filter:none}
 .folder.over svg{filter:invert(1)!important}
 
-/* The current dated folder drops in discrete steps. Reduced motion and static/frame URLs stay settled. */
-@media (prefers-reduced-motion:no-preference){
-  .folder-current{animation:folder-drop 900ms steps(6,end) 700ms both}
-  @keyframes folder-drop{from{transform:translate(260px,-40px);opacity:0}30%{opacity:1}to{transform:none;opacity:1}}
-}
-@media (prefers-reduced-motion:reduce){.folder-current{animation:none!important}}
-.static .folder-current{animation:none!important}
-
 /* Copy remains keyboard focusable while a clipboard write is pending. */
 #term .btn[aria-disabled="true"]{cursor:wait;opacity:.7}
 #term .btn:focus-visible{outline:3px solid var(--paper);outline-offset:3px;box-shadow:0 0 0 6px var(--ink)}

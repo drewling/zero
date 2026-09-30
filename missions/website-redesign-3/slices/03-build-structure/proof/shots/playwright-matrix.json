@@ -1,0 +1,973 @@
+[
+  {
+    "engine": "chromium",
+    "width": 1440,
+    "js": true,
+    "reducedMotion": false,
+    "innerWidth": 1440,
+    "innerHeight": 900,
+    "clientWidth": 1440,
+    "scrollWidth": 1440,
+    "bodyScrollWidth": 1440,
+    "title": "zero — Clean up your Gmail inbox on your Mac.",
+    "metaImage": "https://zero.headless.com/assets/og-image.png",
+    "stripeText": [
+      {
+        "text": "Inbox",
+        "rect": {
+          "x": 992.640625,
+          "y": 248,
+          "width": 70.703125,
+          "height": 16,
+          "top": 248,
+          "right": 1063.34375,
+          "bottom": 264,
+          "left": 992.640625
+        }
+      },
+      {
+        "text": "Before you install",
+        "rect": {
+          "x": 632.265625,
+          "y": 1131.78125,
+          "width": 175.46875,
+          "height": 16,
+          "top": 1131.78125,
+          "right": 807.734375,
+          "bottom": 1147.78125,
+          "left": 632.265625
+        }
+      },
+      {
+        "text": "Settings",
+        "rect": {
+          "x": 1035.09375,
+          "y": 2048.375,
+          "width": 91.8125,
+          "height": 16,
+          "top": 2048.375,
+          "right": 1126.90625,
+          "bottom": 2064.375,
+          "left": 1035.09375
+        }
+      },
+      {
+        "text": "Undo",
+        "rect": {
+          "x": 381.640625,
+          "y": 2779.796875,
+          "width": 62.703125,
+          "height": 16,
+          "top": 2779.796875,
+          "right": 444.34375,
+          "bottom": 2795.796875,
+          "left": 381.640625
+        }
+      },
+      {
+        "text": "Terminal",
+        "rect": {
+          "x": 942.671875,
+          "y": 3501.546875,
+          "width": 94.640625,
+          "height": 16,
+          "top": 3501.546875,
+          "right": 1037.3125,
+          "bottom": 3517.546875,
+          "left": 942.671875
+        }
+      }
+    ]
+  },
+  {
+    "engine": "chromium",
+    "width": 1440,
+    "js": false,
+    "reducedMotion": false,
+    "innerWidth": 1440,
+    "innerHeight": 900,
+    "clientWidth": 1440,
+    "scrollWidth": 1440,
+    "bodyScrollWidth": 1440,
+    "title": "zero — Clean up your Gmail inbox on your Mac.",
+    "metaImage": "https://zero.headless.com/assets/og-image.png",
+    "stripeText": [
+      {
+        "text": "Inbox",
+        "rect": {
+          "x": 992.640625,
+          "y": 248,
+          "width": 70.703125,
+          "height": 16,
+          "top": 248,
+          "right": 1063.34375,
+          "bottom": 264,
+          "left": 992.640625
+        }
+      },
+      {
+        "text": "Before you install",
+        "rect": {
+          "x": 632.265625,
+          "y": 1131.78125,
+          "width": 175.46875,
+          "height": 16,
+          "top": 1131.78125,
+          "right": 807.734375,
+          "bottom": 1147.78125,
+          "left": 632.265625
+        }
+      },
+      {
+        "text": "Settings",
+        "rect": {
+          "x": 1035.09375,
+          "y": 2048.375,
+          "width": 91.8125,
+          "height": 16,
+          "top": 2048.375,
+          "right": 1126.90625,
+          "bottom": 2064.375,
+          "left": 1035.09375
+        }
+      },
+      {
+        "text": "Undo",
+        "rect": {
+          "x": 381.640625,
+          "y": 2779.796875,
+          "width": 62.703125,
+          "height": 16,
+          "top": 2779.796875,
+          "right": 444.34375,
+          "bottom": 2795.796875,
+          "left": 381.640625
+        }
+      },
+      {
+        "text": "Terminal",
+        "rect": {
+          "x": 942.671875,
+          "y": 3501.546875,
+          "width": 94.640625,
+          "height": 16,
+          "top": 3501.546875,
+          "right": 1037.3125,
+          "bottom": 3517.546875,
+          "left": 942.671875
+        }
+      }
+    ]
+  },
+  {
+    "engine": "chromium",
+    "width": 390,
+    "js": true,
+    "reducedMotion": false,
+    "innerWidth": 390,
+    "innerHeight": 844,
+    "clientWidth": 390,
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "title": "zero — Clean up your Gmail inbox on your Mac.",
+    "metaImage": "https://zero.headless.com/assets/og-image.png",
+    "stripeText": [
+      {
+        "text": "Inbox",
+        "rect": {
+          "x": 159.640625,
+          "y": 788.546875,
+          "width": 70.703125,
+          "height": 16,
+          "top": 788.546875,
+          "right": 230.34375,
+          "bottom": 804.546875,
+          "left": 159.640625
+        }
+      },
+      {
+        "text": "Before you install",
+        "rect": {
+          "x": 107.265625,
+          "y": 1552.265625,
+          "width": 175.46875,
+          "height": 16,
+          "top": 1552.265625,
+          "right": 282.734375,
+          "bottom": 1568.265625,
+          "left": 107.265625
+        }
+      },
+      {
+        "text": "Settings",
+        "rect": {
+          "x": 149.09375,
+          "y": 3423.359375,
+          "width": 91.8125,
+          "height": 16,
+          "top": 3423.359375,
+          "right": 240.90625,
+          "bottom": 3439.359375,
+          "left": 149.09375
+        }
+      },
+      {
+        "text": "Undo",
+        "rect": {
+          "x": 163.640625,
+          "y": 4518.421875,
+          "width": 62.703125,
+          "height": 16,
+          "top": 4518.421875,
+          "right": 226.34375,
+          "bottom": 4534.421875,
+          "left": 163.640625
+        }
+      },
+      {
+        "text": "Terminal",
+        "rect": {
+          "x": 147.671875,
+          "y": 5333.46875,
+          "width": 94.640625,
+          "height": 16,
+          "top": 5333.46875,
+          "right": 242.3125,
+          "bottom": 5349.46875,
+          "left": 147.671875
+        }
+      }
+    ]
+  },
+  {
+    "engine": "chromium",
+    "width": 390,
+    "js": false,
+    "reducedMotion": false,
+    "innerWidth": 390,
+    "innerHeight": 844,
+    "clientWidth": 390,
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "title": "zero — Clean up your Gmail inbox on your Mac.",
+    "metaImage": "https://zero.headless.com/assets/og-image.png",
+    "stripeText": [
+      {
+        "text": "Inbox",
+        "rect": {
+          "x": 159.640625,
+          "y": 788.546875,
+          "width": 70.703125,
+          "height": 16,
+          "top": 788.546875,
+          "right": 230.34375,
+          "bottom": 804.546875,
+          "left": 159.640625
+        }
+      },
+      {
+        "text": "Before you install",
+        "rect": {
+          "x": 107.265625,
+          "y": 1264.265625,
+          "width": 175.46875,
+          "height": 16,
+          "top": 1264.265625,
+          "right": 282.734375,
+          "bottom": 1280.265625,
+          "left": 107.265625
+        }
+      },
+      {
+        "text": "Settings",
+        "rect": {
+          "x": 149.09375,
+          "y": 3135.359375,
+          "width": 91.8125,
+          "height": 16,
+          "top": 3135.359375,
+          "right": 240.90625,
+          "bottom": 3151.359375,
+          "left": 149.09375
+        }
+      },
+      {
+        "text": "Undo",
+        "rect": {
+          "x": 163.640625,
+          "y": 4230.421875,
+          "width": 62.703125,
+          "height": 16,
+          "top": 4230.421875,
+          "right": 226.34375,
+          "bottom": 4246.421875,
+          "left": 163.640625
+        }
+      },
+      {
+        "text": "Terminal",
+        "rect": {
+          "x": 147.671875,
+          "y": 5045.46875,
+          "width": 94.640625,
+          "height": 16,
+          "top": 5045.46875,
+          "right": 242.3125,
+          "bottom": 5061.46875,
+          "left": 147.671875
+        }
+      }
+    ]
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "js": true,
+    "reducedMotion": false,
+    "innerWidth": 320,
+    "innerHeight": 700,
+    "clientWidth": 320,
+    "scrollWidth": 320,
+    "bodyScrollWidth": 320,
+    "title": "zero — Clean up your Gmail inbox on your Mac.",
+    "metaImage": "https://zero.headless.com/assets/og-image.png",
+    "stripeText": [
+      {
+        "text": "Inbox",
+        "rect": {
+          "x": 124.875,
+          "y": 793.875,
+          "width": 70.703125,
+          "height": 16,
+          "top": 793.875,
+          "right": 195.578125,
+          "bottom": 809.875,
+          "left": 124.875
+        }
+      },
+      {
+        "text": "Before you install",
+        "rect": {
+          "x": 72.265625,
+          "y": 1557.59375,
+          "width": 175.46875,
+          "height": 16,
+          "top": 1557.59375,
+          "right": 247.734375,
+          "bottom": 1573.59375,
+          "left": 72.265625
+        }
+      },
+      {
+        "text": "Settings",
+        "rect": {
+          "x": 114.09375,
+          "y": 3666.296875,
+          "width": 91.8125,
+          "height": 16,
+          "top": 3666.296875,
+          "right": 205.90625,
+          "bottom": 3682.296875,
+          "left": 114.09375
+        }
+      },
+      {
+        "text": "Undo",
+        "rect": {
+          "x": 128.640625,
+          "y": 5009.140625,
+          "width": 62.703125,
+          "height": 16,
+          "top": 5009.140625,
+          "right": 191.34375,
+          "bottom": 5025.140625,
+          "left": 128.640625
+        }
+      },
+      {
+        "text": "Terminal",
+        "rect": {
+          "x": 112.671875,
+          "y": 5867.296875,
+          "width": 94.640625,
+          "height": 16,
+          "top": 5867.296875,
+          "right": 207.3125,
+          "bottom": 5883.296875,
+          "left": 112.671875
+        }
+      }
+    ]
+  },
+  {
+    "engine": "chromium",
+    "width": 320,
+    "js": false,
+    "reducedMotion": false,
+    "innerWidth": 320,
+    "innerHeight": 700,
+    "clientWidth": 320,
+    "scrollWidth": 320,
+    "bodyScrollWidth": 320,
+    "title": "zero — Clean up your Gmail inbox on your Mac.",
+    "metaImage": "https://zero.headless.com/assets/og-image.png",
+    "stripeText": [
+      {
+        "text": "Inbox",
+        "rect": {
+          "x": 124.875,
+          "y": 793.875,
+          "width": 70.703125,
+          "height": 16,
+          "top": 793.875,
+          "right": 195.578125,
+          "bottom": 809.875,
+          "left": 124.875
+        }
+      },
+      {
+        "text": "Before you install",
+        "rect": {
+          "x": 72.265625,
+          "y": 1269.59375,
+          "width": 175.46875,
+          "height": 16,
+          "top": 1269.59375,
+          "right": 247.734375,
+          "bottom": 1285.59375,
+          "left": 72.265625
+        }
+      },
+      {
+        "text": "Settings",
+        "rect": {
+          "x": 114.09375,
+          "y": 3378.296875,
+          "width": 91.8125,
+          "height": 16,
+          "top": 3378.296875,
+          "right": 205.90625,
+          "bottom": 3394.296875,
+          "left": 114.09375
+        }
+      },
+      {
+        "text": "Undo",
+        "rect": {
+          "x": 128.640625,
+          "y": 4721.140625,
+          "width": 62.703125,
+          "height": 16,
+          "top": 4721.140625,
+          "right": 191.34375,
+          "bottom": 4737.140625,
+          "left": 128.640625
+        }
+      },
+      {
+        "text": "Terminal",
+        "rect": {
+          "x": 112.671875,
+          "y": 5579.296875,
+          "width": 94.640625,
+          "height": 16,
+          "top": 5579.296875,
+          "right": 207.3125,
+          "bottom": 5595.296875,
+          "left": 112.671875
+        }
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "width": 1440,
+    "js": true,
+    "reducedMotion": false,
+    "innerWidth": 1440,
+    "innerHeight": 900,
+    "clientWidth": 1440,
+    "scrollWidth": 1440,
+    "bodyScrollWidth": 1440,
+    "title": "zero — Clean up your Gmail inbox on your Mac.",
+    "metaImage": "https://zero.headless.com/assets/og-image.png",
+    "stripeText": [
+      {
+        "text": "Inbox",
+        "rect": {
+          "x": 992.640625,
+          "y": 248,
+          "width": 70.703125,
+          "height": 16,
+          "top": 248,
+          "right": 1063.34375,
+          "bottom": 264,
+          "left": 992.640625
+        }
+      },
+      {
+        "text": "Before you install",
+        "rect": {
+          "x": 632.265625,
+          "y": 1131.234375,
+          "width": 175.46875,
+          "height": 16,
+          "top": 1131.234375,
+          "right": 807.734375,
+          "bottom": 1147.234375,
+          "left": 632.265625
+        }
+      },
+      {
+        "text": "Settings",
+        "rect": {
+          "x": 1035.09375,
+          "y": 2041.390625,
+          "width": 91.8125,
+          "height": 16,
+          "top": 2041.390625,
+          "right": 1126.90625,
+          "bottom": 2057.390625,
+          "left": 1035.09375
+        }
+      },
+      {
+        "text": "Undo",
+        "rect": {
+          "x": 381.640625,
+          "y": 2762.484375,
+          "width": 62.703125,
+          "height": 16,
+          "top": 2762.484375,
+          "right": 444.34375,
+          "bottom": 2778.484375,
+          "left": 381.640625
+        }
+      },
+      {
+        "text": "Terminal",
+        "rect": {
+          "x": 942.671875,
+          "y": 3481.640625,
+          "width": 94.640625,
+          "height": 16,
+          "top": 3481.640625,
+          "right": 1037.3125,
+          "bottom": 3497.640625,
+          "left": 942.671875
+        }
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "width": 1440,
+    "js": false,
+    "reducedMotion": false,
+    "innerWidth": 1440,
+    "innerHeight": 900,
+    "clientWidth": 1440,
+    "scrollWidth": 1440,
+    "bodyScrollWidth": 1440,
+    "title": "zero — Clean up your Gmail inbox on your Mac.",
+    "metaImage": "https://zero.headless.com/assets/og-image.png",
+    "stripeText": [
+      {
+        "text": "Inbox",
+        "rect": {
+          "x": 992.640625,
+          "y": 248,
+          "width": 70.703125,
+          "height": 16,
+          "top": 248,
+          "right": 1063.34375,
+          "bottom": 264,
+          "left": 992.640625
+        }
+      },
+      {
+        "text": "Before you install",
+        "rect": {
+          "x": 632.265625,
+          "y": 1131.234375,
+          "width": 175.46875,
+          "height": 16,
+          "top": 1131.234375,
+          "right": 807.734375,
+          "bottom": 1147.234375,
+          "left": 632.265625
+        }
+      },
+      {
+        "text": "Settings",
+        "rect": {
+          "x": 1035.09375,
+          "y": 2041.390625,
+          "width": 91.8125,
+          "height": 16,
+          "top": 2041.390625,
+          "right": 1126.90625,
+          "bottom": 2057.390625,
+          "left": 1035.09375
+        }
+      },
+      {
+        "text": "Undo",
+        "rect": {
+          "x": 381.640625,
+          "y": 2762.484375,
+          "width": 62.703125,
+          "height": 16,
+          "top": 2762.484375,
+          "right": 444.34375,
+          "bottom": 2778.484375,
+          "left": 381.640625
+        }
+      },
+      {
+        "text": "Terminal",
+        "rect": {
+          "x": 942.671875,
+          "y": 3481.640625,
+          "width": 94.640625,
+          "height": 16,
+          "top": 3481.640625,
+          "right": 1037.3125,
+          "bottom": 3497.640625,
+          "left": 942.671875
+        }
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "width": 390,
+    "js": true,
+    "reducedMotion": false,
+    "innerWidth": 390,
+    "innerHeight": 844,
+    "clientWidth": 390,
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "title": "zero — Clean up your Gmail inbox on your Mac.",
+    "metaImage": "https://zero.headless.com/assets/og-image.png",
+    "stripeText": [
+      {
+        "text": "Inbox",
+        "rect": {
+          "x": 159.640625,
+          "y": 782,
+          "width": 70.703125,
+          "height": 16,
+          "top": 782,
+          "right": 230.34375,
+          "bottom": 798,
+          "left": 159.640625
+        }
+      },
+      {
+        "text": "Before you install",
+        "rect": {
+          "x": 107.265625,
+          "y": 1544,
+          "width": 175.46875,
+          "height": 16,
+          "top": 1544,
+          "right": 282.734375,
+          "bottom": 1560,
+          "left": 107.265625
+        }
+      },
+      {
+        "text": "Settings",
+        "rect": {
+          "x": 149.09375,
+          "y": 3392,
+          "width": 91.8125,
+          "height": 16,
+          "top": 3392,
+          "right": 240.90625,
+          "bottom": 3408,
+          "left": 149.09375
+        }
+      },
+      {
+        "text": "Undo",
+        "rect": {
+          "x": 163.640625,
+          "y": 4459.765625,
+          "width": 62.703125,
+          "height": 16,
+          "top": 4459.765625,
+          "right": 226.34375,
+          "bottom": 4475.765625,
+          "left": 163.640625
+        }
+      },
+      {
+        "text": "Terminal",
+        "rect": {
+          "x": 147.671875,
+          "y": 5268.765625,
+          "width": 94.640625,
+          "height": 16,
+          "top": 5268.765625,
+          "right": 242.3125,
+          "bottom": 5284.765625,
+          "left": 147.671875
+        }
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "width": 390,
+    "js": false,
+    "reducedMotion": false,
+    "innerWidth": 390,
+    "innerHeight": 844,
+    "clientWidth": 390,
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "title": "zero — Clean up your Gmail inbox on your Mac.",
+    "metaImage": "https://zero.headless.com/assets/og-image.png",
+    "stripeText": [
+      {
+        "text": "Inbox",
+        "rect": {
+          "x": 159.640625,
+          "y": 782,
+          "width": 70.703125,
+          "height": 16,
+          "top": 782,
+          "right": 230.34375,
+          "bottom": 798,
+          "left": 159.640625
+        }
+      },
+      {
+        "text": "Before you install",
+        "rect": {
+          "x": 107.265625,
+          "y": 1256,
+          "width": 175.46875,
+          "height": 16,
+          "top": 1256,
+          "right": 282.734375,
+          "bottom": 1272,
+          "left": 107.265625
+        }
+      },
+      {
+        "text": "Settings",
+        "rect": {
+          "x": 149.09375,
+          "y": 3104,
+          "width": 91.8125,
+          "height": 16,
+          "top": 3104,
+          "right": 240.90625,
+          "bottom": 3120,
+          "left": 149.09375
+        }
+      },
+      {
+        "text": "Undo",
+        "rect": {
+          "x": 163.640625,
+          "y": 4171.765625,
+          "width": 62.703125,
+          "height": 16,
+          "top": 4171.765625,
+          "right": 226.34375,
+          "bottom": 4187.765625,
+          "left": 163.640625
+        }
+      },
+      {
+        "text": "Terminal",
+        "rect": {
+          "x": 147.671875,
+          "y": 4980.765625,
+          "width": 94.640625,
+          "height": 16,
+          "top": 4980.765625,
+          "right": 242.3125,
+          "bottom": 4996.765625,
+          "left": 147.671875
+        }
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "js": true,
+    "reducedMotion": false,
+    "innerWidth": 320,
+    "innerHeight": 700,
+    "clientWidth": 320,
+    "scrollWidth": 320,
+    "bodyScrollWidth": 320,
+    "title": "zero — Clean up your Gmail inbox on your Mac.",
+    "metaImage": "https://zero.headless.com/assets/og-image.png",
+    "stripeText": [
+      {
+        "text": "Inbox",
+        "rect": {
+          "x": 124.875,
+          "y": 788,
+          "width": 70.703125,
+          "height": 16,
+          "top": 788,
+          "right": 195.578125,
+          "bottom": 804,
+          "left": 124.875
+        }
+      },
+      {
+        "text": "Before you install",
+        "rect": {
+          "x": 72.265625,
+          "y": 1550,
+          "width": 175.46875,
+          "height": 16,
+          "top": 1550,
+          "right": 247.734375,
+          "bottom": 1566,
+          "left": 72.265625
+        }
+      },
+      {
+        "text": "Settings",
+        "rect": {
+          "x": 114.09375,
+          "y": 3632,
+          "width": 91.8125,
+          "height": 16,
+          "top": 3632,
+          "right": 205.90625,
+          "bottom": 3648,
+          "left": 114.09375
+        }
+      },
+      {
+        "text": "Undo",
+        "rect": {
+          "x": 128.640625,
+          "y": 4937.765625,
+          "width": 62.703125,
+          "height": 16,
+          "top": 4937.765625,
+          "right": 191.34375,
+          "bottom": 4953.765625,
+          "left": 128.640625
+        }
+      },
+      {
+        "text": "Terminal",
+        "rect": {
+          "x": 112.671875,
+          "y": 5788.765625,
+          "width": 94.640625,
+          "height": 16,
+          "top": 5788.765625,
+          "right": 207.3125,
+          "bottom": 5804.765625,
+          "left": 112.671875
+        }
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "js": false,
+    "reducedMotion": false,
+    "innerWidth": 320,
+    "innerHeight": 700,
+    "clientWidth": 320,
+    "scrollWidth": 320,
+    "bodyScrollWidth": 320,
+    "title": "zero — Clean up your Gmail inbox on your Mac.",
+    "metaImage": "https://zero.headless.com/assets/og-image.png",
+    "stripeText": [
+      {
+        "text": "Inbox",
+        "rect": {
+          "x": 124.875,
+          "y": 788,
+          "width": 70.703125,
+          "height": 16,
+          "top": 788,
+          "right": 195.578125,
+          "bottom": 804,
+          "left": 124.875
+        }
+      },
+      {
+        "text": "Before you install",
+        "rect": {
+          "x": 72.265625,
+          "y": 1262,
+          "width": 175.46875,
+          "height": 16,
+          "top": 1262,
+          "right": 247.734375,
+          "bottom": 1278,
+          "left": 72.265625
+        }
+      },
+      {
+        "text": "Settings",
+        "rect": {
+          "x": 114.09375,
+          "y": 3344,
+          "width": 91.8125,
+          "height": 16,
+          "top": 3344,
+          "right": 205.90625,
+          "bottom": 3360,
+          "left": 114.09375
+        }
+      },
+      {
+        "text": "Undo",
+        "rect": {
+          "x": 128.640625,
+          "y": 4649.765625,
+          "width": 62.703125,
+          "height": 16,
+          "top": 4649.765625,
+          "right": 191.34375,
+          "bottom": 4665.765625,
+          "left": 128.640625
+        }
+      },
+      {
+        "text": "Terminal",
+        "rect": {
+          "x": 112.671875,
+          "y": 5500.765625,
+          "width": 94.640625,
+          "height": 16,
+          "top": 5500.765625,
+          "right": 207.3125,
+          "bottom": 5516.765625,
+          "left": 112.671875
+        }
+      }
+    ]
+  },
+  {
+    "engine": "chromium",
+    "width": 1440,
+    "js": true,
+    "reducedMotion": true,
+    "innerWidth": 1440,
+    "innerHeight": 900,
+    "clientWidth": 1440,
+    "scrollWidth": 1440,
+    "bodyScrollWidth": 1440
+  }
+]

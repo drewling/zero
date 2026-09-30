@@ -15,7 +15,20 @@ const sectionIds = [...homepage.matchAll(/<section\b[^>]*\bid="([^"]+)"/g)].map(
 
 test('production document uses approved page B metadata and section order', () => {
   assert.match(homepage, /<title>zero — Clean up your Gmail inbox on your Mac\.<\/title>/);
-  assert.match(homepage, /rel="canonical" href="https:\/\/zero\.headless\.com\/"/);
+  assert.match(homepage, /<meta name="theme-color" content="#ffffff">/);
+  assert.match(homepage, /<meta name="color-scheme" content="light">/);
+  assert.match(homepage, /<link rel="canonical" href="https:\/\/zero\.headless\.com\/">/);
+  assert.match(homepage, /<meta property="og:type" content="website">/);
+  assert.match(homepage, /<meta property="og:url" content="https:\/\/zero\.headless\.com\/">/);
+  assert.match(homepage, /<meta property="og:title" content="zero — Clean up your Gmail inbox on your Mac\.\">/);
+  assert.match(homepage, /<meta property="og:description" content="zero is a Mac app that keeps the emails you need to deal with and archives the rest\. Undo any archive\.\">/);
+  assert.match(homepage, /<meta property="og:image" content="https:\/\/zero\.headless\.com\/assets\/og-image\.png">/);
+  assert.match(homepage, /<meta property="og:image:width" content="1200">/);
+  assert.match(homepage, /<meta property="og:image:height" content="630">/);
+  assert.match(homepage, /<meta property="og:image:alt" content="zero landing page hero illustration\.\">/);
+  assert.match(homepage, /<meta name="twitter:card" content="summary_large_image">/);
+  assert.match(homepage, /<link rel="icon" href="data:image\/svg\+xml,/);
+  assert.equal(existsSync(new URL('assets/og-image.png', root)), true, 'og image');
   assert.deepEqual(sectionIds, ['hero', 'install', 'how-band', 'undo', 'command']);
   assert.match(homepage, /<h1 id="h1">Clean up your Gmail inbox on your Mac\.<\/h1>/);
   assert.match(homepage, /zero is a Mac app that keeps the emails you need to deal with and archives the rest\. Undo any archive\. Keep using Gmail or Apple Mail\./);
@@ -47,10 +60,9 @@ test('approved disclosures and recovery copy remain visible in the public docume
 
 test('hero has a single compact requirement line and one dated drop target', () => {
   assert.equal((homepage.match(/class="req"/g) ?? []).length, 1);
-  assert.match(homepage, /class="icon folder sel folder-current"/);
-  assert.match(styles, /folder-current\{animation:folder-drop 900ms steps\(6,end\) 700ms both\}/);
-  assert.match(styles, /prefers-reduced-motion:reduce/);
-  assert.match(styles, /\.static/);
+  assert.match(homepage, /class="icon folder sel"/);
+  assert.doesNotMatch(homepage, /folder-current/);
+  assert.doesNotMatch(styles, /folder-current|folder-drop|translate\(260px,-40px\)/);
   assert.doesNotMatch(homepage, /hero-facts|DRAFT comp|not the live site/);
 });
 
@@ -79,7 +91,7 @@ test('production assets are self-contained and obsolete comp paths are gone', ()
   for (const name of [
     'assets/kit.css', 'assets/page.css', 'assets/chicagoflf.woff2',
     'assets/geist.woff2', 'assets/geist-mono.woff2', 'assets/motion.js', 'assets/sections.js',
-    'privacy.html', 'terms.html', 'Dockerfile', 'nginx.conf', 'robots.txt', 'sitemap.xml', 'llms.txt',
+    'assets/og-image.png', 'privacy.html', 'terms.html', 'Dockerfile', 'nginx.conf', 'robots.txt', 'sitemap.xml', 'llms.txt',
   ]) assert.equal(existsSync(new URL(name, root)), true, name);
   assert.doesNotMatch(homepage, /\.\.\/kit\//);
   assert.doesNotMatch(`${homepage}\n${styles}\n${story}\n${sections}`, /missions\/website-redesign/);

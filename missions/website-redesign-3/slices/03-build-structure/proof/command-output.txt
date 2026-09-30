@@ -48,4 +48,51 @@ Local SimpleHTTP served `/`, legal pages, robots, sitemap, llms, and 404 as expe
 ERROR: Cannot connect to the Docker daemon at unix:///Users/light/.docker/run/docker.sock. Is the docker daemon running?
 ```
 
-Docker build, nginx route smoke, and `/install` redirect verification remain release-gate checks for the lead. No deploy or push was performed.
+
+## Follow-up candidate (fresh evidence)
+
+Candidate: working tree after metadata, terminal overlay, and folder-drop fixes, before commit.
+
+### Browser matrix
+
+Fresh real Playwright Chromium/WebKit captures are in `proof/shots/`. `playwright-matrix.json` contains 13 rows: both engines at 1440, 390, and 320px with JS on/off, plus Chromium reduced-motion at 1440px. The rerun returned no overflow rows: every row had `scrollWidth == clientWidth` and `bodyScrollWidth == clientWidth`. The page title was `zero — Clean up your Gmail inbox on your Mac.` and the OG image URL was `https://zero.headless.com/assets/og-image.png` on JS and no-JS rows.
+
+Terminal playback frames were captured in both engines at 1440px and 390px at 150, 500, 850, and 1600ms after real viewport-triggered playback. `node --test landing/test-terminal.mjs` passed both engine subtests.
+
+### Final Docker/nginx smoke
+
+```
+bash landing/build.sh
+# ok installer parses
+# ok built image: zero-landing
+# homepage 200
+# /install redirects 302
+# /install.sh redirects 302
+# privacy 200
+# terms 200
+# site.css 200
+# site.js 200
+# ChicagoFLF font 200
+# Geist font 200
+# Geist Mono font 200
+# unknown path 404
+# /install returns a bash script (280 lines)
+# and it parses
+# All checks passed. Deploy zero-landing.
+```
+
+The script's final line is build-script text only. No deploy command was run.
+
+Manual disposable-container verification:
+
+```
+/install        302  Location: https://raw.githubusercontent.com/drewling/zero/master/macapp/install-zero.sh
+/install.sh     302  Location: https://github.com/drewling/zero/blob/master/macapp/install-zero.sh
+install SHA-256     e3e295302cc601df1af27053a4c25bac3f57fed3971e296222620c3b98176ced
+install.sh SHA-256  3aa2f6d0cf07c1544f5f337016cc5be14f78b5017908f72e92df6d8a3e16f879
+served index SHA-256 c53f6960db3f750f2f93d41e178a765b8134a14f342c492a696d2e9908dad715
+served CSS SHA-256   0d99e4d659aefaf94bce50896025a015222c188e909d11be25d48b02a3b6b2d6
+served OG SHA-256    778a627d5ced1173ff450f02cd484d4f027722811687c11a27d0f027cf8a73bd
+```
+
+No deploy or push was performed.

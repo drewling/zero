@@ -177,7 +177,12 @@ b.ui{font-weight:600}
   .info .k{white-space:normal}
 }
 
-/* ---------- install (Terminal on ink) ---------- */
+/* Enhancement controls must not override the HTML hidden fallback. */
+[hidden]{display:none!important}
+/* The Copy enhancement retains its final slot even when no API/no JS hides it. */
+#term .foot{min-height:60px}
+
+
 .ink{background:var(--ink);color:var(--paper);border-top:2px solid var(--paper)}
 .ink > .txt h2{color:var(--paper)}
 .ink > .term-wrap{grid-column:content-start / content-end;padding-bottom:var(--band-y)}
@@ -191,7 +196,12 @@ b.ui{font-weight:600}
 #term pre{margin:0;padding:24px 20px 12px;font:500 clamp(15px,1.05vw,18px)/1.6 var(--mono);white-space:pre-wrap;word-break:break-all;min-height:4.2em}
 #term pre .p{user-select:none}
 #term .cursorblk,#term .tcur{display:inline-block;width:.6em;height:1.1em;vertical-align:-.2em;background:var(--paper)}
-#term:has(.tcur) .cursorblk{visibility:hidden}
+/* Full command reserves its original line boxes. Glyph/caret sprites never affect wrapping. */
+#term pre{position:relative}
+#term code.typing{visibility:hidden}
+#term .typed-letter,#term .tcur{position:absolute;left:0;top:0;pointer-events:none;white-space:pre;line-height:normal}
+#term .tcur{width:.6em;height:1.1em;vertical-align:baseline}
+#term pre:has(.tcur) .cursorblk{visibility:hidden}
 #term .foot{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px 14px;padding:0 16px 16px}
 #term .copy-status:empty{display:none}
 #term .copy-status{padding:4px 10px;background:var(--paper);color:var(--ink);font:500 15px/1.4 var(--sans)}
