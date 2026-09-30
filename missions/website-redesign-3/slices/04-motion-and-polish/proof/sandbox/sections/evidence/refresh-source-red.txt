@@ -1,0 +1,28 @@
+TAP version 13
+# Subtest: S13: sandbox reader markup and trust styles match exact frozen B 50bf121/DRAFT4
+not ok 1 - S13: sandbox reader markup and trust styles match exact frozen B 50bf121/DRAFT4
+  ---
+  duration_ms: 241.806583
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:215:1'
+  failureType: 'testCodeFailure'
+  error: '[{"selector":".menubar","equal":true},{"selector":".hero","equal":true},{"selector":"#install","equal":false},{"selector":"#how-band","equal":false},{"selector":"#undo","equal":false},{"selector":"#command","equal":false},{"selector":"footer","equal":true}]'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:225:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 435.316167

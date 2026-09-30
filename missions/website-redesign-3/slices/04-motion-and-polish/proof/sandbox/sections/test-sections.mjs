@@ -5,6 +5,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { resolve, dirname, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { spawn } from 'node:child_process';
 const here = dirname(fileURLToPath(import.meta.url));
 const sandbox = resolve(here, '..');
 const require = createRequire(`${process.env.HOME}/.nvm/versions/node/v22.16.0/lib/node_modules/playwright/package.json`);
@@ -20,6 +21,7 @@ test.before(async () => {
       const path = resolve(sandbox, '.' + new URL(req.url, 'http://localhost').pathname);
       if (!path.startsWith(sandbox + '/')) throw new Error('outside sandbox');
       let bytes = await readFile(path);
+      if (process.env.REFERENCE_RUNNER === '50bf121' && path === resolve(sandbox,'motion.js')) bytes = await readFile(resolve(here,'reference/50bf121/motion.js'));
       if (process.env.BASELINE && path === resolve(here, 'sections.css')) bytes = Buffer.from('');
       if (path === resolve(here, 'index.html') && process.env.BASELINE) {
         bytes = Buffer.from(bytes.toString().replace('../motion.js', `reference/${process.env.BASELINE === 'reference' ? 'motion.js' : 'pre-sections-runner.js'}`).replace('src="sections.js"', 'src="reference/sections.js"'));
@@ -209,4 +211,117 @@ test('S11: actual keyboard order, readable Rules policy, visible focus and finit
 test('S12: resizing an active scene cancels safely, and ledger beats accept changed row counts/words',async()=>{
   const a=await open();await a.page.evaluate(()=>{const row=document.querySelector('.info .row').cloneNode(true);row.querySelector('dd').textContent='Provisional changed row for geometry test';document.querySelector('.info .rows').append(row);});await reach(a.page,'#install');await a.page.waitForTimeout(400);await a.page.setViewportSize({width:760,height:900});await a.page.waitForTimeout(50);
   assert.equal(await a.page.locator('#install').getAttribute('data-mode'),'cancelled');assert.equal((await state(a.page)).rows,6);assert.equal(await a.page.locator('#install [data-zm-overlay]').count(),0);await a.context.close();
+});
+
+test('S13: sandbox reader markup and trust styles match exact frozen B 50bf121/DRAFT4',async()=>{
+  const source = await readFile(resolve(here,'reference/50bf121/index.html'),'utf8');
+  const a = await open(390,{javaScriptEnabled:false});
+  try {
+    const matches = await a.page.evaluate(html => {
+      const expected = new DOMParser().parseFromString(html,'text/html');
+      return ['.menubar','.hero','#install','#how-band','#undo','#command','footer'].map(selector => ({
+        selector, equal:document.querySelector(selector).outerHTML === expected.querySelector(selector).outerHTML
+      }));
+    },source);
+    assert.ok(matches.every(item=>item.equal),JSON.stringify(matches));
+    for (const name of ['kit.css','page.css']) {
+      assert.ok((await readFile(resolve(here,'kit',name))).equals(await readFile(resolve(here,'reference/50bf121',name))),`${name} is not frozen50bf121`);
+    }
+    assert.deepEqual(await a.page.locator('.info .row .k').allTextContents(),['Sorting data.','Optional drafts.','Sorting cost.','Google sign-in.','Installer.']);
+    assert.equal(await a.page.locator('.info .row.out').count(),2);
+    assert.deepEqual(await a.page.locator('.info .to:not(.not)').allTextContents(),['Sent to TypeSafe (Jev):','Sent to your coding tool’s provider:']);
+    assert.match(await a.page.locator('.info .rows').textContent(),/\$0\.042 per million input tokens, outputs free \(checked 30 Sep 2026\)/);
+    assert.deepEqual(a.errors,[]);
+  } finally { await a.context.close(); }
+});
+
+test('S14: authored threaded server serves static Copy and complete reader playback without resource errors',async()=>{
+  const repo = resolve(here,'../../../../../../..');
+  const probe = createServer();
+  await new Promise(r=>probe.listen(0,'127.0.0.1',r));
+  const port = probe.address().port;
+  await new Promise(r=>probe.close(r));
+  const child = spawn('python3',[resolve(repo,'missions/website-redesign-3/slices/02-references-and-comps/proof/acceptance/serve.py'),String(port),repo],{stdio:['ignore','ignore','pipe']});
+  let serverError=''; child.stderr.on('data',chunk=>{serverError+=chunk;});
+  child.on('error',error=>{serverError+=error.message;});
+  let context;
+  try {
+    const url = `http://127.0.0.1:${port}/${here.slice(repo.length+1)}/index.html?static`;
+    let ready=false;
+    for(let attempt=0;attempt<30;attempt++) {
+      try { const response=await fetch(url,{signal:AbortSignal.timeout(500)}); ready=response.ok; if(ready)break; } catch (_) {}
+      await new Promise(r=>setTimeout(r,50));
+    }
+    assert.ok(ready,serverError);
+    context = await browser.newContext({viewport:{width:390,height:900}});
+    const page = await context.newPage(),errors=[];
+    page.on('pageerror',e=>errors.push(e.message));
+    page.on('response',r=>{if(r.status()>=400)errors.push(`HTTP ${r.status()} ${r.url()}`);});
+    await page.goto(url);await page.evaluate(()=>document.fonts.ready);
+    assert.deepEqual(await state(page),final);
+    assert.match(await page.locator('.info .rows').textContent(),/Sent to TypeSafe \(Jev\):/);
+    await page.locator('#copy').focus();await page.keyboard.press('Enter');
+    await page.waitForFunction(()=>['Copied','Copy manually: press Command-C.'].includes(document.querySelector('#copy-status').textContent));
+    assert.equal(await page.evaluate(()=>document.activeElement.id),'copy');
+    await page.goto(url.replace('?static',''));await page.evaluate(()=>document.fonts.ready);
+    for(const root of roots) {
+      await reach(page,root);
+      await page.waitForFunction(s=>document.querySelector(s).dataset.mode==='done',root,{timeout:7000});
+    }
+    assert.deepEqual(await state(page),final);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
+    assert.deepEqual(errors,[]);
+  } finally {
+    await context?.close();
+    if (child.exitCode === null && child.signalCode === null && child.pid) {
+      const exited = new Promise(r=>child.once('exit',r));
+      child.kill('SIGTERM');await exited;
+    }
+  }
+});
+
+test('S15: reduced motion settles offscreen armed stories before their first reveal',async()=>{
+  const a=await open(390);
+  try {
+    for(let i=0;i<100;i++) {
+      if(await a.page.locator('#install').getAttribute('data-mode')==='armed')break;
+      await a.page.evaluate(()=>scrollBy(0,30));await a.page.waitForTimeout(25);
+    }
+    assert.equal(await a.page.locator('#install').getAttribute('data-mode'),'armed');
+    await a.page.emulateMedia({reducedMotion:'reduce'});await a.page.waitForTimeout(60);
+    assert.deepEqual(await state(a.page),final);
+    const html=await a.page.locator('#install').innerHTML();
+    await a.page.locator('#install').scrollIntoViewIfNeeded();await a.page.waitForTimeout(1800);
+    assert.notEqual(await a.page.locator('#install').getAttribute('data-mode'),'play');
+    assert.equal(await a.page.locator('#install').innerHTML(),html);
+    assert.deepEqual(a.errors,[]);
+  } finally {await a.context.close();}
+});
+
+test('S16: delayed first observer delivery after reader scroll arms rather than misclassifying first sight (controlled observer)',async()=>{
+  const a=await open(1440,{},'',()=>{
+    window.testObservers=[];
+    window.IntersectionObserver=class {
+      constructor(callback,options){this.callback=callback;this.options=options;window.testObservers.push(this);}
+      observe(target){this.target=target;}
+      disconnect(){this.disconnected=true;}
+    };
+  });
+  try {
+    await a.page.evaluate(()=>scrollBy(0,150));
+    assert.ok(await a.page.locator('#install').evaluate(e=>e.getBoundingClientRect().top<innerHeight));
+    await a.page.evaluate(()=>{
+      const pre=window.testObservers.find(o=>o.target?.id==='install'&&o.options.rootMargin);
+      pre.callback([{isIntersecting:true,boundingClientRect:pre.target.getBoundingClientRect()}]);
+    });
+    assert.equal(await a.page.locator('#install').getAttribute('data-mode'),'armed');
+    await a.page.evaluate(()=>{
+      const play=window.testObservers.find(o=>o.target?.id==='install'&&!o.options.rootMargin);
+      play.callback([{isIntersecting:true,intersectionRatio:.5,intersectionRect:{height:innerHeight*.5}}]);
+    });
+    assert.equal(await a.page.locator('#install').getAttribute('data-mode'),'play');
+    await a.page.waitForFunction(()=>document.querySelector('#install').dataset.mode==='done');
+    assert.equal((await state(a.page)).rows,5);
+    assert.deepEqual(a.errors,[]);
+  } finally {await a.context.close();}
 });

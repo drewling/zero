@@ -209,7 +209,6 @@
       else if (!('IntersectionObserver' in window)) finish('static');
       else {
         let armed = false, started = false;
-        const initialScrollY = scrollY;
         const settle = () => { started = true; observer.disconnect(); finish('seen'); };
         const arm = () => {
           if (armed || started) return;
@@ -220,8 +219,7 @@
         const pre = new IntersectionObserver(entries => {
           const e = entries.find(e => e.isIntersecting); if (!e || started) return;
           pre.disconnect();
-          // First delivery can follow a reader scroll. That arrival is not initial sight.
-          if (e.boundingClientRect.top < innerHeight && scrollY === initialScrollY) settle();
+          if (e.boundingClientRect.top < innerHeight) settle();
           else arm();
         }, { rootMargin: '0px 0px 30% 0px', threshold: 0 });
         const play = new IntersectionObserver(entries => {

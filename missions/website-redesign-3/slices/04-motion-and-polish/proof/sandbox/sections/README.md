@@ -1,6 +1,6 @@
 # Selected page B section-motion sandbox
 
-Prototype only, authorized by main-lead at 00:58Z and design-lead at 01:02Z on 2026-09-30. Contract: `MOTION-SPEC.md` §4.2 at `e58ff8f`. Frozen markup, styles, assets and reference stories: `39aa729`.
+Prototype only, authorized by main-lead at 00:58Z and design-lead at 01:02Z on 2026-09-30. Contract: `MOTION-SPEC.md` §4.2 at `e58ff8f`. Refreshed on design-lead's 01:45Z instruction to frozen markup and trust styles `50bf121`, DRAFT4 / COPY-B `85dfe6f`. Motion beats and font assets did not change. The hardened sandbox runner is preserved, not replaced with the comp runner.
 
 This is not a landing implementation, final copy, owner approval, independent QA or slice completion. `landing/` remains untouched. The copied page's hero is deliberately **static context**. The selected animated hero remains the separate [hero B fixture](../hero-b/README.md). Future integration must combine that hero's reserved geometry with the approved page and copy at an exact slice-03 SHA.
 
@@ -10,7 +10,7 @@ This is not a landing implementation, final copy, owner approval, independent QA
 - `kit/` contains the frozen reference CSS and relevant font assets, not a new design system. Future copy and layout changes in the designer's active files do not mutate this fixture.
 - `sections.js` supplies four data-driven stories to the shared `../motion.js` runner. Row and line counts come from the actual DOM. Every story restores its complete final state on success, cancellation and error.
 - `sections.css` reserves the Copy control's slot, enforces the HTML hidden fallback, and paints Terminal glyphs without altering the complete command's line boxes.
-- `reference/` preserves exact before-state runners and designer stories for paired RED checks. They are not production code.
+- `reference/` preserves the historical `39aa729` before-state runners and designer stories. `reference/50bf121/` holds exact new frozen page, CSS and reference runner bytes. They are not production code.
 - `test-sections.mjs` serves this fixture on an ephemeral loopback port and uses an installed headless Playwright browser. No dependency was installed or added to the application.
 
 ## Reader behavior
@@ -43,7 +43,7 @@ CAPTURE=1 node --test missions/website-redesign-3/slices/04-motion-and-polish/pr
 ENGINE=webkit WEBKIT_EXECUTABLE="$HOME/Library/Caches/ms-playwright/webkit-2336/pw_run.sh" node --test missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs
 ```
 
-WebKit 2336 is a compatible installed alternate, not the package's pinned revision and not Safari acceptance. WebKit 2248 failed before page execution because its protocol lacked `Console.enable`; its failed log is retained. See [verification and requirement mapping](evidence/VERIFICATION.md) for exact observed results, source hashes and remaining boundaries.
+WebKit 2336 is a compatible installed alternate, not the package's pinned revision and not Safari acceptance. WebKit 2248 failed before page execution because its protocol lacked `Console.enable`; its failed log is retained. See the current [DRAFT4 refresh verification and complete requirement mapping](evidence/REFRESH-VERIFICATION.md). The [original 39aa729 verification](evidence/VERIFICATION.md) is historical.
 
 ## Next authorized boundary
 

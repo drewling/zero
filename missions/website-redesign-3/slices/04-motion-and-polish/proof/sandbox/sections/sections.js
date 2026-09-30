@@ -1,4 +1,4 @@
-/* Selected page B section contracts: e58ff8f, reference 39aa729.
+/* Selected page B section contracts: e58ff8f, frozen DRAFT4 markup 50bf121.
    Every story owns a complete finalizer, including interruption/error paths.
    The markup is final. No dependencies, wording assumptions or animated layout. */
 (function () {

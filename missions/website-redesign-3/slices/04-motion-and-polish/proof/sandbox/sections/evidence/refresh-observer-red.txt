@@ -1,0 +1,32 @@
+TAP version 13
+# Subtest: S16: delayed first observer delivery after reader scroll arms rather than misclassifying first sight (controlled observer)
+not ok 1 - S16: delayed first observer delivery after reader scroll arms rather than misclassifying first sight (controlled observer)
+  ---
+  duration_ms: 329.903083
+  type: 'test'
+  location: '/Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:300:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    'seen' !== 'armed'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'armed'
+  actual: 'seen'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/light/Documents/GitHub/zero/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/sections/test-sections.mjs:316:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 528.593958

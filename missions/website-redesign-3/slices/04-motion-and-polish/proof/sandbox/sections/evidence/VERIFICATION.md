@@ -1,5 +1,7 @@
 # Selected B section-motion verification
 
+Historical report for candidate `f1d36e0` against `39aa729`. Current source and captures have been refreshed to DRAFT4 `50bf121`, documented in [REFRESH-VERIFICATION.md](REFRESH-VERIFICATION.md). Historical capture bytes are recoverable at `f1d36e0`. The original logs below are retained without rewriting their observed results.
+
 2026-09-30. Contract `e58ff8f` §4.2, selected source `39aa729`. This report describes the scoped sandbox, not the production landing page. All paths below are relative to this `evidence/` directory unless noted.
 
 ## Acceptance boundary

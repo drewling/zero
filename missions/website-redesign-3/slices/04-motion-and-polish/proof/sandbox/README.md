@@ -26,10 +26,10 @@ The default HTML is the final frame: four kept rows and a full dated archive fol
 
 ## Run locally
 
-From the repository root, serve the files with any static server, for example:
+From the repository root, use the authored threaded acceptance server:
 
 ```sh
-python3 -m http.server 8174 --bind 127.0.0.1
+python3 missions/website-redesign-3/slices/02-references-and-comps/proof/acceptance/serve.py 8174 .
 ```
 
 Open `http://127.0.0.1:8174/missions/website-redesign-3/slices/04-motion-and-polish/proof/sandbox/index.html`.

@@ -1,0 +1,22 @@
+TAP version 13
+# Subtest: S2: first-sight hash and real in-page link arrivals stay final, never rewind
+ok 1 - S2: first-sight hash and real in-page link arrivals stay final, never rewind
+  ---
+  duration_ms: 1496.566583
+  type: 'test'
+  ...
+# Subtest: S16: delayed first observer delivery after reader scroll arms rather than misclassifying first sight (controlled observer)
+ok 2 - S16: delayed first observer delivery after reader scroll arms rather than misclassifying first sight (controlled observer)
+  ---
+  duration_ms: 1415.750375
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3077.749125
