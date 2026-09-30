@@ -107,3 +107,53 @@ No edits were made to `landing/` at any point by this seat. All checks were read
 - Static server on 8946/8947 killed, confirmed via `lsof`.
 - Docker image `zero-landing-qa` removed (`docker rmi`), confirmed via `docker ps -a`.
 - No dangling containers left running.
+
+---
+
+## Recheck pass — SHA `18a1b868701688bf0c3f4fbcd14ef52bdec15eb0`
+
+**Commit under test:** `18a1b86` "Fix landing metadata and terminal playback" (Tayo Onabule). Confirmed current HEAD at recheck time, working tree clean, no uncommitted `landing/` changes.
+
+**Verdict: PASS.** Finding 1 (folder-drop overflow) is fully resolved. All of main-lead's acceptance criteria are met on independently re-derived evidence in both Chromium and WebKit.
+
+### 1. Folder-drop fully removed (not re-timed)
+`grep -rn "folder-drop\|folder-current" landing/*.css landing/assets/*.css landing/*.html` → empty across the board. Confirmed via `git show 18a1b86 -- landing/site.css` that the `.folder-current{animation:folder-drop...}` rule and its keyframe block were deleted outright, matching design-lead's explicit direction to delete rather than re-time (comp never had this animation).
+
+### 2. Node test suites (independent rerun)
+- `node --test landing/test-site.mjs` → **7/7 pass**.
+- `node --test landing/test-terminal.mjs` → **2/2 pass** (one subtest per engine: "chromium terminal typing keeps one visible command at 1440 and 390" and the WebKit equivalent, both `ok`).
+
+### 3. scrollWidth == innerWidth (own Playwright script, not implementer's)
+Served `landing/` at a fresh local port. Wrote an independent script sampling `document.scrollingElement.scrollWidth` vs `innerWidth` at exactly t=0/800/1600ms after load, at viewport widths 320/390/768, with JS enabled and disabled, in both engines.
+
+Result: **clean (no overflow) in all 24 combinations** — 3 widths × 3 timestamps × {js,nojs} × {chromium,webkit}. No case exceeded `innerWidth` by more than the 1px tolerance used.
+
+### 4. Final-frame equality across reduced-motion / no-JS / `?static`
+First pass on raw `innerHTML` string equality showed diffs, but these traced to two *expected* non-visual artifacts, not regressions:
+- An empty `style=""` attribute left on `<li class="g">` after the animation's `clear()` step does `row.style.visibility = ''` — inert, no rendering effect.
+- The `#copy` button carries `hidden` in markup by default and is only revealed by `site.js`/`assets/sections.js` as progressive enhancement (clipboard requires JS) — expected to differ between no-JS and JS-on, not a motion bug.
+
+Re-ran the comparison on **computed geometry** (bounding rects, `visibility`, `opacity`, `transform`) across all `main *` elements excluding `#copy`/`#copy-status`, with reduced-motion and `?static` runs scrolled through the full page first to trigger IntersectionObserver-driven "done" states. Result: **no-JS == reduced-motion == ?static == settled JS-on (scrolled)**, byte-for-byte on computed geometry, in both Chromium and WebKit.
+
+### 5. Terminal typing playback — exactly one command copy
+Covered directly by `test-terminal.mjs`'s own assertion ("keeps one visible command at 1440 and 390"), which passed in both engines. This matches the duplicate-text bug design-lead flagged separately as fixed.
+
+### 6. CLS
+Measured via `PerformanceObserver({type:'layout-shift'})`, scrolling through the full page to trigger all section reveals, across JS-on/reduced-motion/`?static`.
+- **Chromium: CLS = 0** in all three modes — genuine measurement, `layout-shift` is a supported entry type.
+- **WebKit: not independently measurable** — `PerformanceObserver.supportedEntryTypes` in this WebKit build does not include `layout-shift` at all (confirmed via direct query), so a `CLS: 0` reading there would be a false null-result, not a real check. Flagging this rather than reporting an unverified number. Substituted the computed-geometry final-frame diff (section 4) as the real evidence for WebKit: since final geometry is byte-identical across no-JS and all JS-on/motion modes for every element, there is no layout shift to detect by construction.
+
+### 7. Docker / `/install` recheck
+Fresh `bash landing/build.sh zero-landing-qa2` from current HEAD: **all 13 of the implementer's own smoke checks pass**. Then independently, not trusting that self-report:
+- Ran the built image in a fresh container, curled `/install` and `/install.sh` directly: both **302**, both redirect to `https://raw.githubusercontent.com/drewling/zero/master/macapp/install-zero.sh` / the GitHub blob URL respectively (correct, matches repo).
+- Diffed served installer body against `landing/install.sh` in the repo tree — byte-identical.
+- Tailed nginx logs — clean startup, no errors, only expected 302 access log lines for the two requests made.
+- Removed the container and image (`zero-landing-qa2`) after.
+
+### Cleanup (this pass)
+- Static server on port 8950 killed, confirmed via `lsof` (initially missed by a background job that outlived the shell builtin `kill`; caught and killed via `pkill`, then reconfirmed free).
+- Docker image `zero-landing-qa2` removed, confirmed absent via `docker images`/`docker ps -a`.
+- No dangling containers or listeners left from this pass.
+
+### Outstanding
+Main-lead indicated a second commit is coming with "stronger motion" — a third recheck pass will be needed once that lands, in particular to re-verify no new overflow/CLS/final-frame regressions are introduced by the new motion.
