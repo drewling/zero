@@ -31,3 +31,7 @@ Tayo (via advisor-lead): hero B approved (zero as the visible actor, not the use
 ## 2026-09-29 23:03Z: more owner feedback folded into the rethink
 
 Tayo (via advisor-lead): still confusing and hard to read, not enough animation, heading font too hard to read, wants a holistic pass and a full-width layout. Suggests adversarial review, funnel thinking and /impeccable. Dispatched to design-lead and design-copywriter: 2 or 3 heading font options against the current one, full-width edge-to-edge layout tested from 320 to 2560, per-section stepped animation, /funnels and /impeccable passes recorded, isolated reader test of proposal vs baseline. review-qa is queued as the adversarial reviewer (sceptical stranger, then design critic) once the proposal exists. Build held. Slice 03 not released.
+
+## 2026-09-30 01:00Z: owner chose page B (risk-first)
+
+Tayo (via advisor-lead): page B over page A, hero B stays. Page A stays archived in the comps folder. design-lead, copywriter and motion tighten B only (impeccable critique items, heading font, full-width layout, per-section motion, the pending fix batch including the data and cost findability gap). review-qa runs the adversarial passes on the frozen B SHA. Truth rule: no promise of automatic daily runs. Build held, slice 03 not released, no deploy. Handback to advisor-lead: one runnable page B and a 3 line plain summary.
