@@ -74,6 +74,12 @@ Gzip sizes are independently compressed files, summed conservatively. Test fixtu
 | `sections.js` | 5237 | 1933 | `2d89c1264e06ef1d9458302fa79f18de0c522573d14bfeefe46774d3099f5b1e` |
 | Combined | 21354 | **7331** | Limit **8192** |
 
+## Live acceptance-gate check, 01:41Z
+
+Entry to the real acceptance workflow was checked against the authored slice and current queue, rather than assuming fixture passes release the build. `slices/04-motion-and-polish/SPEC.md` is still `status: blocked`, depends on slices 02 and 03, and explicitly requires the 03/04 built-page Lighthouse comparison, design sign-off and exact QA handoff SHA. Live QA obligation `qitem-20260930005834-0ce76331` is **blocked** on designer obligation `qitem-20260930005832-91c2fccb`, which is in progress. Its owner instruction explicitly says: build held, no `landing/` edits, no slice-03 release, no push/deploy, and development-motion sandbox only. The QA query returned one row at limit 10000, so it was not truncated.
+
+That gate prevents entering the integrated build/end-user acceptance path. No landing test was bypassed or represented as passing. Sandbox observations and complete post-mapping rerun remain valid, but they are **not closure of integrated acceptance**. Continue only when the live owner gate permits integration and supplies the approved slice-03 SHA.
+
 ## Remaining limits
 
 - The copied page hero and animated hero are verified separately. The final complete landing page, their combined observer/layout interaction, final copy and production font policy require checks after actual integration.
