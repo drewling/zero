@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
+import { clipboardOutcome } from './clipboard-outcome.mjs';
 const require = createRequire(execFileSync('npm', ['root', '-g'], { encoding: 'utf8' }).trim() + '/');
 const { chromium } = require('playwright');
 const out = process.argv[2];
@@ -61,17 +62,26 @@ try {
           if (mode === 'denied') throw new DOMException('Denied', 'NotAllowedError'); window.__written = text;
         } } });
       }, mode);
-      const pg = await fault.newPage(); await pg.goto(`http://127.0.0.1:8941/page-${outline}/?static`);
+      const pg = await fault.newPage();
+      const health = { resources: [], errors: [], sectionScriptLoaded: false };
+      pg.on('response', r => {
+        if (r.status() >= 400) health.resources.push({ url: r.url(), status: r.status() });
+        if (new URL(r.url()).pathname === '/kit/sections.js' && r.ok()) health.sectionScriptLoaded = true;
+      });
+      pg.on('requestfailed', r => health.resources.push({ url: r.url(), failure: r.failure()?.errorText }));
+      pg.on('pageerror', e => health.errors.push(e.message));
+      await pg.goto(`http://127.0.0.1:8941/page-${outline}/?static`);
       const copy = pg.locator('#copy');
-      if (mode !== 'unavailable') { await copy.focus(); await pg.keyboard.press(mode === 'success' ? 'Enter' : 'Space'); await pg.waitForTimeout(80); }
+      if (mode !== 'unavailable') {
+        await copy.focus(); await pg.keyboard.press(mode === 'success' ? 'Enter' : 'Space');
+        await pg.waitForFunction(() => document.querySelector('#copy-status')?.textContent.trim(), null, { timeout: 3000 }).catch(() => {});
+      }
       const result = await pg.evaluate(() => ({ written: window.__written, selection: getSelection().toString(), focused: document.activeElement?.id,
         status: [...document.querySelectorAll('[role="status"],[aria-live="polite"]')].map(e => e.textContent.trim()).join(' '),
         hidden: !document.querySelector('#copy') || getComputedStyle(document.querySelector('#copy')).display === 'none' || document.querySelector('#copy').hidden,
         command: document.querySelector('#term code')?.textContent }));
-      const ok = mode === 'success' ? result.written === command && /Copied/i.test(result.status) && result.focused === 'copy' :
-        mode === 'denied' ? result.selection === command && /Copy manually: press Command-C\./.test(result.status) && result.focused === 'copy' :
-        result.hidden && result.command === command;
-      rec(ok, `${outline}: clipboard ${mode} keyboard action and accessible feedback`, result);
+      const ok = clipboardOutcome(mode, result, command, health);
+      rec(ok, `${outline}: clipboard ${mode} keyboard action and accessible feedback`, { ...result, health });
       await fault.close();
     }
     await ctx.close();
