@@ -51,7 +51,27 @@ Copy manually: press Command-C.
 
 These alternate statuses count even before they appear. Show and politely announce them. Denied write selects the exact command without moving copy-button focus. Without clipboard support hide the optional button but keep manual command selection usable. No new retry labels without a count.
 
-## Owner-visible schedule note, not visitor copy
+## Pending privacy follow-up, NOT applied to COPY-B
+
+Requested by main/design lead after two of three tightened-B readers flagged the reassurance. Preserve the QA object at `50bf121`. Apply this patch only in the authorized post-QA batch, then recount the generated page and recheck comprehension. This marker is a proposed patch, not a second full COPY-B source.
+
+<!-- PRIVACY-FOLLOWUP-START -->
+
+Remove the ledger lede: `Read connected Gmail in Gmail or Apple Mail.`
+
+Replace only `No zero server receives your email.` with:
+
+**TypeSafe receives sorting data. Your tool's provider receives draft data. Neither goes to zero's servers.**
+
+<!-- PRIVACY-FOLLOWUP-END -->
+
+Keep both recipient-first rows and every disclosed field unchanged. Keep this as its own accessible plate, preferably after the two recipient rows so “Your tool” refers to the immediately adjacent optional coding-tool disclosure. Optional drafts remain optional. Do not merge the plate with the cost row or present it as a local-only assurance.
+
+Budget: remove eight lede words and replace six privacy words with fifteen, net **+1**. Candidate count verified with the normal counter: hero104 + COPY-B275 + objects56 + Rules110 + clipboard5 = **550**. Frozen COPY-B remains **549**. The viewing-client fact remains in the approved hero, so deleting the lede does not remove the Gmail-only/client disclosure. Cost, installer, policy and hero are unchanged.
+
+Source trace: direct TypeSafe endpoint `lib/jev.py:8,33`, sorting payload `lib/review_open_loops.py:974–998`, installed-tool dispatch `lib/llm.py:22–55,76–87`, optional draft context `lib/keeper_server.py:1288–1400`, local zero service `macapp/Sources/main.swift:100–110` and `lib/keeper_server.py:2646–2652`. This names the two disclosed outbound paths and zero's server boundary, not a promise about provider retention, training, billing or all network traffic. Candidate authoring is verified. Final rendered placement, 550-word inventory and a fresh comprehension check remain pending.
+
+### Owner-visible schedule note, not visitor copy
 
 No automatic daily promise is added to B. The approved **Run zero now** is an immediate-run example, not an exclusive-mode claim. Nevertheless all six original readers inferred or questioned manual-only operation. If Tayo wants scheduling mentioned, the truthful alternative is: “Scheduled runs need zero's launch agent installed and loaded. Set time and days in Settings → Daily routine.” That setting does NOT install an agent. The source-backed installation route is `bin/zero schedule`, not a new UI checkbox. Adding the conditional line requires an owner decision and a new count. Exact conditions and source lines: `schedule-and-price-evidence.md`.
 
