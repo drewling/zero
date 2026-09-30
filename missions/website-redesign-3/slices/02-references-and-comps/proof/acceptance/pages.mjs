@@ -1,5 +1,7 @@
 // Acceptance pass for the whole-page comps (page-a, page-b): real engines, real emulation, real captures.
-// Run: COPY_MD=<SECTION-COPY.md> OUT=<dir> ENGINE=chromium|webkit node pages.mjs   (comp server on 127.0.0.1:8941)
+// Run: COPY_MD=<SECTION-COPY.md> COPY_B_MD=<SELECTED-B-COPY.md> OUT=<dir> ENGINE=chromium|webkit node pages.mjs
+//   (comp server on 127.0.0.1:8941). Page A (archived) checks against Draft3 COPY-A. Page B checks against the
+//   owner-selected DRAFT4 COPY-B in COPY_B_MD, plus Draft3's shared OBJECT-COPY and RULES-B-COPY.
 // Checks: horizontal overflow and text escaping its section at 320-2560; no-JS and reduced-motion end states
 // equal the ?static final frame; scroll-triggered beats play to done; layout shift while they play (Chromium);
 // an anchor jump leaves the target section final; keyboard reaches only real links and the Copy button, in order;
@@ -10,15 +12,19 @@ import fs from 'node:fs';
 const require = createRequire(execSync('npm root -g').toString().trim() + '/');
 const { chromium, webkit } = require('playwright');
 
-const BASE = 'http://127.0.0.1:8941', OUT = process.env.OUT, ENGINE = process.env.ENGINE || 'chromium';
+// BASE: any static server rooted at proof/comps (default the shared proof server). Give each concurrent run its own.
+const BASE = process.env.BASE || 'http://127.0.0.1:8941', OUT = process.env.OUT, ENGINE = process.env.ENGINE || 'chromium';
 const COPY = fs.readFileSync(process.env.COPY_MD, 'utf8');
-const block = n => COPY.split(`<!-- ${n}-START -->`)[1].split(`<!-- ${n}-END -->`)[0];
+const COPY_B = fs.readFileSync(process.env.COPY_B_MD, 'utf8');
+const block = (n, src = COPY) => src.split(`<!-- ${n}-START -->`)[1].split(`<!-- ${n}-END -->`)[0];
 const visible = t => t.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/```sh|```/g, '').replace(/\*\*/g, '').replace(/^#+ /gm, '');
 const words = t => (visible(t).replace(/’/g, "'").match(/[\p{L}\p{N}]+(?:['.-][\p{L}\p{N}]+)*/gu) ?? []);
 const bag = ws => ws.reduce((m, w) => (m[w] = (m[w] || 0) + 1, m), {});
 const diff = (a, b) => { const out = []; for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) if ((a[k] || 0) !== (b[k] || 0)) out.push(`${k}:${a[k] || 0}/${b[k] || 0}`); return out; };
 const expected = { 'page-a': [...words(block('COPY-A')), ...words(block('OBJECT-COPY'))],
-                   'page-b': [...words(block('COPY-B')), ...words(block('OBJECT-COPY')), ...words(block('RULES-B-COPY'))] };
+                   'page-b': [...words(block('COPY-B', COPY_B)), ...words(block('OBJECT-COPY')), ...words(block('RULES-B-COPY'))] };
+// the two clipboard states, verbatim from the counted CLIPBOARD-COPY block
+const CLIP = block('CLIPBOARD-COPY', COPY_B).split('\n').map(s => s.trim()).filter(Boolean);
 
 const log = `${OUT}/pages-${ENGINE}.log`; fs.writeFileSync(log, '');
 let pass = 0, fail = 0;
@@ -106,8 +112,25 @@ for (const p of pages) {
     if (w === 1440) {
       const got = bag(words(await pg.evaluate(sectionText))), want = bag(expected[p]);
       const dd = diff(got, want);
-      rec(!dd.length, `${p} rendered section words == Draft3 blocks (${expected[p].length} words)`, dd.join(' '));
+      rec(!dd.length, `${p} rendered section words == copywriter's counted blocks (${p === 'page-b' ? 'DRAFT4 COPY-B + ' : 'Draft3 COPY-A + '}shared, ${expected[p].length} words)`, dd.join(' '));
       rec((await pg.evaluate(heroText)) === HERO, `${p} hero text == approved hero B`);
+      if (p === 'page-b') {
+        // the trust fix: recipient rows first and together, cost next, each recipient named in real text on its own line
+        const T = await pg.evaluate(() => {
+          const rows = [...document.querySelectorAll('.ledger .row')];
+          const r = e => e.getBoundingClientRect();
+          const out = rows.filter(e => e.classList.contains('out'));
+          const leads = [...document.querySelectorAll('.ledger .to')].map(e => ({ t: e.textContent, block: getComputedStyle(e).display === 'block',
+            ownLine: r(e).left - r(e.parentElement).left < 20 }));
+          return { order: rows.map(e => e.querySelector('.k').textContent), out: out.map(e => e.querySelector('.k').textContent),
+            sameBand: out.length === 2 && Math.abs(r(out[0]).top - r(out[1]).top) < 2, leads };
+        });
+        rec(JSON.stringify(T.order) === JSON.stringify(['Sorting data.', 'Optional drafts.', 'Sorting cost.', 'Google sign-in.', 'Installer.'])
+            && JSON.stringify(T.out) === JSON.stringify(['Sorting data.', 'Optional drafts.']) && T.sameBand
+            && T.leads.length === 3 && T.leads.every(l => l.block && l.ownLine)
+            && T.leads[0].t === 'Sent to TypeSafe (Jev):' && T.leads[1].t === 'No zero server receives your email.' && T.leads[2].t === 'Sent to your coding tool’s provider:',
+            `page-b ledger: the two outgoing-data rows lead as one pair, cost next, recipients named in real text on their own line`, JSON.stringify(T));
+      }
     }
     await ctx.close();
   }
@@ -124,6 +147,9 @@ for (const p of pages) {
     { const ctx = await b.newContext({ viewport: { width: w, height: 900 }, javaScriptEnabled: false }); const pg = await ctx.newPage();
       await pg.goto(`${BASE}/${p}/`); await pg.waitForTimeout(200);
       const s = await pg.evaluate(endState); same(s, `${p} ${w} no-JS == final frame`);
+      // rendered boxes, not the attribute: an author display rule can override [hidden] and show a dead control
+      const deadCopy = await pg.evaluate(() => document.getElementById('copy').getClientRects().length > 0);
+      rec(!deadCopy, `${p} ${w} no-JS shows no Copy button (it can't work without JS)`);
       await pg.screenshot({ path: `${OUT}/shots/${p}-${w}-nojs.png`, fullPage: true }); await ctx.close(); }
     // 3 · reduced motion, scrolled through
     { const ctx = await b.newContext({ viewport: { width: w, height: 900 }, reducedMotion: 'reduce' }); const pg = await ctx.newPage();
@@ -179,6 +205,28 @@ for (const p of pages) {
     rec(r.rows === 5 && r.mode !== 'play' && r.mode !== 'armed' && Math.abs(r.top) < 2, `${p} Install CTA lands on the ledger, which stays readable`, JSON.stringify(r));
     await ctx.close(); }
 
+  // 5b · a fresh load straight onto #install (a shared link): the ledger is on screen at first sight and stays final
+  { const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } }); const pg = await ctx.newPage();
+    await pg.goto(`${BASE}/${p}/#install`); await pg.waitForTimeout(1500);
+    const r = await pg.evaluate(() => ({ mode: document.querySelector('.ledger').dataset.mode || '', rows: [...document.querySelectorAll('.info .row')].filter(e => getComputedStyle(e).visibility !== 'hidden').length }));
+    rec(r.rows === 5 && r.mode !== 'play' && r.mode !== 'armed', `${p} direct load on #install: the ledger is readable at once and never rewinds`, JSON.stringify(r));
+    await ctx.close(); }
+
+  // 5c · Reduce Motion switched on mid-visit, while beats are armed or playing: every story settles on its final frame
+  { const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } }); const pg = await ctx.newPage();
+    await pg.goto(`${BASE}/${p}/`); await pg.waitForTimeout(300);
+    // scroll just far enough that the ledger is armed or playing, then flip the preference
+    await pg.evaluate(() => scrollTo(0, document.querySelector('.ledger').offsetTop - innerHeight * .5)); await pg.waitForTimeout(700);
+    const before = await pg.evaluate(() => document.querySelector('.ledger').dataset.mode);
+    await pg.emulateMedia({ reducedMotion: 'reduce' }); await pg.waitForTimeout(400);
+    for (let y = 0; y < 7000; y += 450) { await pg.evaluate(y => scrollTo(0, y), y); await pg.waitForTimeout(40); }
+    await pg.waitForTimeout(300);
+    const s = await pg.evaluate(endState);
+    const modes = await pg.evaluate(() => [...document.querySelectorAll('.band[data-mode]')].map(e => e.dataset.mode));
+    rec(s.ledgerRows === 5 && s.lt === 0 && s.stepping === 0 && modes.every(m => m !== 'play' && m !== 'armed'),
+      `${p} Reduce Motion turned on mid-visit settles every beat on its final frame`, `ledger was ${before}; ${JSON.stringify({ rows: s.ledgerRows, lt: s.lt, modes })}`);
+    await ctx.close(); }
+
   // 6 · keyboard: only real links and the Copy button take focus; illustration controls never do
   { const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } }); const pg = await ctx.newPage();
     await pg.goto(`${BASE}/${p}/?static`);
@@ -202,26 +250,37 @@ for (const p of pages) {
     ['granted', () => { Object.defineProperty(navigator, 'clipboard', { value: { writeText: t => (window.__copied = t, Promise.resolve()) } }); }],
     ['denied', () => { Object.defineProperty(navigator, 'clipboard', { value: { writeText: () => Promise.reject(new DOMException('denied', 'NotAllowedError')) } }); }],
     ['unavailable', () => { Object.defineProperty(navigator, 'clipboard', { value: undefined }); }]]) {
-    const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } }); const pg = await ctx.newPage();
-    await pg.addInitScript(stub); await pg.goto(`${BASE}/${p}/?static`); await pg.waitForTimeout(100);
-    const shown = await pg.evaluate(() => { const c = document.getElementById('copy'); return !c.hidden && c.getClientRects().length > 0; });
+    for (let attempt = 1; attempt <= 2; attempt++) {
+    const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } }); const pg = await ctx.newPage(); const dropped = [];
+    pg.on('requestfailed', r => dropped.push(r.url()));
+    await pg.addInitScript(stub); await pg.goto(`${BASE}/${p}/?static`, { waitUntil: 'load' }); await pg.waitForTimeout(100);
+    // same rule as playback: a script the proof server dropped is a server fault, logged as RETRY and run once more
+    if (dropped.length && attempt === 1) { fs.appendFileSync(log, `RETRY ${p} Copy ${mode}: server dropped ${dropped.join(' ')}\n`); await ctx.close(); continue; }
+    const shown = await pg.evaluate(() => document.getElementById('copy').getClientRects().length > 0);
     if (mode === 'unavailable') {
+      // a hidden button only proves something if sections.js actually ran: require a loaded script and a live story
+      const ran = await pg.evaluate(() => !!window.Zm && !!document.querySelector('#term[data-mode]'));
       const sel = await pg.evaluate(() => getComputedStyle(document.querySelector('#term code')).userSelect);
-      rec(!shown && sel !== 'none', `${p} Copy: no clipboard API hides the button and leaves the command selectable`, `shown=${shown} user-select=${sel}`);
+      rec(ran && !dropped.length && !shown && sel !== 'none', `${p} Copy: no clipboard API hides the button and leaves the command selectable (scripts loaded)`, `ran=${ran} dropped=${dropped.length} shown=${shown} user-select=${sel}`);
     } else {
-      await pg.focus('#copy'); await pg.keyboard.press('Enter'); await pg.waitForTimeout(150);
+      await pg.focus('#copy'); await pg.keyboard.press('Enter');
+      // wait for the status to change rather than a fixed sleep (a fixed 150ms flaked once under a slow local server)
+      await pg.waitForFunction(() => document.getElementById('copy-status').textContent.trim(), null, { timeout: 3000 }).catch(() => {});
       const r = await pg.evaluate(() => { const s = document.getElementById('copy-status'), cs = getComputedStyle(s);
         return { text: s.textContent, live: s.getAttribute('aria-live'), role: s.getAttribute('role'), visible: s.getClientRects().length > 0 && cs.visibility !== 'hidden',
           focus: document.activeElement?.id, selected: getSelection().toString().trim(), copied: window.__copied || null }; });
       const ok = mode === 'granted'
-        ? r.text === 'Copied' && r.copied === CMD
-        : r.text === 'Copy manually: press Command-C.' && r.selected === CMD;
+        ? r.text === CLIP[0] && r.copied === CMD
+        : r.text === CLIP[1] && r.selected === CMD;
       rec(shown && ok && r.live === 'polite' && r.role === 'status' && r.visible && r.focus === 'copy',
-        `${p} Copy ${mode}: visible, polite live status${mode === 'denied' ? ', command selected' : ''}, focus stays on the button`, JSON.stringify(r));
+        `${p} Copy ${mode}: visible, polite live status${mode === 'denied' ? ', command selected' : ''}, focus stays on the button`, JSON.stringify({ ...r, dropped }));
     }
-    await ctx.close();
+    await ctx.close(); break;
+    }
   }
 }
 await b.close();
 fs.appendFileSync(log, `\n${pass} PASS, ${fail} FAIL (${ENGINE})\n`);
 console.log(`${ENGINE}: ${pass} PASS, ${fail} FAIL`);
+// a run with any FAIL exits non-zero, so a wrapper or CI can't mistake it for a pass
+process.exitCode = fail ? 1 : 0;

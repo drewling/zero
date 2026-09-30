@@ -147,6 +147,19 @@ b.ui{font-weight:600}
   .info .row:last-child:nth-child(odd){grid-column:1 / -1;justify-content:start}
   .info .row:nth-last-child(2):nth-child(odd){border-bottom:1px solid var(--ink)}
 }
+/* page B trust fix: the two rows where mail data leaves the Mac lead as one pair, closed by a double rule, and each
+   names its recipient on a plate of its own line (real text, so it reads the same to a screen reader) */
+.ledger-b .info .row.out{background:var(--paper) var(--dither-25) repeat}
+.ledger-b .info .row.out .v{background:var(--paper);padding:10px 12px;border:1px solid var(--ink)}
+/* labels never sit on the dither: a paper plate behind each (the one-bit rule: text on flat paper only) */
+.ledger-b .info .row.out .k{justify-self:start;align-self:start;background:var(--paper);padding:2px 8px;margin-left:-8px}
+.ledger-b .info .row.out + .row:not(.out){border-top:3px double var(--ink)}
+.ledger-b .to{display:block;width:fit-content;margin:0 0 6px;padding:1px 7px;font-weight:600;background:var(--ink);color:var(--paper)}
+.ledger-b .to.not{margin:10px 0 6px;background:var(--paper);color:var(--ink);border:1px solid var(--ink)}
+@media (min-width:1100px){
+  .ledger-b .info .row.out + .row:not(.out){border-top:0}
+  .ledger-b .info .row.out{border-bottom:4px double var(--ink)}
+}
 @media (max-width:720px){
   .ledger > .txt{grid-template-columns:1fr}
   .appicon{grid-row:auto;justify-self:start;margin-bottom:12px}

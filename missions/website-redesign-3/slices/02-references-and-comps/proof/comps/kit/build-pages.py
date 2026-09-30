@@ -5,7 +5,9 @@ Hero B is taken VERBATIM from hero-b/index.html (its style block, menu bar, hero
 approved hero cannot drift. Two changes only: the menu bar's "How it works" link points at #how (the demo section
 it pointed at is cut in both outlines) and the page-level heading face comes from page.css (option T3).
 Section words are Draft3 (slices/01-copy-and-story/proof/rethink/SECTION-COPY.md @ 496d985): the COPY-A / COPY-B,
-OBJECT-COPY and RULES-B-COPY blocks. The acceptance script checks the rendered words against those blocks.
+OBJECT-COPY and RULES-B-COPY blocks. Page B's own section words (owner's choice, 00:58Z) are parsed from the
+copywriter's counted DRAFT4 COPY-B block in SELECTED-B-COPY.md (@ 85dfe6f), not retyped. Page A is archived on Draft3.
+The acceptance script checks the rendered words against those blocks.
 Run from proof/comps:  python3 kit/build-pages.py && python3 kit/inject.py"""
 import re
 from pathlib import Path
@@ -13,6 +15,8 @@ from pathlib import Path
 comps = Path(__file__).resolve().parent.parent
 hero_src = (comps / "hero-b" / "index.html").read_text()
 copy_src = (comps.parents[2] / "01-copy-and-story" / "proof" / "rethink" / "SECTION-COPY.md").read_text()
+# page B (owner's choice, 00:58Z) is built from the copywriter's counted DRAFT4 block; page A stays on Draft3 (archived)
+copy_b_src = (comps.parents[2] / "01-copy-and-story" / "proof" / "rethink" / "SELECTED-B-COPY.md").read_text()
 
 
 def grab(pat, s=hero_src):
@@ -151,16 +155,56 @@ A_sections = [
     install("Install when you're ready.",
             f'Open zero, connect Gmail and save your <a href="https://console.typesafe.ai/keys">Jev key</a> in {ui("Settings " + RARR + " Sorting engine")}. Or download from <a href="https://github.com/drewling/zero/releases">GitHub Releases</a>.'),
 ]
+# ---- page B from SELECTED-B-COPY.md COPY-B, parsed rather than retyped, so the words can't drift ----
+B_BLOCK = grab(r"<!-- COPY-B-START -->(.*?)<!-- COPY-B-END -->", copy_b_src)
+B_SECT = {}  # heading -> list of paragraphs (markdown)
+for part in re.split(r"^### ", B_BLOCK, flags=re.M)[1:]:
+    head, _, body = part.partition("\n")
+    body = re.sub(r"```.*?```", "", body, flags=re.S)
+    B_SECT[head.strip()] = [p.strip() for p in body.split("\n\n") if p.strip() and p.strip() != "**Copy command**"]
+
+
+def md(t):
+    """the block's markdown to HTML. Recipient leads (Sent to …:) and the zero-server line become block-level plates."""
+    t = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', t)
+    t = re.sub(r"\*\*(Sent to [^*]+:)\*\*", r'<b class="to">\1</b>', t)
+    t = re.sub(r"\*\*(No zero server receives your email\.)\*\*", r'<b class="to not">\1</b>', t)
+    t = re.sub(r"\*\*([^*]+)\*\*", r'<b class="ui">\1</b>', t)
+    return q(t)
+
+
+def ledger_b(lede, rows):
+    """B's trust fix: the two outgoing-data rows lead as a distinct pair, cost follows, then sign-in and installer"""
+    out = []
+    for i, p in enumerate(rows):
+        k, v = re.match(r"\*\*([^*]+)\*\*\s*(.*)", p, re.S).groups()
+        out.append(f'          <div class="row{" out" if i < 2 else ""}"><dt class="k">{k}</dt><dd class="v">{md(v)}</dd></div>')
+    return f'''<section class="band ledger ledger-b" id="install" aria-labelledby="before">
+  <div class="txt">
+    <div class="icon appicon"><svg class="px" viewBox="0 0 32 28" aria-hidden="true"><use href="#app"/></svg><span class="lbl">zero</span></div>
+    <h2 id="before">Before you install.</h2>
+    <p>{md(lede)}</p>
+  </div>
+  <div class="win info">
+    {BAR("Before you install")}
+    <dl class="rows">
+{chr(10).join(out)}
+    </dl>
+  </div>
+</section>'''
+
+
+_L = B_SECT["Before you install."]
+assert len(_L) == 6 and [re.match(r"\*\*([^*]+)\*\*", p).group(1) for p in _L[1:]] == \
+    ["Sorting data.", "Optional drafts.", "Sorting cost.", "Google sign-in.", "Installer."], "B ledger order changed"
+(_rules_p,) = B_SECT["Choose what needs to stay."]
+(_undo_p,) = B_SECT["Restore archived mail."]
+(_inst_p,) = B_SECT["Ready to install?"]
 B_sections = [
-    ledger("Read your connected Gmail in Gmail or Apple Mail."),
-    band("split-r", "how-band", "how", "Choose what needs to stay.", [
-        "Run zero from its menu bar to sort connected Gmail accounts. AI applies your rules. Starred mail stays untouched. Uncertain threads stay in your inbox. Check your first runs: the model can make mistakes.",
-    ], RULES),
-    band("split-l", "undo", "h-undo", "Restore archived mail.", [
-        f"In zero's {ui('Undo')} tab, restore one email or a day's archives with {ui('Restore all')}. Nothing is deleted. Find archived mail in Gmail's {ui('All Mail')} under a dated recovery label.",
-    ], UNDO),
-    install("Ready to install?",
-            f'Open zero, connect Gmail, then add your <a href="https://console.typesafe.ai/keys">Jev key</a> in {ui("Settings " + RARR + " Sorting engine")}. Or download from <a href="https://github.com/drewling/zero/releases">GitHub Releases</a>.'),
+    ledger_b(_L[0], _L[1:]),
+    band("split-r", "how-band", "how", "Choose what needs to stay.", [md(_rules_p)], RULES),
+    band("split-l", "undo", "h-undo", "Restore archived mail.", [md(_undo_p)], UNDO),
+    install("Ready to install?", md(_inst_p)),
 ]
 
 FOOTER = '''<footer>
@@ -195,7 +239,7 @@ for name, label, sections in [("page-a", "A · recovery-first", A_sections), ("p
 {chr(10).join(sections)}
 </main>
 {FOOTER}
-<p class="draft-flag">DRAFT comp · page {label} · Draft3 · not approved</p>
+<p class="draft-flag">DRAFT comp · page {label} · {"Draft4 (owner-selected B)" if name == "page-b" else "Draft3"} · not approved</p>
 
 <script src="../kit/motion.js"></script>
 <!-- hero B story, verbatim -->

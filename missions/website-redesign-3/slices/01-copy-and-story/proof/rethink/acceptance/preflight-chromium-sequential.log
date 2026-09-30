@@ -52,7 +52,7 @@ PASS page-a 390 scrolling: every beat played to done :: {"page.page-a":"done","u
 PASS page-a 390 section beats were armed before playing (not snapped from final) :: undo-win,install,term
 PASS page-a 390 after playback == final frame
 PASS page-a 390 playback without page errors
-PASS page-a 390 section beats cause no layout shift :: sections 0.0004 [{"v":0.00018816085984488763,"t":9213,"src":"command"},{"v":0.00018816085984488763,"t":9480,"src":"command"}]
+PASS page-a 390 section beats cause no layout shift :: sections 0.0004 [{"v":0.00018816085984488763,"t":9224,"src":"command"},{"v":0.00018816085984488763,"t":9491,"src":"command"}]
 INFO page-a 390 total CLS incl. hero 0.0287 [["0.0031","drop+drop+drop"],["0.0042","drop+drop+drop+drop"],["0.0057","drop+drop+drop+drop+drop"],["0.0064","drop+drop+drop+drop+drop"],["0.0048","drop+drop+drop+drop+drop"],["0.0019","drop+drop+drop+drop+drop"],["0.0022","hero"],["0.0002","command"],["0.0002","command"]]
 PASS page-a 1440 no-JS == final frame
 PASS page-a 1440 no-JS shows no Copy button (it can't work without JS)
@@ -62,11 +62,11 @@ PASS page-a 1440 scrolling: every beat played to done :: {"page.page-a":"done","
 PASS page-a 1440 section beats were armed before playing (not snapped from final) :: page-a,undo-win,install,term
 PASS page-a 1440 after playback == final frame
 PASS page-a 1440 playback without page errors
-PASS page-a 1440 section beats cause no layout shift :: sections 0.0001 [{"v":0.00006950244877400549,"t":7621,"src":"command"}]
+PASS page-a 1440 section beats cause no layout shift :: sections 0.0001 [{"v":0.00006950244877400549,"t":7647,"src":"command"}]
 INFO page-a 1440 total CLS incl. hero 0.0357 [["0.0088","drop+drop+drop+drop+drop"],["0.0057","drop+drop+drop+drop+drop"],["0.0033","drop+drop+drop+drop+drop"],["0.0020","drop+drop+drop+drop+drop"],["0.0010","drop+drop+drop+drop+drop"],["0.0004","drop+drop+drop+drop+drop"],["0.0145","hero+hero+hero"],["0.0001","command"]]
 PASS page-a Install CTA lands on the ledger, which stays readable :: {"mode":"seen","rows":5,"top":0}
 PASS page-a direct load on #install: the ledger is readable at once and never rewinds :: {"mode":"seen","rows":5}
-PASS page-a Reduce Motion turned on mid-visit settles every beat on its final frame :: ledger was seen; {"rows":5,"lt":0,"modes":["seen"]}
+PASS page-a Reduce Motion turned on mid-visit settles every beat on its final frame :: ledger was undefined; {"rows":5,"lt":0,"modes":[]}
 PASS page-a keyboard order = document order, 16 stops, none in illustrations :: zero > How it works > Undo > Before you install > Source > Install > Install zero for Mac > Read the installer first > Privacy policy > TypeSafe pricing > Jev key > GitHub Releases > Copy command > Source > Privacy > Terms
 PASS page-a Copy command has a visible focus ring :: solid 3px
 PASS page-a Copy granted: visible, polite live status, focus stays on the button :: {"text":"Copied","live":"polite","role":"status","visible":true,"focus":"copy","selected":"","copied":"curl -fsSL https://zero.headless.com/install | bash","dropped":[]}
@@ -122,12 +122,12 @@ PASS page-b ?static is the complete final frame :: {"lt":0,"stepping":0,"undoRow
 PASS page-b 390 no-JS == final frame
 PASS page-b 390 no-JS shows no Copy button (it can't work without JS)
 PASS page-b 390 reduced-motion == final frame
-PASS page-b 390 reduced-motion: every story static, nothing played :: static,static,static,static,static
+PASS page-b 390 reduced-motion: every story static, nothing played :: static
 PASS page-b 390 scrolling: every beat played to done :: {"page.page-b":"done","install":"done","rules-win":"done","undo-win":"done","term":"done"}
 PASS page-b 390 section beats were armed before playing (not snapped from final) :: install,rules-win,undo-win,term
 PASS page-b 390 after playback == final frame
 PASS page-b 390 playback without page errors
-PASS page-b 390 section beats cause no layout shift :: sections 0.0004 [{"v":0.00018816085984488763,"t":10527,"src":"command"},{"v":0.00018816085984488763,"t":10793,"src":"command"}]
+PASS page-b 390 section beats cause no layout shift :: sections 0.0004 [{"v":0.00018816085984488763,"t":10538,"src":"command"},{"v":0.00018816085984488763,"t":10814,"src":"command"}]
 INFO page-b 390 total CLS incl. hero 0.0287 [["0.0031","drop+drop+drop"],["0.0042","drop+drop+drop+drop"],["0.0057","drop+drop+drop+drop+drop"],["0.0064","drop+drop+drop+drop+drop"],["0.0048","drop+drop+drop+drop+drop"],["0.0019","drop+drop+drop+drop+drop"],["0.0022","hero"],["0.0002","command"],["0.0002","command"]]
 PASS page-b 1440 no-JS == final frame
 PASS page-b 1440 no-JS shows no Copy button (it can't work without JS)
@@ -137,16 +137,16 @@ PASS page-b 1440 scrolling: every beat played to done :: {"page.page-b":"done","
 PASS page-b 1440 section beats were armed before playing (not snapped from final) :: page-b,install,rules-win,undo-win,term
 PASS page-b 1440 after playback == final frame
 PASS page-b 1440 playback without page errors
-PASS page-b 1440 section beats cause no layout shift :: sections 0.0001 [{"v":0.00006950244877400549,"t":8713,"src":"command"}]
+PASS page-b 1440 section beats cause no layout shift :: sections 0.0001 [{"v":0.00006950244877400549,"t":8716,"src":"command"}]
 INFO page-b 1440 total CLS incl. hero 0.0357 [["0.0088","drop+drop+drop+drop+drop"],["0.0057","drop+drop+drop+drop+drop"],["0.0033","drop+drop+drop+drop+drop"],["0.0020","drop+drop+drop+drop+drop"],["0.0010","drop+drop+drop+drop+drop"],["0.0004","drop+drop+drop+drop+drop"],["0.0145","hero+hero+hero"],["0.0001","command"]]
 PASS page-b Install CTA lands on the ledger, which stays readable :: {"mode":"seen","rows":5,"top":0}
 PASS page-b direct load on #install: the ledger is readable at once and never rewinds :: {"mode":"seen","rows":5}
 PASS page-b Reduce Motion turned on mid-visit settles every beat on its final frame :: ledger was play; {"rows":5,"lt":0,"modes":["static"]}
-PASS page-b keyboard order = document order, 16 stops, none in illustrations :: zero > How it works > Undo > Before you install > Source > Install > Install zero for Mac > Read the installer first > Privacy policy > Current pricing > Jev key > GitHub Releases > Copy command > Source > Privacy > Terms
-PASS page-b Copy command has a visible focus ring :: solid 3px
+PASS page-b keyboard order = document order, 15 stops, none in illustrations :: zero > How it works > Undo > Before you install > Source > Install > Install zero for Mac > Read the installer first > Privacy policy > Current pricing > Jev key > GitHub Releases > Source > Privacy > Terms
+FAIL page-b Copy command has a visible focus ring :: none 3px
 PASS page-b Rules policy text is exposed to assistive tech
 PASS page-b Copy granted: visible, polite live status, focus stays on the button :: {"text":"Copied","live":"polite","role":"status","visible":true,"focus":"copy","selected":"","copied":"curl -fsSL https://zero.headless.com/install | bash","dropped":[]}
 PASS page-b Copy denied: visible, polite live status, command selected, focus stays on the button :: {"text":"Copy manually: press Command-C.","live":"polite","role":"status","visible":true,"focus":"copy","selected":"curl -fsSL https://zero.headless.com/install | bash","copied":null,"dropped":[]}
 PASS page-b Copy: no clipboard API hides the button and leaves the command selectable (scripts loaded) :: ran=true dropped=0 shown=false user-select=auto
 
-146 PASS, 0 FAIL (chromium)
+145 PASS, 1 FAIL (chromium)

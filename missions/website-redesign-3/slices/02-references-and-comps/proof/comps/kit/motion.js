@@ -9,7 +9,11 @@
 */
 (function () {
   const q = new URLSearchParams(location.search);
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rmq = matchMedia('(prefers-reduced-motion: reduce)');
+  let reduce = rmq.matches;
+  // turning Reduce Motion on mid-visit settles every armed or playing story on its final frame (the no-JS HTML)
+  const live = new Set();
+  rmq.addEventListener && rmq.addEventListener('change', e => { reduce = e.matches; if (reduce) [...live].forEach(stop => stop()); });
   const fine = matchMedia('(pointer: fine)').matches;
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const $ = (root, s) => (typeof s === 'function' ? s(root) : typeof s === 'string' ? root.querySelector(s) : s);
@@ -125,16 +129,21 @@
     }
     // any error mid-story jumps to the final frame (the no-JS state) instead of leaving a half-played scene
     const finish = () => {
+      live.delete(stopNow);
       root.querySelectorAll(':scope > .zr, :scope > .fly').forEach(e => e.remove());
       c.remove(); setFrame(root, n - 1, n);
       for (const f of frames) if (f.set) try { f.set(root, api); } catch (_) {}
       root.dataset.mode = 'done';
     };
+    let stopped = false;
+    const stopNow = () => { stopped = true; finish(); root.dataset.mode = 'static'; };
+    live.add(stopNow);
     try {
     root.dataset.mode = 'play';
     setFrame(root, 0, n); if (frames[0].set) frames[0].set(root, api);
     showCursor(frames[0]); putCursor(frames[0]);
     await wait(story.delay ?? 500);
+    if (stopped) return;
     let at = frames[0].cursor && target(root, frames[0].cursor);
     for (let k = 1; k < n; k++) {
       const f = frames[k];
@@ -145,13 +154,17 @@
         else if (to) place(c, to.x, to.y); // the cursor's first appearance: put it there, don't slide in from 0,0
         at = to;
       } else showCursor(f);
+      if (stopped) return;
       setFrame(root, k, n);
       if (f.set) f.set(root, api);
       if (f.enter) await f.enter(root, api);
+      if (stopped) return;
       await wait(f.hold ?? 300);
+      if (stopped) return;
     }
+    live.delete(stopNow);
     root.dataset.mode = 'done';
-    } catch (err) { console.error('Zm story failed, showing final frame', err); finish(); }
+    } catch (err) { if (stopped) return; console.error('Zm story failed, showing final frame', err); finish(); }
   }
 
   /* start when the element first enters the viewport (sections), or on load (heroes).
@@ -163,9 +176,11 @@
     }
     let armed = false, started = false;
     // put an armed story straight onto its final frame (the no-JS HTML), without playing it
-    const settle = mode => { started = true; io.disconnect(); pre.disconnect(); const n = story.frames.length;
+    const settle = mode => { started = true; live.delete(stopArmed); io.disconnect(); pre.disconnect(); const n = story.frames.length;
       setFrame(root, n - 1, n); for (const f of story.frames) if (f.set) try { f.set(root, api); } catch (_) {}
       root.dataset.mode = mode; };
+    const stopArmed = () => settle('static');
+    live.add(stopArmed);
     const arm = () => { if (armed || started) return; armed = true;
       setFrame(root, 0, story.frames.length); if (story.frames[0].set) story.frames[0].set(root, api); root.dataset.mode = 'armed'; };
     // first sighting: if the element is already on screen (an anchor jump such as the hero's Install link, a reload
@@ -173,7 +188,7 @@
     const pre = new IntersectionObserver(es => {
       const e = es.find(x => x.isIntersecting); if (!e) return;
       pre.disconnect();
-      if (e.boundingClientRect.top < innerHeight) { started = true; io.disconnect(); root.dataset.mode = 'seen'; return; }
+      if (e.boundingClientRect.top < innerHeight) { started = true; live.delete(stopArmed); io.disconnect(); root.dataset.mode = 'seen'; return; }
       arm();
     },
       { rootMargin: '0px 0px 30% 0px', threshold: 0 });
@@ -181,7 +196,7 @@
       if (!armed || started || !es.some(e => e.isIntersecting && (e.intersectionRatio >= .35 || e.intersectionRect.height >= innerHeight * .35))) return;
       // arrived by an in-page link (the hero's Install CTA, the menu bar): the visitor came to read, so show it final
       if (performance.now() - jumpedAt < 1200) return settle('seen');
-      io.disconnect(); pre.disconnect(); started = true; play(root, story);
+      io.disconnect(); pre.disconnect(); started = true; live.delete(stopArmed); play(root, story);
     }, { threshold: [0, .1, .2, .35, .5] });
     pre.observe(root);
     io.observe(root);
