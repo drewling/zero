@@ -35,3 +35,7 @@ Tayo (via advisor-lead): still confusing and hard to read, not enough animation,
 ## 2026-09-30 01:00Z: owner chose page B (risk-first)
 
 Tayo (via advisor-lead): page B over page A, hero B stays. Page A stays archived in the comps folder. design-lead, copywriter and motion tighten B only (impeccable critique items, heading font, full-width layout, per-section motion, the pending fix batch including the data and cost findability gap). review-qa runs the adversarial passes on the frozen B SHA. Truth rule: no promise of automatic daily runs. Build held, slice 03 not released, no deploy. Handback to advisor-lead: one runnable page B and a 3 line plain summary.
+
+## 2026-09-30 02:30Z: tightened page B handed to the owner
+
+Page B tightened and frozen (50bf121, follow-up 65463b8), review-qa pass 1 (df6632d, one Medium: hero Trash) and pass 2 (72f3424, no new findings), Chromium 148/0 and WebKit 144/0 (Playwright). Proposal: slices/02-references-and-comps/proof/comps/proposal/index.html, runnable page: comps/page-b/index.html, served at 127.0.0.1:8941 via acceptance/serve.py. Sent to advisor-lead for Tayo with a 3 line summary. Open owner decisions: drop the hero Trash, keep tightened B, typical monthly cost (product answer, nothing invented), installer and Claude Code presentation, scheduling line (recommend unsaid). Limits: real Safari 26 and devices unverified, clipboard stubbed, readers are AI models with mixed results, three fresh reads of the final privacy wording still running. Build, slice 03 and deploy held.
