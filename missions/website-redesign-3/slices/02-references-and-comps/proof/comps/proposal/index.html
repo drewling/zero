@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>zero page rethink: before and after (proposal, not approved)</title>
+<link rel="stylesheet" href="../kit/kit.css">
+<link rel="preload" href="../kit/chicagoflf.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:ChicagoFLF;src:url(../kit/chicagoflf.woff2) format("woff2");font-display:swap}
+:root{--label:ChicagoFLF,Geist,system-ui,sans-serif;--measure:32em}
+body{margin:0}
+h1,h2,h3{font-family:var(--sans);font-weight:700;letter-spacing:-.03em;line-height:1.05;margin:0;text-wrap:balance}
+h1{font-size:clamp(34px,5vw,64px);max-width:18ch}
+h2{font-size:clamp(26px,3vw,44px);max-width:22ch}
+h3{font-size:19px;letter-spacing:-.01em;margin-top:1.4em}
+p,li{max-width:var(--measure)}
+p+p{margin-top:.7em}
+.band{padding:clamp(40px,6vw,96px) var(--pad);border-top:var(--line)}
+.band > h2{margin-bottom:.6em}
+.band.ink{background:var(--ink);color:var(--paper)}
+.band.ink a{color:var(--paper)}
+.lede{font-size:clamp(18px,1.3vw,21px);margin-top:18px}
+.status{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.tag{font:400 14px/1.2 var(--label);padding:6px 9px;border:var(--line);background:var(--paper);max-width:100%;white-space:normal}
+.tag.inv{background:var(--ink);color:var(--paper)}
+.open{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.btnlink{font:400 16px/1.2 var(--label);padding:11px 16px;max-width:100%;border:var(--line);border-radius:8px;background:var(--paper);color:var(--ink);text-decoration:none;box-shadow:inset 0 0 0 1px var(--paper),inset 0 0 0 3px var(--ink)}
+.btnlink:hover{background:var(--ink);color:var(--paper);box-shadow:none}
+table{border-collapse:collapse;width:100%;margin-top:14px;font-size:16px}
+th,td{border:1px solid var(--ink);padding:10px 12px;text-align:left;vertical-align:top}
+th{font:400 14px/1.2 var(--label);background:var(--ink);color:var(--paper)}
+td b{font-weight:600}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pending{font:400 13px/1 var(--label);display:inline-block;padding:3px 6px;border:1px dashed var(--ink)}
+.cols{display:grid;gap:clamp(16px,2vw,32px);grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));margin-top:20px;align-items:start}
+figure{margin:0}
+figure img{display:block;width:100%;height:auto;border:var(--line);background:var(--paper)}
+figcaption{font:400 13px/1.35 var(--label);margin-top:8px}
+.tall{max-height:720px;overflow-y:auto;border:var(--line)}
+.tall img{border:0}
+.beats{display:grid;gap:10px;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px}
+.beats.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.beats figure img{border-width:1px}
+.ask{counter-reset:ask;list-style:none;padding:0;margin-top:14px}
+.ask li{counter-increment:ask;padding:14px 0 14px 44px;position:relative;border-top:1px solid currentColor}
+.ask li::before{content:counter(ask);position:absolute;left:0;top:12px;font:700 22px/1 var(--sans)}
+.aside-note{font-size:15px}
+.aside-note code,td code{font:400 .92em/1.4 var(--mono);overflow-wrap:anywhere}
+.draft-flag{position:static;display:inline-block;margin:8px var(--pad) 0}
+footer{padding:18px var(--pad);border-top:var(--line);font:400 14px/1.4 var(--label)}
+@media (min-width:1100px){
+  .split{display:grid;grid-template-columns:5fr 7fr;gap:clamp(24px,3vw,64px);align-items:start}
+}
+</style>
+</head>
+<body>
+<p class="draft-flag">PROPOSAL · proof only · not approved</p>
+
+<header class="band" style="border-top:0">
+  <h1>The zero page, rethought as a whole.</h1>
+  <p class="lede">You approved hero B. This page shows everything else: two complete pages you can scroll, what changed from the version you rejected, and what the evidence says so far.</p>
+  <div class="status">
+    <span class="tag inv">Hero B: approved</span>
+    <span class="tag">Story, words, type, layout, motion: proposed</span>
+    <span class="tag">Nothing is live</span>
+  </div>
+  <div class="open">
+    <a class="btnlink" href="../page-a/">Open page A (recovery first)</a>
+    <a class="btnlink" href="../page-b/">Open page B (risk first)</a>
+  </div>
+  <p class="aside-note" style="margin-top:14px">Both pages are real, running builds with the motion on. Resize the window to see the 320 to 2560px layouts. Add <code>?static</code> to a page's address to see its finished state with no motion.</p>
+</header>
+
+<section class="band ink" id="recommend">
+  <h2>Where it stands</h2>
+  <p><b>Working recommendation: page A, not a reader-voted winner.</b> Six fresh isolated readers, three per page, read the frozen pages at 00:37Z. All six understood that zero does the work after you start a run, and all six found the Undo tab and both ways to put mail back. Visuals improved (A 3/3/2, B 3/3/3, against 2/2/2 before). Job clarity and readiness to decide did not change. Finding the data, safety and cost facts did not improve (A 3/4/3, B 3/3/3, against 4/3/4).</p>
+  <p>A is 70 words shorter than B and showed no story or decision disadvantage. B's slightly better visual scores count against A and stay on record. All six readers asked for a real price, and all six found it too easy to confuse "no zero server receives your email" with TypeSafe receiving it. Those two points lead the fix batch.</p>
+  <p>Next: one fix batch covering the readers, the design critique and QA together, then an adversarial review by review-qa, then the final recommendation here.</p>
+  <p class="aside-note">These are AI model readers working from stills and copy, not people and not live motion. Full analysis: <code>slices/01-copy-and-story/proof/rethink/after-findings.md</code>. <span class="pending">review-qa pending</span></p>
+</section>
+
+<section class="band" id="outline">
+  <h2>The story: six blocks became four or five</h2>
+  <p>Old readers all understood the product, but said the page taught the same keep-or-archive lesson twice, and that the Undo window proved nothing. Both new outlines cut the second demo and replace the grey placeholder rows with a readable Undo window.</p>
+  <div class="wrap"><table>
+    <thead><tr><th>Before (rejected)</th><th>A: recovery first</th><th>B: risk first</th></tr></thead>
+    <tbody>
+      <tr><td>Hero B</td><td>Hero B</td><td>Hero B</td></tr>
+      <tr><td>See what stays. See what gets archived.</td><td><b>See what went into the archive.</b> How it runs, the rules, and the Undo tab, in one section</td><td><b>Before you install.</b> The five facts first</td></tr>
+      <tr><td>Keep mail that needs your reply or action.</td><td><b>Before you install.</b> The five facts</td><td><b>Choose what needs to stay.</b> The real Rules text</td></tr>
+      <tr><td>Undo an archive. Nothing is deleted.</td><td><b>Install when you’re ready.</b></td><td><b>Restore archived mail.</b></td></tr>
+      <tr><td>Know what you connect, share and pay for.</td><td></td><td><b>Ready to install?</b></td></tr>
+      <tr><td>Install zero on your Mac.</td><td></td><td></td></tr>
+    </tbody>
+  </table></div>
+  <p class="aside-note" style="margin-top:12px">Words: over 900 on the live site, 532 in the rejected version with hero B, A 474, B 544. Every disclosure is still there, said once. Line-by-line old and new copy is in the copywriter's <code>slices/01-copy-and-story/proof/rethink/PROPOSAL.md</code>.</p>
+</section>
+
+<section class="band" id="pages">
+  <h2>Before and after, whole page</h2>
+  <p>Desktop, 1440px wide. Scroll inside each frame. The mobile captures (390px) follow below.</p>
+  <div class="cols">
+    <figure><div class="tall"><img src="img/before-full-1440.jpg" alt="The rejected page at 1440px: Pixelify headings, six sections, grey placeholder rows in the Undo window" loading="lazy" width="720" height="2161"></div><figcaption>Before: rejected v3, six sections</figcaption></figure>
+    <figure><div class="tall"><img src="img/after-a-1440.jpg" alt="Page A at 1440px: hero, then a full-width Undo band, the Before you install window, and an ink install band" loading="lazy" width="720" height="1461"></div><figcaption>A: four sections</figcaption></figure>
+    <figure><div class="tall"><img src="img/after-b-1440.jpg" alt="Page B at 1440px: hero, the Before you install window, the Rules window, the Undo band and the install band" loading="lazy" width="720" height="1819"></div><figcaption>B: five sections</figcaption></figure>
+  </div>
+  <div class="cols">
+    <figure><div class="tall"><img src="img/before-full-390.jpg" alt="The rejected page at 390px" loading="lazy" width="390" height="5871"></div><figcaption>Before, 390px</figcaption></figure>
+    <figure><div class="tall"><img src="img/after-a-390.jpg" alt="Page A at 390px" loading="lazy" width="390" height="4273"></div><figcaption>A, 390px</figcaption></figure>
+    <figure><div class="tall"><img src="img/after-b-390.jpg" alt="Page B at 390px" loading="lazy" width="390" height="5099"></div><figcaption>B, 390px</figcaption></figure>
+  </div>
+  <p class="aside-note" style="margin-top:12px">More captures, including 320 and 1920px, no JavaScript and reduced motion: <a href="../page-a/shots/">page-a/shots</a>, <a href="../page-b/shots/">page-b/shots</a>.</p>
+</section>
+
+<section class="band" id="type">
+  <div class="split">
+    <div>
+      <h2>Headings you can read</h2>
+      <p>You said the heading font was too hard to read. We set four options on the real headlines at 320, 390, 1440 and 1920px. An OCR test read the old Pixelify headings correctly 30 to 35% of the time on phones. The proposed option T3 scored 93%.</p>
+      <p><b>T3:</b> Geist Bold for every heading. The Chicago-style pixel face stays only on short labels (menu bar, window titles, tabs and buttons), where it's crisp and carries the Mac feel.</p>
+      <p class="aside-note">OCR stands in for reading, not proof of it. Readers, and you, are the real test. All four options: <a href="../type/specimen.html">type specimen</a>.</p>
+    </div>
+    <div class="cols" style="margin-top:0">
+      <figure><img src="img/type-P0-390.jpg" alt="Pixelify headings at 390px" loading="lazy" width="390" height="710"><figcaption>Before: Pixelify, 390px</figcaption></figure>
+      <figure><img src="img/type-T3-390.jpg" alt="Geist Bold headings with ChicagoFLF labels at 390px" loading="lazy" width="390" height="753"><figcaption>After: T3, 390px</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="layout">
+  <h2>Edge to edge</h2>
+  <p>Every section now runs the full width of the window. Below 1100px it's one column: the words, then zero's window on a dithered desktop that runs to both edges. From 1100px the words sit beside the window (5 to 7 columns), and from 1920px they split 4 to 8. Nothing scrolls sideways at any width from 320 to 2560px.</p>
+  <div class="wrap"><table>
+    <thead><tr><th>Width</th><th>Layout</th><th>Line length (characters)</th></tr></thead>
+    <tbody>
+      <tr><td>320</td><td>one column</td><td>34</td></tr>
+      <tr><td>390</td><td>one column</td><td>43</td></tr>
+      <tr><td>768</td><td>one column</td><td>85 <span class="pending">too long, fix queued</span></td></tr>
+      <tr><td>1440</td><td>words beside window, 5 | 7</td><td>60–64</td></tr>
+      <tr><td>1920</td><td>4 | 8, text 18px</td><td>60–63</td></tr>
+      <tr><td>2560</td><td>4 | 8</td><td>85 <span class="pending">too long, fix queued</span></td></tr>
+    </tbody>
+  </table></div>
+  <p class="aside-note" style="margin-top:12px">Line lengths were measured from the real rendered lines, with a median per width. The target is 60 to 75. Spec: <code>proof/LAYOUT-GRID.md</code>.</p>
+</section>
+
+<section class="band" id="motion">
+  <h2>One stepped beat per section</h2>
+  <p>Each section's window acts out its one point, in the same 1-bit, frame-by-frame way as the hero. A section plays once when you scroll to it. If you jump straight to a section, or it's already on screen, it just shows the finished state. With reduced motion or no JavaScript you get the finished state, and nothing is only visible in the motion.</p>
+  <h3>Undo: the batch opens, then the put-back button explains itself</h3>
+  <div class="beats">
+    <figure><img src="../page-a/shots/beat-undo-f0.jpg" alt="Undo batch collapsed" loading="lazy"><figcaption>1 · collapsed</figcaption></figure>
+    <figure><img src="../page-a/shots/beat-undo-f1.jpg" alt="Undo batch open, rows stepping in" loading="lazy"><figcaption>2 · rows step in</figcaption></figure>
+    <figure><img src="../page-a/shots/beat-undo-f2.jpg" alt="Balloon: Put this email back in the inbox" loading="lazy"><figcaption>3 · balloon (final)</figcaption></figure>
+  </div>
+  <h3>Rules (B only): the tab moves to Settings, then the policy fills in</h3>
+  <div class="beats">
+    <figure><img src="../page-b/shots/beat-rules-f0.jpg" alt="Settings window on the Open loops tab" loading="lazy"><figcaption>1 · Open loops</figcaption></figure>
+    <figure><img src="../page-b/shots/beat-rules-f1.jpg" alt="Tab selection moving to Settings" loading="lazy"><figcaption>2 · to Settings</figcaption></figure>
+    <figure><img src="../page-b/shots/beat-rules-f2.jpg" alt="Rules text complete" loading="lazy"><figcaption>3 · Rules (final)</figcaption></figure>
+  </div>
+  <h3>Before you install: Get Info opens from the zero icon</h3>
+  <div class="beats">
+    <figure><img src="../page-a/shots/beat-ledger-f0.jpg" alt="zero app icon only" loading="lazy"><figcaption>1 · icon</figcaption></figure>
+    <figure><img src="../page-a/shots/beat-ledger-f1.jpg" alt="Zoom outlines stepping from the icon" loading="lazy"><figcaption>2 · zoom</figcaption></figure>
+    <figure><img src="../page-a/shots/beat-ledger-f2.jpg" alt="Get Info window with the five facts" loading="lazy"><figcaption>3 · the five facts (final)</figcaption></figure>
+  </div>
+  <h3>Install: the command types itself</h3>
+  <div class="beats two">
+    <figure><img src="../page-a/shots/beat-install-f0.jpg" alt="Empty Terminal prompt" loading="lazy"><figcaption>1 · prompt</figcaption></figure>
+    <figure><img src="../page-a/shots/beat-install-f1.jpg" alt="Command typed, cursor resting" loading="lazy"><figcaption>2 · command (final)</figcaption></figure>
+  </div>
+  <p class="aside-note" style="margin-top:14px">The section beats cause zero layout shift, measured in Chromium. Spec: <code>proof/MOTION-SPEC.md</code> §4.0.</p>
+</section>
+
+<section class="band" id="objects">
+  <h2>Each section shows its point</h2>
+  <div class="wrap"><table>
+    <thead><tr><th>Section</th><th>Before</th><th>After</th></tr></thead>
+    <tbody>
+      <tr><td>Sort demo</td><td><img src="img/before-demo.jpg" alt="Before: Stays and Archived windows" width="240" loading="lazy" style="width:min(240px,40vw);height:auto;border:1px solid"><br>Stays and Archived, which repeated the hero</td><td>Cut. The hero already shows the sort.</td></tr>
+      <tr><td>Rules</td><td><img src="img/before-decisions.jpg" alt="Before: Rules card" width="240" loading="lazy" style="width:min(240px,40vw);height:auto;border:1px solid"><br>A summary card</td><td>A: one paragraph beside Undo. B: zero's real Settings, Rules pane, with the actual default policy text</td></tr>
+      <tr><td>Recovery</td><td><img src="img/before-undo.jpg" alt="Before: Undo window with grey placeholder rows" width="240" loading="lazy" style="width:min(240px,40vw);height:auto;border:1px solid"><br>Grey placeholder rows</td><td>zero's Undo tab: a dated batch, 5 of 8 readable made-up emails, Restore all, a put-back button and its real tooltip</td></tr>
+      <tr><td>Tradeoffs</td><td><img src="img/before-before.jpg" alt="Before: zero Info window" width="240" loading="lazy" style="width:min(240px,40vw);height:auto;border:1px solid"><br>4 long paragraphs; the install warning sat elsewhere</td><td>Get Info from the zero icon: 5 short labelled facts, including the installer warning, all before the command. The hero's Install button lands here.</td></tr>
+      <tr><td>Install</td><td><img src="img/before-install.jpg" alt="Before: install section" width="240" loading="lazy" style="width:min(240px,40vw);height:auto;border:1px solid"><br>Warnings plus the command</td><td>Only the next step: the command, Copy command, and the first setup step</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="band" id="evidence">
+  <h2>Evidence and its limits</h2>
+  <div class="wrap"><table>
+    <thead><tr><th>Check</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td>Automated acceptance, 6 widths</td><td>Chromium 117/0, WebKit 113/0, rerun independently by the copywriter. No sideways scroll, text stays inside its section, the words match the counted copy exactly, the no-JS and reduced-motion states equal the finished page, and keyboard focus only reaches real links and Copy command</td></tr>
+      <tr><td>Fresh readers, 3 per page</td><td>Done, summarised above. Mixed: visuals up, story up for one A reader, finding tradeoffs not improved. One B reader missed the Undo scrollbar, so the 5-of-8 rows need a clearer cue. <code>after-findings.md</code></td></tr>
+      <tr><td>Design critique (/impeccable)</td><td>5 fixes queued: empty space beside short text, a gap in the facts window, line length, Rules text wrapping, and A's longest section. <code>proof/IMPECCABLE-CRITIQUE-pages.md</code></td></tr>
+      <tr><td>Adversarial review (review-qa)</td><td><span class="pending">pending, after the fix batch</span></td></tr>
+      <tr><td>Not verified</td><td>Real Safari 26 and real iPhones or Macs. The "WebKit" results come from Playwright's build, and the readers are AI models, not people.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="band ink" id="decide">
+  <h2>What we'll ask you to decide</h2>
+  <ol class="ask">
+    <li><b>A or B</b>, or neither, once the fixes and the adversarial review are in.</li>
+    <li><b>Heading type T3</b> (Geist Bold headings, pixel face only on labels).</li>
+    <li><b>The four section beats</b>, before development builds them for real.</li>
+  </ol>
+  <p class="aside-note">Nothing goes live from this page. Answers go through main-lead.</p>
+</section>
+
+<footer>zero redesign 3 · slice 02 · proposal page · built by design.lead with design-copywriter</footer>
+</body>
+</html>
