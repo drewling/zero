@@ -1,0 +1,402 @@
+{
+  "sourceCommit": "cdfee91",
+  "scope": "Public local comp interfaces. Clipboard fault injection tests environmental success/denial/unavailability without installer execution.",
+  "records": [
+    {
+      "ok": true,
+      "name": "a: loaded assets and script status",
+      "observed": {
+        "resources": [],
+        "errors": []
+      }
+    },
+    {
+      "ok": true,
+      "name": "a: semantics and policy exposure",
+      "observed": {
+        "h1": 1,
+        "main": 1,
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Clean up your Gmail inbox on your Mac."
+          },
+          {
+            "level": "H2",
+            "text": "See what went into the archive."
+          },
+          {
+            "level": "H2",
+            "text": "Before you install."
+          },
+          {
+            "level": "H2",
+            "text": "Install when you’re ready."
+          }
+        ],
+        "copyName": "Copy command",
+        "exposedPolicy": null
+      }
+    },
+    {
+      "ok": true,
+      "name": "a: target #top",
+      "observed": "zero"
+    },
+    {
+      "ok": true,
+      "name": "a: target #how",
+      "observed": "How it works"
+    },
+    {
+      "ok": true,
+      "name": "a: target #undo",
+      "observed": "Undo"
+    },
+    {
+      "ok": true,
+      "name": "a: target #before",
+      "observed": "Before you install"
+    },
+    {
+      "ok": true,
+      "name": "a: target #install",
+      "observed": "Install"
+    },
+    {
+      "ok": true,
+      "name": "a: target #install",
+      "observed": "Install zero for Mac"
+    },
+    {
+      "ok": false,
+      "name": "a: proof-server linked route /install.sh",
+      "observed": 404
+    },
+    {
+      "ok": false,
+      "name": "a: proof-server linked route /privacy.html",
+      "observed": 404
+    },
+    {
+      "ok": false,
+      "name": "a: proof-server linked route /terms.html",
+      "observed": 404
+    },
+    {
+      "ok": true,
+      "name": "a: every real control has visible focus outline",
+      "observed": [
+        {
+          "text": "zero",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 84.125
+        },
+        {
+          "text": "Install",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 75.25
+        },
+        {
+          "text": "Install zero for Mac",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 230.453125
+        },
+        {
+          "text": "Read the installer first",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 199.078125
+        },
+        {
+          "text": "Privacy policy",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 105.984375
+        },
+        {
+          "text": "TypeSafe pricing",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 129.671875
+        },
+        {
+          "text": "Jev key",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 343.421875
+        },
+        {
+          "text": "GitHub Releases",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 128.296875
+        },
+        {
+          "text": "Copy command",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 184.15625
+        },
+        {
+          "text": "Source",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 55.03125
+        },
+        {
+          "text": "Privacy",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 61.34375
+        },
+        {
+          "text": "Terms",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 48.703125
+        }
+      ]
+    },
+    {
+      "ok": false,
+      "name": "a: clipboard success keyboard action and accessible feedback",
+      "observed": {
+        "written": "curl -fsSL https://zero.headless.com/install | bash",
+        "selection": "",
+        "focused": "copy",
+        "status": "",
+        "hidden": false,
+        "command": "curl -fsSL https://zero.headless.com/install | bash"
+      }
+    },
+    {
+      "ok": false,
+      "name": "a: clipboard denied keyboard action and accessible feedback",
+      "observed": {
+        "written": null,
+        "selection": "",
+        "focused": "copy",
+        "status": "",
+        "hidden": false,
+        "command": "curl -fsSL https://zero.headless.com/install | bash"
+      }
+    },
+    {
+      "ok": false,
+      "name": "a: clipboard unavailable keyboard action and accessible feedback",
+      "observed": {
+        "written": null,
+        "selection": "",
+        "focused": "",
+        "status": "",
+        "hidden": false,
+        "command": "curl -fsSL https://zero.headless.com/install | bash"
+      }
+    },
+    {
+      "ok": true,
+      "name": "b: loaded assets and script status",
+      "observed": {
+        "resources": [],
+        "errors": []
+      }
+    },
+    {
+      "ok": true,
+      "name": "b: semantics and policy exposure",
+      "observed": {
+        "h1": 1,
+        "main": 1,
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Clean up your Gmail inbox on your Mac."
+          },
+          {
+            "level": "H2",
+            "text": "Before you install."
+          },
+          {
+            "level": "H2",
+            "text": "Choose what needs to stay."
+          },
+          {
+            "level": "H2",
+            "text": "Restore archived mail."
+          },
+          {
+            "level": "H2",
+            "text": "Ready to install?"
+          }
+        ],
+        "copyName": "Copy command",
+        "exposedPolicy": true
+      }
+    },
+    {
+      "ok": true,
+      "name": "b: target #top",
+      "observed": "zero"
+    },
+    {
+      "ok": true,
+      "name": "b: target #how",
+      "observed": "How it works"
+    },
+    {
+      "ok": true,
+      "name": "b: target #undo",
+      "observed": "Undo"
+    },
+    {
+      "ok": true,
+      "name": "b: target #before",
+      "observed": "Before you install"
+    },
+    {
+      "ok": true,
+      "name": "b: target #install",
+      "observed": "Install"
+    },
+    {
+      "ok": true,
+      "name": "b: target #install",
+      "observed": "Install zero for Mac"
+    },
+    {
+      "ok": false,
+      "name": "b: proof-server linked route /install.sh",
+      "observed": 404
+    },
+    {
+      "ok": false,
+      "name": "b: proof-server linked route /privacy.html",
+      "observed": 404
+    },
+    {
+      "ok": false,
+      "name": "b: proof-server linked route /terms.html",
+      "observed": 404
+    },
+    {
+      "ok": true,
+      "name": "b: every real control has visible focus outline",
+      "observed": [
+        {
+          "text": "zero",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 84.125
+        },
+        {
+          "text": "Install",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 75.25
+        },
+        {
+          "text": "Install zero for Mac",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 230.453125
+        },
+        {
+          "text": "Read the installer first",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 199.078125
+        },
+        {
+          "text": "Privacy policy",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 105.984375
+        },
+        {
+          "text": "TypeSafe pricing",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 129.671875
+        },
+        {
+          "text": "Jev key",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 346.640625
+        },
+        {
+          "text": "GitHub Releases",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 128.296875
+        },
+        {
+          "text": "Copy command",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 184.15625
+        },
+        {
+          "text": "Source",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 55.03125
+        },
+        {
+          "text": "Privacy",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 61.34375
+        },
+        {
+          "text": "Terms",
+          "outline": "solid",
+          "width": "3px",
+          "widthPx": 48.703125
+        }
+      ]
+    },
+    {
+      "ok": false,
+      "name": "b: clipboard success keyboard action and accessible feedback",
+      "observed": {
+        "written": "curl -fsSL https://zero.headless.com/install | bash",
+        "selection": "",
+        "focused": "copy",
+        "status": "",
+        "hidden": false,
+        "command": "curl -fsSL https://zero.headless.com/install | bash"
+      }
+    },
+    {
+      "ok": false,
+      "name": "b: clipboard denied keyboard action and accessible feedback",
+      "observed": {
+        "written": null,
+        "selection": "",
+        "focused": "copy",
+        "status": "",
+        "hidden": false,
+        "command": "curl -fsSL https://zero.headless.com/install | bash"
+      }
+    },
+    {
+      "ok": false,
+      "name": "b: clipboard unavailable keyboard action and accessible feedback",
+      "observed": {
+        "written": null,
+        "selection": "",
+        "focused": "",
+        "status": "",
+        "hidden": false,
+        "command": "curl -fsSL https://zero.headless.com/install | bash"
+      }
+    }
+  ],
+  "pass": 18,
+  "fail": 12
+}

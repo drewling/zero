@@ -1,0 +1,82 @@
+[
+  {
+    "path": "shots/full-1440.jpg",
+    "source": "original/full-1440.jpg",
+    "operation": "full page",
+    "width": 1440,
+    "height": 2922,
+    "sha256": "6304dba811e707ea95c41507a9d7a6a78ce5049536c7203e7f61b52d2a0dee4a"
+  },
+  {
+    "path": "shots/full-390.jpg",
+    "source": "original/full-390.jpg",
+    "operation": "full page",
+    "width": 390,
+    "height": 4273,
+    "sha256": "83815c5e65e86eba5cd0d088532a2c960da4b6f73f1520bf452de2d0cbcf3cd7"
+  },
+  {
+    "path": "shots/hero-1440.jpg",
+    "source": "original/full-1440.jpg",
+    "operation": "section crop at pixel top 40, bottom 900",
+    "width": 1440,
+    "height": 860,
+    "sha256": "8c06dcc6a97584d459a2aa4bff10e604ae9bb41b9601cd915ae40fd888c2ba52"
+  },
+  {
+    "path": "shots/undo-1440.jpg",
+    "source": "original/full-1440.jpg",
+    "operation": "section crop at pixel top 900, bottom 1573",
+    "width": 1440,
+    "height": 673,
+    "sha256": "9093659c4aa47f01f1123e3c69e4f08cc5f2d839817596da72dd19c216def643"
+  },
+  {
+    "path": "shots/install-1440.jpg",
+    "source": "original/full-1440.jpg",
+    "operation": "section crop at pixel top 1573, bottom 2483",
+    "width": 1440,
+    "height": 910,
+    "sha256": "f282e87f7af18e3e9c0af0a80cdb47353f86de6de2d3e01a65e5ba1ea881d1f3"
+  },
+  {
+    "path": "shots/command-1440.jpg",
+    "source": "original/full-1440.jpg",
+    "operation": "section crop at pixel top 2483, bottom 2860",
+    "width": 1440,
+    "height": 377,
+    "sha256": "debe67586e11b79f709d7e06f0ecdab55fc84f0a0b0a4fa440ffe52702d7ceff"
+  },
+  {
+    "path": "shots/hero-390.jpg",
+    "source": "original/full-390.jpg",
+    "operation": "section crop at pixel top 40, bottom 1062",
+    "width": 390,
+    "height": 1022,
+    "sha256": "8e5bc1624edf6cdcc4444658cc900202a59a9dcf84ab3b3b66112283a7010590"
+  },
+  {
+    "path": "shots/undo-390.jpg",
+    "source": "original/full-390.jpg",
+    "operation": "section crop at pixel top 1062, bottom 2331",
+    "width": 390,
+    "height": 1269,
+    "sha256": "ba16d1917a8ad3ab6de834cd1005bad16edd59dc59fce6aed62aebdbc57c7df4"
+  },
+  {
+    "path": "shots/install-390.jpg",
+    "source": "original/full-390.jpg",
+    "operation": "section crop at pixel top 2331, bottom 3697",
+    "width": 390,
+    "height": 1366,
+    "sha256": "1a0972adb739ff3aa0abe9c1d806acc7e66fc3e0f4e95945fe0836d665b2ad77"
+  },
+  {
+    "path": "shots/command-390.jpg",
+    "source": "original/full-390.jpg",
+    "operation": "section crop at pixel top 3697, bottom 4181",
+    "width": 390,
+    "height": 484,
+    "sha256": "706efe401ba64be2ff26cdb2e0c0dde8cc05930f88a4a5b4483a8e7fdb3846e1"
+  }
+]

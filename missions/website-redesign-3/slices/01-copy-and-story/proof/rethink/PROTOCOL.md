@@ -1,6 +1,6 @@
 # Reader protocol and baseline provenance
 
-Status: three matched baseline reads complete, 2026-09-29. After reads are waiting for the designer's stable A/B commit, final type and full-bleed layout. This is a proof-only redesign proposal. Hero B is owner-approved; sections and copy are not. No install, inbox access, deployment or landing edit is part of this test.
+Status: all nine matched reads complete, updated2026-09-30. Three baseline sessions and three fresh sessions per stable outline retain raw input/session evidence. A/B source frozen at `cdfee91`, copy `496d985`, 10 ordered A images and12 B images versus14 baseline images. All nine have unique IDs, requested `claude-sonnet-5`, one turn and zero tools. Results are mixed, not an overall win (`after-findings.md`). This is a proof-only redesign proposal. Hero B is owner-approved; sections and copy are not. No install, inbox access, deployment or landing edit is part of this test. Post-reader revisions must receive new provenance and cannot overwrite these phases.
 
 ## Before sources
 

@@ -1,0 +1,115 @@
+PASS page-a 320 no horizontal overflow
+PASS page-a 320 every text stays inside its section
+PASS page-a 320 no clipped text
+PASS page-a 320 body text >= 16px :: min 17
+PASS page-a 320 prose measure <= 40em (~75ch) :: max 16.9em
+PASS page-a 320 no page errors
+PASS page-a 390 no horizontal overflow
+PASS page-a 390 every text stays inside its section
+PASS page-a 390 no clipped text
+PASS page-a 390 body text >= 16px :: min 17
+PASS page-a 390 prose measure <= 40em (~75ch) :: max 20.6em
+PASS page-a 390 no page errors
+PASS page-a 768 no horizontal overflow
+PASS page-a 768 every text stays inside its section
+PASS page-a 768 no clipped text
+PASS page-a 768 body text >= 16px :: min 17
+PASS page-a 768 prose measure <= 40em (~75ch) :: max 39.8em
+PASS page-a 768 no page errors
+PASS page-a 1440 no horizontal overflow
+PASS page-a 1440 every text stays inside its section
+PASS page-a 1440 no clipped text
+PASS page-a 1440 body text >= 16px :: min 17
+PASS page-a 1440 prose measure <= 40em (~75ch) :: max 29.6em
+PASS page-a 1440 no page errors
+PASS page-a rendered section words == Draft3 blocks (370 words)
+PASS page-a hero text == approved hero B
+PASS page-a 1920 no horizontal overflow
+PASS page-a 1920 every text stays inside its section
+PASS page-a 1920 no clipped text
+PASS page-a 1920 body text >= 16px :: min 18
+PASS page-a 1920 prose measure <= 40em (~75ch) :: max 36.3em
+PASS page-a 1920 no page errors
+PASS page-a 2560 no horizontal overflow
+PASS page-a 2560 every text stays inside its section
+PASS page-a 2560 no clipped text
+PASS page-a 2560 body text >= 16px :: min 18
+PASS page-a 2560 prose measure <= 40em (~75ch) :: max 39.8em
+PASS page-a 2560 no page errors
+PASS page-a ?static is the complete final frame :: {"lt":0,"stepping":0,"undoRows":5,"balloon":true,"ledgerRows":5,"info":true,"rulesLines":0,"rulesTab":null,"cmd":"curl -fsSL https://zero.headless.com/install | bash","zr":0}
+PASS page-a 390 no-JS == final frame
+PASS page-a 390 reduced-motion == final frame
+PASS page-a 390 reduced-motion: every story static, nothing played :: static,static,static,static
+PASS page-a 390 scrolling: every beat played to done :: {"page.page-a":"done","undo-win":"done","install":"done","term":"done"}
+PASS page-a 390 section beats were armed before playing (not snapped from final) :: undo-win,install,term
+PASS page-a 390 after playback == final frame
+PASS page-a 390 playback without page errors
+PASS page-a 1440 no-JS == final frame
+PASS page-a 1440 reduced-motion == final frame
+PASS page-a 1440 reduced-motion: every story static, nothing played :: static,static,static,static
+PASS page-a 1440 scrolling: every beat played to done :: {"page.page-a":"done","undo-win":"done","install":"done","term":"done"}
+PASS page-a 1440 section beats were armed before playing (not snapped from final) :: page-a,undo-win,install,term
+PASS page-a 1440 after playback == final frame
+PASS page-a 1440 playback without page errors
+PASS page-a Install CTA lands on the ledger, which stays readable :: {"mode":"seen","rows":5,"top":0}
+PASS page-a keyboard order = document order, 16 stops, none in illustrations :: zero > How it works > Undo > Before you install > Source > Install > Install zero for Mac > Read the installer first > Privacy policy > TypeSafe pricing > Jev key > GitHub Releases > Copy command > Source > Privacy > Terms
+PASS page-a Copy command has a visible focus ring :: solid 3px
+PASS page-b 320 no horizontal overflow
+PASS page-b 320 every text stays inside its section
+PASS page-b 320 no clipped text
+PASS page-b 320 body text >= 16px :: min 17
+PASS page-b 320 prose measure <= 40em (~75ch) :: max 16.9em
+PASS page-b 320 no page errors
+PASS page-b 390 no horizontal overflow
+PASS page-b 390 every text stays inside its section
+PASS page-b 390 no clipped text
+PASS page-b 390 body text >= 16px :: min 17
+PASS page-b 390 prose measure <= 40em (~75ch) :: max 20.6em
+PASS page-b 390 no page errors
+PASS page-b 768 no horizontal overflow
+PASS page-b 768 every text stays inside its section
+PASS page-b 768 no clipped text
+PASS page-b 768 body text >= 16px :: min 17
+PASS page-b 768 prose measure <= 40em (~75ch) :: max 39.8em
+PASS page-b 768 no page errors
+PASS page-b 1440 no horizontal overflow
+PASS page-b 1440 every text stays inside its section
+PASS page-b 1440 no clipped text
+PASS page-b 1440 body text >= 16px :: min 17
+PASS page-b 1440 prose measure <= 40em (~75ch) :: max 39.8em
+PASS page-b 1440 no page errors
+PASS page-b rendered section words == Draft3 blocks (440 words)
+PASS page-b hero text == approved hero B
+PASS page-b 1920 no horizontal overflow
+PASS page-b 1920 every text stays inside its section
+PASS page-b 1920 no clipped text
+PASS page-b 1920 body text >= 16px :: min 18
+PASS page-b 1920 prose measure <= 40em (~75ch) :: max 39.8em
+PASS page-b 1920 no page errors
+PASS page-b 2560 no horizontal overflow
+PASS page-b 2560 every text stays inside its section
+PASS page-b 2560 no clipped text
+PASS page-b 2560 body text >= 16px :: min 18
+PASS page-b 2560 prose measure <= 40em (~75ch) :: max 39.8em
+PASS page-b 2560 no page errors
+PASS page-b ?static is the complete final frame :: {"lt":0,"stepping":0,"undoRows":5,"balloon":true,"ledgerRows":5,"info":true,"rulesLines":14,"rulesTab":"Settings","cmd":"curl -fsSL https://zero.headless.com/install | bash","zr":0}
+PASS page-b 390 no-JS == final frame
+PASS page-b 390 reduced-motion == final frame
+PASS page-b 390 reduced-motion: every story static, nothing played :: static,static,static,static,static
+PASS page-b 390 scrolling: every beat played to done :: {"page.page-b":"done","install":"done","rules-win":"done","undo-win":"done","term":"done"}
+PASS page-b 390 section beats were armed before playing (not snapped from final) :: install,rules-win,undo-win,term
+PASS page-b 390 after playback == final frame
+PASS page-b 390 playback without page errors
+PASS page-b 1440 no-JS == final frame
+PASS page-b 1440 reduced-motion == final frame
+PASS page-b 1440 reduced-motion: every story static, nothing played :: static,static,static,static,static
+PASS page-b 1440 scrolling: every beat played to done :: {"page.page-b":"done","install":"done","rules-win":"done","undo-win":"done","term":"done"}
+PASS page-b 1440 section beats were armed before playing (not snapped from final) :: page-b,install,rules-win,undo-win,term
+PASS page-b 1440 after playback == final frame
+PASS page-b 1440 playback without page errors
+PASS page-b Install CTA lands on the ledger, which stays readable :: {"mode":"seen","rows":5,"top":0}
+PASS page-b keyboard order = document order, 16 stops, none in illustrations :: zero > How it works > Undo > Before you install > Source > Install > Install zero for Mac > Read the installer first > Privacy policy > TypeSafe pricing > Jev key > GitHub Releases > Copy command > Source > Privacy > Terms
+PASS page-b Copy command has a visible focus ring :: solid 3px
+PASS page-b Rules policy text is exposed to assistive tech
+
+113 PASS, 0 FAIL (webkit)

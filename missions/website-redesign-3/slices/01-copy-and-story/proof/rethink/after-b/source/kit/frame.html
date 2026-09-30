@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>capture harness</title>
+<style>html,body{margin:0;background:#fff}iframe{display:block;border:0;background:#fff}</style></head>
+<body>
+<!-- Capture harness for the comps. ?src=<page>&w=390&h=844 loads the page in an iframe of exactly that CSS size.
+     This is a narrow-viewport iframe, NOT device emulation: no touch, no mobile UA and no dynamic toolbar. -->
+<iframe id="f" title="comp"></iframe>
+<script>
+const q=new URLSearchParams(location.search),f=document.getElementById('f');
+f.width=q.get('w')||390;f.height=q.get('h')||844;f.src=q.get('src');
+</script>
+</body></html>
