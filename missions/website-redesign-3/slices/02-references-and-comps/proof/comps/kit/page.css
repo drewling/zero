@@ -15,7 +15,7 @@
 :root{
   --pixel:ChicagoFLF,Geist,system-ui,sans-serif;          /* short UI labels only */
   --head:Geist,system-ui,sans-serif;                       /* every heading */
-  --measure:60ch;
+  --measure:32em; /* ~68 characters of Geist at body size; 60ch measured ~85 real characters per line (LAYOUT-GRID) */
   --gap:clamp(20px,2.6vw,56px);
   --band-y:clamp(56px,7vw,128px);
 }
@@ -41,6 +41,8 @@ b.ui{font-weight:600}
 
 @media (min-width:1100px){
   .band > .field{border-top:0}
+  /* a short text column centres against its object, so a tall window never leaves an empty half */
+  .split-r > .txt,.split-l > .txt{align-self:center}
   .split-r > .txt{grid-column:content-start / span 5;padding:var(--band-y) var(--gap) var(--band-y) 0}
   .split-r > .field{grid-column:8 / full-end;border-left:var(--line)}
   .split-l > .field{grid-column:full-start / 9;grid-row:1;border-right:var(--line)}
@@ -99,10 +101,14 @@ b.ui{font-weight:600}
 .ub{display:grid;place-items:center;width:34px;height:30px;border:var(--line);border-radius:7px;background:var(--paper)}
 .ub svg{width:17px;height:auto}
 .ub.hot{background:var(--ink)}.ub.hot svg{filter:invert(1)}
+/* 5 of the batch's 8 rows show. The 6th is cut by the window's edge: only its top rule and the top of its put-back
+   button, no text (readers missed the plain scroll bar). No extra words. */
+.urows li.peek{min-height:0;height:14px;padding-block:5px 0;align-items:start;overflow:hidden;border-bottom:0}
+.urows li:nth-last-child(2){border-bottom:1px solid var(--ink)}
 .undo-obj .sbar{--thumb:62%}
 /* balloon help (System 7), under the window, its tail on row 5's put-back button */
 .balloon{position:relative;justify-self:end;max-width:min(100%,19em);margin:6px 32px 0 0;padding:8px 12px;background:var(--paper);
-  border:var(--line);border-radius:12px;box-shadow:var(--shadow);font:500 14px/1.35 var(--sans)}
+  border:var(--line);border-radius:12px;box-shadow:var(--shadow);font:500 14px/1.45 var(--sans)}
 .balloon::before,.balloon::after{content:"";position:absolute;right:22px;border-style:solid;border-color:transparent}
 .balloon::before{top:-16px;border-width:0 0 16px 14px;border-bottom-color:var(--ink)}
 .balloon::after{top:-11px;right:24.5px;border-width:0 0 12px 10px;border-bottom-color:var(--paper)}
@@ -114,7 +120,7 @@ b.ui{font-weight:600}
 .pane .ph{font:400 16px/1.2 var(--pixel);margin:0 0 8px}
 .editor{display:grid;grid-template-columns:1fr auto;border:var(--line);border-radius:8px;overflow:hidden}
 .editor pre{margin:0;padding:12px 14px;font:400 13.5px/1.55 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}
-.editor .ln{display:block;min-height:1.55em}
+.editor .ln{display:block;min-height:1.55em;padding-left:2ch;text-indent:-2ch} /* a wrapped rule hangs under its text, not its dash */
 .rules-obj .sbar{--thumb:70%}
 .save{display:flex;justify-content:flex-end;margin-top:10px}
 
@@ -132,13 +138,14 @@ b.ui{font-weight:600}
 .info .row{display:grid;grid-template-columns:minmax(9.5em,auto) minmax(0,var(--measure));column-gap:22px;align-items:start;
   margin:0;padding:18px 24px;border-bottom:1px solid var(--ink)}
 .info .row:last-child{border-bottom:0}
-.info .k{font:600 17px/1.35 var(--sans);white-space:nowrap}
+.info .k{font:600 17px/1.4 var(--sans);white-space:nowrap}
 .info .v{margin:0;line-height:1.55}
 @media (min-width:1100px){
-  .info .rows{grid-template-columns:1fr 1fr;grid-auto-flow:column;grid-template-rows:repeat(3,auto)}
-  .info .row:nth-child(3){border-bottom:0}
-  .info .row:nth-child(n+4){border-left:var(--line)}
-  .info .row:nth-child(5){border-bottom:0}
+  /* rows pair up left to right; an odd last row spans both columns, so the grid never has a hole */
+  .info .rows{grid-template-columns:1fr 1fr}
+  .info .row:nth-child(odd):not(:last-child){border-right:var(--line)}
+  .info .row:last-child:nth-child(odd){grid-column:1 / -1;justify-content:start}
+  .info .row:nth-last-child(2):nth-child(odd){border-bottom:1px solid var(--ink)}
 }
 @media (max-width:720px){
   .ledger > .txt{grid-template-columns:1fr}
@@ -163,7 +170,10 @@ b.ui{font-weight:600}
 #term pre .p{user-select:none}
 #term .cursorblk,#term .tcur{display:inline-block;width:.6em;height:1.1em;vertical-align:-.2em;background:var(--paper)}
 #term:has(.tcur) .cursorblk{visibility:hidden}
-#term .foot{display:flex;justify-content:flex-end;padding:0 16px 16px}
+#term .foot{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px 14px;padding:0 16px 16px}
+#term .copy-status:empty{display:none}
+#term .copy-status{padding:4px 10px;background:var(--paper);color:var(--ink);font:500 15px/1.4 var(--sans)}
+#term pre code::selection{background:var(--paper);color:var(--ink)}
 #term .btn{background:var(--paper);color:var(--ink);border-color:var(--paper)}
 #term .btn:hover,#term .btn.hit{background:var(--ink);color:var(--paper)}
 @media (prefers-reduced-motion:no-preference){#term.blink .cursorblk{animation:blink 1s steps(1) 3}}
@@ -173,6 +183,8 @@ b.ui{font-weight:600}
 footer{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;padding:18px var(--pad);border-top:2px solid var(--paper);background:var(--ink);color:var(--paper);font:400 15px/1 var(--pixel)}
 footer a{display:inline-flex;align-items:center;min-height:24px;color:var(--paper);text-decoration:none}
 footer a:hover{background:var(--paper);color:var(--ink)}
+/* the proof label sits after the footer, in flow: a fixed label overlapped copy in full-page captures (3 of 6 readers) */
+.page .draft-flag{position:static;display:block;margin:0;padding:6px var(--pad)}
 footer .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
 footer svg{width:16px;height:15px;filter:invert(1)}
 

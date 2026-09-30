@@ -51,9 +51,24 @@
         enter: async (r, z) => { for (let n = 0; n <= full.length; n += 2) { typed(n); await z.wait(28); } code.textContent = full; },
         still: () => typed(24) }
     ]});
-    const btn = document.getElementById('copy');
-    btn && btn.addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(full); btn.classList.add('hit'); setTimeout(() => btn.classList.remove('hit'), 900); } catch (_) {}
-    });
+    /* Copy: the button ships hidden and is shown only where the clipboard API exists, so no JS or no API leaves just
+       the selectable command. Success and denial are both said in a polite live region and shown on screen.
+       On denial the command is selected for Command-C and focus stays on the button. Strings: copywriter, approved. */
+    const btn = document.getElementById('copy'), status = document.getElementById('copy-status');
+    if (btn && status && window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
+      btn.hidden = false; let t;
+      btn.addEventListener('click', async () => {
+        clearTimeout(t); status.textContent = '';
+        try {
+          await navigator.clipboard.writeText(full);
+          status.textContent = 'Copied'; btn.classList.add('hit');
+          t = setTimeout(() => { status.textContent = ''; btn.classList.remove('hit'); }, 4000);
+        } catch (_) {
+          const code = term.querySelector('code'), range = document.createRange(), sel = getSelection();
+          range.selectNodeContents(code); sel.removeAllRanges(); sel.addRange(range);
+          status.textContent = 'Copy manually: press Command-C.';
+        }
+      });
+    }
   }
 })();

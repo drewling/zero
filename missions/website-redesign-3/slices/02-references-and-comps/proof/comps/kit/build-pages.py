@@ -29,6 +29,9 @@ hero_script = grab(r"<script src=\"../kit/motion.js\"></script>\s*(<script>.*?</
 # the Rules excerpt, verbatim from the copywriter's block (the policy lines between "Save" and the end marker)
 rules_block = grab(r"<!-- RULES-B-COPY-START -->(.*?)<!-- RULES-B-COPY-END -->", copy_src).strip("\n")
 policy = rules_block.split("\nSave\n", 1)[1].strip("\n")
+# the source hard-wraps one long rule ("…uses a real" / "  human name…"). A continuation line joins its rule with a
+# space, so the editor wraps it to the window. Same words, same order (copywriter-approved, 00:34Z).
+policy = re.sub(r"\n  (?=\S)", " ", policy)
 esc = lambda t: t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 policy_html = "".join(f'<span class="ln">{esc(line) if line else ""}</span>' for line in policy.split("\n"))
 
@@ -60,6 +63,7 @@ UNDO = f'''<figure class="obj undo-obj" id="undo-win">
     f'              <li><span class="uw"><span class="us">{s}</span><span class="uf">{f}</span></span>'
     f'<span class="ub{" hot" if i == 4 else ""}" aria-hidden="true"><svg class="px" viewBox="0 0 15 14"><use href="#restore"/></svg></span></li>'
     for i, (s, f) in enumerate(ROWS)) + f'''
+              <li class="peek" aria-hidden="true"><span class="uw"></span><span class="ub"><svg class="px" viewBox="0 0 15 14"><use href="#restore"/></svg></span></li>
             </ul>
             {SBAR}
           </div>
@@ -117,7 +121,7 @@ def install(h2, after):
     <div class="win" id="term">
       {BAR("Terminal")}
       <pre><span class="p" aria-hidden="true">% </span><code>curl -fsSL https://zero.headless.com/install | bash</code> <span class="cursorblk" aria-hidden="true"></span></pre>
-      <div class="foot"><button class="btn" type="button" id="copy">Copy command</button></div>
+      <div class="foot"><span class="copy-status" id="copy-status" role="status" aria-live="polite"></span><button class="btn" type="button" id="copy" hidden>Copy command</button></div>
     </div>
   </div>
 </section>'''
@@ -183,7 +187,6 @@ for name, label, sections in [("page-a", "A · recovery-first", A_sections), ("p
 </head>
 <body class="page {name}">
 <!--icons:start--><!--icons:end-->
-<p class="draft-flag">DRAFT comp · page {label} · Draft3 · not approved</p>
 {header}
 
 <main id="top">
@@ -192,6 +195,7 @@ for name, label, sections in [("page-a", "A · recovery-first", A_sections), ("p
 {chr(10).join(sections)}
 </main>
 {FOOTER}
+<p class="draft-flag">DRAFT comp · page {label} · Draft3 · not approved</p>
 
 <script src="../kit/motion.js"></script>
 <!-- hero B story, verbatim -->
@@ -200,6 +204,10 @@ for name, label, sections in [("page-a", "A · recovery-first", A_sections), ("p
 </body>
 </html>
 '''
+    # root-relative links only resolve on the live site; point them at the verified canonical URLs
+    # (GET 200 for privacy/terms; /install.sh 302s to macapp/install-zero.sh on GitHub, per landing/nginx.conf)
+    for path in ("/privacy.html", "/terms.html", "/install.sh"):
+        html = html.replace(f'href="{path}"', f'href="https://zero.headless.com{path}"')
     out = comps / name / "index.html"
     out.parent.mkdir(exist_ok=True)
     out.write_text(html)

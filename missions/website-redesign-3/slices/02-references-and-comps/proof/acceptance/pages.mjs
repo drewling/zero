@@ -36,7 +36,7 @@ const endState = () => {
   return {
     lt: q('[class*="lt-"]').filter(e => /\blt-\d/.test(e.className) && !e.matches('body')).length,
     stepping: q('.stepping').length,
-    undoRows: q('.urows li').filter(v).length,
+    undoRows: q('.urows li:not(.peek)').filter(v).length,
     balloon: v(d.querySelector('.balloon')),
     ledgerRows: q('.info .row').filter(v).length,
     info: v(d.querySelector('.info')),
@@ -65,7 +65,23 @@ const layout = () => {
   const clip = [...d.querySelectorAll('main section h2, main section p, dd, dt, .us, .uf, .bwhen span, .tabs span, .btn, .editor pre')].filter(vis).filter(e => e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).overflow !== 'visible').map(e => e.textContent.trim().slice(0, 30));
   const minBody = Math.min(...[...d.querySelectorAll('main section .txt p, dd')].filter(vis).map(e => parseFloat(getComputedStyle(e).fontSize)));
   const measure = Math.max(...[...d.querySelectorAll('main section .txt p, dd')].filter(vis).map(e => e.getBoundingClientRect().width / parseFloat(getComputedStyle(e).fontSize)));
-  return { hscroll: d.documentElement.scrollWidth - W, over, escape, clip, minBody, measure: +measure.toFixed(1) };
+  // real characters per rendered line of prose (each paragraph's last line excluded): the box width alone let 60ch run ~85
+  const lines = [];
+  for (const para of [...d.querySelectorAll('main section .txt p, .after, dd')].filter(vis)) {
+    const byTop = new Map(), tw = d.createTreeWalker(para, NodeFilter.SHOW_TEXT);
+    for (let n; (n = tw.nextNode());) for (let i = 0; i < n.length; i++) { const rg = d.createRange(); rg.setStart(n, i); rg.setEnd(n, i + 1);
+      const rc = rg.getClientRects()[0]; if (rc) { const k = Math.round(rc.top); byTop.set(k, (byTop.get(k) || 0) + 1); } }
+    const c = [...byTop.values()]; if (c.length > 1) { c.pop(); lines.push(...c); }
+  }
+  lines.sort((a, b) => a - b);
+  const cpl = { median: lines[lines.length >> 1] || 0, max: lines[lines.length - 1] || 0 };
+  // the ledger's rows tile the window: no empty grid cell beside a last odd row
+  const rows = [...d.querySelectorAll('.info .row')].filter(vis), box = d.querySelector('.info .rows')?.getBoundingClientRect();
+  const last = rows.at(-1)?.getBoundingClientRect();
+  const hole = box && last ? Math.round(box.right - last.right) + Math.round(last.left - box.left) > 2 && last.width < box.width - 2 &&
+    rows.filter(r => Math.abs(r.getBoundingClientRect().top - last.top) < 2).length === 1 : false;
+  const rootRel = [...d.querySelectorAll('a[href^="/"]')].filter(a => !a.getAttribute('href').startsWith('//')).map(a => a.getAttribute('href'));
+  return { hscroll: d.documentElement.scrollWidth - W, over, escape, clip, minBody, measure: +measure.toFixed(1), cpl, hole, rootRel };
 };
 
 // hero B's own text, for the verbatim check
@@ -83,7 +99,9 @@ for (const p of pages) {
     rec(!L.escape.length, `${p} ${w} every text stays inside its section`, L.escape.join(' | '));
     rec(!L.clip.length, `${p} ${w} no clipped text`, L.clip.join(' | '));
     rec(L.minBody >= 16, `${p} ${w} body text >= 16px`, `min ${L.minBody}`);
-    rec(L.measure <= 40, `${p} ${w} prose measure <= 40em (~75ch)`, `max ${L.measure}em`);
+    rec(L.cpl.median <= 75 && L.cpl.max <= 82, `${p} ${w} prose runs <= 75 characters per line (median, real rendered lines; max <= 82)`, JSON.stringify(L.cpl));
+    rec(!L.hole, `${p} ${w} ledger rows leave no empty grid cell`);
+    if (w === 1440) rec(!L.rootRel.length, `${p} no root-relative links (they 404 off the live site)`, L.rootRel.join(' '));
     rec(!errs.length, `${p} ${w} no page errors`, errs.join(' | '));
     if (w === 1440) {
       const got = bag(words(await pg.evaluate(sectionText))), want = bag(expected[p]);
@@ -99,7 +117,7 @@ for (const p of pages) {
   const same = (s, name) => { const d = Object.keys(FINAL).filter(k => JSON.stringify(FINAL[k]) !== JSON.stringify(s[k])).map(k => `${k}=${JSON.stringify(s[k])} want ${JSON.stringify(FINAL[k])}`);
     rec(!d.length, name, d.join(' ')); };
   rec(FINAL.lt === 0 && FINAL.stepping === 0 && FINAL.undoRows === 5 && FINAL.balloon && FINAL.ledgerRows === 5 && FINAL.cmd === 'curl -fsSL https://zero.headless.com/install | bash'
-      && (p === 'page-a' || (FINAL.rulesLines === 14 && FINAL.rulesTab === 'Settings')), `${p} ?static is the complete final frame`, JSON.stringify(FINAL));
+      && (p === 'page-a' || (FINAL.rulesLines === 13 && FINAL.rulesTab === 'Settings')), `${p} ?static is the complete final frame`, JSON.stringify(FINAL));
 
   for (const w of [390, 1440]) {
     // 2 · no JS
@@ -176,6 +194,33 @@ for (const p of pages) {
     const ax = await pg.evaluate(() => { const pre = document.querySelector('.editor pre'); return pre ? !pre.closest('[aria-hidden="true"]') : null; });
     if (p === 'page-b') rec(ax === true, `${p} Rules policy text is exposed to assistive tech`);
     await ctx.close(); }
+
+  // 7 · Copy command: success, denial and no clipboard API, each with visible, announced, recoverable state.
+  // The clipboard itself is stubbed (both engines), so this checks the page's handling, not the OS clipboard.
+  const CMD = 'curl -fsSL https://zero.headless.com/install | bash';
+  for (const [mode, stub] of [
+    ['granted', () => { Object.defineProperty(navigator, 'clipboard', { value: { writeText: t => (window.__copied = t, Promise.resolve()) } }); }],
+    ['denied', () => { Object.defineProperty(navigator, 'clipboard', { value: { writeText: () => Promise.reject(new DOMException('denied', 'NotAllowedError')) } }); }],
+    ['unavailable', () => { Object.defineProperty(navigator, 'clipboard', { value: undefined }); }]]) {
+    const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } }); const pg = await ctx.newPage();
+    await pg.addInitScript(stub); await pg.goto(`${BASE}/${p}/?static`); await pg.waitForTimeout(100);
+    const shown = await pg.evaluate(() => { const c = document.getElementById('copy'); return !c.hidden && c.getClientRects().length > 0; });
+    if (mode === 'unavailable') {
+      const sel = await pg.evaluate(() => getComputedStyle(document.querySelector('#term code')).userSelect);
+      rec(!shown && sel !== 'none', `${p} Copy: no clipboard API hides the button and leaves the command selectable`, `shown=${shown} user-select=${sel}`);
+    } else {
+      await pg.focus('#copy'); await pg.keyboard.press('Enter'); await pg.waitForTimeout(150);
+      const r = await pg.evaluate(() => { const s = document.getElementById('copy-status'), cs = getComputedStyle(s);
+        return { text: s.textContent, live: s.getAttribute('aria-live'), role: s.getAttribute('role'), visible: s.getClientRects().length > 0 && cs.visibility !== 'hidden',
+          focus: document.activeElement?.id, selected: getSelection().toString().trim(), copied: window.__copied || null }; });
+      const ok = mode === 'granted'
+        ? r.text === 'Copied' && r.copied === CMD
+        : r.text === 'Copy manually: press Command-C.' && r.selected === CMD;
+      rec(shown && ok && r.live === 'polite' && r.role === 'status' && r.visible && r.focus === 'copy',
+        `${p} Copy ${mode}: visible, polite live status${mode === 'denied' ? ', command selected' : ''}, focus stays on the button`, JSON.stringify(r));
+    }
+    await ctx.close();
+  }
 }
 await b.close();
 fs.appendFileSync(log, `\n${pass} PASS, ${fail} FAIL (${ENGINE})\n`);
