@@ -137,3 +137,35 @@ All 6 re-check items independently verified true, with fresh evidence (not reuse
 ## Finding 1 status: CLOSED, owner-accepted (2026-09-30)
 
 Tayo (via advisor-lead, relayed by main-lead 02:30Z) decided to **keep** the hero Trash icon as approved, declining the drop-it mock proposed in `comps/proposal/index.html#trash`. Finding 1 (hero Trash icon lacks an empty/full visual state, contradicting "nothing is deleted") is closed as an owner-accepted risk, not a defect requiring further design work. No code change was made in response to this finding, and none is expected. This is the correct terminal state for Finding 1: raised, evidenced, escalated to the owner via design-lead's proposal, decided.
+
+---
+
+## Pass 3 — final scoped re-check of frozen SHA `1ad99b3` (2026-09-30)
+
+**Object reviewed:** `1ad99b34198d01c59e7d9fe52112b0526fd557b8`, the final frozen page B, one commit after `65463b8`. Design-lead's stated scope: only the Draft6 Sorting-cost row (source `SELECTED-B-COPY.md@3088502`), the draft flag, recaptured shots, and the proposal record. Main-lead flagged this as time-sensitive since slice 03 build is releasing in parallel against this same SHA — kept this pass narrow and fast, scoped strictly to what changed, not a redo of pass 1/2.
+
+### Re-check A — Diff scope genuinely limited to cost row + flag + proposal ✅
+`git diff 65463b8..1ad99b3 -- comps/page-a comps/hero-a comps/hero-b comps/hero-c comps/kit/sections.js comps/kit/motion.js comps/kit/page.css` is empty — confirmed myself, not trusted from the message. Hero, Trash, page A, section behavior, and motion are byte-identical to what pass 1/2 already reviewed. The only change in `page-b/index.html` itself is two lines: the `Sorting cost.` row text and the `draft-flag` caption (`Draft4` → `Draft6`, `not approved` → `not the live site`).
+
+### Re-check B — Rendered cost row matches COPY-B at `3088502` exactly ✅
+Diffed the rendered HTML row against `git show 3088502:.../SELECTED-B-COPY.md`'s `**Sorting cost.**` line word-for-word: *"TypeSafe-billed Jev key. Cost depends on how many emails you sort. Jev 1.13: $0.042/million input tokens, outputs free (2026-09-30). [Pricing](...). Free, open-source app (AGPL-3.0)."* — identical, including the exact tariff format, the dating, and the shortened "Pricing" link label. No monthly figure or worked example was invented, consistent with the source note that no measured token-count data was supplied.
+
+### Re-check C — Word count 550 confirmed via the canonical counter script ✅
+Ran `count-section-drafts.mjs` directly (not a manual regex/shell word-split, which gave a different, wrong count on a first naive attempt) against the current `SELECTED-B-COPY.md`: `authoredTotal: 550`, matching design-lead's claim exactly. This is the same tool the mission's own tests use, so it's the correct ground truth rather than a re-derived approximation.
+
+### Re-check D — Acceptance suite independently reproduces 148/0 Chromium, 144/0 WebKit ✅
+Fresh comp server (port 8945, `serve.py`, not reused from pass 2), fresh Playwright rerun on `1ad99b3`: **Chromium 148 PASS, 0 FAIL**; **WebKit 144 PASS, 0 FAIL** (pinned build `webkit-2336`) — exact match. Confirmed zero `FAIL` lines in the raw logs directly (`grep -c "^FAIL"` → 0 both engines), not just the summary line. The ledger-order/privacy-boundary assertion from pass 2 still passes unchanged. Logs: `proof/acceptance-pass3/pages-{chromium,webkit}-pass3-independent.log`.
+
+### Re-check E — Proposal page: no overflow, no broken images at 320/390/1440/1920 ✅
+Independently scripted a Playwright check against the actual `proposal/index.html` (not covered by `pages.mjs`, which only checks page-a/page-b) at all 4 required widths: zero horizontal overflow at any width. A first pass without a full-page scroll showed 22 apparently-"broken" `loading="lazy"` images — re-verified each URL returned `200 OK` directly via `curl` and confirmed this was a lazy-load timing artifact in my own probe, not a real defect; after scrolling the full page to trigger lazy-load, all 22 images report `complete && naturalWidth > 0` cleanly at every width.
+
+## Pass 3 summary for design-lead / main-lead
+
+**PASS.** All 5 scoped re-check items hold:
+1. Diff scope genuinely limited to the cost row, draft flag, and proposal — hero, Trash, page A, sections, and motion untouched.
+2. Rendered cost row is byte-identical to source COPY-B at `3088502`.
+3. Word count 550, confirmed via the canonical counter script, not a manual approximation.
+4. Acceptance: 148/0 Chromium, 144/0 WebKit, zero hidden FAILs.
+5. Proposal page: no overflow, no broken images at 320/390/1440/1920 (after correcting my own initial lazy-load false-positive).
+
+No findings. No `landing/` files touched. No fixes applied by this seat. Recommend proceeding with slice 03 build on this SHA.
