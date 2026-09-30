@@ -57,6 +57,16 @@ Layout:
 - Below 1240px the stack is headline, then popover, then folder and Trash, then Inbox, then caption. That keeps the button and the drop target together near the top.
 - The stacked Inbox list is `height:auto`, so the final window is 4 rows and not a mostly blank window. That resize happens once, at the end, and only moves the caption below it.
 
+**Reserved geometry (agreed with development-motion, their sandbox `cbd261f`, `slices/04-motion-and-polish/proof/sandbox/hero-b/`).** The page comps still use the comp's behavior: the 12-to-4 collapse measures about 0.002 CLS at 390 and 0.015 at 1440, and the drag outlines measure 0.02 more (`acceptance/pages-chromium.log`, INFO lines). Slice 04 replaces this by reserving the scene's outer height, so the caption and everything below it never move:
+
+| Layout | Reserved geometry |
+|---|---|
+| ≥1240 | hero 940px, Inbox slot 468px, list 432px, caption top 700 |
+| stacked 640–1239 | Inbox slot 468px |
+| stacked <640 | Inbox slot 548px (list 512 at first, 224 at the end) |
+
+Inside the slot the window may still shrink to its 4 rows. The slot keeps its height, so only the empty desktop under the window changes.
+
 Honesty rules for B:
 - No arrow pointer.
 - The watch only exists during `Working…`.
@@ -100,6 +110,28 @@ History. The B column below is the **pre-rework** B. The reworked B is §3.0, an
 Why A was recommended at first: the pre-rework B read as "you drag mail yourself" (a manual Finder action zero doesn't ask for), and it had no count. C is calm and clear, but it drops the menu-bar tray, which is where zero actually lives, and it pushes both windows below the headline plate at 1440×900. The owner chose B. §3.0 removes the manual-drag reading by making zero's popover and watch the only actor. B still has no count, and the Inbox window going from 12 rows to 4 is the proof.
 
 ## 4. Section motion (one beat each, played on first view)
+
+### 4.0 Whole-page comps A and B (00:30Z, built in `comps/page-a/`, `comps/page-b/`; `kit/sections.js`)
+
+These replace §4.1 for the rethink. The Stays/Archived demo is cut in both outlines, so no section replays hero B's sort. There is one beat per section object, each on the Zm runner and data-driven (a frame list per object in `kit/sections.js`), with no new strings. **Proposal, not approved.** It goes to readers and review-qa with the pages.
+
+| Section | Object | Beat (frames) | Steps and timing | Stills |
+|---|---|---|---|---|
+| Recovery (A "See what went into the archive." / B "Restore archived mail.") | zero's Undo tab, 5 of 8 rows | 0 batch collapsed (disclosure points right) · 1 expanded, the 5 rows step in one at a time · 2 the balloon `Put this email back in the inbox` appears on row 5's put-back button, which inverts (final) | 5 × 80 ms, hold 380 | `page-{a,b}/shots/beat-undo-f0..2.jpg` |
+| Rules (B only, "Choose what needs to stay.") | zero's Settings window, Rules pane | 0 `Open loops` tab selected, pane empty · 1 the selection hops tab to tab to `Settings` · 2 the 14 policy lines step in two at a time (final) | 3 × 170 ms, then 7 × 45 ms | `page-b/shots/beat-rules-f0..2.jpg` |
+| Before you install (both) | a Get Info window opened from the zero app icon | 0 icon only, window closed · 1 zoom rects step from the icon to the window's box · 2 the window is there and its 5 rows fill in one at a time (final) | zoom 6 steps / 300 ms, 5 × 110 ms | `page-{a,b}/shots/beat-ledger-f0..2.jpg` |
+| Install (both) | Terminal on ink | 0 empty prompt · 1 the command types in, 2 characters a step, then the block cursor blinks 3 times and rests (final) | ~26 steps × 28 ms, blink `steps(1)` × 3 | `page-{a,b}/shots/beat-install-f0..1.jpg` |
+
+Rules the runner now enforces (`kit/motion.js` `when()`):
+
+- **Armed, then played.** A section story is put on frame 0 while it's still below the fold (30% root margin), and it plays when 35% of it, or 35% of the viewport, is visible. The visitor never sees the final frame snap back to frame 0.
+- **Arrival stays final.** If a section is already on screen at first sight (reload mid-page, a fling), or it's reached through an in-page link within 1.2 s (the hero's `Install zero for Mac` goes to `#install`, and the menu bar), it is settled on its final frame and never plays. People who jump to the ledger came to read it.
+- **No layout shift.** Every hidden part uses `visibility`, never `display`. The collapsed Undo keeps its expanded height, and untyped command text is present but invisible. Measured section CLS: 0.0000 at 390 and 1440 on both pages.
+- **No stray DOM.** Stories without a cursor frame get no cursor element. The zoom rects sit under the ledger heading and lede plates (z 35 < 36), never across text.
+- Reduced motion and no JS: the final frame, nothing plays. Measured equal to `?static` in both engines (`acceptance/pages.mjs`).
+- Byte cost: `sections.js` is 3.6 KB unminified. The runner additions are about 1 KB.
+
+### 4.1 Earlier proposal for comps/sections (superseded by 4.0)
 
 > **On hold (22:50Z).** The owner has not approved the sections. They are being rethought with the copywriter, so do not prototype these beats. Note that the section 1 beat below (rows hopping from Stays to Archived) would replay the new hero B. Whatever replaces section 1 must not repeat the sort.
 
