@@ -1,0 +1,250 @@
+TAP version 13
+# Subtest: copy writes the exact install command and announces success
+ok 1 - copy writes the exact install command and announces success
+  ---
+  duration_ms: 9.293542
+  type: 'test'
+  ...
+# Subtest: clipboard denial offers manual recovery and allows retry
+ok 2 - clipboard denial offers manual recovery and allows retry
+  ---
+  duration_ms: 1.574167
+  type: 'test'
+  ...
+# Subtest: clipboard is guarded while pending without blurring focusable control
+ok 3 - clipboard is guarded while pending without blurring focusable control
+  ---
+  duration_ms: 2.235959
+  type: 'test'
+  ...
+# Subtest: unavailable clipboard leaves the optional control hidden
+ok 4 - unavailable clipboard leaves the optional control hidden
+  ---
+  duration_ms: 2.448375
+  type: 'test'
+  ...
+# Subtest: homepage follows the approved visitor-first six-section order
+ok 5 - homepage follows the approved visitor-first six-section order
+  ---
+  duration_ms: 1.341583
+  type: 'test'
+  ...
+# Subtest: retired table, FAQ, motion hooks, and dead implementation assets are absent
+ok 6 - retired table, FAQ, motion hooks, and dead implementation assets are absent
+  ---
+  duration_ms: 1.211167
+  type: 'test'
+  ...
+# Subtest: hero panel is a faithful, decorative one-bit redraw of the real Open loops panel
+ok 7 - hero panel is a faithful, decorative one-bit redraw of the real Open loops panel
+  ---
+  duration_ms: 6.251375
+  type: 'test'
+  ...
+# Subtest: unavailable clipboard cannot pass when section script did not load
+ok 8 - unavailable clipboard cannot pass when section script did not load
+  ---
+  duration_ms: 1.041542
+  type: 'test'
+  ...
+# Subtest: any resource failure or runtime error fails a clipboard fault context
+ok 9 - any resource failure or runtime error fails a clipboard fault context
+  ---
+  duration_ms: 0.133958
+  type: 'test'
+  ...
+# Subtest: completed unavailable state keeps the exact command selectable
+ok 10 - completed unavailable state keeps the exact command selectable
+  ---
+  duration_ms: 5.288708
+  type: 'test'
+  ...
+# Subtest: success requires the exact clipboard content, announced success and retained focus
+ok 11 - success requires the exact clipboard content, announced success and retained focus
+  ---
+  duration_ms: 0.521417
+  type: 'test'
+  ...
+# Subtest: denial requires exact selection, announced fallback and retained focus
+ok 12 - denial requires exact selection, announced fallback and retained focus
+  ---
+  duration_ms: 0.174417
+  type: 'test'
+  ...
+# Subtest: selected B count includes all clipboard states and preserves frozen A/B
+ok 13 - selected B count includes all clipboard states and preserves frozen A/B
+  ---
+  duration_ms: 408.831417
+  type: 'test'
+  ...
+# Subtest: frozen Draft4 stays 549 while the selected copy names both recipients in its own paragraph
+ok 14 - frozen Draft4 stays 549 while the selected copy names both recipients in its own paragraph
+  ---
+  duration_ms: 372.4055
+  type: 'test'
+  ...
+# Subtest: owner cost follow-up stays in the cost row and preserves tariff, billing, date and license
+ok 15 - owner cost follow-up stays in the cost row and preserves tariff, billing, date and license
+  ---
+  duration_ms: 0.866333
+  type: 'test'
+  ...
+# Subtest: missing selected clipboard marker fails
+ok 16 - missing selected clipboard marker fails
+  ---
+  duration_ms: 341.075667
+  type: 'test'
+  ...
+# Subtest: one added selected B word exceeds the ceiling
+ok 17 - one added selected B word exceeds the ceiling
+  ---
+  duration_ms: 332.201708
+  type: 'test'
+  ...
+# Subtest: authored count CLI includes the complete Rules object and extra app-icon label
+ok 18 - authored count CLI includes the complete Rules object and extra app-icon label
+  ---
+  duration_ms: 1134.864458
+  type: 'test'
+  ...
+# Subtest: B policy excerpt is contiguous source text, not an edited middle-bullet omission
+ok 19 - B policy excerpt is contiguous source text, not an edited middle-bullet omission
+  ---
+  duration_ms: 12.11525
+  type: 'test'
+  ...
+# Subtest: extra Rules words fail the total budget
+ok 20 - extra Rules words fail the total budget
+  ---
+  duration_ms: 352.729667
+  type: 'test'
+  ...
+# Subtest: missing Rules text fails rather than being silently uncounted
+ok 21 - missing Rules text fails rather than being silently uncounted
+  ---
+  duration_ms: 1693.866584
+  type: 'test'
+  ...
+# Subtest: privacy freeze rejects unspecified or invalid exact word expectation: missing
+ok 22 - privacy freeze rejects unspecified or invalid exact word expectation: missing
+  ---
+  duration_ms: 1032.82425
+  type: 'test'
+  ...
+# Subtest: privacy freeze rejects unspecified or invalid exact word expectation: 551
+ok 23 - privacy freeze rejects unspecified or invalid exact word expectation: 551
+  ---
+  duration_ms: 1187.326459
+  type: 'test'
+  ...
+# Subtest: privacy freeze rejects unspecified or invalid exact word expectation: 548
+ok 24 - privacy freeze rejects unspecified or invalid exact word expectation: 548
+  ---
+  duration_ms: 2391.776542
+  type: 'test'
+  ...
+# Subtest: privacy freeze rejects unspecified or invalid exact word expectation: 549oops
+ok 25 - privacy freeze rejects unspecified or invalid exact word expectation: 549oops
+  ---
+  duration_ms: 1655.329292
+  type: 'test'
+  ...
+# Subtest: privacy reader accepts the named phase but cannot launch without its immutable inputs
+ok 26 - privacy reader accepts the named phase but cannot launch without its immutable inputs
+  ---
+  duration_ms: 1047.027208
+  type: 'test'
+  ...
+# Subtest: reader guard after-b-tightened 1 never launches on absent or invalid evidence
+ok 27 - reader guard after-b-tightened 1 never launches on absent or invalid evidence
+  ---
+  duration_ms: 325.676291
+  type: 'test'
+  ...
+# Subtest: reader guard after-b-tightened 4 never launches on absent or invalid evidence
+ok 28 - reader guard after-b-tightened 4 never launches on absent or invalid evidence
+  ---
+  duration_ms: 456.684917
+  type: 'test'
+  ...
+# Subtest: reader guard ../after-b-tightened 1 never launches on absent or invalid evidence
+ok 29 - reader guard ../after-b-tightened 1 never launches on absent or invalid evidence
+  ---
+  duration_ms: 158.241667
+  type: 'test'
+  ...
+# Subtest: public verifier refuses to overwrite retained evidence before opening browser
+ok 30 - public verifier refuses to overwrite retained evidence before opening browser
+  ---
+  duration_ms: 9826.051583
+  type: 'test'
+  ...
+# Subtest: public verifier accepts the complete authored package and measured inventory
+ok 31 - public verifier accepts the complete authored package and measured inventory
+  ---
+  duration_ms: 6258.427625
+  type: 'test'
+  ...
+# Subtest: cold-reader public output reproduces the committed verbatim record
+ok 32 - cold-reader public output reproduces the committed verbatim record
+  ---
+  duration_ms: 2279.672917
+  type: 'test'
+  ...
+# Subtest: large cold-reader reports flush every verbatim answer before successful exit
+ok 33 - large cold-reader reports flush every verbatim answer before successful exit
+  ---
+  duration_ms: 2826.489041
+  type: 'test'
+  ...
+# Subtest: over-budget copy fails rather than treating authored count as advisory
+ok 34 - over-budget copy fails rather than treating authored count as advisory
+  ---
+  duration_ms: 2832.596667
+  type: 'test'
+  ...
+# Subtest: case-insensitive banned wording fails even outside visible-copy markers
+ok 35 - case-insensitive banned wording fails even outside visible-copy markers
+  ---
+  duration_ms: 2143.393125
+  type: 'test'
+  ...
+# Subtest: a final-copy change in the tested excerpt invalidates reader reuse
+ok 36 - a final-copy change in the tested excerpt invalidates reader reuse
+  ---
+  duration_ms: 2714.951
+  type: 'test'
+  ...
+# Subtest: duplicate reader sessions fail despite matching category keywords
+ok 37 - duplicate reader sessions fail despite matching category keywords
+  ---
+  duration_ms: 2936.785084
+  type: 'test'
+  ...
+# Subtest: a failed reader call cannot pass from keywords alone
+ok 38 - a failed reader call cannot pass from keywords alone
+  ---
+  duration_ms: 3331.849541
+  type: 'test'
+  ...
+# Subtest: missing disclosure evidence fails the whole package check
+ok 39 - missing disclosure evidence fails the whole package check
+  ---
+  duration_ms: 2112.481709
+  type: 'test'
+  ...
+# Subtest: wrong screenshot dimensions fail even with a valid PNG signature
+ok 40 - wrong screenshot dimensions fail even with a valid PNG signature
+  ---
+  duration_ms: 3748.983542
+  type: 'test'
+  ...
+1..40
+# tests 40
+# suites 0
+# pass 40
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 32193.735083

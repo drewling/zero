@@ -1,0 +1,6 @@
+PASS immutable Git/source/original-capture parity: 65463b8dfdbbb22ecb05f35dc6579a60a4e0c409, 23 files, 550 authored words
+PASS reader 1: requested/actual claude-sonnet-5, session bb1e8665-7293-4cd2-96a9-7fb7a20bc78e, one turn, zero tools, 12 image hashes/bytes, unchanged prompt and frozen text
+PASS reader 2: requested/actual claude-sonnet-5, session a1e65e6e-b1b6-4095-b91d-3ec144e41680, one turn, zero tools, 12 image hashes/bytes, unchanged prompt and frozen text
+PASS reader 3: requested/actual claude-sonnet-5, session a2df5df5-6eff-4418-ae28-512e8bccc3ac, one turn, zero tools, 12 image hashes/bytes, unchanged prompt and frozen text
+PASS source-matched public boundaries: 16 pass, 0 fail
+PASS all privacy evidence checks. Initial ad hoc verifiers failed on guessed original-image source paths and default Git output buffer. This version uses manifest source paths and a sufficient read buffer.

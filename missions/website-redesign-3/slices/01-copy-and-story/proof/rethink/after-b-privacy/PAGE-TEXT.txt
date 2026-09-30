@@ -1,0 +1,121 @@
+zero
+How it works
+Undo
+Before you install
+Source
+Install
+Clean up your Gmail inbox on your Mac.
+zero is a Mac app that keeps the emails you need to deal with and archives the rest. Undo any archive. Keep using Gmail or Apple Mail.
+Install zero for Mac
+Read the installer first
+Apple Silicon. macOS 26 or later. Gmail only.
+zero
+Run zero now
+Working…
+Inbox
+Alex Rivera
+Can you approve the quote?
+11h
+Priya Sharma
+Which date works for you?
+13h
+Daniel Kim
+Your payment failed
+1d
+Sarah Mitchell
+Contract changes to review
+1d
+Illustration. Names are made up.
+Auto-Archived 2026-09-29
+Trash
+zero
+Before you install.
+Before you install
+Sorting data.
+Sent to TypeSafe (Jev):
+sender, subject, a preview of up to 160 characters, whether you sent the latest message and whether you’ve replied to that sender before, your rules and learned preferences.
+Privacy policy
+.
+Optional drafts.
+Draft replies with Claude Code or another installed AI coding tool, using its account and billing.
+Sent to your coding tool’s provider:
+thread previews, sent-mail samples, writing preferences and saved profile context. Review before
+Send reply
+. Drafts never send automatically.
+TypeSafe receives sorting data. Your tool’s provider receives draft data. Neither goes to zero’s servers.
+Sorting cost.
+Your Jev key, billed by TypeSafe. Jev 1.13: $0.042 per million input tokens, outputs free (checked 30 Sep 2026).
+Current pricing
+. Free, open-source app (AGPL-3.0).
+Google sign-in.
+Connect Gmail through Google in your browser. zero never sees your password. Google may show an unverified-app warning because zero hasn’t completed its app review.
+Installer.
+zero is not notarized by Apple. May add Homebrew, Python, Node and Google Workspace CLI. Claude Code is added only if no supported coding tool is installed.
+Choose what needs to stay.
+Use
+Run zero now
+to sort connected Gmail. AI applies your rules. Starred mail stays untouched. Uncertain threads stay in your inbox. Check your first runs: AI can make mistakes.
+Settings
+Open loops
+Accounts
+Undo
+Settings
+Rules
+## Keep a thread only if it genuinely needs me to act
+- A real person is awaiting my reply or my decision.
+- There is an unanswered direct question or request addressed to me.
+- A payment has actually failed or is a live problem (not a routine receipt).
+- It is a legal, contractual, or dispute matter.
+- There is an explicit deadline with a real consequence.
+## Archive everything else (reversibly)
+- Cold outreach, sales, prospecting, pitches, even when the sender uses a real human name and I have never replied to them.
+- Receipts, invoices, statements, order and delivery confirmations.
+- Notifications, alerts, digests, newsletters, social, marketing, surveys.
+Save
+Restore archived mail.
+In zero’s
+Undo
+tab, restore one email or a day’s archives with
+Restore all
+. Nothing is deleted. Archived mail stays searchable in Gmail’s
+All Mail
+under a dated recovery label.
+Undo
+Open loops
+Accounts
+Undo
+Settings
+Tue 29 Sep
+8 set aside · alex@example.com
+Restore all
+Weekly newsletter
+Fieldnotes · 2d
+Coffee receipt
+Northwind · 2d
+Sales introduction
+SalesCo · 3d
+Shipping confirmation
+Parcel · 3d
+Webinar invitation
+Workshop · 4d
+Put this email back in the inbox
+Illustration. Made-up mail.
+Ready to install?
+Open zero, connect Gmail and add your
+Jev key
+in
+Settings → Sorting engine
+. Or download from
+GitHub Releases
+.
+Terminal
+%
+curl -fsSL https://zero.headless.com/install | bash
+Copy command
+zero
+AGPL-3.0
+Source
+Privacy
+Terms
+Copied
+Copy manually: press Command-C.
