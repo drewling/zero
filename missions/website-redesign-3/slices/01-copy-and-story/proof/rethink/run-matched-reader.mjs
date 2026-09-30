@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const [phase, reader] = process.argv.slice(2);
-if (!['before', 'after-a', 'after-b', 'after-b-tightened'].includes(phase) || !/^[123]$/.test(reader ?? '')) throw new Error('Usage: node run-matched-reader.mjs before|after-a|after-b|after-b-tightened 1|2|3');
+if (!['before', 'after-a', 'after-b', 'after-b-tightened', 'after-b-privacy'].includes(phase) || !/^[123]$/.test(reader ?? '')) throw new Error('Usage: node run-matched-reader.mjs before|after-a|after-b|after-b-tightened|after-b-privacy 1|2|3');
 const root = path.dirname(fileURLToPath(import.meta.url));
 const base = path.join(root, phase);
 const baselineImages = ['page-full-1440.jpg', 'page-full-390.jpg',

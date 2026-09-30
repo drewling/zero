@@ -7,8 +7,13 @@ import { fileURLToPath } from 'node:url';
 const root = path.dirname(fileURLToPath(import.meta.url));
 const repo = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
 const sha = execFileSync('git', ['rev-parse', process.argv[2] || 'cdfee91'], { encoding: 'utf8' }).trim();
-const tightened = process.argv[3] === 'after-b-tightened';
-if (process.argv[3] && !tightened) throw new Error('Only after-b-tightened is an additional freeze phase');
+const followup = process.argv[3];
+const privacy = followup === 'after-b-privacy';
+const tightened = followup === 'after-b-tightened' || privacy;
+if (followup && !tightened) throw new Error('Only after-b-tightened or after-b-privacy is an additional freeze phase');
+if (privacy && !['549', '550'].includes(process.env.EXPECTED_WORDS)) throw new Error('after-b-privacy requires EXPECTED_WORDS=549 or 550, chosen from the approved hero state');
+const expectedWords = privacy ? Number(process.env.EXPECTED_WORDS) : tightened ? 549 : null;
+const base = process.env.BASE || 'http://127.0.0.1:8941';
 const comps = 'missions/website-redesign-3/slices/02-references-and-comps/proof/comps';
 const require = createRequire(execFileSync('npm', ['root', '-g'], { encoding: 'utf8' }).trim() + '/');
 const { chromium } = require('playwright');
@@ -18,7 +23,7 @@ const files = execFileSync('git', ['ls-tree', '-r', '--name-only', sha, comps], 
 const browser = await chromium.launch();
 try {
   for (const outline of tightened ? ['b'] : ['a', 'b']) {
-    const phaseName = tightened ? 'after-b-tightened' : `after-${outline}`;
+    const phaseName = tightened ? followup : `after-${outline}`;
     const destination = path.join(root, phaseName);
     if (fs.existsSync(destination)) throw new Error(`Do not overwrite frozen evidence: ${destination}`);
     if (!process.env.JCODE_SCRATCH_DIR) throw new Error('JCODE_SCRATCH_DIR required for staged freeze');
@@ -38,11 +43,11 @@ try {
     for (const width of [1440, 390]) {
       const ctx = await browser.newContext({ viewport: { width, height: 900 } });
       const page = await ctx.newPage();
-      const response = await page.goto(`http://127.0.0.1:8941/page-${outline}/?static`);
+      const response = await page.goto(`${base}/page-${outline}/?static`);
       const served = Buffer.from(await response.body());
       if (hash(served) !== hashes[`source/page-${outline}/index.html`].sha256) throw new Error('Served page differs from frozen Git source');
       for (const [file, evidence] of Object.entries(hashes).filter(([file]) => file.startsWith('source/kit/'))) {
-        const result = await ctx.request.get(`http://127.0.0.1:8941/${file.slice('source/'.length)}`);
+        const result = await ctx.request.get(`${base}/${file.slice('source/'.length)}`);
         if (!result.ok() || hash(await result.body()) !== evidence.sha256) throw new Error(`Served asset differs from frozen Git: ${file}`);
       }
       await page.evaluate(() => document.fonts.ready);
@@ -66,7 +71,7 @@ try {
         await ctx.addInitScript(mode => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => {
           if (mode === 'denied') throw new DOMException('Denied', 'NotAllowedError');
         } } }), mode);
-        const page = await ctx.newPage(); await page.goto('http://127.0.0.1:8941/page-b/?static');
+        const page = await ctx.newPage(); await page.goto(`${base}/page-b/?static`);
         await page.locator('#copy').click();
         await page.waitForFunction(() => document.querySelector('[role="status"],[aria-live="polite"]')?.textContent.trim());
         const status = await page.locator('[role="status"],[aria-live="polite"]').first().textContent();
@@ -76,10 +81,10 @@ try {
     }
     const text = [...textNodes, ...clipboardStates].join('\n') + '\n';
     const count = (text.replace(/’/g, "'").match(/[\p{L}\p{N}]+(?:['.-][\p{L}\p{N}]+)*/gu) || []).length;
-    if (count !== (tightened ? 549 : outline === 'a' ? 474 : 544)) throw new Error(`Unexpected full authored count ${outline}: ${count}`);
+    if (count !== (expectedWords ?? (outline === 'a' ? 474 : 544))) throw new Error(`Unexpected full authored count ${outline}: ${count}`);
     fs.writeFileSync(path.join(phase, 'PAGE-TEXT.txt'), text);
     fs.writeFileSync(path.join(phase, 'layout.json'), JSON.stringify(layouts, null, 2) + '\n');
-    fs.writeFileSync(path.join(phase, 'freeze.json'), JSON.stringify({ commit: sha, frozenAt: new Date().toISOString(), sourceHashes: hashes, textSha256: hash(text), authoredWords: count,
+    fs.writeFileSync(path.join(phase, 'freeze.json'), JSON.stringify({ commit: sha, frozenAt: new Date().toISOString(), proofOrigin: base, sourceHashes: hashes, textSha256: hash(text), authoredWords: count,
       exclusions: ['author-only draft flag', 'screen-reader-only hero description duplicates illustrated content', 'SVG, scripts, styles and document title'],
       clipboardStates,
       includes: ['one header and footer', 'all hero states including Working…', 'hidden mobile subjects', 'all editor lines even if clipped', 'object dates, row ages, fictional addresses and labels', ...(tightened ? ['all clipboard statuses observed through success/denial fault paths'] : [])] }, null, 2) + '\n');
