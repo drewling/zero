@@ -131,3 +131,9 @@ All 6 re-check items independently verified true, with fresh evidence (not reuse
 7. Acceptance — 148/0 Chromium, 144/0 WebKit independently reproduced, zero hidden FAILs.
 
 **No new findings from this re-check.** The one open item from pass 1 (hero Trash icon) remains correctly unresolved and owner-gated — this commit does not attempt to fix it, only proposes a mock for Tayo's decision, which is the right scope. Page A and hero-B remain untouched. No `landing/` files touched. No fixes applied by this seat.
+
+---
+
+## Finding 1 status: CLOSED, owner-accepted (2026-09-30)
+
+Tayo (via advisor-lead, relayed by main-lead 02:30Z) decided to **keep** the hero Trash icon as approved, declining the drop-it mock proposed in `comps/proposal/index.html#trash`. Finding 1 (hero Trash icon lacks an empty/full visual state, contradicting "nothing is deleted") is closed as an owner-accepted risk, not a defect requiring further design work. No code change was made in response to this finding, and none is expected. This is the correct terminal state for Finding 1: raised, evidenced, escalated to the owner via design-lead's proposal, decided.
