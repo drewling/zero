@@ -6,7 +6,7 @@ approved hero cannot drift. Two changes only: the menu bar's "How it works" link
 it pointed at is cut in both outlines) and the page-level heading face comes from page.css (option T3).
 Section words are Draft3 (slices/01-copy-and-story/proof/rethink/SECTION-COPY.md @ 496d985): the COPY-A / COPY-B,
 OBJECT-COPY and RULES-B-COPY blocks. Page B's own section words (owner's choice, 00:58Z) are parsed from the
-copywriter's counted DRAFT4 COPY-B block in SELECTED-B-COPY.md (@ 85dfe6f), not retyped. Page A is archived on Draft3.
+copywriter's counted DRAFT5 COPY-B block in SELECTED-B-COPY.md (@ dcaabd6, which adds the zero-server boundary line and drops the ledger lede), not retyped. Page A is archived on Draft3.
 The acceptance script checks the rendered words against those blocks.
 Run from proof/comps:  python3 kit/build-pages.py && python3 kit/inject.py"""
 import re
@@ -15,7 +15,7 @@ from pathlib import Path
 comps = Path(__file__).resolve().parent.parent
 hero_src = (comps / "hero-b" / "index.html").read_text()
 copy_src = (comps.parents[2] / "01-copy-and-story" / "proof" / "rethink" / "SECTION-COPY.md").read_text()
-# page B (owner's choice, 00:58Z) is built from the copywriter's counted DRAFT4 block; page A stays on Draft3 (archived)
+# page B (owner's choice, 00:58Z) is built from the copywriter's counted DRAFT5 block; page A stays on Draft3 (archived)
 copy_b_src = (comps.parents[2] / "01-copy-and-story" / "proof" / "rethink" / "SELECTED-B-COPY.md").read_text()
 
 
@@ -173,35 +173,47 @@ def md(t):
     return q(t)
 
 
-def ledger_b(lede, rows):
-    """B's trust fix: the two outgoing-data rows lead as a distinct pair, cost follows, then sign-in and installer"""
+def ledger_b(lede, rows, boundary=None):
+    """B's trust fix: the two outgoing-data rows lead as a distinct pair, then (if the copy has one) the zero-server
+    boundary as a full-width plate that closes the pair, then cost, sign-in and installer"""
     out = []
     for i, p in enumerate(rows):
         k, v = re.match(r"\*\*([^*]+)\*\*\s*(.*)", p, re.S).groups()
         out.append(f'          <div class="row{" out" if i < 2 else ""}"><dt class="k">{k}</dt><dd class="v">{md(v)}</dd></div>')
-    return f'''<section class="band ledger ledger-b" id="install" aria-labelledby="before">
+    if boundary:
+        # a statement, not a key/value pair: a <p> between two lists, directly under the recipient pair it answers
+        dls = (f'<dl class="rows">\n{chr(10).join(out[:2])}\n    </dl>\n'
+               f'    <p class="bound"><b class="to not">{q(boundary)}</b></p>\n'
+               f'    <dl class="rows">\n{chr(10).join(out[2:])}\n    </dl>')
+    else:
+        dls = f'<dl class="rows">\n{chr(10).join(out)}\n    </dl>'
+    lede_html = f"\n    <p>{md(lede)}</p>" if lede else ""
+    return f'''<section class="band ledger ledger-b{" no-lede" if not lede else ""}" id="install" aria-labelledby="before">
   <div class="txt">
     <div class="icon appicon"><svg class="px" viewBox="0 0 32 28" aria-hidden="true"><use href="#app"/></svg><span class="lbl">zero</span></div>
-    <h2 id="before">Before you install.</h2>
-    <p>{md(lede)}</p>
+    <h2 id="before">Before you install.</h2>{lede_html}
   </div>
   <div class="win info">
     {BAR("Before you install")}
-    <dl class="rows">
-{chr(10).join(out)}
-    </dl>
+    {dls}
   </div>
 </section>'''
 
 
 _L = B_SECT["Before you install."]
-assert len(_L) == 6 and [re.match(r"\*\*([^*]+)\*\*", p).group(1) for p in _L[1:]] == \
+# the zero-server boundary: a paragraph that is one bold run and no "Key." label (the copywriter's privacy follow-up)
+_BOUND = [p for p in _L if re.fullmatch(r"\*\*[^*]+\*\*", p) and not re.fullmatch(r"\*\*[^*]{1,24}\.\*\*", p)]
+assert len(_BOUND) <= 1, "more than one boundary line"
+_bound = _BOUND[0][2:-2] if _BOUND else None
+_L = [p for p in _L if p not in _BOUND]
+_lede = None if re.match(r"\*\*[^*]+\.\*\*", _L[0]) else _L.pop(0)
+assert [re.match(r"\*\*([^*]+)\*\*", p).group(1) for p in _L] == \
     ["Sorting data.", "Optional drafts.", "Sorting cost.", "Google sign-in.", "Installer."], "B ledger order changed"
 (_rules_p,) = B_SECT["Choose what needs to stay."]
 (_undo_p,) = B_SECT["Restore archived mail."]
 (_inst_p,) = B_SECT["Ready to install?"]
 B_sections = [
-    ledger_b(_L[0], _L[1:]),
+    ledger_b(_lede, _L, _bound),
     band("split-r", "how-band", "how", "Choose what needs to stay.", [md(_rules_p)], RULES),
     band("split-l", "undo", "h-undo", "Restore archived mail.", [md(_undo_p)], UNDO),
     install("Ready to install?", md(_inst_p)),
@@ -239,7 +251,7 @@ for name, label, sections in [("page-a", "A · recovery-first", A_sections), ("p
 {chr(10).join(sections)}
 </main>
 {FOOTER}
-<p class="draft-flag">DRAFT comp · page {label} · {"Draft4 (owner-selected B)" if name == "page-b" else "Draft3"} · not approved</p>
+<p class="draft-flag">DRAFT comp · page {label} · {"Draft5 (owner-selected B)" if name == "page-b" else "Draft3"} · not approved</p>
 
 <script src="../kit/motion.js"></script>
 <!-- hero B story, verbatim -->

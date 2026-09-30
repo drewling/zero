@@ -1,7 +1,7 @@
 // Acceptance pass for the whole-page comps (page-a, page-b): real engines, real emulation, real captures.
 // Run: COPY_MD=<SECTION-COPY.md> COPY_B_MD=<SELECTED-B-COPY.md> OUT=<dir> ENGINE=chromium|webkit node pages.mjs
 //   (comp server on 127.0.0.1:8941). Page A (archived) checks against Draft3 COPY-A. Page B checks against the
-//   owner-selected DRAFT4 COPY-B in COPY_B_MD, plus Draft3's shared OBJECT-COPY and RULES-B-COPY.
+//   owner-selected DRAFT5 COPY-B in COPY_B_MD, plus Draft3's shared OBJECT-COPY and RULES-B-COPY.
 // Checks: horizontal overflow and text escaping its section at 320-2560; no-JS and reduced-motion end states
 // equal the ?static final frame; scroll-triggered beats play to done; layout shift while they play (Chromium);
 // an anchor jump leaves the target section final; keyboard reaches only real links and the Copy button, in order;
@@ -112,24 +112,34 @@ for (const p of pages) {
     if (w === 1440) {
       const got = bag(words(await pg.evaluate(sectionText))), want = bag(expected[p]);
       const dd = diff(got, want);
-      rec(!dd.length, `${p} rendered section words == copywriter's counted blocks (${p === 'page-b' ? 'DRAFT4 COPY-B + ' : 'Draft3 COPY-A + '}shared, ${expected[p].length} words)`, dd.join(' '));
+      rec(!dd.length, `${p} rendered section words == copywriter's counted blocks (${p === 'page-b' ? 'DRAFT5 COPY-B + ' : 'Draft3 COPY-A + '}shared, ${expected[p].length} words)`, dd.join(' '));
       rec((await pg.evaluate(heroText)) === HERO, `${p} hero text == approved hero B`);
       if (p === 'page-b') {
-        // the trust fix: recipient rows first and together, cost next, each recipient named in real text on its own line
+        // the trust fix: recipient rows first and together, each recipient named in real text on its own line, then
+        // the zero-server boundary as its own full-width statement directly under the pair (Draft5), then cost
         const T = await pg.evaluate(() => {
           const rows = [...document.querySelectorAll('.ledger .row')];
           const r = e => e.getBoundingClientRect();
           const out = rows.filter(e => e.classList.contains('out'));
-          const leads = [...document.querySelectorAll('.ledger .to')].map(e => ({ t: e.textContent, block: getComputedStyle(e).display === 'block',
+          const leads = [...document.querySelectorAll('.ledger .row .to')].map(e => ({ t: e.textContent, block: getComputedStyle(e).display === 'block',
             ownLine: r(e).left - r(e.parentElement).left < 20 }));
+          const bd = document.querySelector('.ledger .info .bound'), cost = rows.find(e => e.querySelector('.k').textContent === 'Sorting cost.');
+          const bound = bd && { t: bd.textContent.trim(), statement: bd.tagName === 'P' && !bd.closest('dl'),
+            between: Math.max(...out.map(e => r(e).bottom)) <= r(bd).top + 1 && r(bd).bottom <= r(cost).top + 1,
+            fullWidth: r(bd).width >= r(bd.closest('.info')).width - 4,
+            plain: getComputedStyle(bd).backgroundImage === 'none' && getComputedStyle(bd.querySelector('.to')).backgroundImage === 'none' };
           return { order: rows.map(e => e.querySelector('.k').textContent), out: out.map(e => e.querySelector('.k').textContent),
-            sameBand: out.length === 2 && Math.abs(r(out[0]).top - r(out[1]).top) < 2, leads };
+            sameBand: out.length === 2 && Math.abs(r(out[0]).top - r(out[1]).top) < 2, leads, bound,
+            oldLine: document.body.textContent.includes('No zero server receives your email') };
         });
+        const B_BOUND = (block('COPY-B', COPY_B).match(/^\*\*([^*]+ zero’?'?s servers\.)\*\*$/m) || [])[1];
         rec(JSON.stringify(T.order) === JSON.stringify(['Sorting data.', 'Optional drafts.', 'Sorting cost.', 'Google sign-in.', 'Installer.'])
             && JSON.stringify(T.out) === JSON.stringify(['Sorting data.', 'Optional drafts.']) && T.sameBand
-            && T.leads.length === 3 && T.leads.every(l => l.block && l.ownLine)
-            && T.leads[0].t === 'Sent to TypeSafe (Jev):' && T.leads[1].t === 'No zero server receives your email.' && T.leads[2].t === 'Sent to your coding tool’s provider:',
-            `page-b ledger: the two outgoing-data rows lead as one pair, cost next, recipients named in real text on their own line`, JSON.stringify(T));
+            && T.leads.length === 2 && T.leads.every(l => l.block && l.ownLine)
+            && T.leads[0].t === 'Sent to TypeSafe (Jev):' && T.leads[1].t === 'Sent to your coding tool’s provider:'
+            && !!B_BOUND && T.bound && T.bound.t === B_BOUND.replace(/'/g, '’') && T.bound.statement && T.bound.between && T.bound.fullWidth && T.bound.plain
+            && !T.oldLine,
+            `page-b ledger: the two outgoing-data rows lead as one pair with recipients named on their own line, the zero-server boundary is its own full-width statement under them, then cost`, JSON.stringify(T));
       }
     }
     await ctx.close();
@@ -210,6 +220,20 @@ for (const p of pages) {
     await pg.goto(`${BASE}/${p}/#install`); await pg.waitForTimeout(1500);
     const r = await pg.evaluate(() => ({ mode: document.querySelector('.ledger').dataset.mode || '', rows: [...document.querySelectorAll('.info .row')].filter(e => getComputedStyle(e).visibility !== 'hidden').length }));
     rec(r.rows === 5 && r.mode !== 'play' && r.mode !== 'armed', `${p} direct load on #install: the ledger is readable at once and never rewinds`, JSON.stringify(r));
+    await ctx.close(); }
+
+  // 5b2 · the observer race (development-motion S16): a reader who scrolls a section into view before the observer's
+  //       first callback is arriving by scroll, not at first sight, so the beat arms and plays instead of being skipped.
+  //       The scroll happens synchronously right after motion.js runs, before any IntersectionObserver delivery.
+  { const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } }); const pg = await ctx.newPage();
+    await pg.addInitScript(() => document.addEventListener('DOMContentLoaded', () => {
+      const l = document.querySelector('.ledger'); if (l) scrollTo(0, l.offsetTop - innerHeight * .3); }));
+    await pg.goto(`${BASE}/${p}/`);
+    await pg.waitForFunction(() => /^(armed|play|done)$/.test(document.querySelector('.ledger').dataset.mode || '') || document.querySelector('.ledger').dataset.mode === 'seen', null, { timeout: 4000 }).catch(() => {});
+    await pg.waitForTimeout(2500);
+    const r = await pg.evaluate(() => ({ mode: document.querySelector('.ledger').dataset.mode || '', y: Math.round(scrollY),
+      rows: [...document.querySelectorAll('.info .row, .info .bound')].filter(e => getComputedStyle(e).visibility !== 'hidden').length }));
+    rec(r.mode === 'done' && r.y > 0 && r.rows === (p === 'page-b' ? 6 : 5), `${p} scroll before the first observer callback still plays the ledger beat to done`, JSON.stringify(r));
     await ctx.close(); }
 
   // 5c · Reduce Motion switched on mid-visit, while beats are armed or playing: every story settles on its final frame

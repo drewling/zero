@@ -32,6 +32,10 @@ th,td{border:1px solid var(--ink);padding:10px 12px;text-align:left;vertical-ali
 th{font:400 14px/1.2 var(--label);background:var(--ink);color:var(--paper)}
 td b{font-weight:600}
 .wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* the reader-score table has 4 short columns: it fits a phone without sideways scroll */
+.scores td,.scores th{white-space:nowrap}
+@media (max-width:480px){.scores{font-size:14px}.scores td,.scores th{padding:8px 6px}.scores td:first-child{white-space:normal}}
+@media (max-width:360px){.scores{font-size:13px}.scores td,.scores th{padding:7px 4px}}
 .pending{font:400 13px/1 var(--label);display:inline-block;padding:3px 6px;border:1px dashed var(--ink)}
 .cols{display:grid;gap:clamp(16px,2vw,32px);grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));margin-top:20px;align-items:start}
 figure{margin:0}
@@ -58,45 +62,73 @@ footer{padding:18px var(--pad);border-top:var(--line);font:400 14px/1.4 var(--la
 
 <header class="band" style="border-top:0">
   <h1>Page B, tightened.</h1>
-  <p class="lede">You chose page B (risk first) with hero B. This page compares the B that readers saw with the tightened B that goes to review-qa next.</p>
+  <p class="lede">You chose page B (risk first) with hero B. This page compares the B readers first saw with tightened B, now reviewed, and one more fix after the review.</p>
   <ol class="ask" id="summary" aria-label="Three-line summary">
     <li>B keeps its risk-first order and approved hero, cutting the repeated Stays/Archived demonstration.</li>
     <li>Tightened B names both external data recipients and puts the dated Jev token price before sign-in and installation, without removing disclosure fields.</li>
-    <li>The type/layout/object/clipboard/link fixes are proposed and being verified on a new B freeze. No automatic daily promise, production build or deployment is included.</li>
+    <li>Tested type/layout/object/clipboard changes pass independent browser checks. Earlier installer GitHub 429 is retained; QA now independently observes three 302→200 successes. Privacy Draft5 and any approved hero change need a new freeze/recheck. No automatic daily promise, production build or deployment is included.</li>
   </ol>
+  <p class="aside-note" style="margin-top:8px">Summary quoted from the copywriter's <code>PROPOSAL.md</code> (83b68ce).</p>
   <div class="status">
     <span class="tag inv">Page B + hero B: your choice</span>
-    <span class="tag">Tightened B: proposed</span>
+    <span class="tag">Tightened B: reviewed, 1 finding</span>
+    <span class="tag">Hero Trash: your call</span>
     <span class="tag">Page A: archived, unchanged</span>
     <span class="tag">Nothing is live</span>
   </div>
   <div class="open">
     <a class="btnlink" href="../page-b/">Open tightened B</a>
   </div>
-  <p class="aside-note" style="margin-top:14px">A real, running build with the motion on. Add <code>?static</code> to its address to see the finished state with no motion. The B readers saw is frozen at commit <code>cdfee91</code>. Page A is frozen as it was and is not part of this proposal (<code>page-a/ARCHIVED.md</code>).</p>
+  <p class="aside-note" style="margin-top:14px">A real, running build with the motion on. Add <code>?static</code> to its address to see the finished state with no motion. The B readers first saw is frozen at <code>cdfee91</code>, and the tightened B that readers and review-qa checked at <code>50bf121</code>. The page you open now also carries the privacy fix below, which nobody has read yet. Page A is frozen as it was and is not part of this proposal (<code>page-a/ARCHIVED.md</code>).</p>
 </header>
 
 <section class="band ink" id="readers">
-  <h2>What readers said about the B they saw</h2>
-  <p><b>Mixed, and not a vote for B.</b> Six fresh AI readers, three per page, read the frozen A and B at 00:37Z. B's visuals scored 3/3/3 against 2/2/2 before. Job clarity and readiness to decide did not change. Finding the data, safety and cost facts did not improve (B 3/3/3, against 4/3/4 before).</p>
-  <p>All six asked for a real price. All six found it too easy to confuse "no zero server receives your email" with TypeSafe receiving it. So those two facts were a trust problem, not a wording problem, and they drive the main change below. All six also assumed or asked whether zero only runs by hand.</p>
-  <p class="aside-note">The readers are AI models reading stills and copy, not people and not live motion. Tightened B hasn't been read yet: three fresh readers are next, after the freeze. Full analysis: <code>slices/01-copy-and-story/proof/rethink/after-findings.md</code>.</p>
+  <h2>What readers said</h2>
+  <p><b>Mixed, and not a vote for B.</b> Two rounds of fresh AI readers, three at a time, same prompt and model. The first round read the old B, the second read tightened B at <code>50bf121</code>.</p>
+  <p>Scores out of 5, in this order: job clarity / story / visuals / finding data, safety and cost / readiness to decide.</p>
+  <div class="wrap"><table class="scores">
+    <thead><tr><th>Page</th><th>R1</th><th>R2</th><th>R3</th></tr></thead>
+    <tbody>
+      <tr><td>Rejected baseline</td><td>4/3/2/4/2</td><td>4/3/2/3/2</td><td>4/3/2/4/3</td></tr>
+      <tr><td>Old B <code>cdfee91</code></td><td>4/3/3/3/2</td><td>4/3/3/3/2</td><td>4/3/3/3/3</td></tr>
+      <tr><td>Tightened B <code>50bf121</code></td><td>4/3/3/3/2</td><td>4/3/3/4/2</td><td>4/3/3/3/3</td></tr>
+    </tbody>
+  </table></div>
+  <p><b>Readiness did not improve.</b> The one higher findability score is a narrow signal, not a general gain. What did land: all three readers of tightened B found both outside recipients, what each receives, and the dated unit price.</p>
+  <p>Still open after tightened B: two of three still flag "No zero server receives your email" as easy to read as nothing leaving the Mac. That line is now replaced (see below), but the new line hasn't been read yet. All three ask what typical use costs and how the installer's Claude Code fits optional drafts. Those two are product questions for you, not copy fixes, and the page doesn't invent an estimate. Two of three flag the hero's archived folder beside Trash (review-qa's finding, below).</p>
+  <p class="aside-note">The readers are AI models reading stills and copy, not people and not live motion. Each round uses new sessions, so rounds are matched in procedure, not the same readers twice. Full analysis: <code>slices/01-copy-and-story/proof/rethink/TIGHTENED-B-READERS.md</code> and <code>after-findings.md</code>.</p>
 </section>
 
 <section class="band" id="trust">
   <h2>The main change: who gets your data, and what it costs</h2>
-  <p>The two rows where mail data leaves your Mac now come first, together, on their own dithered band. Each names its recipient in a black label on its own line: <b>Sent to TypeSafe (Jev):</b> and <b>Sent to your coding tool's provider:</b>. "No zero server receives your email." sits in a separate box, so it can't be read as covering TypeSafe. The cost row comes straight after, with Jev 1.13's per-token price dated 30 Sep 2026, then Google sign-in and the installer.</p>
+  <p>The two rows where mail data leaves your Mac now come first, together, on their own dithered band. Each names its recipient in a black label on its own line: <b>Sent to TypeSafe (Jev):</b> and <b>Sent to your coding tool's provider:</b>. The cost row comes straight after, with Jev 1.13's per-token price dated 30 Sep 2026, then Google sign-in and the installer.</p>
+  <p><b>After the review:</b> readers still misread the old reassurance, so it's now one full-width statement directly under the pair: "TypeSafe receives sorting data. Your tool's provider receives draft data. Neither goes to zero's servers." It says who does get the data before saying who doesn't. The lede above the window ("Read connected Gmail in Gmail or Apple Mail.") is cut to pay for it, since the hero already says you keep using Gmail or Apple Mail. Net +1 word, 550 of 550.</p>
   <div class="cols">
     <figure><img src="img/b-old/beat-ledger-f2.jpg" alt="Old B's Before you install window at 1440px: five equal rows, Google sign-in first, and TypeSafe's receipt of mail data in running text" loading="lazy" width="1440" height="917"><figcaption>Old B (cdfee91): five equal rows, sign-in first, no price</figcaption></figure>
-    <figure><img src="img/b-new/ledger-1440.jpg" alt="Tightened B's Before you install window at 1440px: Sorting data and Optional drafts paired on a dithered band with black recipient labels, then Sorting cost with the dated price, Google sign-in and Installer" loading="lazy" width="720" height="475"><figcaption>Tightened B: recipients first, then the dated price</figcaption></figure>
+    <figure><img src="img/b-new/ledger-1440.jpg" alt="Tightened B's Before you install window at 1440px: Sorting data and Optional drafts paired on a dithered band with black recipient labels, then an outlined full-width statement that TypeSafe receives sorting data, your tool's provider receives draft data and neither goes to zero's servers, then Sorting cost with the dated price, Google sign-in and Installer" loading="lazy" width="720" height="538"><figcaption>Tightened B with the privacy fix: recipients, then who doesn't get it, then the price</figcaption></figure>
   </div>
   <div class="cols">
-    <figure><div class="tall"><img src="img/b-new/ledger-390.jpg" alt="Tightened B's Before you install window at 390px, one column, the two recipient rows first" loading="lazy" width="390" height="1686"></div><figcaption>Tightened B, 390px</figcaption></figure>
+    <figure><div class="tall"><img src="img/b-new/ledger-390.jpg" alt="Tightened B's Before you install window at 390px, one column: the two recipient rows first, the privacy statement, then cost, sign-in and installer" loading="lazy" width="390" height="1730"></div><figcaption>Tightened B with the privacy fix, 390px</figcaption></figure>
     <div>
-      <p class="aside-note">Every data field is still listed, and no disclosure was cut. The labels are real text, so a screen reader hears the same thing. An acceptance check confirms the row order, the pairing and that each recipient label sits on its own line, in both engines.</p>
+      <p class="aside-note">Every data field is still listed, and no disclosure was cut. The labels are real text, so a screen reader hears the same thing. An acceptance check confirms the row order, the pairing, that each recipient label sits on its own line, and that the privacy statement is its own full-width line between the pair and the price, in both engines. The old sentence is gone from the page.</p>
       <p class="aside-note"><b>Owner note, not on the page:</b> B makes no schedule promise. If you want scheduling mentioned, the only true line is: "Scheduled runs need zero's launch agent installed and loaded. Set time and days in Settings → Daily routine." That needs your decision and a new word count. Evidence: <code>schedule-and-price-evidence.md</code>.</p>
     </div>
   </div>
+</section>
+
+<section class="band" id="trash">
+  <h2>Review-qa's one finding: the hero's Trash</h2>
+  <p>review-qa independently reran both engines (146/0 and 142/0, matching), re-probed the installer link (three clean redirects, so the earlier 429 was GitHub rate-limiting) and confirmed two earlier critique fixes are closed. It found one new issue, rated medium. The hero shows an empty Trash beside the archive folder, and the page promises "Nothing is deleted." Reader 1 ranked "remove or explain the Trash icon" their top fix. Reader 3 flagged the same pairing.</p>
+  <p>We recommend dropping the Trash icon. It's already drawn empty, and the question readers ask is why it's there at all, which an empty-state cue can't answer. The folder carries the story alone. Trash is part of the hero you approved, so this is your call. We haven't changed it. Dropping it removes one word ("Trash"), so the page would count 549.</p>
+  <div class="cols">
+    <figure><img src="img/trash/trash-keep-1440.jpg" alt="Hero B at 1440px as approved, with the Auto-Archived folder at lower left and an empty Trash can at lower right" loading="lazy" width="1440" height="900"><figcaption>As approved: folder and Trash</figcaption></figure>
+    <figure><img src="img/trash/trash-drop-1440.jpg" alt="Hero B at 1440px with the Trash can removed; only the Auto-Archived folder remains on the desktop" loading="lazy" width="1440" height="900"><figcaption>Proposed: folder only (mock, not built)</figcaption></figure>
+  </div>
+  <div class="cols">
+    <figure><img src="img/trash/trash-keep-390.jpg" alt="Hero B at 390px as approved, folder and Trash side by side above the inbox" loading="lazy" width="390" height="1100"><figcaption>As approved, 390px</figcaption></figure>
+    <figure><img src="img/trash/trash-drop-390.jpg" alt="Hero B at 390px with the Trash removed, folder alone above the inbox" loading="lazy" width="390" height="1100"><figcaption>Proposed, 390px (mock)</figcaption></figure>
+  </div>
+  <p class="aside-note">Review: <code>slices/05-independent-qa/proof/proposal-review.md</code> (df6632d). The mock removes the icon in a live browser. It isn't built into the page.</p>
 </section>
 
 <section class="band" id="words">
@@ -129,11 +161,11 @@ footer{padding:18px var(--pad);border-top:var(--line);font:400 14px/1.4 var(--la
   <p>Scroll inside each frame. Same five sections, same order: hero, Before you install, Choose what needs to stay, Restore archived mail, Ready to install?</p>
   <div class="cols">
     <figure><div class="tall"><img src="img/after-b-1440.jpg" alt="Old B at 1440px" loading="lazy" width="720" height="1819"></div><figcaption>Old B, 1440px (what readers saw)</figcaption></figure>
-    <figure><div class="tall"><img src="img/b-new/full-1440.jpg" alt="Tightened B at 1440px" loading="lazy" width="720" height="1857"></div><figcaption>Tightened B, 1440px</figcaption></figure>
+    <figure><div class="tall"><img src="img/b-new/full-1440.jpg" alt="Tightened B at 1440px" loading="lazy" width="720" height="1920"></div><figcaption>Tightened B, 1440px</figcaption></figure>
   </div>
   <div class="cols">
     <figure><div class="tall"><img src="img/after-b-390.jpg" alt="Old B at 390px" loading="lazy" width="390" height="5099"></div><figcaption>Old B, 390px</figcaption></figure>
-    <figure><div class="tall"><img src="img/b-new/full-390.jpg" alt="Tightened B at 390px" loading="lazy" width="390" height="5365"></div><figcaption>Tightened B, 390px</figcaption></figure>
+    <figure><div class="tall"><img src="img/b-new/full-390.jpg" alt="Tightened B at 390px" loading="lazy" width="390" height="5409"></div><figcaption>Tightened B, 390px</figcaption></figure>
   </div>
   <p class="aside-note" style="margin-top:12px">320 and 1920px, no JavaScript and reduced motion: <a href="../page-b/shots/">page-b/shots</a>.</p>
 </section>
@@ -154,7 +186,7 @@ footer{padding:18px var(--pad);border-top:var(--line);font:400 14px/1.4 var(--la
       <tr><td>Motion</td><td>One beat per section</td><td>Same four beats. Also settles at once if you turn on Reduce Motion mid-visit, or open a link straight to a section</td></tr>
     </tbody>
   </table></div>
-  <p class="aside-note" style="margin-top:12px">Words: 549 counted by the copywriter, one under budget. Line-by-line copy: <code>slices/01-copy-and-story/proof/rethink/SELECTED-B-COPY.md</code>.</p>
+  <p class="aside-note" style="margin-top:12px">Words: 549 at <code>50bf121</code>, then 550 of 550 with the privacy fix (Draft5, <code>dcaabd6</code>), counted by the copywriter. Line-by-line copy: <code>slices/01-copy-and-story/proof/rethink/SELECTED-B-COPY.md</code>.</p>
 </section>
 
 <section class="band" id="motion">
@@ -191,10 +223,12 @@ footer{padding:18px var(--pad);border-top:var(--line);font:400 14px/1.4 var(--la
   <div class="wrap"><table>
     <thead><tr><th>Check</th><th>Result</th></tr></thead>
     <tbody>
-      <tr><td>Automated acceptance, 320 to 2560px</td><td>Chromium 146/0, WebKit 142/0. No sideways scroll, text stays in its section, rendered words match the counted copy, the no-JS and reduced-motion states equal the finished page, keyboard focus only reaches real links and Copy command. Run on <code>acceptance/serve.py</code>: the plain Python server reset about 1 in 15 Chromium script requests, which showed up as false failures</td></tr>
+      <tr><td>Automated acceptance, 320 to 2560px</td><td>At <code>50bf121</code>: Chromium 146/0, WebKit 142/0, reproduced independently by the copywriter and by review-qa. With the privacy fix: Chromium 148/0, WebKit 144/0 (adds the privacy-line check and a scroll-timing check). No sideways scroll, text stays in its section, rendered words match the counted copy, the no-JS and reduced-motion states equal the finished page, keyboard focus only reaches real links and Copy command. Run on <code>acceptance/serve.py</code>: the plain Python server reset about 1 in 15 Chromium script requests, which showed up as false failures</td></tr>
+      <tr><td>Scroll timing</td><td>development-motion found that a reader scrolling very early could skip a section's beat, or leave it blank (reproduced on <code>50bf121</code>). Fixed in the shared motion script and covered by a new check</td></tr>
       <tr><td>Copy command</td><td>Tested with a stand-in clipboard (allowed, denied, missing), not the real system clipboard</td></tr>
-      <tr><td>Fresh readers on tightened B</td><td><span class="pending">pending, 3 readers after the freeze</span></td></tr>
-      <tr><td>Adversarial review (review-qa)</td><td><span class="pending">pending, on the frozen commit</span></td></tr>
+      <tr><td>Fresh readers on tightened B</td><td>3 read <code>50bf121</code>: mixed, readiness unchanged (above). <span class="pending">The privacy fix is not yet read</span></td></tr>
+      <tr><td>Adversarial review (review-qa)</td><td>Done on <code>50bf121</code> (df6632d): 1 new finding, the hero Trash. <span class="pending">Re-check of the privacy fix pending</span></td></tr>
+      <tr><td>Installer link</td><td>One earlier run got 429 from GitHub. review-qa then saw three clean 302→200 redirects. Treated as rate-limiting, not a broken link</td></tr>
       <tr><td>Not verified</td><td>Real Safari 26 and real iPhones or Macs. "WebKit" is Playwright's build. The readers are AI models, not people.</td></tr>
     </tbody>
   </table></div>
@@ -203,7 +237,9 @@ footer{padding:18px var(--pad);border-top:var(--line);font:400 14px/1.4 var(--la
 <section class="band ink" id="decide">
   <h2>What we'll ask you next</h2>
   <ol class="ask">
-    <li><b>Tightened B</b>: keep it, once review-qa and the fresh readers are in.</li>
+    <li><b>Hero Trash</b>: drop it (our recommendation), or keep the hero exactly as approved.</li>
+    <li><b>Tightened B</b>: keep it, once review-qa has re-checked the privacy fix.</li>
+    <li><b>Cost and installer</b>: readers want a typical monthly cost and to know why the installer may add Claude Code. Both need product answers from you. The page won't invent them.</li>
     <li><b>Scheduling</b>: leave it unsaid (now), or add the one conditional line above.</li>
   </ol>
   <p class="aside-note">Nothing goes live from this page, and nothing is built for the real site yet. Answers go through main-lead.</p>

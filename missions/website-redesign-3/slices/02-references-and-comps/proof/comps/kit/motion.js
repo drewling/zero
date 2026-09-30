@@ -182,13 +182,18 @@
     const stopArmed = () => settle('static');
     live.add(stopArmed);
     const arm = () => { if (armed || started) return; armed = true;
-      setFrame(root, 0, story.frames.length); if (story.frames[0].set) story.frames[0].set(root, api); root.dataset.mode = 'armed'; };
+      setFrame(root, 0, story.frames.length); if (story.frames[0].set) story.frames[0].set(root, api); root.dataset.mode = 'armed';
+      io.observe(root); };
     // first sighting: if the element is already on screen (an anchor jump such as the hero's Install link, a reload
     // mid-page, a fast fling), it stays on its final frame and never plays, so nothing the visitor is reading vanishes.
+    // The observer's first delivery can come after a reader has already scrolled (development-motion, sandbox S16):
+    // that arrival is not initial sight, so it arms instead. Initial sight is decided synchronously below.
+    const initialScrollY = scrollY;
+    const seen = () => { started = true; live.delete(stopArmed); io.disconnect(); pre.disconnect(); root.dataset.mode = 'seen'; };
     const pre = new IntersectionObserver(es => {
-      const e = es.find(x => x.isIntersecting); if (!e) return;
+      const e = es.find(x => x.isIntersecting); if (!e || started) return;
       pre.disconnect();
-      if (e.boundingClientRect.top < innerHeight) { started = true; live.delete(stopArmed); io.disconnect(); root.dataset.mode = 'seen'; return; }
+      if (e.boundingClientRect.top < innerHeight && scrollY === initialScrollY) return seen();
       arm();
     },
       { rootMargin: '0px 0px 30% 0px', threshold: 0 });
@@ -198,8 +203,15 @@
       if (performance.now() - jumpedAt < 1200) return settle('seen');
       io.disconnect(); pre.disconnect(); started = true; live.delete(stopArmed); play(root, story);
     }, { threshold: [0, .1, .2, .35, .5] });
+    // initial sight, decided now: the page opened on this element's anchor (or one inside it), or it is on screen
+    let hashEl = null;
+    try { hashEl = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (_) {}
+    const box = root.getBoundingClientRect();
+    if (hashEl && (hashEl === root || hashEl.contains(root) || root.contains(hashEl))) return seen();
+    if (box.top < innerHeight && box.bottom > 0) return seen();
+    // the play observer starts only once the story is armed: observing delivers an initial callback, so a section that
+    // is already 35% in view when it arms plays at once (observer callbacks can arrive in either order)
     pre.observe(root);
-    io.observe(root);
   }
   let jumpedAt = -1e9;
   const markJump = () => { jumpedAt = performance.now(); };

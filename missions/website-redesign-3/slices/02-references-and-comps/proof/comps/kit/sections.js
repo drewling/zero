@@ -29,14 +29,15 @@
     ]});
   }
 
-  /* Ledger: zero's app icon is selected · Get Info zooms out of it · the five rows fill in, one at a time */
+  /* Ledger: zero's app icon is selected · Get Info zooms out of it · the rows fill in, one at a time, in reading order
+     (page B's zero-server boundary line, between the recipient pair and the cost row, steps in with them) */
   const ledger = document.querySelector('.ledger');
   if (ledger) Zm.when(ledger, { delay: 300, frames: [
     {},
     { hold: 120, enter: (r, z) => z.zoom(r, '.appicon svg', '.info', { steps: 6, ms: 300 }),
       still: (r, z) => z.zoom(r, '.appicon svg', '.info', { still: true, steps: 3 }) },
-    { hold: 0, set: r => show($$(r, '.info .row')),
-      enter: (r, z) => { const rows = $$(r, '.info .row'); hide(rows); return reveal(rows, z, 110); } }
+    { hold: 0, set: r => show($$(r, '.info .row, .info .bound')),
+      enter: (r, z) => { const rows = $$(r, '.info .row, .info .bound'); hide(rows); return reveal(rows, z, 110); } }
   ]});
 
   /* Terminal: the command types in, two characters a step, then the block cursor blinks 3 times and rests */

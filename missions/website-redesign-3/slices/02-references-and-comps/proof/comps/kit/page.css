@@ -156,11 +156,20 @@ b.ui{font-weight:600}
 .ledger-b .info .row.out + .row:not(.out){border-top:3px double var(--ink)}
 .ledger-b .to{display:block;width:fit-content;margin:0 0 6px;padding:1px 7px;font-weight:600;background:var(--ink);color:var(--paper)}
 .ledger-b .to.not{margin:10px 0 6px;background:var(--paper);color:var(--ink);border:1px solid var(--ink)}
+/* the boundary statement answers the pair directly under it: full width, outlined, on flat paper (Draft5) */
+.ledger-b .info .bound{margin:0;padding:14px 24px;border-top:1px solid var(--ink);border-bottom:3px double var(--ink);background:var(--paper)}
+.ledger-b .info .bound .to.not{margin:0;padding:4px 10px;max-width:var(--measure);line-height:1.45}
+.ledger-b .info .rows + .bound + .rows{padding-top:6px}
+.ledger-b .info .bound + .rows .row:first-child{border-top:0}
 @media (min-width:1100px){
   .ledger-b .info .row.out + .row:not(.out){border-top:0}
   .ledger-b .info .row.out{border-bottom:4px double var(--ink)}
+  .ledger-b .info .bound{border-top:0}
+  /* the pair's double rule moves under the boundary; below it, cost and sign-in pair up and the installer spans */
+  .ledger-b .info .rows:has(+ .bound) .row.out{border-bottom:0}
 }
 @media (max-width:720px){
+  .ledger-b .info .bound{padding:14px 18px}
   .ledger > .txt{grid-template-columns:1fr}
   .appicon{grid-row:auto;justify-self:start;margin-bottom:12px}
   .ledger .txt p{grid-column:1}
